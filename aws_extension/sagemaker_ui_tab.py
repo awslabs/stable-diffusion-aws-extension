@@ -31,25 +31,21 @@ endpoint_type_choices = ["Async", "Real-time"]
 
 page_key = {}
 
+inference_choices = ["ml.g4dn.2xlarge",
+                     "ml.g4dn.4xlarge",
+                     "ml.g4dn.8xlarge",
+                     "ml.g4dn.12xlarge",
+                     "ml.g5.2xlarge",
+                     "ml.g5.4xlarge",
+                     "ml.g5.8xlarge",
+                     "ml.g5.12xlarge",
+                     "ml.g5.24xlarge",
+                     "ml.p4d.24xlarge",
+                     ]
+
 if is_gcr():
-    inference_choices = ["ml.g4dn.2xlarge",
-                         "ml.g4dn.4xlarge",
-                         "ml.g4dn.8xlarge",
-                         "ml.g4dn.12xlarge"
-                         ]
     inference_choices_default = "ml.g4dn.2xlarge"
 else:
-    inference_choices = ["ml.g4dn.2xlarge",
-                         "ml.g4dn.4xlarge",
-                         "ml.g4dn.8xlarge",
-                         "ml.g4dn.12xlarge",
-                         "ml.g5.2xlarge",
-                         "ml.g5.4xlarge",
-                         "ml.g5.8xlarge",
-                         "ml.g5.12xlarge",
-                         "ml.g5.24xlarge",
-                         "ml.p4d.24xlarge",
-                         ]
     inference_choices_default = "ml.g5.2xlarge"
 
 user_table_size = 10
@@ -1052,6 +1048,8 @@ def _list_sagemaker_endpoints(username, last_key: str = ""):
 
     endpoints = []
     for endpoint in resp:
+        if 'service_type' in endpoint and endpoint['service_type'] != 'sd':
+            continue
         if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
             endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:

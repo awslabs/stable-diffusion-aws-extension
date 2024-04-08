@@ -1,0 +1,249 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: (SO8032) - Extension for Comfy on AWS - EC2 Instance
+Parameters:
+  Branch:
+    Description: Branch of the Comfy to deploy
+    Type: String
+    AllowedValues:
+      - main
+      - dev
+    Default: dev
+  ApiGatewayUrl:
+    Description: API URL
+    Type: String
+    MinLength: 1
+  ApiGatewayUrlToken:
+    Description: API Key
+    Type: String
+    MinLength: 1
+  BucketName:
+    Description: Bucket Name
+    Type: String
+    MinLength: 1
+  EndpointName:
+    Description: Endpoint Name
+    Type: String
+    MinLength: 1
+  InstanceType:
+    Description: EC2 Instance Type of the Comfy to deploy
+    Type: String
+    AllowedValues:
+      - g5.2xlarge
+      - g5.4xlarge
+      - g5.8xlarge
+    Default: g5.2xlarge
+
+Mappings:
+  RegionToAmiId:
+    ap-northeast-1:
+      AMI: ami-029e4579c7ebb8998
+    ap-southeast-1:
+      AMI: ami-0f8aefcf3dd3cebed
+    us-east-1:
+      AMI: ami-01d25fe784d811b28
+    us-east-2:
+      AMI: ami-0f85abf2c61ae7754
+    us-west-1:
+      AMI: ami-0e2cc230d291c3a5f
+    us-west-2:
+      AMI: ami-020f2b388c86c9684
+
+Resources:
+  ComfyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  ComfySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ComfyVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+
+  ComfyInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: [ 'sts:AssumeRole' ]
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  ComfyInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: ComfyInstanceRole
+
+  ComfySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref ComfyVPC
+      GroupName: !Sub ${AWS::StackName}-sg
+      GroupDescription: Security group for SD WebUI EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8188
+          ToPort: 8188
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ComfyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  ComfyVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ComfyVPC
+      InternetGatewayId: !Ref ComfyInternetGateway
+
+  ComfyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ComfyVPC
+
+  ComfyRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ComfyRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ComfyInternetGateway
+
+  ComfySubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ComfySubnet
+      RouteTableId: !Ref ComfyRouteTable
+
+  ComfyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref ComfyInstanceProfile
+      SubnetId: !Ref ComfySubnet
+      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 1024
+            VolumeType: gp3
+      SecurityGroupIds:
+        - !GetAtt ComfySecurityGroup.GroupId
+      Tags: [
+        { "Key": "Name", "Value": !Sub "comfy-on-aws-${Branch}" },
+      ]
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          
+          mkdir -p ~/.aws
+          echo "[default]
+          region = ${AWS::Region}" > ~/.aws/config
+  
+          echo "export COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
+          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
+          echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
+          echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          source /etc/environment
+          
+          sudo apt-get update
+          
+          sudo apt install nginx -y
+          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
+          sudo ufw allow 'Nginx HTTP'
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
+          
+          sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
+          
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash;
+          
+          cat > comfy.service <<EOF
+          [Unit]
+          Description=Comfy Service
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          WorkingDirectory=/ComfyUI
+          ExecStart=python3 main.py --listen
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=root
+          StartLimitAction=reboot
+
+          [Install]
+          WantedBy=default.target
+
+          EOF
+          sudo mv comfy.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/comfy.service
+          sudo systemctl enable comfy.service
+          sudo systemctl start comfy.service
+
+          cat > comfy_upload.service <<EOF
+          [Unit]
+          Description=Comfy Upload Service
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          WorkingDirectory=/ComfyUI
+          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=root
+          StartLimitAction=reboot
+
+          [Install]
+          WantedBy=default.target
+
+          EOF
+          sudo mv comfy_upload.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/comfy_upload.service
+          sudo systemctl enable comfy_upload.service
+          sudo systemctl start comfy_upload.service
+          
+          # tail -f /var/log/cloud-init-output.log
+          # sudo journalctl -u comfy -f
+          # sudo journalctl -u comfy_upload -f
+
+  WebUiEIP:
+    Type: AWS::EC2::EIP
+  WebUiEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt WebUiEIP.AllocationId
+      InstanceId: !Ref ComfyEC2Instance
+
+Outputs:
+  ComfyURL:
+    Description: URL for Comfy WebUI
+    Value: !Sub http://${WebUiEIP}
+  ComfyRealURL:
+    Description: URL for Comfy WebUI
+    Value: !Sub http://${WebUiEIP}:8188

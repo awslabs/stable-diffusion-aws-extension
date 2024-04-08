@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -13,21 +13,18 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteInferenceJobsApiProps {
   router: Resource;
   httpMethod: string;
   inferenceJobTable: Table;
   userTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteInferenceJobsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -44,25 +41,47 @@ export class DeleteInferenceJobsApi {
     this.httpMethod = props.httpMethod;
     this.inferenceJobTable = props.inferenceJobTable;
     this.userTable = props.userTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.deleteInferenceJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.createRequestValidator(),
+        requestModels: {
+          'application/json': this.createRequestBodyModel(),
+        },
+        operationName: 'DeleteInferenceJobs',
+        methodResponses: [
+          ApiModels.methodResponses204(),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+        ],
+      });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
-          schema: JsonSchemaVersion.DRAFT4,
+          schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
@@ -94,13 +113,12 @@ export class DeleteInferenceJobsApi {
       });
   }
 
-  private deleteInferenceJobsApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/inferences`,
+        entry: '../middleware_api/inferences',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_inference_jobs.py',
@@ -108,32 +126,12 @@ export class DeleteInferenceJobsApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.userTable.tableName,
           INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         },
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
 
   private iamRole(): Role {

@@ -1,11 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateCheckPointApiProps {
@@ -13,16 +14,13 @@ export interface CreateCheckPointApiProps {
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class CreateCheckPointApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
+  public router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -40,31 +38,209 @@ export class CreateCheckPointApi {
     this.multiUserTable = props.multiUserTable;
     this.baseId = id;
     this.router = props.router;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.role = this.iamRole();
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
-    this.createCheckpointApi();
+
+    const lambdaFunction = this.apiLambda();
+
+    this.lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createRequestBodyModel(),
+      },
+      operationName: 'CreateCheckpoint',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponse(this.responseUrlModel(), '202'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses504(),
+      ],
+    });
+  }
+
+  private responseUrlModel() {
+    return new Model(this.scope, `${this.baseId}-url-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateCheckpointUrlResponse',
+      description: `Response Model ${this.baseId}`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+        },
+        required: [
+          'debug',
+          'message',
+          'statusCode',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-update-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateCheckpointResponse',
+      description: `Response Model ${this.baseId}`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        title: 'CreateCheckpointResponse',
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              checkpoint: {
+                type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
+                properties: {
+                  id: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  s3_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  status: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  params: {
+                    type: JsonSchemaType.OBJECT,
+                    additionalProperties: true,
+                    properties: {
+                      message: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      creator: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      created: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      multipart_upload: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          '.*': {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              upload_id: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              bucket: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              key: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: [
+                              'bucket',
+                              'key',
+                              'upload_id',
+                            ],
+                          },
+                        },
+                      },
+                    },
+                    required: [
+                      'created',
+                      'creator',
+                      'message',
+                      'multipart_upload',
+                    ],
+                  },
+                },
+                required: [
+                  'id',
+                  'params',
+                  's3_location',
+                  'status',
+                  'type',
+                ],
+              },
+              s3PresignUrl: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  '.*': {
+                    type: JsonSchemaType.ARRAY,
+                    items: {
+                      type: JsonSchemaType.STRING,
+                    },
+                  },
+                },
+              },
+            },
+            required: [
+              'checkpoint',
+              's3PresignUrl',
+            ],
+          },
+          message: SCHEMA_MESSAGE,
+        },
+        required: [
+          'data',
+          'debug',
+          'message',
+          'statusCode',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: '../middleware_api/checkpoints',
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'create_checkpoint.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
+      },
+      layers: [this.layer],
+    });
   }
 
   private uploadByUrlLambdaFunction() {
     return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, {
       functionName: `${this.baseId}-create-checkpoint-by-url`,
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint_by_url.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 10240,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -104,8 +280,6 @@ export class CreateCheckPointApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -133,27 +307,17 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      modelName: `${this.baseId}Request`,
+      description: `Request Model ${this.baseId}`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          checkpoint_type: {
-            type: JsonSchemaType.STRING,
-            enum: [
-              'Stable-diffusion',
-              'embeddings',
-              'Lora',
-              'hypernetworks',
-              'ControlNet',
-              'VAE',
-            ],
-          },
+          checkpoint_type: SCHEMA_CHECKPOINT_TYPE,
           filenames: {
             type: JsonSchemaType.ARRAY,
             items: {
@@ -188,9 +352,6 @@ export class CreateCheckPointApi {
               message: {
                 type: JsonSchemaType.STRING,
               },
-              creator: {
-                type: JsonSchemaType.STRING,
-              },
             },
           },
         },
@@ -212,38 +373,5 @@ export class CreateCheckPointApi {
       });
   }
 
-  private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'create_checkpoint.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.role,
-      memorySize: 4048,
-      environment: {
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
-      },
-      layers: [this.layer],
-    });
-
-    const createCheckpointIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-  }
 }
 

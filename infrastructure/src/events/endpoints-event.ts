@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_iam, Duration } from 'aws-cdk-lib';
+import { aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -10,12 +10,10 @@ import { Construct } from 'constructs';
 export interface SagemakerEndpointEventsProps {
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class SagemakerEndpointEvents {
-  private readonly src: string;
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
@@ -27,7 +25,6 @@ export class SagemakerEndpointEvents {
     this.baseId = id;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     this.createEndpointEventBridge();
@@ -86,18 +83,15 @@ export class SagemakerEndpointEvents {
   private createEndpointEventBridge() {
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/endpoints`,
+      entry: '../middleware_api/endpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'endpoint_event.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 4048,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-      },
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
 

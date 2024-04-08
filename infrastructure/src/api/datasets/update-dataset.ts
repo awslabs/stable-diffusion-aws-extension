@@ -1,10 +1,11 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_STATUS, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateDatasetApiProps {
@@ -13,16 +14,12 @@ export interface UpdateDatasetApiProps {
   datasetInfoTable: aws_dynamodb.Table;
   datasetItemTable: aws_dynamodb.Table;
   userTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class UpdateDatasetApi {
   public readonly router: aws_apigateway.Resource;
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly userTable: aws_dynamodb.Table;
@@ -34,7 +31,6 @@ export class UpdateDatasetApi {
 
   constructor(scope: Construct, id: string, props: UpdateDatasetApiProps) {
     this.scope = scope;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.baseId = id;
     this.router = props.router;
@@ -43,16 +39,78 @@ export class UpdateDatasetApi {
     this.userTable = props.userTable;
     this.httpMethod = props.httpMethod;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.updateDatasetApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addResource('{id}')
+      .addMethod(this.httpMethod, lambdaIntegration, {
+        apiKeyRequired: true,
+        requestValidator: this.createRequestValidator(),
+        requestModels: {
+          'application/json': this.createRequestBodyModel(),
+        },
+        operationName: 'UpdateDataset',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+        ],
+      });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'UpdateDatasetsResponse',
+      description: `Response Model ${this.baseId}`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        title: 'UpdateDatasetsResponse',
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              datasetName: SCHEMA_DATASET_NAME,
+              status: SCHEMA_DATASET_STATUS,
+            },
+            required: [
+              'datasetName',
+              'status',
+            ],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-update-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -92,21 +150,21 @@ export class UpdateDatasetApi {
         's3:ListMultipartUploadParts',
         's3:ListBucketMultipartUploads',
       ],
-      resources: [`${this.s3Bucket.bucketArn}/*`,
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      ],
     }));
     return newRole;
   }
 
-  private createModel() {
+  private createRequestBodyModel() {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
@@ -133,10 +191,9 @@ export class UpdateDatasetApi {
       });
   }
 
-
-  private updateDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/datasets`,
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_dataset.py',
@@ -144,30 +201,15 @@ export class UpdateDatasetApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
       },
       layers: [this.layer],
     });
-
-
-    const createModelIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addResource('{id}')
-      .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
   }
+
+
 }
 

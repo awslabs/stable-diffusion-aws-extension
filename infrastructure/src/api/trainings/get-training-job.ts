@@ -1,24 +1,24 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_PARAMS, SCHEMA_TRAIN_STATUS, SCHEMA_TRAIN_TYPE } from '../../shared/schema';
 
 export interface GetTrainingJobApiProps {
   router: Resource;
   httpMethod: string;
   trainingTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class GetTrainingJobApi {
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -35,33 +35,10 @@ export class GetTrainingJobApi {
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
-    this.getTrainingJobApi();
-  }
-
-  private getTrainingJobApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/trainings`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_10,
-        index: 'get_training_job.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 2048,
-        environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
-          TRAINING_JOB_TABLE: this.trainingTable.tableName,
-        },
-        layers: [this.layer],
-      });
+    const lambdaFunction = this.apiLambda();
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -69,9 +46,80 @@ export class GetTrainingJobApi {
     );
 
     this.router.addResource('{id}')
-      .addMethod(this.httpMethod, lambdaIntegration, { apiKeyRequired: true });
-
+      .addMethod(this.httpMethod, lambdaIntegration, {
+        apiKeyRequired: true,
+        operationName: 'GetTraining',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      },
+      );
   }
+
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetTrainResponse',
+      description: 'Response Model GetTrainResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
+            properties: {
+              id: SCHEMA_TRAIN_ID,
+              job_status: SCHEMA_TRAIN_STATUS,
+              params: SCHEMA_TRAIN_PARAMS,
+              train_type: SCHEMA_TRAIN_TYPE,
+            },
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+
+  private apiLambda() {
+    return new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: '../middleware_api/trainings',
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_10,
+        index: 'get_training_job.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
+        environment: {
+          TRAINING_JOB_TABLE: this.trainingTable.tableName,
+        },
+        layers: [this.layer],
+      });
+  }
+
 
   private iamRole(): Role {
 

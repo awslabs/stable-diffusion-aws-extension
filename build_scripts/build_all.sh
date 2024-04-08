@@ -13,5 +13,3 @@ then
     echo "Usage: $0 <extension-branch> <image-tag> <commit_id>"
     exit 1
 fi
-
-#./build_and_push.sh Dockerfile.dreambooth.from_scratch aigc-webui-dreambooth-training $mode $tag $commit_id

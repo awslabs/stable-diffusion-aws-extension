@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -13,6 +13,8 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DATASET_NAME } from '../../shared/schema';
 
 export interface DeleteDatasetsApiProps {
   router: Resource;
@@ -20,15 +22,11 @@ export interface DeleteDatasetsApiProps {
   datasetInfoTable: Table;
   datasetItemTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteDatasetsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -47,36 +45,55 @@ export class DeleteDatasetsApi {
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemTable = props.datasetItemTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.deleteDatasetsApi();
+    const lambdaFunction =this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.createRequestValidator(),
+        requestModels: {
+          'application/json': this.createRequestBodyModel(),
+        },
+        operationName: 'DeleteDatasets',
+        methodResponses: [
+          ApiModels.methodResponses204(),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
+
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
-          schema: JsonSchemaVersion.DRAFT4,
+          schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
             dataset_name_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-                maxLength: 20,
-                pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-              },
+              items: SCHEMA_DATASET_NAME,
               minItems: 1,
               maxItems: 10,
             },
@@ -99,13 +116,12 @@ export class DeleteDatasetsApi {
       });
   }
 
-  private deleteDatasetsApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/datasets`,
+        entry: '../middleware_api/datasets',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_datasets.py',
@@ -113,35 +129,15 @@ export class DeleteDatasetsApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
           DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
           DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         },
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
+
 
   private iamRole(): Role {
 

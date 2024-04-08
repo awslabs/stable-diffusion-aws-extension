@@ -6,10 +6,10 @@ export class LambdaCommonLayer {
 
   public readonly commonLayer: PythonLayerVersion;
 
-  constructor(scope: Construct, id: string, srcRoot: string) {
+  constructor(scope: Construct, id: string) {
 
     this.commonLayer = new PythonLayerVersion(scope, `${id}-common-layer`, {
-      entry: `${srcRoot}`,
+      entry: '../middleware_api',
       bundling: {
         outputPathSuffix: '/python',
       },

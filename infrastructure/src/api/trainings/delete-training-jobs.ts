@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -13,21 +13,19 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_TRAIN_ID } from '../../shared/schema';
 
 export interface DeleteTrainingJobsApiProps {
   router: Resource;
   httpMethod: string;
   trainingTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteTrainingJobsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -44,34 +42,52 @@ export class DeleteTrainingJobsApi {
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.deleteInferenceJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      { proxy: true },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.createRequestValidator(),
+        requestModels: {
+          'application/json': this.createRequestBodyModel(),
+        },
+        operationName: 'DeleteTrainings',
+        methodResponses: [
+          ApiModels.methodResponses204(),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
-          schema: JsonSchemaVersion.DRAFT4,
+          schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
             training_id_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
+              items: SCHEMA_TRAIN_ID,
               minItems: 1,
               maxItems: 100,
             },
@@ -94,13 +110,12 @@ export class DeleteTrainingJobsApi {
       });
   }
 
-  private deleteInferenceJobsApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/trainings`,
+        entry: '../middleware_api/trainings',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_training_jobs.py',
@@ -108,30 +123,12 @@ export class DeleteTrainingJobsApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
         },
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      { proxy: true },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
 
   private iamRole(): Role {

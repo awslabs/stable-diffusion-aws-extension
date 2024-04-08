@@ -1,33 +1,30 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { Aws, aws_apigateway, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
+import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  modelTable: aws_dynamodb.Table;
-  trainTable: aws_dynamodb.Table;
-  multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
+  modelTable: Table;
+  trainTable: Table;
+  multiUserTable: Table;
   s3Bucket: aws_s3.Bucket;
-  commonLayer: aws_lambda.LayerVersion;
-  checkpointTable: aws_dynamodb.Table;
-  datasetInfoTable: aws_dynamodb.Table;
+  commonLayer: LayerVersion;
+  checkpointTable: Table;
+  datasetInfoTable: Table;
   userTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
-  accountId: ICfnRuleConditionExpression;
 }
 
 export class CreateTrainingJobApi {
 
-  public model: Model;
-  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly props: CreateTrainingJobApiProps;
@@ -38,18 +35,149 @@ export class CreateTrainingJobApi {
     this.id = id;
     this.scope = scope;
     this.props = props;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
     this.sagemakerTrainRole = this.sageMakerTrainRole();
 
-    this.createTrainJobLambda();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        $default: this.createRequestBodyModel(),
+      },
+      operationName: 'CreateTraining',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
+  private responseModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.props.router.api,
+      modelName: 'CreateTrainResponse',
+      description: 'Response Model CreateTrainResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [201],
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              statusCode: {
+                type: JsonSchemaType.INTEGER,
+              },
+              debug: SCHEMA_DEBUG,
+              data: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  id: SCHEMA_TRAIN_ID,
+                  status: SCHEMA_TRAIN_STATUS,
+                  created: SCHEMA_TRAIN_CREATED,
+                  params: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      config_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          saving_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              output_name: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              save_every_n_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['output_name', 'save_every_n_epochs'],
+                          },
+                          training_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              max_train_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['max_train_epochs'],
+                          },
+                        },
+                        required: ['saving_arguments', 'training_arguments'],
+                      },
+                      training_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          s3_data_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          training_instance_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_model_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          fm_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_toml_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        required: ['s3_data_path', 'training_instance_type', 's3_model_path', 'fm_type', 's3_toml_path'],
+                      },
+                      training_type: SCHEMA_TRAINING_TYPE,
+                    },
+                    required: ['config_params', 'training_params', 'training_type'],
+                  },
+                  input_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  output_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                },
+                required: ['id', 'status', 'created', 'params', 'input_location', 'output_location'],
+              },
+              message: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
 
   private sageMakerTrainRole(): aws_iam.Role {
     const sagemakerRole = new aws_iam.Role(this.scope, `${this.id}-train-role`, {
       assumedBy: new aws_iam.ServicePrincipal('sagemaker.amazonaws.com'),
     });
+
     sagemakerRole.addManagedPolicy(aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSageMakerFullAccess'));
 
     sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -61,8 +189,6 @@ export class CreateTrainingJobApi {
       resources: [
         `${this.props.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -81,6 +207,7 @@ export class CreateTrainingJobApi {
     const newRole = new aws_iam.Role(this.scope, `${this.id}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -128,8 +255,6 @@ export class CreateTrainingJobApi {
         's3:CreateBucket',
       ],
       resources: [`${this.props.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
@@ -147,13 +272,13 @@ export class CreateTrainingJobApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.props.router.api,
       modelName: this.id,
-      description: `${this.id} Request Model`,
+      description: `Request Model ${this.id}`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
         type: JsonSchemaType.OBJECT,
         properties: {
@@ -243,46 +368,28 @@ export class CreateTrainingJobApi {
       });
   }
 
-  private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
-      entry: `${this.props.srcRoot}/trainings`,
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.id}-lambda`, {
+      entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
-      memorySize: 4089,
+      memorySize: 3070,
+      tracing: Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
         MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.props.multiUserTable.tableName,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,
         USER_EMAIL_TOPIC_ARN: this.props.userTopic.topicArn,
       },
       layers: [this.props.commonLayer],
     });
-
-    const createTrainJobIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.props.router.addMethod(this.props.httpMethod, createTrainJobIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        $default: this.model,
-      },
-    });
-
-    return lambdaFunction;
   }
 
 }

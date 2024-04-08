@@ -6,7 +6,7 @@ from PIL import Image, PngImagePlugin
 import time
 import os
 import sys
-sys.path.append("extensions/stable-diffusion-aws-extension/middleware_api/lambda/inference")
+sys.path.append("extensions/stable-diffusion-aws-extension/middleware_api/inference")
 from parse.parameter_parser import json_convert_to_payload
 from dotenv import load_dotenv
 

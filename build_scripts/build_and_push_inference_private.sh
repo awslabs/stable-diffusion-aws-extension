@@ -2,13 +2,12 @@
 
 # Build inference image and push it to private ECR repository
 dockerfile=$1
-image=$2
+repo_name=$2
 mode=$3
 region=$4
 tag=$5
-commit_id=$6
 
-if [ "$image" = "" ] || [ "$dockerfile" = "" ]
+if [ "$repo_name" = "" ] || [ "$dockerfile" = "" ]
 then
     echo "Usage: $0 <docker-file> <image-name>"
     exit 1
@@ -20,44 +19,43 @@ then
 fi
 
 # Get the account number associated with the current IAM credentials
-account=$(aws sts get-caller-identity --query Account --output text)
+account=$(aws sts get-caller-identity --region "$region" --query Account --output text)
 
 if [ $? -ne 0 ]
 then
     exit 255
 fi
 
-# Get the region defined in the current configuration (default to us-west-2 if none defined)
-region="${region}"
-
-image_name="${image}"
+if [[ $region == cn* ]]; then
+    AWS_DOMAIN="amazonaws.com.cn"
+else
+    AWS_DOMAIN="amazonaws.com"
+fi
 
 # If the repository doesn't exist in ECR, create it.
 
-desc_output=$(aws ecr describe-repositories --repository-names ${image_name} 2>&1)
+desc_output=$(aws ecr describe-repositories --region "$region" --repository-names "$repo_name" 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --repository-name "${image_name}" > /dev/null
+        aws ecr create-repository --region "$region" --repository-name "$repo_name" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
 fi
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
-aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+aws ecr set-repository-policy --region "$region" --repository-name "$repo_name" --policy-text '{"Version": "2008-10-17", "Statement": [{"Sid": "public statement", "Effect": "Allow", "Principal": "*", "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]}]}'
 
-cp ${dockerfile} .
+aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$account.dkr.ecr.$region.$AWS_DOMAIN"
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
-echo $fullname
+fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
+echo "docker build $fullname"
+docker build -t "$fullname" -f "$dockerfile" .
 
-docker build -t ${image_name}:${tag} -f ${dockerfile} .
-docker tag ${image_name}:${tag} ${fullname}
-docker push ${fullname}
-echo "docker push ${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
-echo "Completed"
+echo "docker push $fullname"
+docker push "$fullname"
+echo "docker push $fullname} Completed"

@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -12,19 +12,16 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteRolesApiProps {
   router: Resource;
   httpMethod: string;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class DeleteRolesApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -38,12 +35,35 @@ export class DeleteRolesApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.deleteRolesApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.createRequestValidator(),
+        requestModels: {
+          'application/json': this.createRequestBodyModel(),
+        },
+        operationName: 'DeleteRoles',
+        methodResponses: [
+          ApiModels.methodResponses204(),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
   }
 
   private iamRole(): Role {
@@ -85,16 +105,16 @@ export class DeleteRolesApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
-          schema: JsonSchemaVersion.DRAFT4,
+          schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
@@ -126,13 +146,12 @@ export class DeleteRolesApi {
       });
   }
 
-  private deleteRolesApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/roles`,
+        entry: '../middleware_api/roles',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_roles.py',
@@ -140,31 +159,9 @@ export class DeleteRolesApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
-        environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
-        },
+        tracing: aws_lambda.Tracing.ACTIVE,
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
+
 }

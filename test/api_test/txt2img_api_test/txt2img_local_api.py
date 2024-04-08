@@ -8,7 +8,7 @@ import os
 from gradio.processing_utils import encode_pil_to_base64
 import sys
 
-sys.path.append("../../../middleware_api/lambda/inference")
+sys.path.append("../../../middleware_api/inference")
 from parse.parameter_parser import json_convert_to_payload
 start_time = time.time()
 

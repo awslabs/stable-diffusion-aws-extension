@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
+import { Aws, aws_iam, aws_lambda, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -10,14 +10,12 @@ import { Construct } from 'constructs';
 export interface SagemakerTrainingEventsProps {
   trainingTable: Table;
   checkpointTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   userTopic: aws_sns.Topic;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class SagemakerTrainingEvents {
-  private readonly src: string;
   private readonly scope: Construct;
   private readonly trainingTable: Table;
   private readonly checkpointTable: Table;
@@ -32,7 +30,6 @@ export class SagemakerTrainingEvents {
     this.baseId = id;
     this.trainingTable = props.trainingTable;
     this.checkpointTable = props.checkpointTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.userSnsTopic = props.userTopic;
     this.s3Bucket = props.s3Bucket;
@@ -107,8 +104,6 @@ export class SagemakerTrainingEvents {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `${this.s3Bucket.bucketArn}`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
@@ -129,7 +124,7 @@ export class SagemakerTrainingEvents {
   private createTrainingEventsBridge() {
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/trainings`,
+      entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'training_event.py',
@@ -137,6 +132,7 @@ export class SagemakerTrainingEvents {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAINING_JOB_TABLE: this.trainingTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,

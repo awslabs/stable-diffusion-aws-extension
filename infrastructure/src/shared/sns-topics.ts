@@ -9,6 +9,8 @@ export class SnsTopics {
   public readonly snsTopic: Topic;
   public readonly inferenceResultTopic: Topic;
   public readonly inferenceResultErrorTopic: Topic;
+  public readonly executeResultSuccessTopic: Topic;
+  public readonly executeResultFailTopic: Topic;
   private readonly scope: Construct;
   private readonly id: string;
 
@@ -18,14 +20,18 @@ export class SnsTopics {
     this.id = id;
 
     // Create an SNS topic to get async inference result
-    this.snsTopic = this.createOrImportTopic('StableDiffusionSnsUserTopic');
+    this.snsTopic = this.fromTopicArn('StableDiffusionSnsUserTopic');
     this.snsTopic.addSubscription(new EmailSubscription(emailParam.valueAsString));
 
-    this.inferenceResultTopic = this.createOrImportTopic('ReceiveSageMakerInferenceSuccess');
-    this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
+    this.inferenceResultTopic = this.fromTopicArn('ReceiveSageMakerInferenceSuccess');
+    this.inferenceResultErrorTopic = this.fromTopicArn('ReceiveSageMakerInferenceError');
+
+    // comfy
+    this.executeResultSuccessTopic = this.fromTopicArn('comfyExecuteSuccess');
+    this.executeResultFailTopic = this.fromTopicArn('comfyExecuteFail');
   }
 
-  private createOrImportTopic(topicName: string): Topic {
+  private fromTopicArn(topicName: string): Topic {
     return <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,

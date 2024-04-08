@@ -1,4 +1,4 @@
-import { CfnParameter, CustomResource, Duration } from 'aws-cdk-lib';
+import { aws_lambda, CfnParameter, CustomResource, Duration } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -11,6 +11,7 @@ export interface ResourceWaiterProps {
   resourceProvider: ResourceProvider;
   restApiGateway: RestApiGateway;
   apiKeyParam: CfnParameter;
+  timestamp?: string;
 }
 
 export class ResourceWaiter extends Construct {
@@ -30,7 +31,8 @@ export class ResourceWaiter extends Construct {
       },
       timeout: Duration.seconds(900),
       role: role,
-      memorySize: 4048,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
     });
 
     const provider = new Provider(scope, 'ResourcesWaiterProvider', {
@@ -38,11 +40,13 @@ export class ResourceWaiter extends Construct {
       logRetention: RetentionDays.ONE_DAY,
     });
 
-    const waiter1 = new CustomResource(scope, 'ResourcesWaiterCustomResource', {
+    const waiter1 = new CustomResource(scope, 'ResourcesWaiterCustomResource1', {
       serviceToken: provider.serviceToken,
       properties: {
         apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
+        timestamp: props.timestamp,
+        name: 'Waiter1',
       },
     });
 
@@ -51,10 +55,22 @@ export class ResourceWaiter extends Construct {
       properties: {
         apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
+        timestamp: props.timestamp,
+        name: 'Waiter2',
       },
     });
-
     waiter2.node.addDependency(waiter1);
+
+    const waiter3 = new CustomResource(scope, 'ResourcesWaiterCustomResource3', {
+      serviceToken: provider.serviceToken,
+      properties: {
+        apiUrl: props.restApiGateway.apiGateway.url,
+        apiKey: props.apiKeyParam.valueAsString,
+        timestamp: props.timestamp,
+        name: 'Waiter3',
+      },
+    });
+    waiter3.node.addDependency(waiter2);
 
   }
 

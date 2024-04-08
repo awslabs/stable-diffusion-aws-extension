@@ -1,18 +1,25 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_INFERENCE,
+  SCHEMA_INFERENCE_ASYNC_MODEL,
+  SCHEMA_INFERENCE_REAL_TIME_MODEL,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   endpointDeploymentTable: aws_dynamodb.Table;
   inferenceJobTable: aws_dynamodb.Table;
-  srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
@@ -21,11 +28,8 @@ export interface CreateInferenceJobApiProps {
 
 export class CreateInferenceJobApi {
 
-  public model: Model;
-  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
-  private readonly srcRoot: string;
   private readonly endpointDeploymentTable: aws_dynamodb.Table;
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
@@ -38,7 +42,6 @@ export class CreateInferenceJobApi {
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
     this.scope = scope;
-    this.srcRoot = props.srcRoot;
     this.checkpointTable = props.checkpointTable;
     this.multiUserTable = props.multiUserTable;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
@@ -47,19 +50,169 @@ export class CreateInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
     this.router = props.router;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.createInferenceJobLambda();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createRequestBodyModel(),
+      },
+      operationName: 'CreateInferenceJob',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseRealtimeModel(), '200'),
+        ApiModels.methodResponse(this.responseCreatedModel(), '201'),
+        ApiModels.methodResponse(this.responseAsyncModel(), '202'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses504(),
+      ],
+    });
   }
 
-  private createModel(): Model {
+  private responseRealtimeModel() {
+    return new Model(this.scope, `${this.id}-rt-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobRealtimeResponse',
+      description: 'Response Model CreateInferenceJobRealtimeResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'CreateInferenceJobRealtimeResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseAsyncModel() {
+    return new Model(this.scope, `${this.id}-async-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobAsyncResponse',
+      description: 'Response Model CreateInferenceJobAsyncResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'CreateInferenceJobAsyncResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_ASYNC_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseCreatedModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobResponse',
+      description: 'Response Model CreateInferenceJob',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'CreateInferenceJobResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              inference: {
+                type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
+                properties: {
+                  id: SCHEMA_INFERENCE.InferenceJobId,
+                  type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  api_params_s3_location: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  api_params_s3_upload_url: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  models: {
+                    type: JsonSchemaType.ARRAY,
+                    items: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        id: {
+                          type: JsonSchemaType.STRING,
+                          format: 'uuid',
+                        },
+                        name: {
+                          type: JsonSchemaType.ARRAY,
+                          items: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        type: {
+                          type: JsonSchemaType.STRING,
+                        },
+                      },
+                      required: [
+                        'id',
+                        'name',
+                        'type',
+                      ],
+                    },
+                  },
+                },
+                required: [
+                  'id',
+                  'type',
+                  'api_params_s3_location',
+                  'api_params_s3_upload_url',
+                ],
+              },
+            },
+            required: [
+              'inference',
+            ],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
       modelName: this.id,
-      description: `${this.id} Request Model`,
+      description: `Request Model ${this.id}`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
         type: JsonSchemaType.OBJECT,
         properties: {
@@ -70,10 +223,7 @@ export class CreateInferenceJobApi {
           custom_extensions: {
             type: JsonSchemaType.STRING,
           },
-          inference_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
-          },
+          inference_type: SCHEMA_INFER_TYPE,
           payload_string: {
             type: JsonSchemaType.STRING,
           },
@@ -137,8 +287,6 @@ export class CreateInferenceJobApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -151,8 +299,6 @@ export class CreateInferenceJobApi {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
@@ -180,41 +326,24 @@ export class CreateInferenceJobApi {
       });
   }
 
-  private createInferenceJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
-      entry: `${this.srcRoot}/inferences`,
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.id}-lambda`, {
+      entry: '../middleware_api/inferences',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_inference_job.py',
       handler: 'handler',
-      memorySize: 10240,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
       },
       layers: [this.layer],
     });
-
-
-    const createInferenceJobIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, createInferenceJobIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-    return lambdaFunction;
   }
+
 }

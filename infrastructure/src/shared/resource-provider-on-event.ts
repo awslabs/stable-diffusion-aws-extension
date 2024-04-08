@@ -42,7 +42,6 @@ const {
   S3_BUCKET_NAME,
 } = process.env;
 const accountId = ROLE_ARN?.split(':')[4] || '';
-export const INFER_INDEX_NAME = 'taskType-createTime-index';
 
 interface Event {
   RequestType: string;
@@ -77,9 +76,9 @@ async function createAndCheckResources() {
   await createTopics();
   await waitTableReady('MultiUserTable');
   await putItemUsersTable();
-  await waitTableReady('SDInferenceJobTable');
-  await createGlobalSecondaryIndex('SDInferenceJobTable');
-  // todo check kms key and enable sd-extension-password-key
+
+  await createGlobalSecondaryIndex('SDInferenceJobTable', 'taskType', 'createTime');
+  await createGlobalSecondaryIndex('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
 }
 
 async function waitTableReady(tableName: string) {
@@ -206,6 +205,63 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
+
+    ComfyTemplateTable: {
+      partitionKey: {
+        name: 'template_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyConfigTable: {
+      partitionKey: {
+        name: 'config_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyExecuteTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfySyncTable: {
+      partitionKey: {
+        name: 'endpoint_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'request_time',
+        type: AttributeType.NUMBER,
+      },
+    },
+    ComfyInstanceMonitorTable: {
+      partitionKey: {
+        name: 'endpoint_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'gen_instance_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyMessageTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'request_time',
+        type: AttributeType.NUMBER,
+      },
+    },
   };
 
   for (let tableName in tables) {
@@ -308,30 +364,33 @@ async function putItem(tableName: string, item: any) {
   }
 }
 
-async function createGlobalSecondaryIndex(tableName: string) {
+async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: string) {
+
+  await waitTableReady(tableName);
+
   const params: UpdateTableCommandInput = {
     TableName: tableName,
     AttributeDefinitions: [
       {
-        AttributeName: 'taskType',
+        AttributeName: pk,
         AttributeType: 'S',
       },
       {
-        AttributeName: 'createTime',
+        AttributeName: sk,
         AttributeType: 'S',
       },
     ],
     GlobalSecondaryIndexUpdates: [
       {
         Create: {
-          IndexName: INFER_INDEX_NAME,
+          IndexName: `${pk}-${sk}-index`,
           KeySchema: [
             {
-              AttributeName: 'taskType',
+              AttributeName: pk,
               KeyType: 'HASH',
             },
             {
-              AttributeName: 'createTime',
+              AttributeName: sk,
               KeyType: 'RANGE',
             },
           ],
@@ -345,6 +404,7 @@ async function createGlobalSecondaryIndex(tableName: string) {
 
   try {
     const command = new UpdateTableCommand(params);
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const response = await ddbClient.send(command);
     console.log('createGlobalSecondaryIndex Success', response);
   } catch (err) {
@@ -435,9 +495,13 @@ async function putBucketCors(bucketName: string) {
 
 async function createTopics() {
   const list = [
+    // SD
     'ReceiveSageMakerInferenceSuccess',
     'ReceiveSageMakerInferenceError',
     'StableDiffusionSnsUserTopic',
+    // comfy
+    'comfyExecuteFail',
+    'comfyExecuteSuccess',
   ];
 
   for (let Name of list) {

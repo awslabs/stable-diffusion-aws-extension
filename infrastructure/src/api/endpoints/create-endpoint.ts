@@ -1,21 +1,20 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
-import {
-  JsonSchemaType,
-  JsonSchemaVersion,
-  LambdaIntegration,
-  Model,
-  RequestValidator,
-  Resource,
-} from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ESD_VERSION } from '../../shared/version';
+import { ApiModels } from '../../shared/models';
+import {
+  SCHEMA_DEBUG, SCHEMA_ENDPOINT_AUTOSCALING, SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT, SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS, SCHEMA_ENDPOINT_ID,
+  SCHEMA_ENDPOINT_INSTANCE_TYPE, SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER, SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE, SCHEMA_ENDPOINT_SERVICE_TYPE, SCHEMA_ENDPOINT_START_TIME,
+  SCHEMA_ENDPOINT_STATUS,
+  SCHEMA_ENDPOINT_TYPE,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -24,31 +23,33 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  inferenceJobTable: Table;
-  srcRoot: string;
+  syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: LayerVersion;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
-  accountId: ICfnRuleConditionExpression;
+  queue: aws_sqs.Queue;
+  executeResultSuccessTopic: Topic;
+  executeResultFailTopic: Topic;
 }
 
 export class CreateEndpointApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
-  private readonly inferenceJobTable: Table;
+  private readonly syncTable: Table;
+  private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly accountId: ICfnRuleConditionExpression;
   private readonly userNotifySNS: Topic;
+  private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
+  private readonly executeResultSuccessTopic: Topic;
+  private readonly executeResultFailTopic: Topic;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -56,18 +57,105 @@ export class CreateEndpointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
+    this.syncTable = props.syncTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
-    this.accountId = props.accountId;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
+    this.executeResultSuccessTopic = props.executeResultSuccessTopic;
+    this.executeResultFailTopic = props.executeResultFailTopic;
+    this.queue = props.queue;
 
-    this.createEndpointsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const integration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, integration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createRequestBodyModel(),
+      },
+      operationName: 'CreateEndpoint',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateEndpointResponse',
+      description: `Response Model ${this.baseId}`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        title: 'CreateEndpointResponse',
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [
+              202,
+            ],
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              EndpointDeploymentJobId: SCHEMA_ENDPOINT_ID,
+              autoscaling: SCHEMA_ENDPOINT_AUTOSCALING,
+              max_instance_number: SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
+              startTime: SCHEMA_ENDPOINT_START_TIME,
+              instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
+              current_instance_count: SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
+              endpoint_status: SCHEMA_ENDPOINT_STATUS,
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
+              endpoint_type: SCHEMA_ENDPOINT_TYPE,
+              service_type: SCHEMA_ENDPOINT_SERVICE_TYPE,
+              owner_group_or_role: SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
+              min_instance_number: SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+              custom_extensions: SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
+            },
+            required: [
+              'EndpointDeploymentJobId',
+              'autoscaling',
+              'max_instance_number',
+              'startTime',
+              'instance_type',
+              'current_instance_count',
+              'endpoint_status',
+              'endpoint_name',
+              'endpoint_type',
+              'owner_group_or_role',
+              'min_instance_number',
+              'custom_extensions',
+              'service_type',
+            ],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): Role {
@@ -82,6 +170,8 @@ export class CreateEndpointApi {
         this.userNotifySNS.topicArn,
         this.inferenceResultTopic.topicArn,
         this.inferenceResultErrorTopic.topicArn,
+        this.executeResultSuccessTopic.topicArn,
+        this.executeResultFailTopic.topicArn,
       ],
     });
 
@@ -129,6 +219,8 @@ export class CreateEndpointApi {
         'iam:CreateServiceLinkedRole',
         'iam:PassRole',
         'sts:AssumeRole',
+        'xray:PutTraceSegments',
+        'xray:PutTelemetryRecords',
       ],
       resources: ['*'],
     });
@@ -147,7 +239,8 @@ export class CreateEndpointApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.multiUserTable.tableArn,
-        this.inferenceJobTable.tableArn,
+        this.syncTable.tableArn,
+        this.instanceMonitorTable.tableArn,
       ],
     });
 
@@ -159,6 +252,14 @@ export class CreateEndpointApi {
         'logs:PutLogEvents',
       ],
       resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
+    });
+
+    const sqsStatement = new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sqs:SendMessage',
+      ],
+      resources: [this.queue.queueArn],
     });
 
     const passStartDeployRole = new PolicyStatement({
@@ -183,40 +284,37 @@ export class CreateEndpointApi {
     lambdaStartDeployRole.addToPolicy(endpointStatement);
     lambdaStartDeployRole.addToPolicy(ddbStatement);
     lambdaStartDeployRole.addToPolicy(logStatement);
+    lambdaStartDeployRole.addToPolicy(sqsStatement);
     lambdaStartDeployRole.addToPolicy(passStartDeployRole);
 
     return lambdaStartDeployRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            maxLength: 20,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           custom_docker_image_uri: {
             type: JsonSchemaType.STRING,
           },
-          endpoint_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
-          },
+          endpoint_type: SCHEMA_ENDPOINT_TYPE,
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
           },
-          instance_type: {
+          service_type: {
             type: JsonSchemaType.STRING,
+            enum: ['sd', 'comfy'],
           },
+          instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
           initial_instance_count: {
             type: JsonSchemaType.NUMBER,
             minimum: 1,
@@ -239,9 +337,6 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_type',
@@ -249,7 +344,6 @@ export class CreateEndpointApi {
           'initial_instance_count',
           'autoscaling_enabled',
           'assign_to_roles',
-          'creator',
         ],
       },
     });
@@ -263,12 +357,10 @@ export class CreateEndpointApi {
     });
   }
 
-  private createEndpointsApi() {
-
+  private apiLambda() {
     const role = this.iamRole();
-
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/endpoints`,
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: '../middleware_api/endpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_endpoint.py',
@@ -276,33 +368,20 @@ export class CreateEndpointApi {
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
+        COMFY_QUEUE_URL: this.queue.queueUrl,
+        COMFY_SYNC_TABLE: this.syncTable.tableName,
+        COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
+        COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
+        COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
       },
       layers: [this.layer],
     });
-
-
-    const integration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-
-    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-
   }
+
+
 }

@@ -1,13 +1,33 @@
-import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import {
+  App,
+  Aspects,
+  Aws,
+  aws_apigateway,
+  CfnCondition,
+  CfnOutput,
+  CfnParameter,
+  Fn,
+  Stack,
+  StackProps,
+  Tags,
+} from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { OasApi } from './api/service/oas';
 import { PingApi } from './api/service/ping';
+import { RootAPI } from './api/service/root';
+import { CheckpointStack } from './checkpoints/checkpoint-stack';
+import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
+import { ComfyDatabase } from './comfy/comfy-database';
+import { SqsStack } from './comfy/comfy-sqs';
+import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
+import { DatasetStack } from './shared/dataset';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
@@ -29,6 +49,7 @@ export class Middleware extends Stack {
     },
   ) {
     super(scope, id, props);
+
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
@@ -87,6 +108,7 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         esdVersion: ESD_VERSION,
+        // timestamp: new Date().toISOString(),
       },
     );
 
@@ -98,10 +120,13 @@ export class Middleware extends Stack {
 
     const ddbTables = new Database(this, 'sd-ddb');
 
-    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+      // service
+      'api',
       'ping',
+      // sd api
       'checkpoints',
       'datasets',
       'users',
@@ -109,6 +134,14 @@ export class Middleware extends Stack {
       'endpoints',
       'inferences',
       'trainings',
+      // comfy api
+      'template',
+      'model',
+      'executes',
+      'node',
+      'config',
+      'prepare',
+      'sync',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
     cfnApi.addPropertyOverride('EndpointConfiguration', {
@@ -122,11 +155,22 @@ export class Middleware extends Stack {
       routers: restApi.routers,
     });
 
+    new RootAPI(this, 'RootApi', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      restApi: restApi.apiGateway,
+    });
+
+    new OasApi(this, 'ApiDoc', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      router: restApi.routers.api,
+    });
+
     new PingApi(this, 'Ping', {
       commonLayer: commonLayers.commonLayer,
       httpMethod: 'GET',
       router: restApi.routers.ping,
-      srcRoot: '../middleware_api/lambda',
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
@@ -144,32 +188,92 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
-      accountId,
       resourceProvider,
     });
 
-    const train = new TrainDeploy(this, {
-      commonLayer: commonLayers.commonLayer,
+    new CheckpointStack(this, {
       // env: devEnv,
+      synthesizer: props.synthesizer,
+      checkpointTable: ddbTables.checkpointTable,
+      multiUserTable: ddbTables.multiUserTable,
+      routers: restApi.routers,
+      s3Bucket: s3Bucket,
+      commonLayer: commonLayers.commonLayer,
+      logLevel: logLevel,
+    });
+
+    const ddbComfyTables = new ComfyDatabase(this, 'comfy-ddb');
+
+    const sqsStack = new SqsStack(this, 'comfy-sqs', {
+      name: 'SyncComfyMsgJob',
+      visibilityTimeout: 900,
+    });
+
+    const apis = new ComfyApiStack(this, 'comfy-api', <ComfyInferenceStackProps>{
+      routers: restApi.routers,
+      // env: devEnv,
+      s3Bucket: s3Bucket,
+      configTable: ddbComfyTables.configTable,
+      executeTable: ddbComfyTables.executeTable,
+      syncTable: ddbComfyTables.syncTable,
+      msgTable: ddbComfyTables.msgTable,
+      multiUserTable: ddbTables.multiUserTable,
+      endpointTable: ddbTables.sDEndpointDeploymentJobTable,
+      instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
+      commonLayer: commonLayers.commonLayer,
+      executeSuccessTopic: snsTopics.executeResultSuccessTopic,
+      executeFailTopic: snsTopics.executeResultFailTopic,
+      snsTopic: snsTopics.snsTopic,
+      queue: sqsStack.queue,
+    });
+    apis.node.addDependency(ddbComfyTables);
+
+    new EndpointStack(this, {
+      inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
+      inferenceResultTopic: snsTopics.inferenceResultTopic,
+      executeResultSuccessTopic: snsTopics.executeResultSuccessTopic,
+      executeResultFailTopic: snsTopics.executeResultFailTopic,
+      routers: restApi.routers,
+      s3Bucket: s3Bucket,
+      multiUserTable: ddbTables.multiUserTable,
+      snsTopic: snsTopics.snsTopic,
+      EndpointDeploymentJobTable: ddbTables.sDEndpointDeploymentJobTable,
+      syncTable: ddbComfyTables.syncTable,
+      instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
+      commonLayer: commonLayers.commonLayer,
+      queue: sqsStack.queue,
+    },
+    );
+
+    new TrainDeploy(this, {
+      commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
       database: ddbTables,
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
       resourceProvider,
-      accountId,
     });
 
-    const resourceWaiter = new ResourceWaiter(
+    new DatasetStack(this, {
+      commonLayer: commonLayers.commonLayer,
+      synthesizer: props.synthesizer,
+      database: ddbTables,
+      routers: restApi.routers,
+      s3Bucket: s3Bucket,
+      logLevel,
+    });
+
+    new ResourceWaiter(
       this,
       'ResourcesWaiter',
       {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
+        // timestamp: new Date().toISOString(),
       },
     );
-    resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
@@ -181,10 +285,48 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('ESD_VERSION', ESD_VERSION);
     this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvironmentVariableToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
+    this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
+    this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
+    this.addEnvironmentVariableToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
+    this.addEnvironmentVariableToAllLambdas('ACCOUNT_ID', accountId.toString());
+
+    // make order for api
+    let requestValidator: aws_apigateway.RequestValidator;
+    let model: aws_apigateway.Model;
+    this.node.children.forEach(child => {
+
+      if (child instanceof aws_apigateway.RequestValidator) {
+        if (!requestValidator) {
+          requestValidator = child;
+        } else {
+          child.node.addDependency(requestValidator);
+          requestValidator = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.Model) {
+        if (!model) {
+          model = child;
+        } else {
+          child.node.addDependency(model);
+          model = child;
+        }
+      }
+
+      // if (model && requestValidator) {
+      //   requestValidator.node.addDependency(model);
+      // }
+
+    });
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
+    Tags.of(this).add('version', ESD_VERSION);
 
     new CfnOutput(this, 'EsdVersion', {
       value: ESD_VERSION,
@@ -200,6 +342,11 @@ export class Middleware extends Stack {
     new CfnOutput(this, 'ApiGatewayUrlToken', {
       value: apiKeyParam.valueAsString,
       description: 'API Gateway Token',
+    });
+
+    new CfnOutput(this, 'ApiOAS3', {
+      value: `${restApi.apiGateway.url}api`,
+      description: 'API Doc - OAS3',
     });
 
     new CfnOutput(this, 'S3BucketName', {
