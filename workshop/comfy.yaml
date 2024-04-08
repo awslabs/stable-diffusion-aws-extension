@@ -212,14 +212,14 @@ Resources:
           After=network.target
           StartLimitIntervalSec=0
 
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
+          [Service]
+          WorkingDirectory=/ComfyUI
+          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=root
+          StartLimitAction=reboot
 
           [Install]
           WantedBy=default.target
