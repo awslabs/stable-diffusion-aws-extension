@@ -16,12 +16,6 @@ aws cloudformation delete-stack --stack-name "$STACK_NAME"
 aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 
 echo "----------------------------------------------------------------"
-echo "phases -> build -> commands"
-echo "----------------------------------------------------------------"
-python --version
-sudo yum install wget -y
-
-echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
 echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
@@ -59,7 +53,10 @@ export API_GATEWAY_URL_TOKEN=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] 
 echo "export API_GATEWAY_URL=$API_GATEWAY_URL" >> env.properties
 echo "export API_GATEWAY_URL_TOKEN=$API_GATEWAY_URL_TOKEN" >> env.properties
 
-cd stable-diffusion-aws-extension/test
+python --version
+sudo yum install wget -y
+
+cd stable-diffusion-aws-extension/test/api
 make build
 
 echo "----------------------------------------------------------------"

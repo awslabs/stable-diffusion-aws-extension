@@ -8,7 +8,7 @@ if [ -z "$ACCOUNT_ID" ]; then
   exit 1
 fi
 
-cd stable-diffusion-aws-extension/test || exit
+cd stable-diffusion-aws-extension/test/api || exit
 
 ls -la
 
