@@ -43,9 +43,8 @@ else
                                                 ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                 ParameterKey=LogLevel,ParameterValue="INFO" \
                                                 ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-
-   aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 fi
+aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 FINISHED_TIME=$(date +%s)
 export DEPLOY_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
 echo "export DEPLOY_DURATION_TIME=$DEPLOY_DURATION_TIME" >> env.properties
