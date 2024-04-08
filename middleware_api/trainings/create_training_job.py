@@ -94,29 +94,6 @@ def _update_toml_file_in_s3(
         logger.error(f"An error occurred when updating Kohya toml: {e}")
 
 
-def _json_encode_hyperparameters(hyperparameters):
-    """Encode hyperparameters
-
-    Args:
-        hyperparameters : hyperparameters to be encoded
-
-    Returns:
-        Encoded hyperparameters
-    """
-    new_params = {}
-    for k, v in hyperparameters.items():
-        if region.startswith("cn"):
-            new_params[k] = json.dumps(v, cls=DecimalEncoder)
-        else:
-            json_v = json.dumps(v, cls=DecimalEncoder)
-            v_bytes = json_v.encode("ascii")
-            base64_bytes = base64.b64encode(v_bytes)
-            base64_v = base64_bytes.decode("ascii")
-            new_params[k] = base64_v
-
-    return new_params
-
-
 def _trigger_sagemaker_training_job(
         train_job: TrainJob, ckpt_output_path: str, train_job_name: str
 ):
@@ -142,9 +119,6 @@ def _trigger_sagemaker_training_job(
 
     s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4, cls=DecimalEncoder))
 
-    # todo will delete this
-    hyperparameters = _json_encode_hyperparameters(data)
-
     final_instance_type = instance_type
     if (
             "training_params" in train_job.params
@@ -162,7 +136,9 @@ def _trigger_sagemaker_training_job(
         instance_type=final_instance_type,
         volume_size=125,
         base_job_name=f"{train_job_name}",
-        hyperparameters=hyperparameters,
+        hyperparameters={
+            "s3_location": f"s3://{bucket_name}/{train_params_file}",
+        },
         job_id=train_job.id,
     )
     est.fit(wait=False)
