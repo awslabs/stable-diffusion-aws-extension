@@ -55,7 +55,6 @@ export class TrainDeploy {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
-      modelTable: props.database.modelTable,
       router: routers.trainings,
       s3Bucket: props.s3Bucket,
       trainTable: props.database.trainingTable,

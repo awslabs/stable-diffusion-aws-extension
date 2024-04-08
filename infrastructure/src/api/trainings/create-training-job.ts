@@ -12,7 +12,6 @@ import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SC
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  modelTable: Table;
   trainTable: Table;
   multiUserTable: Table;
   s3Bucket: aws_s3.Bucket;
@@ -221,7 +220,6 @@ export class CreateTrainingJobApi {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.props.modelTable.tableArn,
         this.props.trainTable.tableArn,
         this.props.checkpointTable.tableArn,
         this.props.multiUserTable.tableArn,
@@ -383,7 +381,6 @@ export class CreateTrainingJobApi {
       tracing: Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
-        MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
         INSTANCE_TYPE: this.instanceType,
