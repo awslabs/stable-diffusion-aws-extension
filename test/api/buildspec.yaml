@@ -3,13 +3,10 @@ version: 0.2
 env:
   variables:
     STACK_NAME: "ESD"
-    CODE_REPO: "https://github.com/awslabs/stable-diffusion-aws-extension"
     CODE_BRANCH: "dev"
     DEPLOY_STACK: "template"
     CLEAN_RESOURCES: "no"
-    TEST_BRANCH: "dev"
     TEST_FAST: "false"
-    TEST_LOG_LEVEL: "ERROR"
     SLA_BATCH_SIZE: 2
     TEMPLATE_FILE: "https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/dev/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json"
     SNS_REGION: "ap-northeast-1"
@@ -18,8 +15,8 @@ env:
 phases:
   build:
     commands:
-      - git clone https://github.com/elonniu/esd-api-test.git --branch $TEST_BRANCH --single-branch
-      - bash esd-api-test/buildspec_build.sh
+      - git clone https://github.com/awslabs/stable-diffusion-aws-extension --branch $CODE_BRANCH --single-branch
+      - bash stable-diffusion-aws-extension/test/api/buildspec_build.sh
   post_build:
     commands:
-      - bash esd-api-test/buildspec_post_build.sh
+      - bash stable-diffusion-aws-extension/test/api/buildspec_post_build.sh

@@ -14,7 +14,6 @@ ls -la
 
 echo "----------------------------------------------------------------"
 properties=("Account: $ACCOUNT_ID")
-properties+=("Repo: $CODE_REPO")
 properties+=("Version/Branch: $CODE_BRANCH")
 properties+=("Region: $AWS_DEFAULT_REGION")
 properties+=("Deploy Method: $DEPLOY_STACK")
