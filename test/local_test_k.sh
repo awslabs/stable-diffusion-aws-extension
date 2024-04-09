@@ -2,10 +2,8 @@
 
 set -e
 
-if [ "$(uname)" == "Darwin" ]; then
+if [ -d "venv" ]; then
     source venv/bin/activate
-else
-    . venv/bin/activate
 fi
 
 if [ -z "$1" ]; then
