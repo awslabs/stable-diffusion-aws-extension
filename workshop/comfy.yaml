@@ -179,7 +179,7 @@ Resources:
           cp s5cmd /usr/local/bin/
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash;
-          rm ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           
           
           cat > comfy.service <<EOF
