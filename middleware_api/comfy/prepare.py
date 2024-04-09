@@ -59,9 +59,9 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
     endpoint_info = get_endpoint_info(endpoint_name)
     if not endpoint_info:
         raise Exception(f'endpoint not found with name {endpoint_name}')
-    request_id_use = request_id if event.prepare_id is None else event.prepare_id
+
     sync_job = ComfySyncTable(
-        request_id=request_id_use,
+        request_id=request_id if event.prepare_id is None else event.prepare_id,
         endpoint_name=event.endpoint_name,
         endpoint_id=endpoint_info['EndpointDeploymentJobId'],
         instance_count=endpoint_info['current_instance_count'],
@@ -76,7 +76,6 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
     )
     save_sync_ddb_resp = ddb_service.put_items(sync_table, entries=sync_job.__dict__)
     logger.info(str(save_sync_ddb_resp))
-    return request_id_use
 
 
 @tracer.capture_lambda_handler
@@ -87,7 +86,7 @@ def handler(raw_event, ctx):
         request_id = ctx.aws_request_id
 
         event = PrepareEnvEvent(**json.loads(raw_event['body']))
-        request_id_use = prepare_sagemaker_env(request_id, event)
-        return ok(data=request_id_use)
+        prepare_sagemaker_env(request_id, event)
+        return ok(data=event.endpoint_name)
     except Exception as e:
         return response_error(e)
