@@ -31,17 +31,6 @@ logging.info("env_path", env_path)
 for item in os.environ.keys():
     logging.info(f'环境变量： {item} {os.environ.get(item)}')
 
-# Source environment variables from /etc/environment
-# try:
-#     with open(env_path, 'r') as env_file:
-#         for line in env_file:
-#             parts = line.strip().split('=', 1)
-#             if len(parts) == 2:
-#                 os.environ[parts[0]] = parts[1]
-#                 logging.info(f"{os.environ.get(parts[0])}  {parts[1]}")
-# except FileNotFoundError:
-#     logging.info("/etc/environment not found")
-
 DIR3 = "input"
 DIR1 = "models"
 DIR2 = "custom_nodes"
@@ -233,17 +222,17 @@ def sync_files(filepath):
         logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
 
-        if 'custom_nodes' == str(directory):
+        if DIR2 == str(directory):
             logging.info(f" sync custom nodes files: {filepath}")
             s5cmd_syn_node_command = f's5cmd sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             os.system(s5cmd_syn_node_command)
-        elif 'input' == str(directory):
+        elif DIR3 == str(directory):
             logging.info(f" sync custom input files: {filepath}")
             s5cmd_syn_input_command = f's5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
             os.system(s5cmd_syn_input_command)
-        elif 'models' == str(directory):
+        elif DIR1 == str(directory):
             logging.info(f" sync custom models files: {filepath}")
             s5cmd_syn_model_command = f's5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
             os.system(s5cmd_syn_model_command)
