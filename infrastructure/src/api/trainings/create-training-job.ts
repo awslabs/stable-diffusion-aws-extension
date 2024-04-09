@@ -292,6 +292,7 @@ export class CreateTrainingJobApi {
               enable_wd14_tagger: {
                 type: JsonSchemaType.BOOLEAN,
                 default: false,
+                description: 'Enable WD14 Tagger',
               },
               wd14_tagger_params: {
                 type: JsonSchemaType.OBJECT,
@@ -299,10 +300,12 @@ export class CreateTrainingJobApi {
                   general_threshold: {
                     type: JsonSchemaType.STRING,
                     default: '0',
+                    description: 'General threshold',
                   },
                   character_threshold: {
                     type: JsonSchemaType.STRING,
                     default: '0',
+                    description: 'Character threshold',
                   },
                 },
                 additionalProperties: true,
@@ -312,15 +315,19 @@ export class CreateTrainingJobApi {
                 properties: {
                   training_instance_type: {
                     type: JsonSchemaType.STRING,
+                    description: 'Training instance type',
                   },
                   model: {
                     type: JsonSchemaType.STRING,
+                    description: 'Model',
                   },
                   dataset: {
                     type: JsonSchemaType.STRING,
+                    description: 'Dataset',
                   },
                   fm_type: {
                     type: JsonSchemaType.STRING,
+                    description: 'FM type',
                   },
                 },
                 required: [
@@ -335,18 +342,22 @@ export class CreateTrainingJobApi {
                 properties: {
                   saving_arguments: {
                     type: JsonSchemaType.OBJECT,
+                    description: 'Saving arguments',
                     properties: {
                       output_name: {
                         type: JsonSchemaType.STRING,
+                        description: 'Output name',
                       },
                       save_every_n_epochs: {
                         type: JsonSchemaType.INTEGER,
+                        description: 'Save every n epochs',
                       },
                     },
                     required: ['output_name', 'save_every_n_epochs'],
                   },
                   training_arguments: {
                     type: JsonSchemaType.OBJECT,
+                    description: 'Training arguments',
                     properties: {
                       max_train_epochs: {
                         type: JsonSchemaType.INTEGER,

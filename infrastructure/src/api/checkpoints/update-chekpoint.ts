@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_STATUS, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateCheckPointApiProps {
@@ -125,9 +125,7 @@ export class UpdateCheckPointApi {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
                   },
-                  status: {
-                    type: JsonSchemaType.STRING,
-                  },
+                  status: SCHEMA_CHECKPOINT_STATUS,
                   params: {
                     type: JsonSchemaType.OBJECT,
                     properties: {
@@ -281,10 +279,7 @@ export class UpdateCheckPointApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          status: SCHEMA_CHECKPOINT_STATUS,
           name: {
             type: JsonSchemaType.STRING,
             minLength: 1,
