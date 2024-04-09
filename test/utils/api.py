@@ -361,7 +361,6 @@ class Api:
 def get_schema_by_id_and_code(api: Api, operation_id: str, code: int):
     code = str(code)
 
-    # find operationId=GetInferenceJob node
     responses = None
     for path, methods in api.schema['paths'].items():
         for method, op in methods.items():

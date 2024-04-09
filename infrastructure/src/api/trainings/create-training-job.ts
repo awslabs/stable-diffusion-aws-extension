@@ -289,6 +289,24 @@ export class CreateTrainingJobApi {
           params: {
             type: JsonSchemaType.OBJECT,
             properties: {
+              enable_wd14_tagger: {
+                type: JsonSchemaType.BOOLEAN,
+                default: false,
+              },
+              wd14_tagger_params: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  general_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                  },
+                  character_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                  },
+                },
+                additionalProperties: true,
+              },
               training_params: {
                 type: JsonSchemaType.OBJECT,
                 properties: {
@@ -303,18 +321,6 @@ export class CreateTrainingJobApi {
                   },
                   fm_type: {
                     type: JsonSchemaType.STRING,
-                  },
-                  enable_wd14_tagger: {
-                    type: JsonSchemaType.BOOLEAN,
-                    default: false,
-                  },
-                  general_threshold: {
-                    type: JsonSchemaType.STRING,
-                    default: '0',
-                  },
-                  character_threshold: {
-                    type: JsonSchemaType.STRING,
-                    default: '0',
                   },
                 },
                 required: [
