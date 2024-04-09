@@ -15,12 +15,10 @@ WORKDIR /home/ubuntu/
 
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
-    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc && \
-    # may not needed in endpoint
-    apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
-    # for env install
-    apt-get install --no-install-recommends -y tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
-    # clean up
+    apt-get install --no-install-recommends -y \
+                    git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
+                    pkg-config file curl protobuf-compiler mesa-utils \
+                    python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
     rm -rf /var/lib/apt/lists/*
 
 ARG ESD_COMMIT_ID
@@ -56,3 +54,6 @@ RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_1
 
 RUN mkdir -p '/root/.u2net/' && \
     wget -qO '/root/.u2net/u2net_human_seg.onnx' 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx'
+
+RUN mkdir -p /root/.cache/huggingface/accelerate
+COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
