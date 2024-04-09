@@ -3,7 +3,7 @@ import os
 
 from aws_lambda_powertools import Tracer
 
-from client import DynamoDbUtilsService
+from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, no_content
 from libs.utils import response_error
 
