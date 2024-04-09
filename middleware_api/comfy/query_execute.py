@@ -5,7 +5,6 @@ import os
 import boto3
 from aws_lambda_powertools import Tracer
 
-from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param, generate_presigned_url_for_job
 from libs.comfy_data_types import ComfyExecuteTable
@@ -18,7 +17,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
-ddb_service = DynamoDbUtilsService(logger=logger)
 
 ddb = boto3.resource('dynamodb')
 table = ddb.Table(execute_table)
