@@ -619,7 +619,7 @@ async function checkDeploy() {
 }
 
 async function createRegionRole() {
-  const roleName = `${ESDRoleForEndpoint}-new-${AWS_REGION}`;
+  const roleName = `${ESDRoleForEndpoint}-${AWS_REGION}`;
   try {
 
     const assumedRolePolicy = JSON.stringify({
