@@ -1,6 +1,7 @@
 import logging
 
 import boto3
+import pytest
 import requests
 
 import config
@@ -11,6 +12,7 @@ client = boto3.client('cloudformation')
 template = "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml"
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestWebUiClientCheck:
 
     @classmethod

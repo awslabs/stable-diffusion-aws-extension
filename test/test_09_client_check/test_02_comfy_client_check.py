@@ -1,6 +1,7 @@
 import logging
 
 import boto3
+import pytest
 import requests
 
 import config
@@ -9,6 +10,7 @@ logger = logging.getLogger(__name__)
 client = boto3.client('cloudformation')
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestComfyClientCheck:
 
     @classmethod
