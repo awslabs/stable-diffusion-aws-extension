@@ -156,7 +156,6 @@ def execute_proxy(func):
         save_already = False
         with concurrent.futures.ThreadPoolExecutor() as executor:
             execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
-
             while comfy_need_sync and not execute_future.done():
                 msg_future = executor.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
@@ -179,7 +178,10 @@ def execute_proxy(func):
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 continue
-                            already_synced = True
+                            if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
+                                already_synced = True
+                            else:
+                                continue
                             handle_sync_messages(server_use, msg_response.json().get("data"))
 
             while comfy_need_sync and not already_synced:
@@ -189,7 +191,10 @@ def execute_proxy(func):
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         continue
-                    already_synced = True
+                    if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
+                        already_synced = True
+                    else:
+                        continue
                     handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
