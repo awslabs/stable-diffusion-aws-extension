@@ -1,23 +1,30 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
+import { aws_dynamodb, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { ESD_ROLE } from '../../shared/const';
 import { ApiModels } from '../../shared/models';
 import {
-  SCHEMA_DEBUG, SCHEMA_ENDPOINT_AUTOSCALING, SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT, SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS, SCHEMA_ENDPOINT_ID,
-  SCHEMA_ENDPOINT_INSTANCE_TYPE, SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER, SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
-  SCHEMA_ENDPOINT_NAME, SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE, SCHEMA_ENDPOINT_SERVICE_TYPE, SCHEMA_ENDPOINT_START_TIME,
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_AUTOSCALING,
+  SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
+  SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
+  SCHEMA_ENDPOINT_ID,
+  SCHEMA_ENDPOINT_INSTANCE_TYPE,
+  SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_NAME,
+  SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
+  SCHEMA_ENDPOINT_SERVICE_TYPE,
+  SCHEMA_ENDPOINT_START_TIME,
   SCHEMA_ENDPOINT_STATUS,
   SCHEMA_ENDPOINT_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
-import { ESD_VERSION } from '../../shared/version';
-
-export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -39,13 +46,10 @@ export class CreateEndpointApi {
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly endpointDeploymentTable: Table;
-  private readonly multiUserTable: Table;
   private readonly syncTable: Table;
   private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly userNotifySNS: Topic;
   private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
@@ -57,12 +61,9 @@ export class CreateEndpointApi {
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.multiUserTable = props.multiUserTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
-    this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.executeResultSuccessTopic = props.executeResultSuccessTopic;
@@ -160,137 +161,7 @@ export class CreateEndpointApi {
   }
 
   private iamRole(): Role {
-    const roleName = `${ESDRoleForEndpoint}-${ESD_VERSION}`;
-    return <Role>Role.fromRoleName(this.scope, 'esd-role', roleName);
-
-    const snsStatement = new PolicyStatement({
-      actions: [
-        'sns:Publish',
-        'sns:ListSubscriptionsByTopic',
-        'sns:ListTopics',
-      ],
-      resources: [
-        this.userNotifySNS.topicArn,
-        this.inferenceResultTopic.topicArn,
-        this.inferenceResultErrorTopic.topicArn,
-        this.executeResultSuccessTopic.topicArn,
-        this.executeResultFailTopic.topicArn,
-      ],
-    });
-
-    const s3Statement = new PolicyStatement({
-      actions: [
-        's3:Get*',
-        's3:List*',
-        's3:PutObject',
-        's3:GetObject',
-      ],
-      resources: [
-        '*',
-      ],
-    });
-
-    const endpointStatement = new PolicyStatement({
-      actions: [
-        'sagemaker:DeleteModel',
-        'sagemaker:DeleteEndpoint',
-        'sagemaker:DescribeEndpoint',
-        'sagemaker:DeleteEndpointConfig',
-        'sagemaker:DescribeEndpointConfig',
-        'sagemaker:InvokeEndpoint',
-        'sagemaker:CreateModel',
-        'sagemaker:CreateEndpoint',
-        'sagemaker:CreateEndpointConfig',
-        'sagemaker:InvokeEndpointAsync',
-        'ecr:GetAuthorizationToken',
-        'ecr:BatchCheckLayerAvailability',
-        'ecr:GetDownloadUrlForLayer',
-        'ecr:GetRepositoryPolicy',
-        'ecr:DescribeRepositories',
-        'ecr:ListImages',
-        'ecr:DescribeImages',
-        'ecr:BatchGetImage',
-        'ecr:InitiateLayerUpload',
-        'ecr:UploadLayerPart',
-        'ecr:CompleteLayerUpload',
-        'ecr:PutImage',
-        'cloudwatch:PutMetricAlarm',
-        'cloudwatch:PutMetricData',
-        'cloudwatch:DeleteAlarms',
-        'cloudwatch:DescribeAlarms',
-        'sagemaker:UpdateEndpointWeightsAndCapacities',
-        'iam:CreateServiceLinkedRole',
-        'iam:PassRole',
-        'sts:AssumeRole',
-        'xray:PutTraceSegments',
-        'xray:PutTelemetryRecords',
-      ],
-      resources: ['*'],
-    });
-
-    const ddbStatement = new PolicyStatement({
-      actions: [
-        'dynamodb:Query',
-        'dynamodb:GetItem',
-        'dynamodb:PutItem',
-        'dynamodb:DeleteItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:Describe*',
-        'dynamodb:List*',
-        'dynamodb:Scan',
-      ],
-      resources: [
-        this.endpointDeploymentTable.tableArn,
-        this.multiUserTable.tableArn,
-        this.syncTable.tableArn,
-        this.instanceMonitorTable.tableArn,
-      ],
-    });
-
-    const logStatement = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
-      resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-    });
-
-    const sqsStatement = new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sqs:SendMessage',
-      ],
-      resources: [this.queue.queueArn],
-    });
-
-    const passStartDeployRole = new PolicyStatement({
-      actions: [
-        'iam:PassRole',
-      ],
-      resources: [
-        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/${ESDRoleForEndpoint}-${Aws.REGION}`,
-      ],
-    });
-
-    const lambdaStartDeployRole = new Role(this.scope, ESDRoleForEndpoint, {
-      assumedBy: new CompositePrincipal(
-        new ServicePrincipal('lambda.amazonaws.com'),
-        new ServicePrincipal('sagemaker.amazonaws.com'),
-      ),
-      roleName: `${ESDRoleForEndpoint}-${Aws.REGION}`,
-    });
-
-    lambdaStartDeployRole.addToPolicy(snsStatement);
-    lambdaStartDeployRole.addToPolicy(s3Statement);
-    lambdaStartDeployRole.addToPolicy(endpointStatement);
-    lambdaStartDeployRole.addToPolicy(ddbStatement);
-    lambdaStartDeployRole.addToPolicy(logStatement);
-    lambdaStartDeployRole.addToPolicy(sqsStatement);
-    lambdaStartDeployRole.addToPolicy(passStartDeployRole);
-
-    return lambdaStartDeployRole;
+    return <Role>Role.fromRoleName(this.scope, 'esd-role', ESD_ROLE);
   }
 
   private createRequestBodyModel(): Model {
