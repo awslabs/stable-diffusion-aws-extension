@@ -5,7 +5,6 @@
 2. 打开输出（Outputs）标签页，找到 **APIGatewayUrl** 和 **ApiGatewayUrlToken** 对应的数值，并复制。
 3. 打开 Stable Diffusion WebUI 中的 **Amazon SageMaker** 标签页，在 **API URL** 文本框粘贴步骤2得到的URL，在 **API Token** 输入步骤2得到的token。在 **Username** 及 **Password** 文本框请填入初始超级管理员角色名称及密码。点击 **Test Connection & Update Setting**。
 4. 当提示信息 **Successfully Connected & Setting Updated** 显示后，表明前端已经和后端云资源成功链接，同时配置文件得到更新，以便在未来启动webUI时能自动打出对应信息。
-5. 在后台重启 WebUI，以使得全功能生效。
 
 
 ## 多用户管理

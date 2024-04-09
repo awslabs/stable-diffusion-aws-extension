@@ -109,7 +109,7 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         esdVersion: ESD_VERSION,
-        // timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       },
     );
 
@@ -272,7 +272,7 @@ export class Middleware extends Stack {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
-        // timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       },
     );
 
@@ -318,10 +318,6 @@ export class Middleware extends Stack {
           model = child;
         }
       }
-
-      // if (model && requestValidator) {
-      //   requestValidator.node.addDependency(model);
-      // }
 
     });
 
