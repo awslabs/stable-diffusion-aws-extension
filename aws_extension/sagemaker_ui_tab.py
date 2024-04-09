@@ -80,7 +80,7 @@ def restart_ec2():
 
     thread = threading.Thread(target=run_command)
     thread.start()
-    return "Restarting the server after 5 seconds..."
+    return "Restarting the EC2 after 5 seconds..."
 
 
 def git_pull(directory):
@@ -268,7 +268,7 @@ def api_setting_tab():
         with gr.Row():
             update_extension_btn = gr.Button(value="Update SageMaker Extension",
                                              elem_id="update_extension")
-            restart_service = gr.Button(value="Restart Server",
+            restart_service = gr.Button(value="Restart EC2",
                                         elem_id="restart_service")
 
             def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
