@@ -54,6 +54,9 @@ logger.info(f"config.dataset_name: {dataset_name}")
 train_model_name = "train_model_name"
 logger.info(f"config.train_model_name: {train_model_name}")
 
+train_wd14_model_name = "wd14_model_name"
+logger.info(f"config.train_wd14_model_name: {train_wd14_model_name}")
+
 model_name = "test-model"
 logger.info(f"config.model_name: {model_name}")
 
