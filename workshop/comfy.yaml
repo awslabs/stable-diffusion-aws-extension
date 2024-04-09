@@ -74,8 +74,14 @@ Resources:
               Service: [ ec2.amazonaws.com ]
             Action: [ 'sts:AssumeRole' ]
       Path: "/"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Policies:
+        - PolicyName: PutObjectToSpecificBucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
+                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/comfy/*' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -156,12 +162,16 @@ Resources:
           mkdir -p ~/.aws
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
-  
+          
           echo "export COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
           source /etc/environment
+          
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
           
           sudo apt-get update
           
@@ -173,10 +183,6 @@ Resources:
           sudo systemctl restart nginx
           
           sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
-
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
@@ -205,35 +211,35 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
-
-#          cat > comfy_upload.service <<EOF
-#          [Unit]
-#          Description=Comfy Upload Service
-#          After=network.target
-#          StartLimitIntervalSec=0
-#
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
-#
-#          [Install]
-#          WantedBy=default.target
-#
-#          EOF
-#          sudo mv comfy_upload.service /etc/systemd/system
-#          sudo chown root:root /etc/systemd/system/comfy_upload.service
-#          sudo systemctl enable comfy_upload.service
-#          sudo systemctl start comfy_upload.service
           
+          #          cat > comfy_upload.service <<EOF
+          #          [Unit]
+          #          Description=Comfy Upload Service
+          #          After=network.target
+          #          StartLimitIntervalSec=0
+          #
+          #          [Service]
+          #          WorkingDirectory=/ComfyUI
+          #          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+          #          Type=simple
+          #          Restart=always
+          #          RestartSec=3
+          #          User=root
+          #          StartLimitAction=reboot
+          #
+          #          [Install]
+          #          WantedBy=default.target
+          #
+          #          EOF
+          #          sudo mv comfy_upload.service /etc/systemd/system
+          #          sudo chown root:root /etc/systemd/system/comfy_upload.service
+          #          sudo systemctl enable comfy_upload.service
+          #          sudo systemctl start comfy_upload.service
+
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
-          # sudo journalctl -u comfy --no-pager -n 200
+        # sudo journalctl -u comfy --no-pager -n 200
 
   WebUiEIP:
     Type: AWS::EC2::EIP

@@ -24,6 +24,7 @@ import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack
 import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
 import { EndpointStack } from './endpoints/endpoint-stack';
+import { ESD_COMMIT_ID } from './shared/commit';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
@@ -36,7 +37,6 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
-import { ESD_COMMIT_ID } from './shared/commit';
 
 const app = new App();
 
@@ -329,6 +329,11 @@ export class Middleware extends Stack {
     new CfnOutput(this, 'EsdVersion', {
       value: ESD_VERSION,
       description: 'ESD Version',
+    });
+
+    new CfnOutput(this, 'EsdReleaseTime', {
+      value: new Date().toISOString(),
+      description: 'ESD Release Time',
     });
 
     // Adding Outputs for apiGateway and s3Bucket
