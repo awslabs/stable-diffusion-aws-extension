@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
-import { GetRoleCommand, GetRoleCommandOutput, IAMClient } from '@aws-sdk/client-iam';
+import { GetRoleCommand, GetRoleCommandOutput, IAM, IAMClient } from '@aws-sdk/client-iam';
 import {
   CancelKeyDeletionCommand,
   CreateAliasCommand,
@@ -19,22 +19,16 @@ import {
   KMSClient,
   ListAliasesCommand,
 } from '@aws-sdk/client-kms';
-import {
-  CreateBucketCommand,
-  GetBucketLocationCommand,
-  HeadBucketCommand,
-  PutBucketCorsCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { CreateBucketCommand, GetBucketLocationCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-
+import { ESDRoleForEndpoint } from '../api/endpoints/create-endpoint';
 
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
 const snsClient = new SNSClient({});
 const kmsClient = new KMSClient({});
 const iamClient = new IAMClient({});
-
+const iam = new IAM({});
 
 const {
   AWS_REGION,
@@ -67,6 +61,7 @@ export async function handler(event: Event, context: Object) {
 }
 
 async function createAndCheckResources() {
+  await createRegionRole();
   await createBucket();
   await createTables();
   await createKms(
@@ -269,16 +264,28 @@ async function createTables() {
 
     try {
       const KeySchema: KeySchemaElement[] = [
-        { AttributeName: config.partitionKey.name, KeyType: 'HASH' },
+        {
+          AttributeName: config.partitionKey.name,
+          KeyType: 'HASH',
+        },
       ];
 
       const AttributeDefinitions: AttributeDefinition[] = [
-        { AttributeName: config.partitionKey.name, AttributeType: config.partitionKey.type },
+        {
+          AttributeName: config.partitionKey.name,
+          AttributeType: config.partitionKey.type,
+        },
       ];
 
       if (config.sortKey) {
-        KeySchema.push({ AttributeName: config.sortKey.name, KeyType: 'RANGE' });
-        AttributeDefinitions.push({ AttributeName: config.sortKey.name, AttributeType: config.sortKey.type });
+        KeySchema.push({
+          AttributeName: config.sortKey.name,
+          KeyType: 'RANGE',
+        });
+        AttributeDefinitions.push({
+          AttributeName: config.sortKey.name,
+          AttributeType: config.sortKey.type,
+        });
       }
 
       const createTableInput: CreateTableCommandInput = {
@@ -608,6 +615,192 @@ async function checkDeploy() {
     }
 
     throw new Error('The solution has been deployed.');
+  }
+
+}
+
+async function createRegionRole() {
+  const roleName = `${ESDRoleForEndpoint}-new-${AWS_REGION}`;
+  try {
+
+    const assumedRolePolicy = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: {
+            Service: ['lambda.amazonaws.com', 'sagemaker.amazonaws.com'],
+          },
+          Action: 'sts:AssumeRole',
+        },
+      ],
+    });
+
+    await iam.createRole({
+      RoleName: roleName,
+      AssumeRolePolicyDocument: assumedRolePolicy,
+    });
+
+    // Define policy documents for each service
+    const snsPolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'sns:Publish',
+          'sns:ListSubscriptionsByTopic',
+          'sns:ListTopics',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'SnsPolicy', PolicyDocument: snsPolicyDocument });
+
+
+    const s3PolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          's3:Get*',
+          's3:List*',
+          's3:PutObject',
+          's3:GetObject',
+        ],
+        Resource: '*',
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'S3Policy', PolicyDocument: s3PolicyDocument });
+
+    const endpointPolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'sagemaker:DeleteModel',
+          'sagemaker:DeleteEndpoint',
+          'sagemaker:DescribeEndpoint',
+          'sagemaker:DeleteEndpointConfig',
+          'sagemaker:DescribeEndpointConfig',
+          'sagemaker:InvokeEndpoint',
+          'sagemaker:CreateModel',
+          'sagemaker:CreateEndpoint',
+          'sagemaker:CreateEndpointConfig',
+          'sagemaker:InvokeEndpointAsync',
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:GetRepositoryPolicy',
+          'ecr:DescribeRepositories',
+          'ecr:ListImages',
+          'ecr:DescribeImages',
+          'ecr:BatchGetImage',
+          'ecr:InitiateLayerUpload',
+          'ecr:UploadLayerPart',
+          'ecr:CompleteLayerUpload',
+          'ecr:PutImage',
+          'cloudwatch:PutMetricAlarm',
+          'cloudwatch:PutMetricData',
+          'cloudwatch:DeleteAlarms',
+          'cloudwatch:DescribeAlarms',
+          'sagemaker:UpdateEndpointWeightsAndCapacities',
+          'iam:CreateServiceLinkedRole',
+          'iam:PassRole',
+          'sts:AssumeRole',
+          'xray:PutTraceSegments',
+          'xray:PutTelemetryRecords',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'EndpointPolicy', PolicyDocument: endpointPolicyDocument });
+
+    const dynamoDBPolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'dynamodb:Query',
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:DeleteItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:Describe*',
+          'dynamodb:List*',
+          'dynamodb:Scan',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'DdbPolicy', PolicyDocument: dynamoDBPolicyDocument });
+
+    const logPolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'logs:CreateLogGroup',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'LogPolicy', PolicyDocument: logPolicyDocument });
+
+    const sqsPolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'sqs:SendMessage',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'SqsPolicy', PolicyDocument: sqsPolicyDocument });
+
+    const passRolePolicyDocument = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [{
+        Effect: 'Allow',
+        Action: [
+          'iam:PassRole',
+        ],
+        Resource: [
+          '*',
+        ],
+      }],
+    });
+    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'PassRolePolicy', PolicyDocument: passRolePolicyDocument });
+
+
+  } catch (err: any) {
+
+    console.log(err);
+
+    // it's ok if the role not exists
+    if (err?.Error?.Message === `The role with name ${roleName} cannot be found.`) {
+      return;
+    }
+
+    if (err?.Error?.Code !== 'NoSuchEntity') {
+      console.log(err?.Error?.Code);
+      console.log(err?.Error?.Message);
+      throw err;
+    }
+
   }
 
 }
