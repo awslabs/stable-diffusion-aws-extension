@@ -16,20 +16,30 @@ import json
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import subprocess
+from dotenv import load_dotenv
 
 
 env_path = '/etc/environment'
+
 if 'ENV_FILE_PATH' in os.environ and os.environ.get('ENV_FILE_PATH'):
     env_path = os.environ.get('ENV_FILE_PATH')
+
+load_dotenv('/etc/environment')
+print("env_path", env_path)
+
+for item in os.environ.keys():
+    print(f'环境变量： {item} {os.environ.get(item)}')
+
 # Source environment variables from /etc/environment
-try:
-    with open(env_path, 'r') as env_file:
-        for line in env_file:
-            parts = line.strip().split('=', 1)
-            if len(parts) == 2:
-                os.environ[parts[0]] = parts[1]
-except FileNotFoundError:
-    print("/etc/environment not found")
+# try:
+#     with open(env_path, 'r') as env_file:
+#         for line in env_file:
+#             parts = line.strip().split('=', 1)
+#             if len(parts) == 2:
+#                 os.environ[parts[0]] = parts[1]
+#                 print(f"{os.environ.get(parts[0])}  {parts[1]}")
+# except FileNotFoundError:
+#     print("/etc/environment not found")
 
 DIR3 = "input"
 DIR1 = "models"

@@ -233,6 +233,7 @@ Resources:
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
+          # sudo journalctl -u comfy --no-pager -n 200
 
   WebUiEIP:
     Type: AWS::EC2::EIP
