@@ -1,13 +1,4 @@
-FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
-
-RUN apt-get update -y
-RUN apt-get install -y wget
-RUN wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
-
-COPY --from=builder /s5cmd /usr/local/bin/
 
 SHELL ["/bin/bash", "-c"]
 
@@ -19,7 +10,11 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
                     git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
                     pkg-config file curl protobuf-compiler mesa-utils \
                     python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    mv s5cmd /usr/local/bin/
 
 ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
