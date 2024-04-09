@@ -17,6 +17,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import subprocess
 from dotenv import load_dotenv
+import logging
 
 
 env_path = '/etc/environment'
@@ -25,10 +26,10 @@ if 'ENV_FILE_PATH' in os.environ and os.environ.get('ENV_FILE_PATH'):
     env_path = os.environ.get('ENV_FILE_PATH')
 
 load_dotenv('/etc/environment')
-print("env_path", env_path)
+logging.info("env_path", env_path)
 
 for item in os.environ.keys():
-    print(f'环境变量： {item} {os.environ.get(item)}')
+    logging.info(f'环境变量： {item} {os.environ.get(item)}')
 
 # Source environment variables from /etc/environment
 # try:
@@ -37,9 +38,9 @@ for item in os.environ.keys():
 #             parts = line.strip().split('=', 1)
 #             if len(parts) == 2:
 #                 os.environ[parts[0]] = parts[1]
-#                 print(f"{os.environ.get(parts[0])}  {parts[1]}")
+#                 logging.info(f"{os.environ.get(parts[0])}  {parts[1]}")
 # except FileNotFoundError:
-#     print("/etc/environment not found")
+#     logging.info("/etc/environment not found")
 
 DIR3 = "input"
 DIR1 = "models"
@@ -80,7 +81,7 @@ def save_images_locally(response_json, local_folder):
         image_video_data = data.get("image_video_data", {})
 
         if not prompt_id or not image_video_data:
-            print("Missing prompt_id or image_video_data in the response.")
+            logging.info("Missing prompt_id or image_video_data in the response.")
             return
 
         folder_path = os.path.join(local_folder, prompt_id)
@@ -92,13 +93,13 @@ def save_images_locally(response_json, local_folder):
                 image_path = os.path.join(folder_path, image_name)
                 with open(image_path, "wb") as image_file:
                     image_file.write(image_response.content)
-                print(f"Image '{image_name}' saved to {image_path}")
+                logging.info(f"Image '{image_name}' saved to {image_path}")
             else:
-                print(
+                logging.info(
                     f"Failed to download image '{image_name}' from {image_url}. Status code: {image_response.status_code}")
 
     except Exception as e:
-        print(f"Error saving images locally: {e}")
+        logging.info(f"Error saving images locally: {e}")
 
 
 def save_files(prefix, execute, key, target_dir, need_prefix):
@@ -110,7 +111,7 @@ def save_files(prefix, execute, key, target_dir, need_prefix):
             # if target_dir not exists, create it
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
-            print(f"Saving file {loca_file} to {target_dir}")
+            logging.info(f"Saving file {loca_file} to {target_dir}")
             if loca_file.endswith("output_images_will_be_put_here"):
                 continue
             if need_prefix:
@@ -179,13 +180,13 @@ def execute_proxy(func):
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-                            print(images_response.json())
+                            logging.info(images_response.json())
                             save_already = True
                             break
-                        print(execute_resp.json())
+                        logging.info(execute_resp.json())
                     elif future == msg_future:
                         msg_response = future.result()
-                        print(msg_response.json())
+                        logging.info(msg_response.json())
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 continue
@@ -194,7 +195,7 @@ def execute_proxy(func):
 
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
-                print(msg_response.json())
+                logging.info(msg_response.json())
                 already_synced = True
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
@@ -217,7 +218,7 @@ PromptExecutor.execute = execute_proxy(PromptExecutor.execute)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
-        print(f"Sending sync request!!!!!!! {args}")
+        logging.info(f"Sending sync request!!!!!!! {args}")
         return func(*args, **kwargs)
     return wrapper
 
@@ -228,7 +229,7 @@ server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 def sync_files(filepath):
     try:
         directory = os.path.dirname(filepath)
-        print(f"Files changed in: {directory}")
+        logging.info(f"Files changed in: {directory}")
         timestamp = str(int(time.time() * 1000))
 
         s5cmd_syn_input_command = f's5cmd sync {DIR3}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
@@ -240,16 +241,16 @@ def sync_files(filepath):
         os.system(s5cmd_syn_node_command)
 
         url = api_url + "prepare"
-        print("URL:", url)
+        logging.info("URL:", url)
         data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
-        print("Data:")
-        print(json.dumps(data, indent=4))
+        logging.info("Data:")
+        logging.info(json.dumps(data, indent=4))
         result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
                                  f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                 capture_output=True, text=True)
-        print(result.stdout)
+        logging.info(result.stdout)
     except Exception as e:
-        print(f"sync_files error {e}")
+        logging.info(f"sync_files error {e}")
 
 
 class MyHandler(FileSystemEventHandler):
@@ -267,7 +268,7 @@ stop_event = threading.Event()
 
 
 def check_and_sync():
-    print("check_and_sync start")
+    logging.info("check_and_sync start")
     event_handler = MyHandler()
     observer = Observer()
     try:
@@ -278,13 +279,13 @@ def check_and_sync():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("sync Shutting down please restart ComfyUI")
+        logging.info("sync Shutting down please restart ComfyUI")
         observer.stop()
     observer.join()
 
 
 def signal_handler(sig, frame):
-    print("Received termination signal. Exiting...")
+    logging.info("Received termination signal. Exiting...")
     stop_event.set()
 
 
