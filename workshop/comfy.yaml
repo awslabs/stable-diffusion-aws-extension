@@ -81,7 +81,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
-                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/comfy/*' ]
+                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -193,7 +193,7 @@ Resources:
           Description=Comfy Service
           After=network.target
           StartLimitIntervalSec=0
-
+          
           [Service]
           WorkingDirectory=/ComfyUI
           ExecStart=python3 main.py --listen
@@ -202,10 +202,10 @@ Resources:
           RestartSec=3
           User=root
           StartLimitAction=reboot
-
+          
           [Install]
           WantedBy=default.target
-
+          
           EOF
           sudo mv comfy.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/comfy.service
@@ -235,24 +235,24 @@ Resources:
           #          sudo chown root:root /etc/systemd/system/comfy_upload.service
           #          sudo systemctl enable comfy_upload.service
           #          sudo systemctl start comfy_upload.service
-
+          
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
-        # sudo journalctl -u comfy --no-pager -n 200
-
-  WebUiEIP:
-    Type: AWS::EC2::EIP
-  WebUiEIPAssociation:
-    Type: AWS::EC2::EIPAssociation
-    Properties:
-      AllocationId: !GetAtt WebUiEIP.AllocationId
-      InstanceId: !Ref ComfyEC2Instance
-
-Outputs:
-  ComfyNginxURL:
-    Description: URL for Comfy WebUI
-    Value: !Sub http://${WebUiEIP}
-  ComfyRealURL:
-    Description: URL for Comfy WebUI
-    Value: !Sub http://${WebUiEIP}:8188
+          # sudo journalctl -u comfy --no-pager -n 200
+          
+          WebUiEIP:
+            Type: AWS::EC2::EIP
+          WebUiEIPAssociation:
+            Type: AWS::EC2::EIPAssociation
+            Properties:
+              AllocationId: !GetAtt WebUiEIP.AllocationId
+              InstanceId: !Ref ComfyEC2Instance
+          
+          Outputs:
+          ComfyNginxURL:
+          Description: URL for Comfy WebUI
+          Value: !Sub http://${ WebUiEIP }
+          ComfyRealURL:
+          Description: URL for Comfy WebUI
+          Value: !Sub http://${ WebUiEIP }:8188
