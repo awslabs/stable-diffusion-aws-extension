@@ -178,10 +178,12 @@ def execute_proxy(func):
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 continue
-                            if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
-                                already_synced = True
-                            else:
-                                continue
+                            logging.debug(msg_response.json())
+                            # if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
+                            #     already_synced = True
+                            # else:
+                            #     continue
+                            already_synced = True
                             handle_sync_messages(server_use, msg_response.json().get("data"))
 
             while comfy_need_sync and not already_synced:
@@ -191,10 +193,11 @@ def execute_proxy(func):
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         continue
-                    if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
-                        already_synced = True
-                    else:
-                        continue
+                    # if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
+                    #     already_synced = True
+                    # else:
+                    #     continue
+                    already_synced = True
                     handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
