@@ -206,29 +206,29 @@ Resources:
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
 
-          cat > comfy_upload.service <<EOF
-          [Unit]
-          Description=Comfy Upload Service
-          After=network.target
-          StartLimitIntervalSec=0
-
-          [Service]
-          WorkingDirectory=/ComfyUI
-          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-          Type=simple
-          Restart=always
-          RestartSec=3
-          User=root
-          StartLimitAction=reboot
-
-          [Install]
-          WantedBy=default.target
-
-          EOF
-          sudo mv comfy_upload.service /etc/systemd/system
-          sudo chown root:root /etc/systemd/system/comfy_upload.service
-          sudo systemctl enable comfy_upload.service
-          sudo systemctl start comfy_upload.service
+#          cat > comfy_upload.service <<EOF
+#          [Unit]
+#          Description=Comfy Upload Service
+#          After=network.target
+#          StartLimitIntervalSec=0
+#
+#          [Service]
+#          WorkingDirectory=/ComfyUI
+#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+#          Type=simple
+#          Restart=always
+#          RestartSec=3
+#          User=root
+#          StartLimitAction=reboot
+#
+#          [Install]
+#          WantedBy=default.target
+#
+#          EOF
+#          sudo mv comfy_upload.service /etc/systemd/system
+#          sudo chown root:root /etc/systemd/system/comfy_upload.service
+#          sudo systemctl enable comfy_upload.service
+#          sudo systemctl start comfy_upload.service
           
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
