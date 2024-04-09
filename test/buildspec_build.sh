@@ -13,6 +13,8 @@ echo "export API_BUCKET=$API_BUCKET" >> env.properties
 echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
 aws cloudformation delete-stack --stack-name "$STACK_NAME"
+aws cloudformation delete-stack --stack-name "comfy-stack"
+aws cloudformation delete-stack --stack-name "webui-stack"
 
 python --version
 sudo yum install wget -y
@@ -20,7 +22,8 @@ sudo yum install wget -y
 cd stable-diffusion-aws-extension/test
 make build
 
-aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
+aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
