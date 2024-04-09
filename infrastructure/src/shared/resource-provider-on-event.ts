@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
-import { GetRoleCommand, GetRoleCommandOutput, IAM, IAMClient } from '@aws-sdk/client-iam';
+import { CreateRoleCommand, GetRoleCommand, GetRoleCommandOutput, IAMClient, PutRolePolicyCommand } from '@aws-sdk/client-iam';
 import {
   CancelKeyDeletionCommand,
   CreateAliasCommand,
@@ -28,7 +28,6 @@ const ddbClient = new DynamoDBClient({});
 const snsClient = new SNSClient({});
 const kmsClient = new KMSClient({});
 const iamClient = new IAMClient({});
-const iam = new IAM({});
 
 const {
   AWS_REGION,
@@ -635,11 +634,10 @@ async function createRegionRole() {
         },
       ],
     });
-
-    await iam.createRole({
+    await iamClient.send(new CreateRoleCommand({
       RoleName: roleName,
       AssumeRolePolicyDocument: assumedRolePolicy,
-    });
+    }));
 
     // Define policy documents for each service
     const snsPolicyDocument = JSON.stringify({
@@ -656,9 +654,11 @@ async function createRegionRole() {
         ],
       }],
     });
-
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'SnsPolicy', PolicyDocument: snsPolicyDocument });
-
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'SnsPolicy',
+      PolicyDocument: snsPolicyDocument,
+    }));
 
     const s3PolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -673,7 +673,11 @@ async function createRegionRole() {
         Resource: '*',
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'S3Policy', PolicyDocument: s3PolicyDocument });
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'S3Policy',
+      PolicyDocument: s3PolicyDocument,
+    }));
 
     const endpointPolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -718,7 +722,11 @@ async function createRegionRole() {
         ],
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'EndpointPolicy', PolicyDocument: endpointPolicyDocument });
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'EndpointPolicy',
+      PolicyDocument: endpointPolicyDocument,
+    }));
 
     const dynamoDBPolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -739,7 +747,11 @@ async function createRegionRole() {
         ],
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'DdbPolicy', PolicyDocument: dynamoDBPolicyDocument });
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'DdbPolicy',
+      PolicyDocument: dynamoDBPolicyDocument,
+    }));
 
     const logPolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -755,7 +767,11 @@ async function createRegionRole() {
         ],
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'LogPolicy', PolicyDocument: logPolicyDocument });
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'LogPolicy',
+      PolicyDocument: logPolicyDocument,
+    }));
 
     const sqsPolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -769,7 +785,11 @@ async function createRegionRole() {
         ],
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'SqsPolicy', PolicyDocument: sqsPolicyDocument });
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'SqsPolicy',
+      PolicyDocument: sqsPolicyDocument,
+    }));
 
     const passRolePolicyDocument = JSON.stringify({
       Version: '2012-10-17',
@@ -783,8 +803,11 @@ async function createRegionRole() {
         ],
       }],
     });
-    await iam.putRolePolicy({ RoleName: roleName, PolicyName: 'PassRolePolicy', PolicyDocument: passRolePolicyDocument });
-
+    await iamClient.send(new PutRolePolicyCommand({
+      RoleName: roleName,
+      PolicyName: 'PassRolePolicy',
+      PolicyDocument: passRolePolicyDocument,
+    }));
 
   } catch (err: any) {
 
