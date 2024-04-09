@@ -31,7 +31,7 @@ export class ResourceProvider extends Construct {
       entry: 'src/shared/resource-provider-on-event.ts',
       bundling: {
         minify: true,
-        // externalModules: ['aws-cdk-lib'],
+        sourceMap: true,
       },
       timeout: Duration.seconds(900),
       role: this.role,
@@ -85,6 +85,7 @@ export class ResourceProvider extends Construct {
         'iam:PutRolePolicy',
         'sts:AssumeRole',
         'iam:GetRole',
+        'iam:CreateRole',
         'kms:CreateKey',
         'kms:CreateAlias',
         'kms:DisableKeyRotation',
