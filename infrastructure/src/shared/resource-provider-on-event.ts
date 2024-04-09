@@ -22,6 +22,7 @@ import {
 import { CreateBucketCommand, GetBucketLocationCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
 import { ESDRoleForEndpoint } from '../api/endpoints/create-endpoint';
+import { ESD_VERSION } from './version';
 
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
@@ -619,7 +620,7 @@ async function checkDeploy() {
 }
 
 async function createRegionRole() {
-  const roleName = `${ESDRoleForEndpoint}-${AWS_REGION}`;
+  const roleName = `${ESDRoleForEndpoint}-${ESD_VERSION}`;
   try {
 
     const assumedRolePolicy = JSON.stringify({
@@ -813,12 +814,7 @@ async function createRegionRole() {
 
     console.log(err);
 
-    // it's ok if the role not exists
-    if (err?.Error?.Message === `The role with name ${roleName} cannot be found.`) {
-      return;
-    }
-
-    if (err?.Error?.Code !== 'NoSuchEntity') {
+    if (err?.Error?.Code !== 'EntityAlreadyExists') {
       console.log(err?.Error?.Code);
       console.log(err?.Error?.Message);
       throw err;

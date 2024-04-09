@@ -15,8 +15,9 @@ import {
   SCHEMA_ENDPOINT_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
+import { ESD_VERSION } from '../../shared/version';
 
-export const ESDRoleForEndpoint = 'ESDRoleForEndpoint-new';
+export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -159,7 +160,7 @@ export class CreateEndpointApi {
   }
 
   private iamRole(): Role {
-    const roleName = `${ESDRoleForEndpoint}-${Aws.REGION}`;
+    const roleName = `${ESDRoleForEndpoint}-${ESD_VERSION}`;
     return <Role>Role.fromRoleName(this.scope, 'esd-role', roleName);
 
     const snsStatement = new PolicyStatement({
