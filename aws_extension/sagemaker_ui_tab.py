@@ -61,9 +61,6 @@ all_resources = [
 
 all_actions = [
     'all',
-    # 'create',
-    # 'list'
-    # 'delete'
 ]
 
 all_permissions = []
@@ -74,16 +71,16 @@ for resource in all_resources:
 
 def run_command():
     subprocess.run(["sleep", "5"])
-    subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
+    subprocess.run(["sudo", "reboot"])
 
 
-def restart_sd_webui_service():
+def restart_ec2():
     if not os.path.exists(service_file):
         return f"Service file {service_file} not found, make sure you created the service by CloudFormation template."
 
     thread = threading.Thread(target=run_command)
     thread.start()
-    return "Restarting the service after 5 seconds..."
+    return "Restarting the server after 5 seconds..."
 
 
 def git_pull(directory):
@@ -105,7 +102,7 @@ def update_extension():
     if not os.path.exists(service_file):
         return f"You are not running in the environment created by CloudFormation, Please restart WebUI manually."
 
-    return restart_sd_webui_service()
+    return restart_ec2()
 
 
 def on_ui_tabs():
@@ -271,7 +268,7 @@ def api_setting_tab():
         with gr.Row():
             update_extension_btn = gr.Button(value="Update SageMaker Extension",
                                              elem_id="update_extension")
-            restart_service = gr.Button(value="Restart WebUI",
+            restart_service = gr.Button(value="Restart Server",
                                         elem_id="restart_service")
 
             def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
@@ -308,7 +305,7 @@ def api_setting_tab():
                     return show_output, f'{message}, but update setting failed, because {e}'
 
                 if os.path.exists(service_file):
-                    restart_sd_webui_service()
+                    restart_ec2()
                     return show_output, f"Setting Updated, Service will restart in 5 seconds"
 
                 return show_output, f"{message} & Setting Updated"
@@ -318,7 +315,7 @@ def api_setting_tab():
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[connection_output, connection_output])
 
-            restart_service.click(fn=restart_sd_webui_service, inputs=[], outputs=[connection_output])
+            restart_service.click(fn=restart_ec2, inputs=[], outputs=[connection_output])
             update_extension_btn.click(fn=update_extension, inputs=[], outputs=[connection_output])
 
     with gr.Row(visible=has_config()) as disclaimer_tab:
