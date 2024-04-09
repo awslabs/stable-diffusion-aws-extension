@@ -221,30 +221,40 @@ def sync_files(filepath):
         logging.info(f"Directory changed in: {directory}")
         logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
+        need_prepare = False
 
-        if DIR2 == str(directory):
+        if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
+                or str(directory) == DIR2):
             logging.info(f" sync custom nodes files: {filepath}")
             s5cmd_syn_node_command = f's5cmd sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            logging.info(s5cmd_syn_node_command)
             os.system(s5cmd_syn_node_command)
-        elif DIR3 == str(directory):
+            need_prepare = True
+        elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
+              or str(directory) == DIR3):
             logging.info(f" sync custom input files: {filepath}")
             s5cmd_syn_input_command = f's5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            logging.info(s5cmd_syn_input_command)
             os.system(s5cmd_syn_input_command)
-        elif DIR1 == str(directory):
+            need_prepare = True
+        elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
+              or str(directory) == DIR1):
             logging.info(f" sync custom models files: {filepath}")
             s5cmd_syn_model_command = f's5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            logging.info(s5cmd_syn_model_command)
             os.system(s5cmd_syn_model_command)
-
-        url = api_url + "prepare"
-        logging.info("URL:", url)
-        data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
-        logging.info(f"prepare params Data: {json.dumps(data, indent=4)}")
-        result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
-                                 f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
-                                capture_output=True, text=True)
-        logging.info(result.stdout)
+            need_prepare = True
+        if need_prepare:
+            url = api_url + "prepare"
+            logging.info(f"URL:{url}")
+            data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
+            logging.info(f"prepare params Data: {json.dumps(data, indent=4)}")
+            result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
+                                     f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
+                                    capture_output=True, text=True)
+            logging.info(result.stdout)
     except Exception as e:
         logging.info(f"sync_files error {e}")
 
