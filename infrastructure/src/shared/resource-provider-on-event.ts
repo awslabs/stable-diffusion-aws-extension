@@ -59,7 +59,9 @@ export async function handler(event: Event, context: Object) {
 }
 
 async function createAndCheckResources() {
-  await createRegionRole();
+  await createRegionRole(ESD_ROLE);
+  // todo will remove in the next major version, current to keep old endpoint
+  await createRegionRole(`ESDRoleForEndpoint-${AWS_REGION}`);
   await createBucket();
   await createTables();
   await createKms(
@@ -589,7 +591,7 @@ async function findKeyByAlias(aliasName: string) {
   return null;
 }
 
-async function createRegionRole() {
+async function createRegionRole(role_name: string) {
   try {
 
     const assumedRolePolicy = JSON.stringify({
@@ -605,7 +607,7 @@ async function createRegionRole() {
       ],
     });
     await iamClient.send(new CreateRoleCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       AssumeRolePolicyDocument: assumedRolePolicy,
     }));
 
@@ -625,7 +627,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'SnsPolicy',
       PolicyDocument: snsPolicyDocument,
     }));
@@ -644,7 +646,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'S3Policy',
       PolicyDocument: s3PolicyDocument,
     }));
@@ -693,7 +695,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'EndpointPolicy',
       PolicyDocument: endpointPolicyDocument,
     }));
@@ -718,7 +720,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'DdbPolicy',
       PolicyDocument: dynamoDBPolicyDocument,
     }));
@@ -738,7 +740,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'LogPolicy',
       PolicyDocument: logPolicyDocument,
     }));
@@ -756,7 +758,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'SqsPolicy',
       PolicyDocument: sqsPolicyDocument,
     }));
@@ -774,7 +776,7 @@ async function createRegionRole() {
       }],
     });
     await iamClient.send(new PutRolePolicyCommand({
-      RoleName: ESD_ROLE,
+      RoleName: role_name,
       PolicyName: 'PassRolePolicy',
       PolicyDocument: passRolePolicyDocument,
     }));
