@@ -229,22 +229,29 @@ server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 def sync_files(filepath):
     try:
         directory = os.path.dirname(filepath)
-        logging.info(f"Files changed in: {directory}")
+        logging.info(f"Directory changed in: {directory}")
+        logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
 
-        s5cmd_syn_input_command = f's5cmd sync {DIR3}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
-        s5cmd_syn_model_command = f's5cmd sync {DIR1}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
-        s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
-
-        os.system(s5cmd_syn_input_command)
-        os.system(s5cmd_syn_model_command)
-        os.system(s5cmd_syn_node_command)
+        if 'custom_nodes' == str(directory):
+            logging.info(f" sync custom nodes files: {filepath}")
+            s5cmd_syn_node_command = f's5cmd sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            os.system(s5cmd_syn_node_command)
+        elif 'input' == str(directory):
+            logging.info(f" sync custom input files: {filepath}")
+            s5cmd_syn_input_command = f's5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            os.system(s5cmd_syn_input_command)
+        elif 'models' == str(directory):
+            logging.info(f" sync custom models files: {filepath}")
+            s5cmd_syn_model_command = f's5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            os.system(s5cmd_syn_model_command)
 
         url = api_url + "prepare"
         logging.info("URL:", url)
         data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
-        logging.info("Data:")
-        logging.info(json.dumps(data, indent=4))
+        logging.info(f"prepare params Data: {json.dumps(data, indent=4)}")
         result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
                                  f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                 capture_output=True, text=True)
