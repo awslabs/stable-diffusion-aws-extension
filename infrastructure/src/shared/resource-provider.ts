@@ -31,7 +31,7 @@ export class ResourceProvider extends Construct {
       entry: 'src/shared/resource-provider-on-event.ts',
       bundling: {
         minify: true,
-        externalModules: ['aws-cdk-lib'],
+        // externalModules: ['aws-cdk-lib'],
       },
       timeout: Duration.seconds(900),
       role: this.role,
