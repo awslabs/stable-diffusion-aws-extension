@@ -19,6 +19,8 @@ import subprocess
 from dotenv import load_dotenv
 import logging
 
+global sync_msg_list
+
 
 env_path = '/etc/environment'
 
@@ -118,12 +120,20 @@ def get_file_name(url: str):
 
 
 def handle_sync_messages(server_use, msg_array):
+    already_synced = False
+    global sync_msg_list
     for msg in msg_array:
         for item in msg:
             event = item.get('event')
             data = item.get('data')
             sid = item.get('sid') if 'sid' in item else None
+            if data in sync_msg_list:
+                continue
             server_use.send_sync(event, data, sid)
+            sync_msg_list.append(data)
+            if event == 'finish':
+                already_synced = True
+    return already_synced
 
 
 def execute_proxy(func):
@@ -161,6 +171,8 @@ def execute_proxy(func):
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                   return_when=concurrent.futures.FIRST_COMPLETED)
+                global sync_msg_list
+                sync_msg_list = []
                 for future in done:
                     if future == execute_future:
                         execute_resp = future.result()
@@ -183,8 +195,7 @@ def execute_proxy(func):
                             #     already_synced = True
                             # else:
                             #     continue
-                            already_synced = True
-                            handle_sync_messages(server_use, msg_response.json().get("data"))
+                            already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
 
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
@@ -197,8 +208,7 @@ def execute_proxy(func):
                     #     already_synced = True
                     # else:
                     #     continue
-                    already_synced = True
-                    handle_sync_messages(server_use, msg_response.json().get("data"))
+                    already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
                 execute_resp = execute_future.result()
