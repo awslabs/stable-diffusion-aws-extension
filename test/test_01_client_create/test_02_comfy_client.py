@@ -46,7 +46,7 @@ class TestComfyClient:
                 },
                 {
                     'ParameterKey': 'InstanceType',
-                    'ParameterValue': "g5.4xlarge"
+                    'ParameterValue': "g5.2xlarge"
                 }
             ]
         )
