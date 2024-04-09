@@ -22,6 +22,7 @@ sudo yum install wget -y
 cd stable-diffusion-aws-extension/test
 make build
 
+aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 
