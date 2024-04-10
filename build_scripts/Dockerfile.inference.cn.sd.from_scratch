@@ -52,4 +52,6 @@ RUN chmod +x /serve.sh
 COPY inference/metrics.py /
 RUN chmod +x /metrics.py
 
+RUN ls -la /home/ubuntu/
+
 ENTRYPOINT ["bash", "/serve.sh"]
