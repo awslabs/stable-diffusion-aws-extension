@@ -6,17 +6,25 @@ import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } f
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { ESD_ROLE } from '../../shared/const';
 import { ApiModels } from '../../shared/models';
 import {
-  SCHEMA_DEBUG, SCHEMA_ENDPOINT_AUTOSCALING, SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT, SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS, SCHEMA_ENDPOINT_ID,
-  SCHEMA_ENDPOINT_INSTANCE_TYPE, SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER, SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
-  SCHEMA_ENDPOINT_NAME, SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE, SCHEMA_ENDPOINT_SERVICE_TYPE, SCHEMA_ENDPOINT_START_TIME,
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_AUTOSCALING,
+  SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
+  SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
+  SCHEMA_ENDPOINT_ID,
+  SCHEMA_ENDPOINT_INSTANCE_TYPE,
+  SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_NAME,
+  SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
+  SCHEMA_ENDPOINT_SERVICE_TYPE,
+  SCHEMA_ENDPOINT_START_TIME,
   SCHEMA_ENDPOINT_STATUS,
   SCHEMA_ENDPOINT_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
-
-export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -267,16 +275,15 @@ export class CreateEndpointApi {
         'iam:PassRole',
       ],
       resources: [
-        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/${ESDRoleForEndpoint}-${Aws.REGION}`,
+        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/*`,
       ],
     });
 
-    const lambdaStartDeployRole = new Role(this.scope, ESDRoleForEndpoint, {
+    const lambdaStartDeployRole = new Role(this.scope, 'ESDRoleForEndpoint', {
       assumedBy: new CompositePrincipal(
         new ServicePrincipal('lambda.amazonaws.com'),
         new ServicePrincipal('sagemaker.amazonaws.com'),
       ),
-      roleName: `${ESDRoleForEndpoint}-${Aws.REGION}`,
     });
 
     lambdaStartDeployRole.addToPolicy(snsStatement);
@@ -358,7 +365,7 @@ export class CreateEndpointApi {
   }
 
   private apiLambda() {
-    const role = this.iamRole();
+    const endpoint_role = <Role>Role.fromRoleName(this.scope, 'esd-role', ESD_ROLE);
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/endpoints',
       architecture: Architecture.X86_64,
@@ -366,7 +373,7 @@ export class CreateEndpointApi {
       index: 'create_endpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: role,
+      role: this.iamRole(),
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -377,7 +384,7 @@ export class CreateEndpointApi {
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
         COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
-        EXECUTION_ROLE_ARN: role.roleArn,
+        EXECUTION_ROLE_ARN: endpoint_role.roleArn,
       },
       layers: [this.layer],
     });

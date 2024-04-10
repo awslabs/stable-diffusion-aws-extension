@@ -1,13 +1,4 @@
-FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
-
-RUN apt-get update -y
-RUN apt-get install -y wget
-RUN wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
-
-COPY --from=builder /s5cmd /usr/local/bin/
 
 SHELL ["/bin/bash", "-c"]
 
@@ -15,33 +6,35 @@ WORKDIR /home/ubuntu/
 
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
-    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc && \
-    # may not needed in endpoint
-    apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
-    # for env install
-    apt-get install --no-install-recommends -y tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
-    # clean up
-    rm -rf /var/lib/apt/lists/*
+    apt-get install --no-install-recommends -y \
+                    git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
+                    pkg-config file curl protobuf-compiler mesa-utils \
+                    python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    mv s5cmd /usr/local/bin/
+
+ARG ESD_COMMIT_ID
+ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
+ENV ON_DOCKER true
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+ENV FULL_IMAGE true
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
     cd /home/ubuntu/conda/lib/ && \
     wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
     wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10
 
-ENV ON_DOCKER true
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-ENV FULL_IMAGE true
+COPY install_comfy.sh /home/ubuntu/
+RUN cd /home/ubuntu || exit 1 && \
+    bash install_comfy.sh
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
 
-ENTRYPOINT ["bash", "/serve.sh"]
+COPY inference/metrics.py /
+RUN chmod +x /metrics.py
 
-RUN cd /home/ubuntu || exit 1 && \
-    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
-    cd stable-diffusion-aws-extension && \
-    echo $(git rev-parse HEAD) > /home/ubuntu/esd.version && \
-    mv install_comfy.sh ../ && \
-    cd ../ && \
-    rm -rf stable-diffusion-aws-extension && \
-    bash install_comfy.sh
+ENTRYPOINT ["bash", "/serve.sh"]

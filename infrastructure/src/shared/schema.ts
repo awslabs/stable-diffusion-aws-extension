@@ -270,6 +270,10 @@ export const SCHEMA_CHECKPOINT_ID: JsonSchema = {
   description: 'ID of checkpoint',
 };
 
+export const SCHEMA_CHECKPOINT_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Status of checkpoint',
+};
 
 export const SCHEMA_TRAIN_ID: JsonSchema = {
   type: JsonSchemaType.STRING,

@@ -64,6 +64,7 @@ export class GetExecuteApi {
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
       ],
     });
   }

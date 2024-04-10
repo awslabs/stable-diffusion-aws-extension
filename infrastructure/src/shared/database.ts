@@ -4,7 +4,6 @@ import { Construct } from 'constructs';
 
 export class Database {
 
-  public modelTable: Table;
   public trainingTable: Table;
   public checkpointTable: Table;
   public datasetInfoTable: Table;
@@ -14,8 +13,6 @@ export class Database {
   public multiUserTable: Table;
 
   constructor(scope: Construct, baseId: string) {
-
-    this.modelTable = this.table(scope, baseId, 'ModelTable');
 
     this.trainingTable = this.table(scope, baseId, 'TrainingTable');
 

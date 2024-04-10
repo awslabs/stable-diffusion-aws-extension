@@ -6,7 +6,6 @@
 2. Navigate the **Outputs** tab, and copy the information under **APIGatewayUrl** and **ApiGatewayUrlToken**.
 3. Open Stable Diffusion webUI, navigate to the 'Amazon SageMaker' tab, paste information from step 2 into fields **API URL** and **API Token**. Create a super admin user name and password by entering information in field **Username** and **Password**. And click **Test Connection & Update Setting**.
 4. Message **Successfully Connected & Setting Updated** will be printed once front UI successfully connected with backend cloud resource. The configuration file has been updated to automatically display corresponding information upon future launches of the webUI.
-5. Restart the WebUI in the background to ensure that all functionalities take effect.
 
 ## Multiple User Management
 IT Operator role users can log in and navigate to the **Amazon SageMaker** tab, and then to the **API and User Settings** sub-tab to manage roles and users.

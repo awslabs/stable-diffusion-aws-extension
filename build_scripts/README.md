@@ -16,21 +16,3 @@ Update time: 20240118
 accelerate launch --num_cpu_threads_per_process=6 launch.py --api
 
 ```
-
-# How to build images
-
-
-### Build public images for aigc-webui-inference which is used for GPU operations, like txt2img inference.
-
-```
-sh build_and_push.sh Dockerfile.inference.from_scratch aigc-webui-inference
-
-```
-
-
-### Update public ecr to your private ecr
-
-```
-sh update_private_ecr.sh aigc-webui-utils|aigc-webui-inference
-
-```

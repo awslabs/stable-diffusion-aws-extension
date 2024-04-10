@@ -181,7 +181,7 @@ Resources:
           
           cd /home/ubuntu
           
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_sd.sh" | bash;
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_sd.sh" | bash;
           
           cd stable-diffusion-webui/extensions
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
@@ -234,7 +234,7 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
-  WebUIURL:
+  WebUINginxURL:
     Description: URL for Stable Diffusion WebUI
     Value: !Sub http://${WebUiEIP}
   WebUIRealURL:

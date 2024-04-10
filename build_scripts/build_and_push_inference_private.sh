@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euxo pipefail
+
 # Build inference image and push it to private ECR repository
 dockerfile=$1
 repo_name=$2
@@ -54,8 +56,8 @@ aws ecr get-login-password --region "$region" | docker login --username AWS --pa
 # with the full name.
 fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
 echo "docker build $fullname"
-docker build -t "$fullname" -f "$dockerfile" .
+docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "$fullname" -f "$dockerfile" .
 
 echo "docker push $fullname"
 docker push "$fullname"
-echo "docker push $fullname} Completed"
+echo "docker push $fullname Completed"

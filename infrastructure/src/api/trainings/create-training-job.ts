@@ -12,7 +12,6 @@ import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SC
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  modelTable: Table;
   trainTable: Table;
   multiUserTable: Table;
   s3Bucket: aws_s3.Bucket;
@@ -221,7 +220,6 @@ export class CreateTrainingJobApi {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.props.modelTable.tableArn,
         this.props.trainTable.tableArn,
         this.props.checkpointTable.tableArn,
         this.props.multiUserTable.tableArn,
@@ -254,8 +252,10 @@ export class CreateTrainingJobApi {
         's3:ListBucket',
         's3:CreateBucket',
       ],
-      resources: [`${this.props.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      resources: [
+        `${this.props.s3Bucket.bucketArn}/*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -289,20 +289,45 @@ export class CreateTrainingJobApi {
           params: {
             type: JsonSchemaType.OBJECT,
             properties: {
+              enable_wd14_tagger: {
+                type: JsonSchemaType.BOOLEAN,
+                default: false,
+                description: 'Enable WD14 Tagger',
+              },
+              wd14_tagger_params: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  general_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                    description: 'General threshold',
+                  },
+                  character_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                    description: 'Character threshold',
+                  },
+                },
+                additionalProperties: true,
+              },
               training_params: {
                 type: JsonSchemaType.OBJECT,
                 properties: {
                   training_instance_type: {
                     type: JsonSchemaType.STRING,
+                    description: 'Training instance type',
                   },
                   model: {
                     type: JsonSchemaType.STRING,
+                    description: 'Model',
                   },
                   dataset: {
                     type: JsonSchemaType.STRING,
+                    description: 'Dataset',
                   },
                   fm_type: {
                     type: JsonSchemaType.STRING,
+                    description: 'FM type',
                   },
                 },
                 required: [
@@ -317,18 +342,22 @@ export class CreateTrainingJobApi {
                 properties: {
                   saving_arguments: {
                     type: JsonSchemaType.OBJECT,
+                    description: 'Saving arguments',
                     properties: {
                       output_name: {
                         type: JsonSchemaType.STRING,
+                        description: 'Output name',
                       },
                       save_every_n_epochs: {
                         type: JsonSchemaType.INTEGER,
+                        description: 'Save every n epochs',
                       },
                     },
                     required: ['output_name', 'save_every_n_epochs'],
                   },
                   training_arguments: {
                     type: JsonSchemaType.OBJECT,
+                    description: 'Training arguments',
                     properties: {
                       max_train_epochs: {
                         type: JsonSchemaType.INTEGER,
@@ -381,7 +410,6 @@ export class CreateTrainingJobApi {
       tracing: Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
-        MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
         INSTANCE_TYPE: this.instanceType,

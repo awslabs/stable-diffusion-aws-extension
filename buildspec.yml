@@ -56,18 +56,14 @@ phases:
     commands:
       - echo "Starting build the public ECR"
       - cd ../build_scripts
-      - chmod +x ./build_all.sh
-      - chmod +x ./build_and_push.sh
-      - chmod +x ./source_image_update.sh
-      - chmod +x ./update_private_ecr.sh
       - json_output=$(aws sts assume-role  --role-arn "$AWS_ASSET_PUBLISH_ROLE"  --role-session-name "asset-publishing-role"  --duration-seconds "3600"  2>&1)
       - set +x
       - export AWS_ACCESS_KEY_ID=$(echo "${json_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]")
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "export const ESD_VERSION:string = '${BUILD_VERSION}';" > ../infrastructure/src/shared/version.ts
+      - echo "export const ESD_COMMIT_ID:string = '${CODEBUILD_RESOLVED_SOURCE_VERSION}';" > ../infrastructure/src/shared/commit.ts
       - echo "checking the updated image name"
       - cat ../infrastructure/src/shared/version.ts
       - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
