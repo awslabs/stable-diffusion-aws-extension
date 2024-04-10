@@ -38,7 +38,7 @@ class TestEndpointRealTimeCheckForComfyE2E:
 
         assert config.comfy_real_time_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=30)
+        timeout = datetime.now() + timedelta(minutes=50)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()

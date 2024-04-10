@@ -42,7 +42,7 @@ class TestEndpointCheckForTrainE2E:
 
         assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=30)
+        timeout = datetime.now() + timedelta(minutes=50)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()

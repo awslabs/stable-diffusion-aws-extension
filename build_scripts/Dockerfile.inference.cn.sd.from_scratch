@@ -35,10 +35,8 @@ RUN mkdir -p /home/ubuntu/conda/lib/ && \
     wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
     wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10
 
+COPY install_sd.sh /home/ubuntu/
 RUN cd /home/ubuntu || exit 1 && \
-    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
-    mv stable-diffusion-aws-extension/install_sd.sh ./ && \
-    rm -rf stable-diffusion-aws-extension && \
     bash install_sd.sh
 
 COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui

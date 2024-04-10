@@ -30,9 +30,5 @@ ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 ENV FULL_IMAGE false
 
-RUN cd /home/ubuntu || exit 1 && \
-    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
-    mv stable-diffusion-aws-extension/install_sd.sh ./ && \
-    mv stable-diffusion-aws-extension/install_comfy.sh ./ && \
-    rm -rf stable-diffusion-aws-extension
-
+COPY install_sd.sh /home/ubuntu/
+COPY install_comfy.sh /home/ubuntu/

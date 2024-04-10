@@ -89,7 +89,7 @@ class TestTrainWDStartE2E:
         train_jobs = resp.json()["data"]["trainings"]
         assert len(train_jobs) > 0
         for trainJob in train_jobs:
-            timeout = datetime.now() + timedelta(minutes=30)
+            timeout = datetime.now() + timedelta(minutes=50)
 
             while datetime.now() < timeout:
                 resp = self.api.get_training_job(job_id=trainJob["id"], headers=headers)

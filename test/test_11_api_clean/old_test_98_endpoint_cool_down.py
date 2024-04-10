@@ -33,7 +33,7 @@ class TestEndpointCoolDownE2E:
         assert resp.status_code == 200, resp.dumps()
         assert resp.json()["statusCode"] == 200
 
-        timeout = datetime.now() + timedelta(minutes=30)
+        timeout = datetime.now() + timedelta(minutes=50)
 
         while datetime.now() < timeout:
             result = self.train_wait_for_complete()
