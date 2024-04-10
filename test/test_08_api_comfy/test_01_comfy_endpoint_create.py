@@ -18,6 +18,31 @@ class TestEndpointCreateForComfyE2E:
     def teardown_class(self):
         pass
 
+    def test_1_clean_all_endpoints(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        resp = self.api.list_endpoints(headers=headers)
+
+        endpoints = resp.json()['data']['endpoints']
+        for endpoint in endpoints:
+            endpoint_name = endpoint['endpoint_name']
+            while True:
+                data = {
+                    "endpoint_name_list": [
+                        endpoint_name
+                    ],
+                }
+                resp = self.api.delete_endpoints(headers=headers, data=data)
+                if resp.status_code == 400:
+                    logger.info(resp.json()['message'])
+                    sleep(5)
+                    continue
+                else:
+                    break
+
     def test_1_endpoints_async_delete_before(self):
         while True:
             status = get_endpoint_status(self.api, config.comfy_async_ep_name)
