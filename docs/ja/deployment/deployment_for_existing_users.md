@@ -49,4 +49,4 @@
 2. WebUI とミドルウェアのバージョンは一致する必要があります。
 3. EC2 に新しい WebUI をデプロイするのを推奨します。 
 4. ミドルウェア API バージョン 1.4.0 は直接更新できますが、バージョン 1.3.0 は先にアンインストールしてから再インストールする必要があります。
-5. API を介してすでに統合されているサービスがある場合は、[アップグレードの認証検証](https://awslabs.github.io/stable-diffusion-aws-extension/zh/developer-guide/api_authentication/)方法について API ドキュメントを確認し、本番環境に移行する前に十分にテストを行ってください。
+5. API を介してすでに統合されているサービスがある場合は、[アップグレードの認証検証](https://awslabs.github.io/stable-diffusion-aws-extension/ja/developer-guide/api_authentication/)方法について API ドキュメントを確認し、本番環境に移行する前に十分にテストを行ってください。

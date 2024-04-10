@@ -44,4 +44,4 @@ aws s3 sync local_folder_name s3://<bucket_name>/<folder_name>
 
 ### 訓練 API の呼び出し
 
-[API ドキュメント ](https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api/1.5.0/) を参照して、訓練 API を呼び出すことができます。
+[API ドキュメント](https://awslabs.github.io/stable-diffusion-aws-extension/ja/developer-guide/api/1.5.0/) を参照して、訓練 API を呼び出すことができます。
