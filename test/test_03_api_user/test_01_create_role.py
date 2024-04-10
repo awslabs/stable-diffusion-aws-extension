@@ -30,7 +30,7 @@ class TestRoleE2E:
             "permissions": ['train:all', 'checkpoint:all'],
         }
 
-        resp = self.api.create_role(headers=headers, data=data)
+        self.api.create_role(headers=headers, data=data)
 
     def test_2_create_role_byoc(self):
         headers = {
