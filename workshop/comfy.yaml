@@ -180,13 +180,6 @@ Resources:
           sudo systemctl restart nginx
 
           sudo apt install wget git libgl1 libtcmalloc-minimal4 -y
-          sudo apt install software-properties-common -y
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install python3.10 python3.10-dev python3-pip -y
-          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
-          sudo pip install torch==2.1.0 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
-          sudo pip install psutil
-          sudo apt install nvidia-utils-470 
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /home/ubuntu/ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
