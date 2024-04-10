@@ -49,9 +49,9 @@ class TestInferenceOneApiAsyncE2E:
             resp = self.api.get_inference_job(job_id=inference_id, headers=headers)
             assert resp.status_code in [200, 504], resp.dumps()
             if resp.status_code == 504:
-                logger.warning("Real-time inference timeout error, waiting for 70 seconds and retrying")
+                logger.warning("Real-time inference timeout error, waiting for 30 seconds and retrying")
                 import time
-                time.sleep(70)
+                time.sleep(30)
             else:
                 result = resp.json()['data']
                 assert 'img_presigned_urls' in result, f'img_presigned_urls not found in {result}'
