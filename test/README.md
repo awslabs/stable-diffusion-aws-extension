@@ -28,7 +28,7 @@ Create `.env` file with the following content:
 ```bash
 API_GATEWAY_URL=https://{apiId}.execute-api.{region}.amazonaws.com/prod/
 API_GATEWAY_URL_TOKEN={apiToken}
-API_BUCKET=elonniu
+API_BUCKET=xxxx
 ```
 
 ## Run All Tests
