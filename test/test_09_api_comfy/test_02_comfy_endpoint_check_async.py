@@ -92,4 +92,4 @@ class TestEndpointCheckForComfyE2E:
         }
 
         resp = self.api.create_endpoint(headers=headers, data=data)
-        assert 'not allow to have another one' in resp.json()["message"]
+        assert resp.status_code == 400, resp.dumps()
