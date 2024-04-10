@@ -4,14 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /home/ubuntu/
 
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
-
-COPY inference/metrics.py /
-RUN chmod +x /metrics.py
-
-ENTRYPOINT ["bash", "/serve.sh"]
-
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
     apt-get install --no-install-recommends -y \
@@ -32,3 +24,11 @@ ENV FULL_IMAGE false
 
 COPY install_sd.sh /home/ubuntu/
 COPY install_comfy.sh /home/ubuntu/
+
+COPY inference/serve.sh /
+RUN chmod +x /serve.sh
+
+COPY inference/metrics.py /
+RUN chmod +x /metrics.py
+
+ENTRYPOINT ["bash", "/serve.sh"]

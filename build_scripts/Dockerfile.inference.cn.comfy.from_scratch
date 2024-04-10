@@ -4,14 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /home/ubuntu/
 
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
-
-COPY inference/metrics.py /
-RUN chmod +x /metrics.py
-
-ENTRYPOINT ["bash", "/serve.sh"]
-
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
     apt-get install --no-install-recommends -y \
@@ -38,3 +30,11 @@ RUN mkdir -p /home/ubuntu/conda/lib/ && \
 COPY install_comfy.sh /home/ubuntu/
 RUN cd /home/ubuntu || exit 1 && \
     bash install_comfy.sh
+
+COPY inference/serve.sh /
+RUN chmod +x /serve.sh
+
+COPY inference/metrics.py /
+RUN chmod +x /metrics.py
+
+ENTRYPOINT ["bash", "/serve.sh"]

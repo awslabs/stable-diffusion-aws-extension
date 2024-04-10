@@ -4,14 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 WORKDIR /home/ubuntu/
 
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
-
-COPY inference/metrics.py /
-RUN chmod +x /metrics.py
-
-ENTRYPOINT ["bash", "/serve.sh"]
-
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
     apt-get install --no-install-recommends -y \
@@ -53,3 +45,11 @@ RUN mkdir -p '/root/.u2net/' && \
 
 RUN mkdir -p /root/.cache/huggingface/accelerate
 COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
+
+COPY inference/serve.sh /
+RUN chmod +x /serve.sh
+
+COPY inference/metrics.py /
+RUN chmod +x /metrics.py
+
+ENTRYPOINT ["bash", "/serve.sh"]
