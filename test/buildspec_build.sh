@@ -30,6 +30,7 @@ echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
 echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
+
 if [ "$DEPLOY_STACK" = "cdk" ]; then
    pushd "../infrastructure"
    npm i -g pnpm
@@ -40,7 +41,9 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
                   --parameters SdExtensionApiKey="09876743210987654322" \
                   --require-approval never
    popd
-else
+fi
+
+if [ "$DEPLOY_STACK" = "template" ]; then
    aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                    --template-url "$TEMPLATE_FILE" \
                                    --capabilities CAPABILITY_NAMED_IAM \
@@ -50,6 +53,17 @@ else
                                                 ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
    aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 fi
+
+if [ "$DEPLOY_STACK" = "update" ]; then
+   aws cloudformation update-stack --stack-name "$STACK_NAME" \
+                                   --template-url "$TEMPLATE_FILE" \
+                                   --parameters ParameterKey=Email,ParameterValue="example@example.com" \
+                                                ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
+                                                ParameterKey=LogLevel,ParameterValue="INFO" \
+                                                ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
+   aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+fi
+
 FINISHED_TIME=$(date +%s)
 export DEPLOY_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
 echo "export DEPLOY_DURATION_TIME=$DEPLOY_DURATION_TIME" >> env.properties
