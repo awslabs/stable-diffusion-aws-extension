@@ -33,6 +33,7 @@ jobs:
         run: |
           mkdocs build -f ./docs/mkdocs.en.yml
           mkdocs build -f ./docs/mkdocs.zh.yml
+          mkdocs build -f ./docs/mkdocs.ja.yml
           cp -av ./docs/index.html ./docs/site
 
       - name: Deploy
