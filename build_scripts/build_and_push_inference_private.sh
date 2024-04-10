@@ -60,4 +60,4 @@ docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "
 
 echo "docker push $fullname"
 docker push "$fullname"
-echo "docker push $fullname} Completed"
+echo "docker push $fullname Completed"

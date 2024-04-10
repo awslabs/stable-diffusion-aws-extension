@@ -184,7 +184,7 @@ Resources:
           
           sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
           
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash;
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           
           cat > comfy.service <<EOF
