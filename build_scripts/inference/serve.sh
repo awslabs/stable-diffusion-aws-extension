@@ -265,7 +265,7 @@ comfy_remove_unused_list(){
   find_and_remove_file /home/ubuntu/ComfyUI "*.png"
   find_and_remove_file /home/ubuntu/ComfyUI "*.jpg"
 
-  find_and_remove_file /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
+#  find_and_remove_file /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
 }
 
 comfy_build_for_launch(){
@@ -316,6 +316,7 @@ comfy_accelerate_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
+  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
   get_device_count
