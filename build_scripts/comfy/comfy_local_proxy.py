@@ -240,6 +240,7 @@ def sync_files(filepath):
         logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
         need_prepare = False
+        prepare_type = 'default'
 
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or f"{DIR2}/" in filepath):
@@ -250,6 +251,7 @@ def sync_files(filepath):
             logging.info(s5cmd_syn_node_command)
             os.system(s5cmd_syn_node_command)
             need_prepare = True
+            prepare_type = 'nodes'
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or f"{DIR3}/" in filepath):
             logging.info(f" sync custom input files: {filepath}")
@@ -257,6 +259,7 @@ def sync_files(filepath):
             logging.info(s5cmd_syn_input_command)
             os.system(s5cmd_syn_input_command)
             need_prepare = True
+            prepare_type = 'inputs'
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or f"{DIR1}/" in filepath):
             logging.info(f" sync custom models files: {filepath}")
@@ -264,11 +267,13 @@ def sync_files(filepath):
             logging.info(s5cmd_syn_model_command)
             os.system(s5cmd_syn_model_command)
             need_prepare = True
+            prepare_type = 'models'
         logging.info(f"Files changed in:: {need_prepare} {str(directory)} {DIR2} {DIR1} {DIR3}")
         if need_prepare:
             url = api_url + "prepare"
             logging.info(f"URL:{url}")
-            data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
+            data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp,
+                    "prepare_type": prepare_type}
             logging.info(f"prepare params Data: {json.dumps(data, indent=4)}")
             result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
                                      f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
