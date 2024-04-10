@@ -362,8 +362,10 @@ if [ "$FULL_IMAGE" == "true" ]; then
   export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_accelerate_launch
+    exit 1
   else
     comfy_accelerate_launch
+    exit 1
   fi
 fi
 
@@ -372,14 +374,18 @@ output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$S3_LOCATION"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_s3
+    exit 1
   else
     comfy_launch_from_s3
+    exit 1
   fi
 fi
 
 echo "No files found in S3, just install the environment and launch from local..."
 if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_local
+    exit 1
 else
     comfy_launch_from_local
+    exit 1
 fi
