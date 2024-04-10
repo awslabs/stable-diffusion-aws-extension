@@ -152,7 +152,7 @@ def upload_with_put(s3_url, local_file):
 
 
 def upload_multipart_file(signed_urls, local_path):
-    print(f"uploading {local_path}")
+    logger.info(f"Uploading {local_path}")
     with open(local_path, "rb") as f:
         parts = []
 
