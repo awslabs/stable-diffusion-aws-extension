@@ -16,7 +16,7 @@ cd ../
 git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 if [ -n "$ESD_COMMIT_ID" ]; then
   cd stable-diffusion-aws-extension || exit 1
-  echo "reset ESD to $ESD_COMMIT_ID"
+  echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
   git reset --hard "$ESD_COMMIT_ID"
   cd ../
 fi
