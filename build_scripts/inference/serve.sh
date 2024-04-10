@@ -261,12 +261,13 @@ comfy_remove_unused_list(){
   find_and_remove_file /home/ubuntu/ComfyUI "*.gif"
   find_and_remove_file /home/ubuntu/ComfyUI "*.png"
   find_and_remove_file /home/ubuntu/ComfyUI "*.jpg"
+
+  find_and_remove_file /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
 }
 
 comfy_build_for_launch(){
   cd /home/ubuntu || exit 1
   bash install_comfy.sh
-  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
 }
 
 comfy_listen_ready() {
