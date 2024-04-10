@@ -28,6 +28,7 @@ queue_url = os.environ.get('COMFY_QUEUE_URL')
 sync_table = os.environ.get('COMFY_SYNC_TABLE')
 instance_monitor_table = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
 esd_version = os.environ.get("ESD_VERSION")
+esd_release_time = os.environ.get("ESD_RELEASE_TIME")
 esd_commit_id = os.environ.get("ESD_COMMIT_ID")
 
 account_id = os.environ.get("ACCOUNT_ID")
@@ -225,6 +226,7 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
             'COMFY_SYNC_TABLE': sync_table or '',
             'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
             'ESD_VERSION': esd_version,
+            'ESD_RELEASE_TIME': esd_release_time,
             'ESD_COMMIT_ID': esd_commit_id,
             'SERVICE_TYPE': event.service_type,
             'ON_DOCKER': 'true',

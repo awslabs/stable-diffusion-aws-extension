@@ -284,6 +284,7 @@ export class Middleware extends Stack {
     }
 
     this.addEnvToAllLambdas('ESD_VERSION', ESD_VERSION);
+    this.addEnvToAllLambdas('ESD_RELEASE_TIME', new Date().toISOString());
     this.addEnvToAllLambdas('ESD_COMMIT_ID', ESD_COMMIT_ID);
     this.addEnvToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
