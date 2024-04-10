@@ -1,14 +1,14 @@
 # Extension for Stable Diffusion on AWS
-This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.
+This is a WebUI extension to help users migrate existing workload (inference, train, ckpt merge, etc.) from local server or standalone server to AWS Cloud.
 
 ## How to get started:
 
 ### **Part1**: Install the stable-diffusion-webui and extension
-If you have not install the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
+If you have not installed the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
 
 ### **Part2**: Install Middleware On AWS Cloud
 #### **Option 1**: Use AWS Cloudformation Template
-1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SdWebUiMidWare&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) to install CloudFormation template directly, input the parameter accordingly, note the `Bucket` is the bucket to store all your solution assets, `Email` is the mail address you register to receive notification for events like model training complete, the `SdExtensionApiKey` is the basic authentication for your api url connection, the `UtilsCpuInstType` is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
+1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SdWebUiMidWare&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) to install CloudFormation template directly, input the parameter accordingly, note the `Bucket` is the bucket to store all your solution assets, `Email` is the mail address you register to receive notification for events like model training complete, the `SdExtensionApiKey` is the basic authentication for your api url connection:
 
 <img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
@@ -20,11 +20,11 @@ For users who need explicit IAM permissions for strict account control, we provi
 **Specify such role in Cloudformation creation.**
 ![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/3121c876-79d4-48a2-8260-be80c480b893)
 
->**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
+>**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in another region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
 #### **Option 2**: Use AWS CDK(Cloud Development Kit)
 **Prerequisites**
-To set up the development environment, you will need have AWS account and tools with preferred version below to install from source code:
+To set up the development environment, you will need to have AWS account and tools with a preferred version below to install from source code:
 - NPM, Node
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
 - Docker
@@ -47,7 +47,7 @@ To set up the development environment, you will need have AWS account and tools 
    --parameters sub-email-address=<YOUREMAIL@XXX.COM>\
    --parameters util-instance-type=<ml.r5.large | ml.r5.xlarge| ml.c6i.2xlarge | ml.c6i.4xlarge | ml.r5.large>
    ```
-   The project build and deployment will take about 25 minutes and the first time can be longer due to container image packaging. Once the project deployed successfully to your AWS account, you will see output similar below:
+   The project build and deployment will take about 25 minutes, and the first time can be longer due to container image packaging. Once the project is deployed successfully to your AWS account, you will see output similar below:
 
    ```text
      Stable-diffusion-aws-extension-middleware-stack: creating CloudFormation changeset...
@@ -80,24 +80,24 @@ To set up the development environment, you will need have AWS account and tools 
 
 Please refer to [**user guide**](https://awslabs.github.io/stable-diffusion-aws-extension/zh/user-guide/preparation/) for following detailed operations.
 
-## Why we build such extension
+## Why we build such an extension
 Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2img/img2img model. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
 Some user existing workflow is shown below that the data scientists had to jump from customized WebUI, EC2 and manual scripts to accomplished a single model finetune process, which are:
-* time consuming: the model training is executed on a standalone server that leading long training time (30-40 minutes per model) and no scalable workaround;
+* time-consuming: the model training is executed on a standalone server that leading long training time (30-40 minutes per model) and no scalable workaround;
 * error prone: data training, model (CKPT) packaging, endpoint deployment, UI update, result validation are not in a single panel;
 * easily out-dated: functional feature of WebUI and community extension keep evolving, making existing customized WebUI laborious to sync with upstream community;
 
 ![Screen Shot 2023-05-20 at 21 44 58](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/08109af4-84b0-4055-bf19-b9e8344dba75)
 
-Thus we plan to contribute a solution aiming to mitigate above issue and provide a lite, decouple and user friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
+Thus we plan to contribute a solution aiming to mitigate the above issue and provide a lite, decouple and user-friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
 
 ## What is the user tutorial
-We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
-Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
+We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such an extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
+Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus, providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
 ![UIProcess](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/3c6961d0-e1f9-4bee-b370-892978063781)
 
-## What is the overall architecture & workflow
-Diagram below is the brief view of internal workflow between our extension and middleware, user will keep launching community WebUI onto standalone EC2/local server with our extension installed, while the training and inference part will be pass onto AWS cloud (SageMaker, S3 etc.) through the RESTful API provided by middleware installed on user’s AWS account. Note the middleware is per AWS account, means it could be installed separately as work node to communicate with WebUI as control node, user only need to input endpoint URL and API key per account to decide which specific AWS account will be used for successive jobs.
+## What is the overall architecture & workflow?
+Diagram below is the brief view of internal workflow between our extension and middleware, user will keep launching community WebUI onto standalone EC2/local server with our extension installed, while the training and inference part will be passed onto AWS cloud (SageMaker, S3 etc.) through the RESTful API provided by middleware installed on user’s AWS account. Note the middleware is per AWS account, means it could be installed separately as work node to communicate with WebUI as control node, user only need to input endpoint URL and API key per account to decide which specific AWS account will be used for successive jobs.
 
 ![workflow](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/2781734c-d1fb-44c3-bc57-c0e78e128c4e)
 

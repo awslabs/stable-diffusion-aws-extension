@@ -31,12 +31,6 @@ describe('common parameters test', () => {
     });
   });
 
-  test('Should has Parameter UtilsCpuInstType', () => {
-    template.hasParameter('UtilsCpuInstType', {
-      Type: 'String',
-    });
-  });
-
   test('Should has Parameter DeployedBefore', () => {
     template.hasParameter('DeployedBefore', {
       Type: 'String',
