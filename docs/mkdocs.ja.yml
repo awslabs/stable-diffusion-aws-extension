@@ -1,0 +1,56 @@
+INHERIT: ./mkdocs.base.yml
+docs_dir: ja
+site_dir: ./site/ja
+theme:
+  language: ja
+nav:
+  - 実装ガイド:
+    - ソリューションの概要:
+        - 概要: index.md
+        - 機能と利点: solution-overview/features-and-benefits.md
+        #- ユースケース: solution-overview/use-cases.md
+        #- 概念と定義: solution-overview/concepts.md
+    - コスト: cost.md
+    - アーキテクチャの概要:
+        - アーキテクチャ図: architecture-overview/architecture.md
+        #- AWS Well-Architectedデザイン上の考慮事項: architecture-overview/design-considerations.md
+        - アーキテクチャの詳細: architecture-overview/architecture-details.md
+    - デプロイを計画する:
+        - セキュリティ: plan-deployment/security.md
+        - サポートされているリージョン: plan-deployment/regions.md
+        - クォータ: plan-deployment/quotas.md
+    - ソリューションをデプロイする:
+        - 権限: deployment/permissions.md
+        - AWS CloudFormationテンプレート: deployment/template.md
+        - デプロイ手順: deployment/deployment.md
+        - 既存のリソースからのデプロイ手順: deployment/deployment_for_existing_users.md
+    #- ソリューションを更新する: update.md
+    - ソリューションをアンインストールする: uninstall.md
+    - ソリューションを使用する:
+        - 準備: user-guide/preparation.md
+        - API とユーザー管理の設定: user-guide/multi-user.md
+        - クラウドアセット管理: user-guide/CloudAssetsManage.md
+        - txt2imgガイド: user-guide/txt2img-guide.md
+        - img2imgガイド: user-guide/img2img-guide.md
+        - controlNetガイド: user-guide/controlnet-guide.md
+        - トレーニングガイド: user-guide/training-guide.md
+        - その他の拡張機能ガイド: user-guide/extensions-guide.md
+        #- チェックポイントマージャーガイド: user-guide/checkpoint-merge-guide.md
+    - 開発者ガイド:
+        - ソースコード: developer-guide/source.md
+        - APIアクセス制限: developer-guide/access.md
+        - APIチェックポイントアップロードプロセス: developer-guide/api_upload_ckpt.md
+        - API推論プロセス: developer-guide/api_inference_process.md
+        - API推論デバッガー: developer-guide/api_debugger.md
+        - API認証: developer-guide/api_authentication.md
+        - APIバージョンと詳細:
+            - 1.5.0: developer-guide/api/1.5.0.md
+            - 1.4.0: developer-guide/api/1.4.0.md
+        - OpenAPIスペック: developer-guide/oas.md
+        - カスタムコンテナ: developer-guide/byoc.md
+    - トラブルシューティング: troubleshooting.md
+    - FAQ: faq.md
+    - 改訂: revisions.md
+    #- 貢献者: contributors.md
+    - 通知: notices.md
+
