@@ -24,10 +24,6 @@ Parameters:
     Description: Endpoint Name
     Type: String
     MinLength: 1
-  KeyPairName:
-    Description: KeyPair Name
-    Type: String
-    MinLength: 1
   InstanceType:
     Description: EC2 Instance Type of the Comfy to deploy
     Type: String
@@ -155,7 +151,6 @@ Resources:
             VolumeType: gp3
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
-      KeyName: ${KeyPairName}
       Tags: [
         { "Key": "Name", "Value": !Sub "comfy-on-aws-${Branch}" },
       ]
