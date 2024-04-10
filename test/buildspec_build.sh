@@ -12,7 +12,6 @@ echo "export ACCOUNT_ID=$ACCOUNT_ID" > env.properties
 echo "export API_BUCKET=$API_BUCKET" >> env.properties
 echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
-aws cloudformation delete-stack --stack-name "$STACK_NAME"
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
 
@@ -22,7 +21,6 @@ sudo yum install wget -y
 cd stable-diffusion-aws-extension/test
 make build
 
-aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 
@@ -32,6 +30,8 @@ echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
 
 if [ "$DEPLOY_STACK" = "cdk" ]; then
+   aws cloudformation delete-stack --stack-name "$STACK_NAME"
+   aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
    pushd "../infrastructure"
    npm i -g pnpm
    pnpm i
@@ -44,6 +44,8 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
 fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
+   aws cloudformation delete-stack --stack-name "$STACK_NAME"
+   aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
    aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                    --template-url "$TEMPLATE_FILE" \
                                    --capabilities CAPABILITY_NAMED_IAM \
