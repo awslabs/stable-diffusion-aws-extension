@@ -190,7 +190,8 @@ Resources:
           sudo apt install wget git libgl1 libtcmalloc-minimal4 -y
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install python3.10 python3.10-dev python3.10-venv -y
+          sudo apt install python3.10 python3.10-dev -y
+          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
@@ -203,7 +204,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/ComfyUI
-          ExecStart=python3.10 main.py --listen
+          ExecStart=python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
