@@ -68,9 +68,9 @@
 
 3. 打开输出（Outputs）标签页，找到**APIGatewayUrl**和**ApiGatewayUrlToken**对应的数值，并复制。
 
-4. 打开Stable Diffusion WebUI中的**Amazon SageMaker**标签页，在**API URL**文本框粘贴步骤3得到的URL。在**API Token**输入步骤3得到的token。点击**Test Connection**，会得到**Successfully Connected**的确认信息。
+4. 打开Stable Diffusion WebUI中的**Amazon SageMaker**标签页，在**API URL**文本框粘贴步骤3得到的URL。在**API Token**输入步骤3得到的token。
 
-5. 点击**Update Setting**更新配置文件，这样下次就能得到对应的信息 -->
+5. 点击**Test Connection & Update Setting**更新配置文件，这样下次就能得到对应的信息 -->
 
 
 <!-- ## 后续操作
