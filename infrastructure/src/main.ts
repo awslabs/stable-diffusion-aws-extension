@@ -284,7 +284,6 @@ export class Middleware extends Stack {
     }
 
     this.addEnvToAllLambdas('ESD_VERSION', ESD_VERSION);
-    this.addEnvToAllLambdas('ESD_RELEASE_TIME', new Date().toISOString());
     this.addEnvToAllLambdas('ESD_COMMIT_ID', ESD_COMMIT_ID);
     this.addEnvToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
@@ -330,11 +329,6 @@ export class Middleware extends Stack {
     new CfnOutput(this, 'EsdVersion', {
       value: ESD_VERSION,
       description: 'ESD Version',
-    });
-
-    new CfnOutput(this, 'EsdReleaseTime', {
-      value: new Date().toISOString(),
-      description: 'ESD Release Time',
     });
 
     // Adding Outputs for apiGateway and s3Bucket

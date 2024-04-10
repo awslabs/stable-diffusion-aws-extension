@@ -1,7 +1,7 @@
+from __future__ import print_function
+
 import logging
 from time import sleep
-
-import pytest
 
 import config as config
 from utils.api import Api
@@ -10,8 +10,7 @@ from utils.helper import delete_sagemaker_endpoint, get_endpoint_status, update_
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
-class TestEndpointCreateForTrainE2E:
+class TestEndpointReCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -20,6 +19,31 @@ class TestEndpointCreateForTrainE2E:
     @classmethod
     def teardown_class(self):
         pass
+
+    def test_0_clean_all_endpoints(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        resp = self.api.list_endpoints(headers=headers)
+
+        endpoints = resp.json()['data']['endpoints']
+        for endpoint in endpoints:
+            endpoint_name = endpoint['endpoint_name']
+            while True:
+                data = {
+                    "endpoint_name_list": [
+                        endpoint_name
+                    ],
+                }
+                resp = self.api.delete_endpoints(headers=headers, data=data)
+                if resp.status_code == 400:
+                    logger.info(resp.json()['message'])
+                    sleep(5)
+                    continue
+                else:
+                    break
 
     def test_1_endpoints_async_delete_before(self):
         endpoint_name = f"sd-async-{config.endpoint_name}"
@@ -33,11 +57,11 @@ class TestEndpointCreateForTrainE2E:
                 sleep(10)
             else:
                 try:
-                    delete_sagemaker_endpoint(self.api, endpoint_name)
+                    delete_sagemaker_endpoint(self.api, config.endpoint_name)
                     break
                 except Exception as e:
-                    sleep(2)
                     logger.info(e)
+                    sleep(2)
         pass
 
     def test_2_endpoints_real_time_delete_before(self):
@@ -51,12 +75,8 @@ class TestEndpointCreateForTrainE2E:
                 logger.warning(f"Endpoint {endpoint_name} is {status}, waiting to delete...")
                 sleep(10)
             else:
-                try:
-                    delete_sagemaker_endpoint(self.api, endpoint_name)
-                    break
-                except Exception as e:
-                    sleep(2)
-                    logger.info(e)
+                delete_sagemaker_endpoint(self.api, endpoint_name)
+                break
         pass
 
     def test_2_no_available_endpoint(self):
@@ -100,7 +120,6 @@ class TestEndpointCreateForTrainE2E:
         data = {
             "endpoint_name": config.endpoint_name,
             "endpoint_type": "Async",
-            "service_type": "sd",
             "instance_type": config.async_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": True,
@@ -121,7 +140,6 @@ class TestEndpointCreateForTrainE2E:
         data = {
             "endpoint_name": config.endpoint_name,
             "endpoint_type": "Real-time",
-            "service_type": "sd",
             "instance_type": config.real_time_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": False,

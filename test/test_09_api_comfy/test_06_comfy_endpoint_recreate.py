@@ -95,7 +95,7 @@ class TestEndpointCreateForComfyE2E:
             "instance_type": config.async_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": True,
-            "assign_to_roles": ["IT Operator"],
+            "assign_to_roles": ["comfy"],
             "creator": config.username
         }
 

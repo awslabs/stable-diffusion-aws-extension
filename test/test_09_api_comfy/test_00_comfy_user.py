@@ -17,7 +17,21 @@ class TestCreateUserForComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_0_create_user_for_comfy(self):
+    def test_1_create_comfy_role(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "role_name": 'comfy',
+            "creator": "api",
+            "permissions": ['train:all', 'checkpoint:all'],
+        }
+
+        self.api.create_role(headers=headers, data=data)
+
+    def test_2_create_user_for_comfy(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username,
@@ -27,7 +41,7 @@ class TestCreateUserForComfyE2E:
             "username": "api",
             "password": "admin",
             "creator": "api",
-            "roles": ['IT Operator', 'byoc'],
+            "roles": ['IT Operator', 'byoc', 'comfy'],
         }
 
         resp = self.api.create_user(headers=headers, data=data)
