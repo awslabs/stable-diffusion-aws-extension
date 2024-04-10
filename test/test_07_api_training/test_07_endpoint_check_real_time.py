@@ -5,6 +5,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.helper import update_oas
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 endpoint_name = f"sd-real-time-{config.endpoint_name}"
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestEndpointRealTimeCheckForTrainE2E:
 
     def setup_class(self):

@@ -5,6 +5,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.helper import update_oas
@@ -12,6 +14,7 @@ from utils.helper import update_oas
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestTrainStartCompleteE2E:
     def setup_class(self):
         self.api = Api(config)
