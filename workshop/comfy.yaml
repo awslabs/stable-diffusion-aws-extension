@@ -39,18 +39,10 @@ Parameters:
 
 Mappings:
   RegionToAmiId:
-    ap-northeast-1:
-      AMI: ami-029e4579c7ebb8998
-    ap-southeast-1:
-      AMI: ami-0f8aefcf3dd3cebed
     us-east-1:
-      AMI: ami-01d25fe784d811b28
+      AMI: ami-080e1f13689e07408
     us-east-2:
-      AMI: ami-0f85abf2c61ae7754
-    us-west-1:
-      AMI: ami-0e2cc230d291c3a5f
-    us-west-2:
-      AMI: ami-020f2b388c86c9684
+      AMI: ami-06a02b78678ead6d7
 
 Resources:
   ComfyVPC:
@@ -190,10 +182,14 @@ Resources:
           sudo apt install wget git libgl1 libtcmalloc-minimal4 -y
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install python3.10 python3.10-dev python3.10-venv -y
+          sudo apt install python3.10 python3.10-dev python3-pip -y
+          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          sudo pip install torch==2.1.0 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
+          sudo pip install psutil
+          sudo apt install nvidia-utils-470 
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
-          sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          sudo rm /home/ubuntu/ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           
           cat > comfy.service <<EOF
           [Unit]
@@ -203,7 +199,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/ComfyUI
-          ExecStart=python3.10 main.py --listen
+          ExecStart=python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
