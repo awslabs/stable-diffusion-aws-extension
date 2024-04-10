@@ -30,6 +30,7 @@ def wget_file(local_file: str, url: str, gcr_url: str = None):
         local_path = os.path.dirname(local_file)
         logger.info(f"Downloading {url}")
         wget_process = subprocess.run(['wget', '-qP', local_path, url], capture_output=True)
+        logger.info(f"Downloaded {url}")
         if wget_process.returncode != 0:
             raise subprocess.CalledProcessError(wget_process.returncode, 'wget failed')
 
