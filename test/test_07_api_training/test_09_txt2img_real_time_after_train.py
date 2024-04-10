@@ -2,6 +2,8 @@ from __future__ import print_function
 
 import logging
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.enums import InferenceType, InferenceStatus
@@ -12,6 +14,7 @@ logger = logging.getLogger(__name__)
 inference_data = {}
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestTxt2ImgInferenceRealtimeAfterTrainE2E:
 
     def setup_class(self):

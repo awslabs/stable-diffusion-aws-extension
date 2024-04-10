@@ -2,6 +2,8 @@ from __future__ import print_function
 
 import logging
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.helper import upload_multipart_file, wget_file, update_oas
@@ -11,6 +13,7 @@ checkpoint_id = None
 signed_urls = None
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestCheckPointForTrainE2E:
 
     def setup_class(self):

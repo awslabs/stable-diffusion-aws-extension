@@ -3,6 +3,7 @@ from __future__ import print_function
 import logging
 import os
 
+import pytest
 import requests
 
 import config as config
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 dataset = {}
 
 
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 class TestDatasetCreateUpdateE2E:
     def setup_class(self):
         self.api = Api(config)
