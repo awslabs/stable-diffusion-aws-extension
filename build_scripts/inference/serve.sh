@@ -184,6 +184,9 @@ sd_build_for_launch(){
 sd_accelerate_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate sd launch..."
+
+  ls -la /home/ubuntu/
+
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
