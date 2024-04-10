@@ -42,9 +42,9 @@ RUN cd /home/ubuntu || exit 1 && \
     bash install_sd.sh
 
 COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
-RUN cd /home/ubuntu/stable-diffusion-webui/ && \
+RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
     source venv/bin/activate python && \
-    python3 /home/ubuntu/stable-diffusion-webui/clip_init.py
+    python3 clip_init.py
 
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt' 'https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt'
 
