@@ -68,17 +68,14 @@ if [ "$result" = "Passed" ]; then
   properties+=("extra-single-image Task: OK")
   properties+=("train_instance_type: ${TRAIN_INSTANCE_TYPE}")
 
-  echo "----------------------------------------------------------------"
-  echo "Remove the stack"
-  echo "----------------------------------------------------------------"
-  echo "Waiting for stack to be deleted..."
-  STARTED_TIME=$(date +%s)
-  aws cloudformation delete-stack --stack-name "$STACK_NAME"
-  aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
-  FINISHED_TIME=$(date +%s)
-  REMOVE_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
-  REMOVE_DURATION_TIME=$(printf "%dm%ds\n" $(($REMOVE_DURATION_TIME/60)) $(($REMOVE_DURATION_TIME%60)))
-  properties+=("Remove Stack Duration: ${REMOVE_DURATION_TIME}")
+  if [ "$DEPLOY_STACK" != "update" ]; then
+    echo "----------------------------------------------------------------"
+    echo "Remove the stack"
+    echo "----------------------------------------------------------------"
+    echo "Waiting for stack to be deleted..."
+    aws cloudformation delete-stack --stack-name "$STACK_NAME"
+    aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+  fi
 
   if [ "$CLEAN_RESOURCES" = "yes" ]; then
      aws s3 rb "s3://$API_BUCKET" --force
