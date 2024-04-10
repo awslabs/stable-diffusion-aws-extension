@@ -31,7 +31,7 @@ load_dotenv('/etc/environment')
 logging.info("env_path", env_path)
 
 for item in os.environ.keys():
-    logging.info(f'环境变量： {item} {os.environ.get(item)}')
+    logging.info(f'evn key： {item} {os.environ.get(item)}')
 
 DIR3 = "input"
 DIR1 = "models"
