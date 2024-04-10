@@ -12,10 +12,6 @@ python3 -m venv venv
 
 source venv/bin/activate
 
-if [ -n "$AWS_REGION" ] && [[ $AWS_REGION == cn-* ]]; then
-    pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-fi
-
 pip install --upgrade pip
 
 pip --default-timeout=6000 install -r requirements.txt
