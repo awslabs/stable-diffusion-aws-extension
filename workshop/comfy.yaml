@@ -40,7 +40,7 @@ Parameters:
 Mappings:
   RegionToAmiId:
     us-east-1:
-      AMI: ami-080e1f13689e07408
+      AMI: ami-031f210ebaaf07489
     us-east-2:
       AMI: ami-06a02b78678ead6d7
 
@@ -180,9 +180,12 @@ Resources:
           sudo systemctl restart nginx
 
           sudo apt install wget git libgl1 libtcmalloc-minimal4 -y
+          sudo apt install software-properties-common -y
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
-          sudo rm /home/ubuntu/ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           
           cat > comfy.service <<EOF
           [Unit]
