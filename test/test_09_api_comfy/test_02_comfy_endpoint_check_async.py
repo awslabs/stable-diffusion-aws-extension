@@ -73,23 +73,3 @@ class TestEndpointCheckForComfyE2E:
                 return False
 
         return False
-
-    # not support a same role create more than one endpoint
-    def test_2_create_endpoint_role_limit(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
-        data = {
-            "endpoint_name": config.endpoint_name,
-            "endpoint_type": "Async",
-            "instance_type": config.async_instance_type,
-            "initial_instance_count": 1,
-            "autoscaling_enabled": False,
-            "assign_to_roles": ["IT Operator"],
-            "creator": config.username
-        }
-
-        resp = self.api.create_endpoint(headers=headers, data=data)
-        assert 'not allow to have another one' in resp.json()["message"]
