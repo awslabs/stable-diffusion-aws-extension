@@ -24,6 +24,10 @@ Parameters:
     Description: Endpoint Name
     Type: String
     MinLength: 1
+  keyPairName:
+    Description: Name of the key pair to use for the EC2 instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
   InstanceType:
     Description: EC2 Instance Type of the Comfy to deploy
     Type: String
@@ -149,6 +153,7 @@ Resources:
           Ebs:
             VolumeSize: 1024
             VolumeType: gp3
+      KeyName: !Ref keyPairName
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
       Tags: [
@@ -181,11 +186,14 @@ Resources:
           sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
           sudo systemctl restart nginx
-          
-          sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
+
+          sudo apt install software-properties-common -y
+          sudo apt install wget git python3.10 python3.10-venv python3-dev build-essential net-tools libgl1 libtcmalloc-minimal4 -y
+          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          sudo python3.11 -m venv /Comfy/venv
           
           cat > comfy.service <<EOF
           [Unit]
