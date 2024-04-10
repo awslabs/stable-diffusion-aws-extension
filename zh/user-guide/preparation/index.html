@@ -881,20 +881,23 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="连接Stable Diffusion WebUI与AWS账号">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      前提条件
+      要求
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      步骤
+    </span>
+  </a>
   
 </li>
       
@@ -1486,20 +1489,23 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="连接Stable Diffusion WebUI与AWS账号">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      前提条件
+      要求
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      步骤
+    </span>
+  </a>
   
 </li>
       
@@ -1524,28 +1530,17 @@
   <h1>准备工作</h1>
 
 <h2 id="stable-diffusion-webuiaws">连接Stable Diffusion WebUI与AWS账号</h2>
-<h3 id="_1">前提条件</h3>
-<p>您需要已经成功完成解决方案的部署。</p>
-<p><em>可选项</em>
-为了保证AWS Extension插件同第三方插件之间（controlnet）版本的兼容性，您可以运行以下命令检查AWS Extension所支持的第三方插件的最小支持版本。
-<div class="highlight"><pre><span></span><code>./preflight.sh
-</code></pre></div>
-<img alt="preflight" src="../../images/preflight.png" /></p>
-<p>如果您对第三方插件的版本没有特别的要求，您可以通过执行以下命令安装版本兼容的第三方插件（controlnet）。</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Clone sd-webui-controlnet</span>
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Mikubill/sd-webui-controlnet.git
-
-<span class="c1"># Go to sd-webui-controlnet directory and reset to specific commit</span>
-<span class="nb">cd</span><span class="w"> </span>sd-webui-controlnet
-git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>7c674f8364227d63e1628fc29fa8619d33c56674
-<span class="nb">cd</span><span class="w"> </span>..
-</code></pre></div>
-<!-- ### 操作步骤
-1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
-2. 从堆栈列表中选择方案的根堆栈，而不是嵌套堆栈。列表中嵌套堆栈的名称旁边会显示嵌套（NESTED）。
-3. 打开输出（Outputs）标签页，找到**APIGatewayUrl**对应的URL，并复制。
-4. 打开Stable Diffusion WebUI中的**Amazon SageMaker**标签页，在**API URL**文本框粘贴步骤3得到的URL。在**API Token**输入09876543210987654321。点击**Update Setting**，会得到*Successfully Updated Config*的确认信息。
-5. 点击**Test Connection**，得到*Successfully Connected*确认信息，表明现在Stable Diffusion WebUI已经成功与后端部署堆栈的AWS账户链接。 -->
+<h2 id="_1">要求</h2>
+<p>您需要部署好解决方案。</p>
+<h2 id="_2">步骤</h2>
+<ol>
+<li>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>。</li>
+<li>从堆栈列表中选择方案的堆栈。</li>
+<li>打开输出（Outputs）标签页，找到<strong>APIGatewayUrl</strong>对应的URL，并复制。</li>
+<li>打开Stable Diffusion WebUI中的<strong>Amazon SageMaker</strong>标签页，在<strong>API URL</strong>文本框粘贴步骤3得到的URL。在<strong>API Token</strong>输入
+   token。点击<strong>Update Setting</strong>，会得到<em>Successfully Updated Config</em>的确认信息。</li>
+<li>点击<strong>Test Connection &amp; Update Setting</strong> 。</li>
+</ol>
 
 
 

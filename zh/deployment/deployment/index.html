@@ -1657,16 +1657,8 @@
 <li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
 <li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
 <li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。</li>
-<li>
-<p>在<strong>参数</strong>部分，在<strong>Bucket</strong>中填入一个有效的新的s3桶的名字。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>SdExtensionApiKey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>LogLevel</strong>处选择您心仪的Lambda Log日志打印级别，默认ERROR才打印。在<strong>UtilsCpuInstType</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击<strong>下一步</strong>。</p>
-<div class="admonition important">
-<p class="admonition-title">提示</p>
-<p>请不要自行改动<strong>EcrImageTag</strong>。如有需求，请联系解决方案团队。</p>
-</div>
-</li>
-<li>
-<p>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</p>
-</li>
+<li>在<strong>参数</strong>部分，在<strong>Bucket</strong>中填入一个有效的新的s3桶的名字。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>SdExtensionApiKey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>LogLevel</strong>处选择您心仪的Lambda Log日志打印级别，默认ERROR才打印。点击<strong>下一步</strong>。</li>
+<li>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</li>
 <li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
 <li>
 <p>您可以在 AWS CloudFormation 控制台的 <strong>状态</strong> 列中查看堆栈的状态。您应该会在大约 15 分钟内收到<strong>CREATE_COMPLETE</strong>状态。</p>
