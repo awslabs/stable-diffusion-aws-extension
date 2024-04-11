@@ -13,7 +13,9 @@ url_suffix = os.environ.get("URL_SUFFIX")
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 tracer = Tracer()
-x_api_version = "1.5.0"
+
+esd_version = os.environ.get("ESD_VERSION")
+x_api_version = esd_version.split('-')[0].replace('v', '')
 
 
 class HttpStatusCode:

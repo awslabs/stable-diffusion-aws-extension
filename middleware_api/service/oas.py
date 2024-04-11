@@ -16,6 +16,8 @@ tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
+esd_version = os.environ.get("ESD_VERSION")
+
 
 @tracer.capture_lambda_handler
 def handler(event: dict, context: LambdaContext):
@@ -32,6 +34,7 @@ def handler(event: dict, context: LambdaContext):
         oas = response['body'].read()
         json_schema = json.loads(oas)
         json_schema = replace_null(json_schema)
+        json_schema['info']['version'] = esd_version.split('-')[0]
 
         payload = {
             'isBase64Encoded': False,

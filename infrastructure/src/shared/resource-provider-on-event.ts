@@ -60,8 +60,10 @@ export async function handler(event: Event, context: Object) {
 
 async function createAndCheckResources() {
   await createRegionRole(ESD_ROLE);
+  await new Promise(resolve => setTimeout(resolve, 1000));
   // todo will remove in the next major version, current to keep old endpoint
   await createRegionRole(`ESDRoleForEndpoint-${AWS_REGION}`);
+
   await createBucket();
   await createTables();
   await createKms(
@@ -592,6 +594,9 @@ async function findKeyByAlias(aliasName: string) {
 }
 
 async function createRegionRole(role_name: string) {
+
+  console.log(`Creating role ${role_name}`);
+
   try {
 
     const assumedRolePolicy = JSON.stringify({

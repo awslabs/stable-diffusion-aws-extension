@@ -63,7 +63,7 @@ if [ "$DEPLOY_STACK" = "update" ]; then
                                                 ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                 ParameterKey=LogLevel,ParameterValue="INFO" \
                                                 ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-   aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+   aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
 fi
 
 FINISHED_TIME=$(date +%s)

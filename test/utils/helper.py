@@ -88,6 +88,9 @@ def get_inference_job_image(api_instance, job_id: str, target_file: str):
         },
     )
 
+    if 'data' not in resp.json():
+        raise Exception(f"data not found in inference job: {resp.json()}")
+
     if 'img_presigned_urls' not in resp.json()['data']:
         raise Exception(f"img_presigned_urls not found in inference job: {resp.json()}")
 
@@ -106,7 +109,6 @@ def get_inference_job_image(api_instance, job_id: str, target_file: str):
             raise Exception(f"Image {target_file} first generated")
 
         if resp.content == open(target_file, "rb").read():
-            logger.info(f"Image same with {target_file}")
             return
 
         # write image to file

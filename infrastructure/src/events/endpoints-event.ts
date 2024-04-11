@@ -42,6 +42,7 @@ export class SagemakerEndpointEvents {
         'dynamodb:UpdateItem',
         'dynamodb:Scan',
         'dynamodb:GetItem',
+        'dynamodb:DeleteItem',
       ],
       resources: [
         this.endpointDeploymentTable.tableArn,

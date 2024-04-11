@@ -17,6 +17,7 @@ endpoint_name = f"sd-real-time-{config.endpoint_name}"
 
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
+@pytest.mark.skipif(config.test_fast, reason="test_fast")
 class TestEndpointRealTimeCheckForTrainE2E:
 
     def setup_class(self):
@@ -70,6 +71,8 @@ class TestEndpointRealTimeCheckForTrainE2E:
 
         for endpoint in resp.json()['data']["endpoints"]:
             if endpoint["endpoint_name"] == endpoint_name:
+                if endpoint["endpoint_status"] == "Failed":
+                    raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
                 if endpoint["endpoint_status"] != "InService":
                     logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
                     return False
