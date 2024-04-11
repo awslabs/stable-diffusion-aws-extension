@@ -75,6 +75,7 @@ def handler(event, context):
                 model_name = event['detail']['ModelName']
                 sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
                 sagemaker.delete_model(ModelName=model_name)
+                ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
             except Exception as e:
                 logger.error(f"error deleting endpoint config and model with exception: {e}")
 
