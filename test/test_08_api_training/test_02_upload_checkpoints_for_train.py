@@ -14,6 +14,7 @@ signed_urls = None
 
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
+@pytest.mark.skipif(config.test_fast, reason="test_fast")
 class TestCheckPointForTrainE2E:
 
     def setup_class(self):

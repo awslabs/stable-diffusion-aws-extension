@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
+@pytest.mark.skipif(config.test_fast, reason="test_fast")
 class TestEndpointCreateForTrainE2E:
 
     def setup_class(self):

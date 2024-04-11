@@ -52,6 +52,8 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 
+no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
+
 
 if not api_url:
     raise ValueError("API_URL environment variables must be set.")
@@ -238,25 +240,33 @@ def sync_files(filepath):
     try:
         directory = os.path.dirname(filepath)
         logging.info(f"Directory changed in: {directory}")
+        if not directory:
+            logging.info("root path no need to sync files by duplicate opt")
+            return
         logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
         need_prepare = False
         prepare_type = 'default'
-
+        need_reboot = False
+        for ignore_item in no_need_sync_files:
+            if filepath.endswith(ignore_item):
+                logging.info(f"no need to sync files by ignore files {filepath} ends by {ignore_item}")
+                return
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or f"{DIR2}/" in filepath):
             logging.info(f" sync custom nodes files: {filepath}")
-            s5cmd_syn_node_command = f's5cmd --log-level=quiet sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             logging.info(s5cmd_syn_node_command)
             os.system(s5cmd_syn_node_command)
             need_prepare = True
+            need_reboot = True
             prepare_type = 'nodes'
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or f"{DIR3}/" in filepath):
             logging.info(f" sync custom input files: {filepath}")
-            s5cmd_syn_input_command = f's5cmd --log-level=quiet sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
             logging.info(s5cmd_syn_input_command)
             os.system(s5cmd_syn_input_command)
             need_prepare = True
@@ -264,7 +274,7 @@ def sync_files(filepath):
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or f"{DIR1}/" in filepath):
             logging.info(f" sync custom models files: {filepath}")
-            s5cmd_syn_model_command = f's5cmd --log-level=quiet sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
             logging.info(s5cmd_syn_model_command)
             os.system(s5cmd_syn_model_command)
             need_prepare = True
@@ -273,7 +283,7 @@ def sync_files(filepath):
         if need_prepare:
             url = api_url + "prepare"
             logging.info(f"URL:{url}")
-            data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp,
+            data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": timestamp,
                     "prepare_type": prepare_type}
             logging.info(f"prepare params Data: {json.dumps(data, indent=4)}")
             result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",

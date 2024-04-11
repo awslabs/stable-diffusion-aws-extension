@@ -17,6 +17,7 @@ endpoint_name = f"sd-real-time-{config.endpoint_name}"
 
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
+@pytest.mark.skipif(config.test_fast, reason="test_fast")
 class TestEndpointRealTimeCheckForTrainE2E:
 
     def setup_class(self):
