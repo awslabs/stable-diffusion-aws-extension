@@ -36,6 +36,10 @@ def handler(event: dict, context: LambdaContext):
         json_schema = replace_null(json_schema)
         json_schema['info']['version'] = esd_version.split('-')[0]
 
+        json_schema['servers'][0]['url'] = "{ApiGatewayUrl}"
+        json_schema['servers'][0]['variables']['ApiGatewayUrl'][
+            'default'] = "https://xxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod/"
+
         payload = {
             'isBase64Encoded': False,
             'statusCode': 200,
