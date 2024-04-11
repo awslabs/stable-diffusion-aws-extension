@@ -61,12 +61,9 @@ echo "--------------------------------------------------------------------------
 set_conda(){
   echo "---------------------------------------------------------------------------------"
   echo "set conda environment..."
-  export AWS_REGION="us-west-2"
-  conda_path="aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda"
-  s5cmd --log=error cp "s3://$conda_path/libcufft.so.10" /home/ubuntu/conda/lib/
-  s5cmd --log=error cp "s3://$conda_path/libcurand.so.10" /home/ubuntu/conda/lib/
-  export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
-  export AWS_REGION=$AWS_DEFAULT_REGION
+  mkdir -p /home/ubuntu/conda/lib/
+  wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
+  wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
 }
 
 find_and_remove_dir(){

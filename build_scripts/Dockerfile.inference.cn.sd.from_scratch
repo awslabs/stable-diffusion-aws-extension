@@ -23,9 +23,8 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 ENV FULL_IMAGE true
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
-    cd /home/ubuntu/conda/lib/ && \
-    wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
-    wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10
+    wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10 && \
+    wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
 
 COPY install_sd.sh /home/ubuntu/
 RUN cd /home/ubuntu || exit 1 && \
@@ -38,7 +37,7 @@ RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
 
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt' 'https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt'
 
-RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_128.onnx' 'https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/creator/inswapper_128.onnx'
+RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_128.onnx' 'https://huggingface.co/elonniu/esd/resolve/main/inswapper_128.onnx'
 
 RUN mkdir -p '/root/.u2net/' && \
     wget -qO '/root/.u2net/u2net_human_seg.onnx' 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx'
