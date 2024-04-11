@@ -178,14 +178,18 @@ Resources:
           sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
           sudo systemctl restart nginx
-
-          sudo apt install wget git libgl1 libtcmalloc-minimal4 -y
-          sudo apt install software-properties-common -y
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
           
+          sudo add-apt-repository ppa:deadsnakes/ppa
+          sudo apt update
+          sudo apt install wget python3.10 python3.10-venv python3-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
+          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+          sudo python3 -m venv venv
+          source venv/bin/activate
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          sudo chmod 777 -R /ComfyUI
           
           cat > comfy.service <<EOF
           [Unit]
@@ -195,11 +199,11 @@ Resources:
 
           [Service]
           WorkingDirectory=/ComfyUI
-          ExecStart=python3 main.py --listen
+          ExecStart=/venv/bin/python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
-          User=root
+          User=ubuntu
           StartLimitAction=reboot
 
           [Install]
