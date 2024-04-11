@@ -350,7 +350,7 @@ def is_file_unlocked(file_path):
     except (IOError, OSError, Exception) as e:
         logging.info(f"unlock file error {file_path} is writing")
         logging.error(e)
-        return False
+        return True
 
 
 class MyHandlerWithCheck(FileSystemEventHandler):
