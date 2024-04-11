@@ -21,6 +21,7 @@ aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 echo "update to dev version..."
 aws cloudformation update-stack --stack-name "$STACK_NAME" \
                                --template-url "https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/dev/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json" \
+                               --capabilities CAPABILITY_NAMED_IAM \
                                --parameters ParameterKey=Email,ParameterValue="example@example.com" \
                                             ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                             ParameterKey=LogLevel,ParameterValue="INFO" \
