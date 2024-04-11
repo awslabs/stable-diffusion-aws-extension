@@ -59,21 +59,12 @@ async function waitApiReady(event: Event, path: string) {
         },
       });
 
-      if (!resp.ok) {
-        throw new Error(`${event.ResourceProperties.name} HTTP error! status: ${resp.status}`);
-      }
-
-      const data = await resp.json();
-
-      console.log(`${event.ResourceProperties.name} Received response from API: `, data);
-
-      // @ts-ignore
-      if (data && data.message === 'pong') {
-        console.log(`${event.ResourceProperties.name} Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
+      if (resp.status === 200) {
+        console.log(`${event.ResourceProperties.name} Received 200 after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
-      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 3 seconds...`);
+      console.log(`${event.ResourceProperties.name} Did not receive 200 from API. Checking again in 3 seconds...`);
       await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {
