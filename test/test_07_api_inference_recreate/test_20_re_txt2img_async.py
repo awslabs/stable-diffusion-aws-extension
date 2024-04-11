@@ -97,7 +97,7 @@ class TestTxt2ImgInferenceAsyncE2E:
         else:
             raise Exception(f"Inference execution {inference_id} timed out after 7 minutes.")
 
-    def test_6_txt2img_inference_async_content(self):
+    def test_6_txt2img_async_content(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -109,7 +109,7 @@ class TestTxt2ImgInferenceAsyncE2E:
             target_file="./data/api_params/txt2img_api_param.png"
         )
 
-    def test_7_txt2img_inference_async_delete_succeed(self):
+    def test_7_txt2img_async_delete_succeed(self):
 
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
