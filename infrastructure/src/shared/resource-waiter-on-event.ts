@@ -49,7 +49,7 @@ async function waitApiReady(event: Event, path: string) {
     }
 
     try {
-      const url = `${event.ResourceProperties.apiUrl}/${path}`;
+      const url = `${event.ResourceProperties.apiUrl}${path}`;
       console.log(`${event.ResourceProperties.name} Checking API readiness ${url}...`);
 
       const resp = await fetch(url, {
