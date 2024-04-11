@@ -1,3 +1,7 @@
+#!/bin/bash
+
+chmod +x env.properties
+
 source env.properties
 
 echo "----------------------------------------------------------------"
