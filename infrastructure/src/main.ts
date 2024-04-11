@@ -1,16 +1,4 @@
-import {
-  App,
-  Aspects,
-  Aws,
-  aws_apigateway,
-  CfnCondition,
-  CfnOutput,
-  CfnParameter,
-  Fn,
-  Stack,
-  StackProps,
-  Tags,
-} from 'aws-cdk-lib';
+import { App, Aspects, Aws, aws_apigateway, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
