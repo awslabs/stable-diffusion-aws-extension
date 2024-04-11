@@ -168,6 +168,6 @@ if [ "$result" = "Passed" ]; then
   echo "----------------------------------------------------------------"
   echo "Delete log groups"
   echo "----------------------------------------------------------------"
-  aws logs describe-log-groups | jq -r '.logGroups[].logGroupName' | grep -v codebuild | xargs -I {} aws logs delete-log-group --log-group-name {}
+  aws logs describe-log-groups | jq -r '.logGroups[].logGroupName' | grep 'Extension-for-Stable' | xargs -I {} aws logs delete-log-group --log-group-name {}
 fi
 
