@@ -15,7 +15,7 @@ signed_urls = None
 def ckpt_url():
     if config.is_gcr:
         return "https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/models/cartoony.safetensors"
-    return "https://raw.githubusercontent.com/elonniu/safetensors/main/cartoony.safetensors"
+    return "https://huggingface.co/elonniu/esd/resolve/main/cartoony.safetensors"
 
 
 class TestUpdateCheckPointE2E:
