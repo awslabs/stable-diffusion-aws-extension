@@ -10,7 +10,7 @@ from utils.helper import update_oas
 logger = logging.getLogger(__name__)
 
 
-class TestEndpointRealTimeCheckForComfyE2E:
+class TestEndpointRealTimeReCheckForComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)

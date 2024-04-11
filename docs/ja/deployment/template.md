@@ -1,0 +1,3 @@
+自動デプロイを行うために、このソリューションでは以下の AWS CloudFormation テンプレートを使用します。このテンプレートはデプロイ前にダウンロードできます:
+
+[AWS 上の Stable Diffusion の拡張機能](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) : このテンプレートを使ってソリューションと関連コンポーネントを起動します。デフォルトの構成では [Amazon API Gateway](https://aws.amazon.com/api-gateway/) 、 [AWS Lambda](https://aws.amazon.com/lambda/) 、 [Amazon S3](https://aws.amazon.com/s3/) 、 [Amazon SageMaker](https://aws.amazon.com/sagemaker/) 、 [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) がデプロイされますが、テンプレートをカスタマイズして特定のニーズに合わせることもできます。

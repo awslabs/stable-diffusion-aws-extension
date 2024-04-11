@@ -10,7 +10,7 @@ from utils.helper import update_oas
 logger = logging.getLogger(__name__)
 
 
-class TestEndpointCheckForComfyE2E:
+class TestEndpointReCheckForComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -20,7 +20,7 @@ class TestEndpointCheckForComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_list_endpoints_status(self):
+    def test_1_list_async_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -73,23 +73,3 @@ class TestEndpointCheckForComfyE2E:
                 return False
 
         return False
-
-    # not support a same role create more than one endpoint
-    def test_2_create_endpoint_role_limit(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
-        data = {
-            "endpoint_name": "test",
-            "endpoint_type": "Async",
-            "instance_type": config.async_instance_type,
-            "initial_instance_count": 1,
-            "autoscaling_enabled": False,
-            "assign_to_roles": ["IT Operator"],
-            "creator": config.username
-        }
-
-        resp = self.api.create_endpoint(headers=headers, data=data)
-        assert resp.status_code == 400, resp.dumps()

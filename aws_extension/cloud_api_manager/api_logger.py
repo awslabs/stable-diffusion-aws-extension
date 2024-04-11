@@ -48,7 +48,7 @@ class ApiLogger:
         self.file.write(f"\n")
 
         if headers:
-            headers['x-api-key'] = 'xxxx'
+            headers['x-api-key'] = '********'
             self.file.write(f"#### headers: \n")
             self.file.write(f"\n")
             self.file.write(f"```\n")

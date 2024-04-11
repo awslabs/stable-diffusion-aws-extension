@@ -23,6 +23,9 @@ extra:
     - name: 简体中文
       link: /stable-diffusion-aws-extension/zh/
       lang: zh
+    - name: 日本語
+      link: /stable-diffusion-aws-extension/ja/
+      lang: ja
   bucket: aws-gcr-solutions
   version: develop
 

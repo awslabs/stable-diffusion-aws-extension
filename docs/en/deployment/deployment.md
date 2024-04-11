@@ -48,10 +48,6 @@ This automated AWS CloudFormation template deploys the solution in the AWS Cloud
 
 4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. 
 5. On the **Parameters** page, enter a new valid bucket name under **Bucket** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Select desired Amazon log level to be printed under **LogLevel**, only ERROR log will be printed by default. Enter a string of 20 characters that includes a combination of alphanumeric characters for **SdExtensionApiKey**, and it will be 09876543210987654321 by default, etc. Choose **Next**.
-
-    !!! Important "Notice" 
-        Please do not change **EcrImageTag** before a consulting solution team.
-
 6. On the **Configure stack options** page, choose **Next**.
 7. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
 
