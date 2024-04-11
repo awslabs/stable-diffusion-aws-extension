@@ -31,8 +31,12 @@ if 'ENV_FILE_PATH' in os.environ and os.environ.get('ENV_FILE_PATH'):
 load_dotenv('/etc/environment')
 logging.info("env_path", env_path)
 
+env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
+            'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME']
+
 for item in os.environ.keys():
-    logging.info(f'evn key： {item} {os.environ.get(item)}')
+    if item in env_keys:
+        logging.info(f'evn key： {item} {os.environ.get(item)}')
 
 DIR3 = "input"
 DIR1 = "models"
