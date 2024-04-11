@@ -1,11 +1,11 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-set INITIAL_SUPPORT_COMMIT_ROOT=cf2772fab0af5573da775e7437e6acdca424f26e
+set INITIAL_SUPPORT_COMMIT_ROOT=bef51aed032c0aaa5cfd80445bc4cf0d85b408b5
 set INITIAL_SUPPORT_COMMIT_CONTROLNET=2a210f0489a4484f55088159bbfa51aaf73e10d9
-set INITIAL_SUPPORT_COMMIT_REMBG=a4c07b857e73f3035f759876797fa6de986def3d
 set INITIAL_SUPPORT_COMMIT_TILEDVAE=f9f8073e64f4e682838f255215039ba7884553bf
-
+set INITIAL_SUPPORT_COMMIT_REMBG=a4c07b857e73f3035f759876797fa6de986def3d
+set INITIAL_SUPPORT_COMMIT_REACTOR=0185d7a2afa4a3c76b304314233a1cafd1cf4842
 
 # Clone stable-diffusion-webui
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
@@ -46,5 +46,10 @@ git clone https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic11
 
 # Go to multidiffusion-upscaler-for-automatic1111 and reset to specific commit
 cd multidiffusion-upscaler-for-automatic1111
-git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
+git reset --hard %INITIAL_SUPPORT_COMMIT_TILEDVAE%
+cd ..
+
+git clone https://github.com/Gourieff/sd-webui-reactor.git --branch main --single-branch
+cd sd-webui-reactor
+git reset --hard %INITIAL_SUPPORT_COMMIT_REACTOR%
 cd ..
