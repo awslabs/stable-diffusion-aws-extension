@@ -18,6 +18,7 @@ from watchdog.events import FileSystemEventHandler
 import subprocess
 from dotenv import load_dotenv
 import logging
+import fcntl
 
 global sync_msg_list
 
@@ -259,6 +260,10 @@ def sync_files(filepath):
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             logging.info(s5cmd_syn_node_command)
+            # custom_node文件夹有变化 稍后再同步
+            if not is_folder_unlocked(directory):
+                return
+            logging.info("sync custom_nodes files start")
             os.system(s5cmd_syn_node_command)
             need_prepare = True
             need_reboot = True
@@ -268,6 +273,11 @@ def sync_files(filepath):
             logging.info(f" sync custom input files: {filepath}")
             s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
             logging.info(s5cmd_syn_input_command)
+            # 判断文件写完后再同步
+            while not is_file_unlocked(filepath):
+                time.sleep(1)
+
+            logging.info("sync input files start")
             os.system(s5cmd_syn_input_command)
             need_prepare = True
             prepare_type = 'inputs'
@@ -276,6 +286,11 @@ def sync_files(filepath):
             logging.info(f" sync custom models files: {filepath}")
             s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
             logging.info(s5cmd_syn_model_command)
+            # 判断文件写完后再同步
+            while not is_file_unlocked(filepath):
+                time.sleep(1)
+
+            logging.info("sync models files start")
             os.system(s5cmd_syn_model_command)
             need_prepare = True
             prepare_type = 'models'
@@ -294,14 +309,67 @@ def sync_files(filepath):
         logging.info(f"sync_files error {e}")
 
 
-class MyHandler(FileSystemEventHandler):
+def is_folder_unlocked(directory):
+    event_handler = MyHandlerWithCheck()
+    observer = Observer()
+    observer.schedule(event_handler, directory, recursive=True)
+    observer.start()
+    time.sleep(3)
+    try:
+        if event_handler.file_changed:
+            print(f"folder {directory} is still changing..")
+            event_handler.file_changed = False
+            observer.stop()
+            return False
+        else:
+            return True
+    except (KeyboardInterrupt, Exception) as e:
+        observer.stop()
+    observer.join()
+    return True
+
+
+def is_file_unlocked(file_path):
+    try:
+        initial_size = os.path.getsize(file_path)
+        initial_mtime = os.path.getmtime(file_path)
+        time.sleep(1)
+
+        current_size = os.path.getsize(file_path)
+        current_mtime = os.path.getmtime(file_path)
+        if current_size != initial_size or current_mtime != initial_mtime:
+            return False
+
+        with open(file_path, 'r') as f:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+    except (IOError, OSError, Exception) as e:
+        logging.info(f"unlock file error {file_path} is writing")
+        logging.error(e)
+        return False
+
+
+class MyHandlerWithCheck(FileSystemEventHandler):
+    class MyHandler(FileSystemEventHandler):
+        def __init__(self):
+            self.file_changed = False
+
+        def on_any_event(self, event):
+            logging.info(f"custom_node folder is changing {event.src_path}")
+            self.file_changed = True
+
+
+class MyHandlerWithSync(FileSystemEventHandler):
     def on_modified(self, event):
+        logging.info(f"files modified ，start to sync")
         sync_files(event.src_path)
 
     def on_created(self, event):
+        logging.info(f"files added ，start to sync")
         sync_files(event.src_path)
 
     def on_deleted(self, event):
+        logging.info(f"files deleted ，start to sync")
         sync_files(event.src_path)
 
 
@@ -310,7 +378,7 @@ stop_event = threading.Event()
 
 def check_and_sync():
     logging.info("check_and_sync start")
-    event_handler = MyHandler()
+    event_handler = MyHandlerWithSync()
     observer = Observer()
     try:
         observer.schedule(event_handler, DIR1, recursive=True)
