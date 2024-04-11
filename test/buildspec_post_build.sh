@@ -134,8 +134,8 @@ properties+=("SNS_ARN: ${SNS_ARN}")
 
 if [ -f "report-${CODEBUILD_BUILD_NUMBER}.html" ]; then
   report_file="report-${CODEBUILD_BUILD_NUMBER}.html"
-  aws s3 cp "$report_file" "s3://$REPORT_BUCKET/test_report/"
-  properties+=("Report: s3://$REPORT_BUCKET/test_report/$report_file")
+  aws s3 cp "$report_file" "s3://$API_BUCKET/test_report/"
+  properties+=("Report: s3://$API_BUCKET/test_report/$report_file")
 fi
 
 properties+=("CodeBuildUrl: ${CODEBUILD_BUILD_URL}")
