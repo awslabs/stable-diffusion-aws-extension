@@ -71,6 +71,8 @@ class TestEndpointRealTimeCheckForTrainE2E:
 
         for endpoint in resp.json()['data']["endpoints"]:
             if endpoint["endpoint_name"] == endpoint_name:
+                if endpoint["endpoint_status"] == "Failed":
+                    raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
                 if endpoint["endpoint_status"] != "InService":
                     logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
                     return False

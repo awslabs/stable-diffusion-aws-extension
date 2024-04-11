@@ -22,7 +22,10 @@ export async function handler(event: Event, context: Object) {
   const allow_types = ['Create', 'Update'];
 
   if (allow_types.includes(event.RequestType)) {
-    await waitApiReady(event);
+    await waitApiReady(event, 'ping');
+    await waitApiReady(event, 'api');
+    await waitApiReady(event, 'roles');
+    await waitApiReady(event, 'users');
     await waitTableIndexReady(event, 'SDInferenceJobTable', 'taskType', 'createTime');
     await waitTableIndexReady(event, 'SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
   }
@@ -32,7 +35,7 @@ export async function handler(event: Event, context: Object) {
 }
 
 
-async function waitApiReady(event: Event) {
+async function waitApiReady(event: Event, path: string) {
   const lambdaStartTime = Date.now();
   const startCheckTime = Date.now();
 
@@ -46,30 +49,22 @@ async function waitApiReady(event: Event) {
     }
 
     try {
-      console.log(`${event.ResourceProperties.name} Checking API readiness...`);
+      const url = `${event.ResourceProperties.apiUrl}${path}`;
+      console.log(`${event.ResourceProperties.name} Checking API readiness ${url}...`);
 
-      const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
+      const resp = await fetch(url, {
         method: 'GET',
         headers: {
           'x-api-key': event.ResourceProperties.apiKey,
         },
       });
 
-      if (!resp.ok) {
-        throw new Error(`${event.ResourceProperties.name} HTTP error! status: ${resp.status}`);
-      }
-
-      const data = await resp.json();
-
-      console.log(`${event.ResourceProperties.name} Received response from API: `, data);
-
-      // @ts-ignore
-      if (data && data.message === 'pong') {
-        console.log(`${event.ResourceProperties.name} Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
+      if (resp.status === 200) {
+        console.log(`${event.ResourceProperties.name} Received 200 after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
-      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 3 seconds...`);
+      console.log(`${event.ResourceProperties.name} Did not receive 200 from API. Checking again in 3 seconds...`);
       await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {
