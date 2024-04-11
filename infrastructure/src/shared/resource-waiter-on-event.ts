@@ -22,12 +22,12 @@ export async function handler(event: Event, context: Object) {
   const allow_types = ['Create', 'Update'];
 
   if (allow_types.includes(event.RequestType)) {
+    await waitTableIndexReady(event, 'SDInferenceJobTable', 'taskType', 'createTime');
+    await waitTableIndexReady(event, 'SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
     await waitApiReady(event, 'ping');
     await waitApiReady(event, 'api');
     await waitApiReady(event, 'roles');
     await waitApiReady(event, 'users');
-    await waitTableIndexReady(event, 'SDInferenceJobTable', 'taskType', 'createTime');
-    await waitTableIndexReady(event, 'SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
   }
 
   return response(event, true);
@@ -49,13 +49,13 @@ async function waitApiReady(event: Event, path: string) {
     }
 
     try {
-      const url = `${event.ResourceProperties.apiUrl}${path}`;
-      console.log(`${event.ResourceProperties.name} Checking API readiness ${url}...`);
+      console.log(`${event.ResourceProperties.name} Checking /${path} readiness`);
 
-      const resp = await fetch(url, {
+      const resp = await fetch(`${event.ResourceProperties.apiUrl}${path}`, {
         method: 'GET',
         headers: {
           'x-api-key': event.ResourceProperties.apiKey,
+          'username': 'api',
         },
       });
 
