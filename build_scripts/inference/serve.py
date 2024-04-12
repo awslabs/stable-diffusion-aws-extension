@@ -1,4 +1,5 @@
 import logging
+import signal
 import socket
 import subprocess
 from time import sleep
@@ -14,6 +15,15 @@ app = FastAPI()
 COMFY_PORT = 8081
 
 
+def handle_sigterm(signum, frame):
+    print("SIGTERM received, performing cleanup...")
+    print(signum)
+    print(frame)
+
+
+signal.signal(signal.SIGTERM, handle_sigterm)
+
+
 @app.get("/ping")
 async def ping():
     return {"message": "pong"}
@@ -22,7 +32,7 @@ async def ping():
 @app.post("/invocations")
 async def invocations(request: Request):
     while True:
-        if is_port_open(8081):
+        if is_port_open(COMFY_PORT):
             req = await request.json()
             logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{COMFY_PORT}/invocations")
             response = requests.post(f"http://127.0.0.1:{COMFY_PORT}/invocations", json=req)
