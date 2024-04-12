@@ -57,7 +57,7 @@ def handler(event: dict, context: LambdaContext):
                 'Access-Control-Allow-Methods': '*',
                 'Access-Control-Allow-v': True,
             },
-            'body': json.dumps(json_schema, cls=DecimalEncoder)
+            'body': json.dumps(json_schema, cls=DecimalEncoder, indent=2)
         }
 
         return payload
