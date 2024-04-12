@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 app = FastAPI()
 
 service_type = os.getenv('SERVICE_TYPE', 'sd')
-SD_PORT = 7861
+SD_PORT = os.getenv('WEBUI_PORT', 7861)
 COMFY_PORT = 8081
 
 SERVER_PORT = COMFY_PORT if service_type == 'comfy' else SD_PORT
@@ -29,7 +29,6 @@ def handle_sigterm(signum, frame):
 
 @app.get("/ping")
 async def ping():
-    logger.info("ping")
     return {"message": "pong"}
 
 
