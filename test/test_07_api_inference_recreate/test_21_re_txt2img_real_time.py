@@ -75,11 +75,11 @@ class TestTxt2ImgInferenceRealTimeE2E:
         resp = self.api.start_inference_job(job_id=inference_id, headers=headers)
         assert resp.status_code in [200, 504], resp.dumps()
         if resp.status_code == 504:
-            logger.warning("Real-time inference timeout error, waiting for 30 seconds and retrying")
+            logger.warning("Real-time inference timeout error, waiting for 60 seconds and retrying")
             import time
-            time.sleep(30)
+            time.sleep(60)
 
-    def test_4_txt2img_inference_real_time_content(self):
+    def test_4_txt2img_re_real_time_content(self):
         global inference_data
 
         inference_id = inference_data["id"]
