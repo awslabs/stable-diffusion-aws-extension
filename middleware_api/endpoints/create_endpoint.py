@@ -150,7 +150,7 @@ def handler(raw_event, ctx):
             logger.info(endpoint.__dict__)
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
-                for role in event.assign_to_roles:
+                for role in event.assign_to_roles and endpoint.owner_group_or_role:
                     if role in endpoint.owner_group_or_role:
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")

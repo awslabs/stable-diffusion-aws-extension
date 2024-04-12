@@ -68,23 +68,18 @@ def handler(event, context):
             update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
             update_endpoint_field(ep_id, 'current_instance_count', 0)
 
-        # if endpoint is deleted, update the instance count to 0 and delete the config and model
-        if business_status == EndpointStatus.DELETED.value:
-            try:
-                endpoint_config_name = event['detail']['EndpointConfigName']
-                model_name = event['detail']['ModelName']
-                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-                sagemaker.delete_model(ModelName=model_name)
-                ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
-            except Exception as e:
-                logger.error(f"error deleting endpoint config and model with exception: {e}")
+            endpoint_config_name = event['detail']['EndpointConfigName']
+            model_name = event['detail']['ModelName']
+            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            sagemaker.delete_model(ModelName=model_name)
+            ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(ep_id, 'error', event['FailureReason'])
 
     except Exception as e:
         update_endpoint_field(ep_id, 'error', str(e))
-        logger.error(f"Error processing event with exception: {e}")
+        logger.error(e)
 
     return {'statusCode': 200}
 
