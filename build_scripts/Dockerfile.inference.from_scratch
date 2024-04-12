@@ -16,10 +16,10 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
     rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
     mv s5cmd /usr/local/bin/
 
-RUN python3 -m venv /venv && \
-    source /venv/bin/activate && \
-    pip3 install --upgrade pip && \
-    pip3 install fastapi uvicorn requests
+#RUN python3 -m venv /venv && \
+#    source /venv/bin/activate && \
+#    pip3 install --upgrade pip && \
+#    pip3 install fastapi uvicorn requests
 
 ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
