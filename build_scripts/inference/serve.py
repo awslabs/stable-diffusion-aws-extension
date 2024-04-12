@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 app = FastAPI()
 
 PHY_LOCALHOST = '127.0.0.1'
-COMFY_PORT = 8188
+COMFY_PORT = 8081
 
 
 @app.get("/ping")
