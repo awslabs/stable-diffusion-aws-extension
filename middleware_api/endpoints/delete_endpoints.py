@@ -9,7 +9,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
-from endpoints.endpoint_event import update_endpoint_field
+from endpoint_event import update_endpoint_field
 from libs.enums import EndpointStatus
 from libs.utils import response_error
 
