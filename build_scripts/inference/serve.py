@@ -40,7 +40,7 @@ async def invocations(request: Request):
             try:
                 req = await request.json()
                 logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
-                response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=200)
+                response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=(200, 300))
                 if response.status_code != 200:
                     return json.dumps({
                         "status_code": response.status_code,
