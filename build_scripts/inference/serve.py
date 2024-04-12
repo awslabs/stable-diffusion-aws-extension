@@ -16,9 +16,9 @@ COMFY_PORT = 8081
 
 
 def handle_sigterm(signum, frame):
-    print("SIGTERM received, performing cleanup...")
-    print(signum)
-    print(frame)
+    logger.info("SIGTERM received, performing cleanup...")
+    logger.info(signum)
+    logger.info(frame)
 
 
 @app.get("/ping")
