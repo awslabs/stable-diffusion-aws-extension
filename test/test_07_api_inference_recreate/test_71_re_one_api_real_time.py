@@ -23,7 +23,7 @@ class TestInferenceOneApiRealTimeE2E:
     def teardown_class(self):
         pass
 
-    def test_1_inference_one_api_real_time(self):
+    def test_1_one_api_real_time(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -36,7 +36,6 @@ class TestInferenceOneApiRealTimeE2E:
                 "Stable-diffusion": [filename],
                 "embeddings": []
             },
-
         }
 
         with open("./data/api_params/txt2img_api_param.json", 'rb') as data:

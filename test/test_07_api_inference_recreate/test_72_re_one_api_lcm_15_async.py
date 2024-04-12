@@ -23,7 +23,7 @@ class TestInferenceOneApiLcm15AsyncE2E:
     def teardown_class(self):
         pass
 
-    def test_1_inference_one_api_lcm_15_async(self):
+    def test_1_one_api_lcm_15_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

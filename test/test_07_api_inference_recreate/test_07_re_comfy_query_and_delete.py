@@ -1,22 +1,15 @@
 import json
 import logging
-import time
-from datetime import datetime
-from datetime import timedelta
+import uuid
 
 import config as config
 from utils.api import Api
-from utils.enums import InferenceStatus
 from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
-inference_data = {}
 
-prompt_id = "11111111-1111-1111"
-
-
-class TestTxt2ImgInferenceAsyncAfterComfyE2E:
+class TestTxt2ImgQueryAndDeleteComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -26,7 +19,12 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_inference_async_create(self):
+    def test_1_comfy_txt2img_async_batch_create(self):
+        count = 20
+        for i in range(count):
+            self.comfy_txt2img_async_create()
+
+    def comfy_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
         }
@@ -178,50 +176,57 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
                     "class_type": "SaveImage"
                 }
             },
-            "prompt_id": prompt_id,
+            "prompt_id": str(uuid.uuid4()),
             "endpoint_name": config.comfy_async_ep_name
         })
 
         resp = self.api.create_execute(headers=headers, data=json.loads(payload))
-        assert resp.status_code == 201, resp.dumps()
-
-        global inference_data
-        inference_data = resp.json()['data']
-
         assert resp.json()["statusCode"] == 201
-        print(json.dumps(resp.json()['debug'], indent=2))
+        logger.info(f"execute created: {resp.json()['data']['prompt_id']}")
 
-    def test_2_comfy_txt2img_inference_async_exists(self):
-        global inference_data
-        prompt_id = inference_data["prompt_id"]
-
-        headers = {
-            "x-api-key": config.api_key,
-        }
-
-        resp = self.api.get_execute_job(headers=headers, prompt_id=prompt_id)
-        assert resp.status_code == 200, resp.dumps()
-
-    def test_3_comfy_txt2img_inference_async_start_and_succeed(self):
-
-        headers = {
-            "x-api-key": config.api_key,
-        }
-
-        global inference_data
-        prompt_id = inference_data["prompt_id"]
-
-        timeout = datetime.now() + timedelta(minutes=7)
-
-        while datetime.now() < timeout:
-            resp = self.api.get_execute_job(headers=headers, prompt_id=prompt_id)
-            status = resp.json()["data"]["status"]
-            logger.info(f"execute {prompt_id} is {status}")
-            if status == 'success':
+    def test_2_comfy_txt2img_list(self):
+        last_evaluated_key = None
+        while True:
+            resp = self.executes_list(exclusive_start_key=last_evaluated_key)
+            last_evaluated_key = resp.json()['data']['last_evaluated_key']
+            logger.info(last_evaluated_key)
+            if not last_evaluated_key:
                 break
-            if status == InferenceStatus.FAILED.value:
-                logger.error(inference_data)
-                raise Exception(f"execute {prompt_id} failed.")
-            time.sleep(7)
-        else:
-            raise Exception(f"execute {prompt_id} timed out after 7 minutes.")
+
+    def executes_list(self, exclusive_start_key=None):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        resp = self.api.list_executes(headers=headers,
+                                      params={"exclusive_start_key": exclusive_start_key, "limit": 20})
+        return resp
+
+    def test_4_comfy_txt2img_clean(self):
+        last_evaluated_key = None
+        while True:
+            resp = self.executes_list(exclusive_start_key=last_evaluated_key)
+            executes = resp.json()['data']['executes']
+            last_evaluated_key = resp.json()['data']['last_evaluated_key']
+
+            for execute in executes:
+                prompt_id = execute['prompt_id']
+                headers = {
+                    "x-api-key": config.api_key,
+                    "username": config.username
+                }
+                data = {
+                    "execute_id_list": [prompt_id]
+                }
+                resp = self.api.delete_executes(headers=headers, data=data)
+                assert resp.status_code == 204, resp.dumps()
+                logger.info(f"deleted prompt_id: {prompt_id}")
+
+            if not last_evaluated_key:
+                break
+
+    def test_5_comfy_txt2img_check_clean(self):
+        resp = self.executes_list()
+        executes = resp.json()['data']['executes']
+        assert len(executes) == 0, resp.dumps()

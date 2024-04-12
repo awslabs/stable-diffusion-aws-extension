@@ -26,7 +26,7 @@ class TestTxt2ImgInferenceRealtimeAfterTrainE2E:
     def teardown_class(self):
         pass
 
-    def test_1_after_train_txt2img_inference_real_time_create(self):
+    def test_1_after_train_txt2img_real_time_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -55,7 +55,7 @@ class TestTxt2ImgInferenceRealtimeAfterTrainE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param_train.json")
 
-    def test_2_txt2img_inference_real_time_start_and_succeed(self):
+    def test_2_txt2img_real_time_start_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -72,7 +72,7 @@ class TestTxt2ImgInferenceRealtimeAfterTrainE2E:
             import time
             time.sleep(60)
 
-    def test_3_txt2img_inference_real_time_exists(self):
+    def test_3_txt2img_real_time_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -86,7 +86,7 @@ class TestTxt2ImgInferenceRealtimeAfterTrainE2E:
 
         assert resp.json()['data']['status'] == InferenceStatus.SUCCEED.value, resp.dumps()
 
-    def test_4_txt2img_inference_real_time_delete_succeed(self):
+    def test_4_txt2img_real_time_delete_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 

@@ -9,6 +9,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
+from libs.enums import EndpointStatus
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -55,6 +56,16 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+def update_endpoint_field(endpoint_id, field_name, field_value):
+    logger.info(f"Updating {field_name} to {field_value} for: {endpoint_id}")
+    ddb_service.update_item(
+        table=sagemaker_endpoint_table,
+        key={'EndpointDeploymentJobId': endpoint_id},
+        field_name=field_name,
+        value=field_value
+    )
+
+
 @tracer.capture_method
 def delete_endpoint(endpoint_item):
     tracer.put_annotation("endpoint_item", endpoint_item)
@@ -62,12 +73,16 @@ def delete_endpoint(endpoint_item):
     logger.info(json.dumps(endpoint_item))
 
     endpoint_name = endpoint_item['endpoint_name']['S']
+    ep_id = endpoint_item['EndpointDeploymentJobId']['S']
 
     endpoint = get_endpoint_in_sagemaker(endpoint_name)
 
     if endpoint is None:
         delete_endpoint_item(endpoint_item)
         return
+
+    update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
+    update_endpoint_field(ep_id, 'current_instance_count', 0)
 
     # delete sagemaker endpoint
     logger.info("endpoint")
@@ -104,7 +119,6 @@ def delete_endpoint_item(endpoint_item):
         table=sagemaker_endpoint_table,
         keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
     )
-    # bucket.objects.filter(Prefix=f"{endpoint_item['endpoint_name']['S']}-{esd_version}").delete()
 
 
 @tracer.capture_method

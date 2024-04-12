@@ -35,7 +35,7 @@ class TestXyzCheckpointE2E:
             delete_inference_jobs([inference_data['id']])
 
     @pytest.mark.skip(reason="not ready")
-    def test_1_xyz_checkpoint_txt2img_inference_job_create(self):
+    def test_1_xyz_checkpoint_txt2img_job_create(self):
 
         headers = {
             "x-api-key": config.api_key,
@@ -64,7 +64,7 @@ class TestXyzCheckpointE2E:
         upload_with_put(inference_data["api_params_s3_upload_url"], api_params_filename)
 
     @pytest.mark.skip(reason="not ready")
-    def test_2_xyz_checkpoint_txt2img_inference_job_succeed(self):
+    def test_2_xyz_checkpoint_txt2img_job_succeed(self):
 
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value

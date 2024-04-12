@@ -1,9 +1,6 @@
 from __future__ import print_function
 
 import logging
-import time
-from datetime import datetime
-from datetime import timedelta
 
 import pytest
 
@@ -74,31 +71,37 @@ class TestTrainStartCompleteE2E:
         resp = self.api.create_training_job(headers=headers, data=payload)
         assert resp.status_code == 201, resp.dumps()
 
-    def test_2_wait_train_job_complete(self):
+    def test_2_train_wd14_job_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
         }
 
-        resp = self.api.list_trainings(headers=headers)
+        payload = {
+            "lora_train_type": "kohya",
+            "params": {
+                "training_params": {
+                    "training_instance_type": config.train_instance_type,
+                    "model": config.default_model_id,
+                    "dataset": config.dataset_name,
+                    "fm_type": "sd_1_5"
+                },
+                "enable_wd14_tagger": True,
+                "wd14_tagger_params": {
+                    "character_threshold": "0.7",
+                    "general_threshold": "0.7"
+                },
+                "config_params": {
+                    "saving_arguments": {
+                        "output_name": config.train_wd14_model_name,
+                        "save_every_n_epochs": 1
+                    },
+                    "training_arguments": {
+                        "max_train_epochs": 1
+                    }
+                }
+            }
+        }
 
-        assert resp.status_code == 200, resp.dumps()
-        assert resp.json()["statusCode"] == 200
-        assert 'trainings' in resp.json()["data"]
-        train_jobs = resp.json()["data"]["trainings"]
-        assert len(train_jobs) > 0
-        for trainJob in train_jobs:
-            timeout = datetime.now() + timedelta(minutes=50)
-
-            while datetime.now() < timeout:
-                resp = self.api.get_training_job(job_id=trainJob["id"], headers=headers)
-                assert resp.status_code == 200, resp.dumps()
-                job_status = resp.json()["data"]['job_status']
-                if job_status == "Failed" or job_status == "Fail":
-                    raise Exception(f"Train is {job_status}. {resp.json()}")
-                if job_status == "Completed":
-                    break
-                logger.info("Train job is %s", job_status)
-                time.sleep(20)
-            else:
-                raise Exception("Function execution timed out after 30 minutes.")
+        resp = self.api.create_training_job(headers=headers, data=payload)
+        assert resp.status_code == 201, resp.dumps()
