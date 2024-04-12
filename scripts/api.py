@@ -21,6 +21,7 @@ THREAD_CHECK_COUNT = 1
 CONDITION_POOL_MAX_COUNT = 10
 CONDITION_WAIT_TIME_OUT = 100000
 
+WEBUI_PORT = os.environ.get('WEBUI_PORT') or 8080
 
 def dummy_function(*args, **kwargs):
     return None
@@ -215,7 +216,7 @@ def sagemaker_api(_, app: FastAPI):
                     if image_type:
                         logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
-                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/sdapi/v1/txt2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp.update(response.json())
@@ -230,25 +231,25 @@ def sagemaker_api(_, app: FastAPI):
                     if image_type:
                         logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
-                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/sdapi/v1/img2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp.update(response.json())
                     return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
-                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
                     return response.json()
                 elif req.task == 'extra-single-image':
-                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-single-image',
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/sdapi/v1/extra-single-image',
                                              json=payload)
                     return response.json()
                 elif req.task == 'extra-batch-images':
-                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-batch-images',
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/sdapi/v1/extra-batch-images',
                                              json=payload)
                     return response.json()
                 elif req.task == 'rembg':
-                    response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload)
+                    response = requests.post(url=f'http://0.0.0.0:{WEBUI_PORT}/rembg', json=payload)
                     return response.json()
                 elif req.task == 'db-create-model':
                     r"""
@@ -301,11 +302,7 @@ def sagemaker_api(_, app: FastAPI):
                             logger.info("Check disk usage after download.")
                             os.system("df -h")
                         logger.info("Start creating model.")
-                        # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
-                        #                         params=db_create_model_params)
                         create_model_func_args = copy.deepcopy(db_create_model_params)
-                        # ckpt_path = create_model_func_args.pop("new_model_src")
-                        # create_model_func_args["ckpt_path"] = ckpt_path
                         local_response = create_model(**create_model_func_args)
                         target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
                         logging.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")

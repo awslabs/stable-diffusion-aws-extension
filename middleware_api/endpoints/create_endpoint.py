@@ -130,9 +130,9 @@ def handler(raw_event, ctx):
             short_id = event.endpoint_name
 
         endpoint_type = event.endpoint_type.lower()
-        model_name = f"{event.service_type}-model-{endpoint_type}-{short_id}"
-        endpoint_config_name = f"{event.service_type}-config-{endpoint_type}-{short_id}"
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
+        model_name = f"{endpoint_name}"
+        endpoint_config_name = f"{endpoint_name}"
 
         model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 

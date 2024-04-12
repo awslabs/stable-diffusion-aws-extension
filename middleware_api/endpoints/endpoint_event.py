@@ -65,15 +65,14 @@ def handler(event, context):
                 update_endpoint_field(ep_id, 'current_instance_count', instance_count)
         else:
 
-            endpoint_config_name = event['detail']['EndpointConfigName']
-            model_name = event['detail']['ModelName']
-
             try:
+                endpoint_config_name = event['detail']['EndpointConfigName']
                 sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
             except Exception as e:
                 logger.error(e)
 
             try:
+                model_name = event['detail']['ModelName']
                 sagemaker.delete_model(ModelName=model_name)
             except Exception as e:
                 logger.error(e)
