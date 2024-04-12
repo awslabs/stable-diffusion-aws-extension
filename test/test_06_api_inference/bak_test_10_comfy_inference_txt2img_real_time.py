@@ -21,7 +21,7 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_inference_real_time_create(self):
+    def test_1_comfy_txt2img_real_time_create(self):
         headers = {
             "x-api-key": config.api_key,
         }
@@ -187,7 +187,7 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
             import time
             time.sleep(60)
 
-    def test_2_comfy_txt2img_inference_real_time_exists(self):
+    def test_2_comfy_txt2img_real_time_exists(self):
         global inference_data
         prompt_id = inference_data["prompt_id"]
 

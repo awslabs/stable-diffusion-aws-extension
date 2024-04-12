@@ -22,7 +22,7 @@ class TestRembgRealTimeE2E:
     def teardown_class(self):
         pass
 
-    def test_1_rembg_inference_real_time_create(self):
+    def test_1_rembg_real_time_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -49,7 +49,7 @@ class TestRembgRealTimeE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/rembg-api-params.json")
 
-    def test_2_rembg_inference_real_time_exists(self):
+    def test_2_rembg_real_time_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.REMBG.value
 
@@ -61,7 +61,7 @@ class TestRembgRealTimeE2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_3_rembg_inference_real_time_start_and_succeed(self):
+    def test_3_rembg_real_time_start_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.REMBG.value
 

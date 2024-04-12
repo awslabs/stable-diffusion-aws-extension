@@ -20,7 +20,7 @@ class TestTxt2ImgCreateAndGetComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_inference_async_create(self):
+    def test_1_comfy_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
         }

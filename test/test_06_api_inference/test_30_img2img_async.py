@@ -25,7 +25,7 @@ class TestImg2ImgInferenceAsyncE2E:
     def teardown_class(self):
         pass
 
-    def test_1_img2img_inference_async_create(self):
+    def test_1_img2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -53,7 +53,7 @@ class TestImg2ImgInferenceAsyncE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/img2img_api_param.json")
 
-    def test_2_img2img_inference_async_exists(self):
+    def test_2_img2img_async_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.IMG2IMG.value
 
@@ -65,7 +65,7 @@ class TestImg2ImgInferenceAsyncE2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_5_img2img_inference_async_and_succeed(self):
+    def test_5_img2img_async_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.IMG2IMG.value
 
@@ -99,7 +99,7 @@ class TestImg2ImgInferenceAsyncE2E:
         else:
             raise Exception("Inference execution timed out after 5 minutes.")
 
-    def test_6_img2img_inference_async_content(self):
+    def test_6_img2img_async_content(self):
         global inference_data
 
         inference_id = inference_data["id"]

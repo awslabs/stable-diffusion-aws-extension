@@ -26,7 +26,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_inference_async_create(self):
+    def test_1_comfy_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
         }
@@ -191,7 +191,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         assert resp.json()["statusCode"] == 201
         print(json.dumps(resp.json()['debug'], indent=2))
 
-    def test_2_comfy_txt2img_inference_async_exists(self):
+    def test_2_comfy_txt2img_async_exists(self):
         global inference_data
         prompt_id = inference_data["prompt_id"]
 
@@ -202,7 +202,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         resp = self.api.get_execute_job(headers=headers, prompt_id=prompt_id)
         assert resp.status_code == 200, resp.dumps()
 
-    def test_3_comfy_txt2img_inference_async_start_and_succeed(self):
+    def test_3_comfy_txt2img_async_start_and_succeed(self):
 
         headers = {
             "x-api-key": config.api_key,

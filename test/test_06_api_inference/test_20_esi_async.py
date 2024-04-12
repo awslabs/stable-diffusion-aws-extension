@@ -25,7 +25,7 @@ class TestEsiInferenceAsyncE2E:
     def teardown_class(cls):
         pass
 
-    def test_1_esi_inference_async_create(self):
+    def test_1_esi_async_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -54,7 +54,7 @@ class TestEsiInferenceAsyncE2E:
         upload_with_put(inference_data["api_params_s3_upload_url"],
                         "./data/api_params/extra-single-image-api-params.json")
 
-    def test_2_esi_inference_async_exists(self):
+    def test_2_esi_async_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.ESI.value
 
@@ -72,7 +72,7 @@ class TestEsiInferenceAsyncE2E:
 
         assert resp.json()["statusCode"] == 200
 
-    def test_3_esi_inference_async_and_succeed(self):
+    def test_3_esi_async_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.ESI.value
 
@@ -106,7 +106,7 @@ class TestEsiInferenceAsyncE2E:
         else:
             raise Exception("Inference execution timed out after 5 minutes.")
 
-    def test_4_esi_inference_async_content(self):
+    def test_4_esi_async_content(self):
         global inference_data
 
         inference_id = inference_data["id"]
