@@ -1,4 +1,5 @@
 import logging
+import os
 import signal
 import socket
 import subprocess
@@ -13,7 +14,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 app = FastAPI()
 
+service_type = os.getenv('SERVICE_TYPE', 'sd')
 SD_PORT = 7861
+COMFY_PORT = 8081
+
+SERVER_PORT = COMFY_PORT if service_type == 'comfy' else SD_PORT
 
 
 def handle_sigterm(signum, frame):
@@ -31,10 +36,10 @@ async def ping():
 @app.post("/invocations")
 async def invocations(request: Request):
     while True:
-        if is_port_open(SD_PORT):
+        if is_port_open(SERVER_PORT):
             req = await request.json()
-            logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SD_PORT}/invocations")
-            response = requests.post(f"http://127.0.0.1:{SD_PORT}/invocations", json=req)
+            logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
+            response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req)
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
                                     detail=f"service returned an error: {response.text}")
