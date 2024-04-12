@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import signal
@@ -7,7 +8,7 @@ from time import sleep
 
 import requests
 import uvicorn
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,8 +41,10 @@ async def invocations(request: Request):
             logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
             response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=200)
             if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code,
-                                    detail=f"service returned an error: {response.text}")
+                return json.dumps({
+                    "status_code": response.status_code,
+                    "detail": f"service returned an error: {response.text}"
+                })
             return response.json()
         else:
             sleep(1)
