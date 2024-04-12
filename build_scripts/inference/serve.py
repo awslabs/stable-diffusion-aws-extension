@@ -33,7 +33,7 @@ async def invocations(request: Request):
             return response.json()
         else:
             sleep(1)
-            print('Waiting for port to be open')
+            logger.info('waiting for comfy service to start...')
 
 
 def is_port_open(host, port):

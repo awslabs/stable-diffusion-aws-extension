@@ -41,4 +41,3 @@ RUN chmod +x /serve.py
 
 #ENTRYPOINT ["bash", "/serve.sh"]
 ENTRYPOINT ["/venv/bin/python", "/serve.py"]
-#ENTRYPOINT ["nginx", "-g", "daemon off;"]
