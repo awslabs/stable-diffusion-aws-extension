@@ -21,7 +21,7 @@ THREAD_CHECK_COUNT = 1
 CONDITION_POOL_MAX_COUNT = 10
 CONDITION_WAIT_TIME_OUT = 100000
 
-SD_PORT = os.environ.get('SD_PORT') or 7861
+SD_PORT = os.environ.get('SD_PORT') or 24001
 
 def dummy_function(*args, **kwargs):
     return None
