@@ -293,8 +293,6 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            # (Optional) Specify the max number of inflight invocations per instance
-            # If no value is provided, Amazon SageMaker will choose an optimal value for you
             "MaxConcurrentInvocationsPerInstance": 1
         }
     }
