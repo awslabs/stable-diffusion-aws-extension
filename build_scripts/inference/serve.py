@@ -8,6 +8,7 @@ import requests
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 app = FastAPI()
@@ -52,4 +53,4 @@ def is_port_open(port):
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_sigterm)
     subprocess.Popen(["bash", "/serve.sh"])
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
