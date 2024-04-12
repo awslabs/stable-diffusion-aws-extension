@@ -10,7 +10,7 @@ from utils.helper import update_oas
 logger = logging.getLogger(__name__)
 
 
-class TestEndpointCheckForComfyE2E:
+class TestEndpointRealTimeReCheckForComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -20,7 +20,7 @@ class TestEndpointCheckForComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_list_endpoints_status(self):
+    def test_1_list_real_time_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -36,7 +36,7 @@ class TestEndpointCheckForComfyE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert config.comfy_async_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert config.comfy_real_time_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
         timeout = datetime.now() + timedelta(minutes=50)
 
@@ -62,7 +62,7 @@ class TestEndpointCheckForComfyE2E:
         assert resp.status_code == 200, resp.dumps()
 
         for endpoint in resp.json()['data']["endpoints"]:
-            if endpoint["endpoint_name"] == config.comfy_async_ep_name:
+            if endpoint["endpoint_name"] == config.comfy_real_time_ep_name:
                 if endpoint["endpoint_status"] == "InService":
                     return True
 

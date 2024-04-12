@@ -86,7 +86,7 @@ class TestEndpointCreateE2E:
         resp = self.api.create_inference(headers=headers, data=data)
         assert resp.json()["message"] == 'no available Async endpoints for user "api"'
 
-    def test_3_create_endpoint_async(self):
+    def test_3_create_sd_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -98,7 +98,7 @@ class TestEndpointCreateE2E:
             "instance_type": config.async_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": True,
-            "assign_to_roles": ["IT Operator"],
+            "assign_to_roles": [config.role_sd_async],
             "creator": config.username
         }
 
@@ -106,7 +106,7 @@ class TestEndpointCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_4_create_endpoint_real_time(self):
+    def test_4_create_sd_endpoint_real_time(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -118,7 +118,7 @@ class TestEndpointCreateE2E:
             "instance_type": config.real_time_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": False,
-            "assign_to_roles": ["byoc"],
+            "assign_to_roles": [config.role_sd_real_time],
             "creator": config.username
         }
 
@@ -135,6 +135,67 @@ class TestEndpointCreateE2E:
         data = {
             "endpoint_name": config.endpoint_name,
             "endpoint_type": 'Async',
+            "instance_type": config.async_instance_type,
+            "initial_instance_count": int(config.initial_instance_count),
+            "autoscaling_enabled": False,
+            "assign_to_roles": ["Designer"],
+            "creator": config.username
+        }
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert "Cannot create already existing model" in resp.json()["message"]
+
+    def test_3_create_endpoint_async_for_comfy(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        data = {
+            "endpoint_name": "test",
+            "service_type": "comfy",
+            "endpoint_type": "Async",
+            "instance_type": config.async_instance_type,
+            "initial_instance_count": 1,
+            "autoscaling_enabled": True,
+            "assign_to_roles": [config.role_sd_async],
+            "creator": config.username
+        }
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert 'data' in resp.json(), resp.dumps()
+        assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
+
+    def test_4_create_endpoint_real_time_for_comfy(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        data = {
+            "endpoint_name": "test",
+            "service_type": "comfy",
+            "endpoint_type": "Real-time",
+            "instance_type": config.real_time_instance_type,
+            "initial_instance_count": 1,
+            "autoscaling_enabled": False,
+            "assign_to_roles": [config.role_comfy_real_time],
+            "creator": config.username
+        }
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert 'data' in resp.json(), resp.dumps()
+        assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
+
+    def test_5_create_endpoint_exists_for_comfy(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+        data = {
+            "endpoint_name": "test",
+            "endpoint_type": 'Async',
+            "service_type": "comfy",
             "instance_type": config.async_instance_type,
             "initial_instance_count": int(config.initial_instance_count),
             "autoscaling_enabled": False,

@@ -96,3 +96,7 @@ logger.info(f"config.compare_content: {compare_content}")
 
 webui_stack = "webui-stack"
 comfy_stack = "comfy-stack"
+role_comfy_async = "comfy_async"
+role_comfy_real_time = "comfy_real_time"
+role_sd_async = "sd_async"
+role_sd_real_time = "sd_real_time"
