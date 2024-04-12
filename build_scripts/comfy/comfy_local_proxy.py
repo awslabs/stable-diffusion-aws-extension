@@ -34,7 +34,8 @@ load_dotenv('/etc/environment')
 logging.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
-            'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME']
+            'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
+            'MAX_WAIT_TIME']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -55,9 +56,10 @@ if 'COMFY_NODE_PATH' in os.environ and os.environ.get('COMFY_NODE_PATH'):
 api_url = os.environ.get('COMFY_API_URL')
 api_token = os.environ.get('COMFY_API_TOKEN')
 comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
-comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
+comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
+max_wait_time = os.environ.get('MAX_WAIT_TIME', 30)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -183,7 +185,7 @@ def execute_proxy(func):
         def send_get_request(url):
             response = requests.get(url, headers=headers)
             return response
-        logging.info(f"payload is: {payload}")
+        logging.debug(f"payload is: {payload}")
 
         already_synced = False
         save_already = False
@@ -200,11 +202,22 @@ def execute_proxy(func):
                     if future == execute_future:
                         execute_resp = future.result()
                         if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
-                            images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                            save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-                            logging.info(images_response.json())
-                            save_already = True
+                            i = max_wait_time
+                            while i > 0:
+                                images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
+                                response = images_response.json()
+                                if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                                    logging.error("there is no response from execute result !!!!!!!!")
+                                    break
+                                elif response['data']['status'] != 'Completed':
+                                    time.sleep(2)
+                                    i = i - 1
+                                else:
+                                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                                    save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                    logging.info(images_response.json())
+                                    save_already = True
+                                    break
                             break
                         logging.info(execute_resp.json())
                     elif future == msg_future:
@@ -212,34 +225,37 @@ def execute_proxy(func):
                         logging.info(msg_response.json())
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                                logging.error("there is no response from sync msg by thread ")
                                 continue
                             logging.debug(msg_response.json())
-                            # if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
-                            #     already_synced = True
-                            # else:
-                            #     continue
                             already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
-
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
-                logging.info(msg_response.json())
+                # logging.info(msg_response.json())
                 already_synced = True
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                        logging.error("there is no response from sync msg")
                         continue
-                    # if 'event' in msg_response.json() and msg_response.json().get("event") == 'finish':
-                    #     already_synced = True
-                    # else:
-                    #     continue
                     already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
                 execute_resp = execute_future.result()
                 if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
-                    images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                    save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-
+                    i = max_wait_time
+                    while i > 0:
+                        images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
+                        response = images_response.json()
+                        if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                            logging.error("there is no response from sync executes")
+                            break
+                        elif response['data']['status'] != 'Completed':
+                            time.sleep(2)
+                            i = i - 1
+                        else:
+                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                            save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                            break
     return wrapper
 
 
@@ -248,7 +264,7 @@ PromptExecutor.execute = execute_proxy(PromptExecutor.execute)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
-        logging.info(f"Sending sync request!!!!!!! {args}")
+        logging.info(f"Sending sync request----- {args}")
         return func(*args, **kwargs)
     return wrapper
 
