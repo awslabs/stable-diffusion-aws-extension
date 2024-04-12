@@ -23,6 +23,7 @@ CONDITION_WAIT_TIME_OUT = 100000
 
 SD_PORT = os.environ.get('SD_PORT') or 24001
 
+
 def dummy_function(*args, **kwargs):
     return None
 
@@ -184,6 +185,8 @@ def sagemaker_api(_, app: FastAPI):
         """
         logger.info('-------invocation------')
         logger.info(json.dumps(req.__dict__, default=str))
+        logger.info(app.__dict__)
+        logger.info(app)
 
         with condition:
             try:
