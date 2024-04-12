@@ -9,7 +9,6 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
-from endpoint_event import update_endpoint_field
 from libs.enums import EndpointStatus
 from libs.utils import response_error
 
@@ -57,6 +56,16 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+def update_endpoint_field(endpoint_id, field_name, field_value):
+    logger.info(f"Updating {field_name} to {field_value} for: {endpoint_id}")
+    ddb_service.update_item(
+        table=sagemaker_endpoint_table,
+        key={'EndpointDeploymentJobId': endpoint_id},
+        field_name=field_name,
+        value=field_value
+    )
+
+
 @tracer.capture_method
 def delete_endpoint(endpoint_item):
     tracer.put_annotation("endpoint_item", endpoint_item)
@@ -64,7 +73,7 @@ def delete_endpoint(endpoint_item):
     logger.info(json.dumps(endpoint_item))
 
     endpoint_name = endpoint_item['endpoint_name']['S']
-    ep_id = endpoint_item['EndpointDeploymentJobId']
+    ep_id = endpoint_item['EndpointDeploymentJobId']['S']
 
     endpoint = get_endpoint_in_sagemaker(endpoint_name)
 
