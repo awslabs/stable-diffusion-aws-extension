@@ -185,8 +185,8 @@ def sagemaker_api(_, app: FastAPI):
         """
         logger.info('-------invocation------')
         logger.info(json.dumps(req.__dict__, default=str))
-        logger.info(app.__dict__)
-        logger.info(app)
+        print(app.__dict__)
+        print(app)
 
         with condition:
             try:
