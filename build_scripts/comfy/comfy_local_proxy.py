@@ -1,5 +1,6 @@
 import base64
 import concurrent.futures
+import datetime
 import os
 import signal
 import threading
@@ -19,6 +20,7 @@ import subprocess
 from dotenv import load_dotenv
 import logging
 import fcntl
+import hashlib
 
 global sync_msg_list
 
@@ -29,7 +31,7 @@ if 'ENV_FILE_PATH' in os.environ and os.environ.get('ENV_FILE_PATH'):
     env_path = os.environ.get('ENV_FILE_PATH')
 
 load_dotenv('/etc/environment')
-logging.info("env_path", env_path)
+logging.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME']
@@ -98,6 +100,19 @@ def save_images_locally(response_json, local_folder):
 
     except Exception as e:
         logging.info(f"Error saving images locally: {e}")
+
+
+def calculate_file_hash(file_path):
+    # 创建一个哈希对象
+    hasher = hashlib.sha256()
+    # 打开文件并逐块更新哈希对象
+    with open(file_path, 'rb') as file:
+        buffer = file.read(65536)  # 64KB 的缓冲区大小
+        while len(buffer) > 0:
+            hasher.update(buffer)
+            buffer = file.read(65536)
+    # 返回哈希值的十六进制表示
+    return hasher.hexdigest()
 
 
 def save_files(prefix, execute, key, target_dir, need_prefix):
@@ -184,7 +199,7 @@ def execute_proxy(func):
                 for future in done:
                     if future == execute_future:
                         execute_resp = future.result()
-                        if execute_resp.status_code == 200:
+                        if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
@@ -220,7 +235,7 @@ def execute_proxy(func):
 
             if not save_already:
                 execute_resp = execute_future.result()
-                if execute_resp.status_code == 200:
+                if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                     save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                     save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
@@ -241,7 +256,7 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
-def sync_files(filepath):
+def sync_files(filepath, is_folder):
     try:
         directory = os.path.dirname(filepath)
         logging.info(f"Directory changed in: {directory}")
@@ -263,38 +278,52 @@ def sync_files(filepath):
             s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
-            logging.info(s5cmd_syn_node_command)
+
             # custom_node文件夹有变化 稍后再同步
             if not is_folder_unlocked(directory):
+                logging.info("sync custom_nodes files is changing ,waiting.... ")
                 return
             logging.info("sync custom_nodes files start")
+            logging.info(s5cmd_syn_node_command)
             os.system(s5cmd_syn_node_command)
             need_prepare = True
             need_reboot = True
             prepare_type = 'nodes'
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or f"{DIR3}/" in filepath):
-            logging.info(f" sync custom input files: {filepath}")
+            logging.info(f" sync input files: {filepath}")
             s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
-            logging.info(s5cmd_syn_input_command)
-            # 判断文件写完后再同步
-            while not is_file_unlocked(filepath):
-                time.sleep(1)
 
+            # 判断文件写完后再同步
+            if bool(is_folder):
+                can_sync = is_folder_unlocked(filepath)
+            else:
+                can_sync = is_file_unlocked(filepath)
+            if not can_sync:
+                logging.info("sync input files is changing ,waiting.... ")
+                return
             logging.info("sync input files start")
+            logging.info(s5cmd_syn_input_command)
             os.system(s5cmd_syn_input_command)
             need_prepare = True
             prepare_type = 'inputs'
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or f"{DIR1}/" in filepath):
-            logging.info(f" sync custom models files: {filepath}")
+            logging.info(f" sync models files: {filepath}")
             s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
-            logging.info(s5cmd_syn_model_command)
+
             # 判断文件写完后再同步
-            while not is_file_unlocked(filepath):
-                time.sleep(1)
+            if bool(is_folder):
+                can_sync = is_folder_unlocked(filepath)
+            else:
+                can_sync = is_file_unlocked(filepath)
+            # logging.info(f'is folder {directory} {is_folder} can_sync {can_sync}')
+            if not can_sync:
+                logging.info("sync input models is changing ,waiting.... ")
+                return
 
             logging.info("sync models files start")
+            logging.info(s5cmd_syn_model_command)
             os.system(s5cmd_syn_model_command)
             need_prepare = True
             prepare_type = 'models'
@@ -314,26 +343,34 @@ def sync_files(filepath):
 
 
 def is_folder_unlocked(directory):
+    # logging.info("check if folder ")
     event_handler = MyHandlerWithCheck()
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=True)
     observer.start()
-    time.sleep(3)
+    time.sleep(1)
+    result = False
     try:
         if event_handler.file_changed:
-            print(f"folder {directory} is still changing..")
+            logging.info(f"folder {directory} is still changing..")
             event_handler.file_changed = False
-            observer.stop()
-            return False
+            time.sleep(1)
+            if event_handler.file_changed:
+                logging.info(f"folder {directory} is still still changing..")
+            else:
+                logging.info(f"folder {directory} changing stopped")
+                result = True
         else:
-            return True
+            logging.info(f"folder {directory} not stopped")
+            result = True
     except (KeyboardInterrupt, Exception) as e:
-        observer.stop()
-    observer.join()
-    return True
+        logging.info(f"folder {directory} changed exception {e}")
+    observer.stop()
+    return result
 
 
 def is_file_unlocked(file_path):
+    # logging.info("check if file ")
     try:
         initial_size = os.path.getsize(file_path)
         initial_mtime = os.path.getmtime(file_path)
@@ -342,6 +379,7 @@ def is_file_unlocked(file_path):
         current_size = os.path.getsize(file_path)
         current_mtime = os.path.getmtime(file_path)
         if current_size != initial_size or current_mtime != initial_mtime:
+            logging.info(f"unlock file error {file_path} is changing")
             return False
 
         with open(file_path, 'r') as f:
@@ -350,31 +388,38 @@ def is_file_unlocked(file_path):
     except (IOError, OSError, Exception) as e:
         logging.info(f"unlock file error {file_path} is writing")
         logging.error(e)
-        return True
+        return False
 
 
 class MyHandlerWithCheck(FileSystemEventHandler):
-    class MyHandler(FileSystemEventHandler):
-        def __init__(self):
-            self.file_changed = False
+    def __init__(self):
+        self.file_changed = False
 
-        def on_any_event(self, event):
-            logging.info(f"custom_node folder is changing {event.src_path}")
-            self.file_changed = True
+    def on_modified(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_deleted(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_created(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
 
 
 class MyHandlerWithSync(FileSystemEventHandler):
     def on_modified(self, event):
-        logging.info(f"files modified ，start to sync")
-        sync_files(event.src_path)
+        logging.info(f"{datetime.datetime.now()} files modified ，start to sync {event}")
+        sync_files(event.src_path, event.is_directory)
 
     def on_created(self, event):
-        logging.info(f"files added ，start to sync")
-        sync_files(event.src_path)
+        logging.info(f"{datetime.datetime.now()} files added ，start to sync {event}")
+        sync_files(event.src_path, event.is_directory)
 
     def on_deleted(self, event):
-        logging.info(f"files deleted ，start to sync")
-        sync_files(event.src_path)
+        logging.info(f"{datetime.datetime.now()} files deleted ，start to sync {event}")
+        sync_files(event.src_path, event.is_directory)
 
 
 stop_event = threading.Event()
