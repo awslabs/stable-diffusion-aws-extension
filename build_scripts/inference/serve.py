@@ -11,7 +11,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("controller")
 logger.setLevel(logging.INFO)
 app = FastAPI()
 
@@ -40,7 +40,7 @@ async def invocations(request: Request):
         if is_port_open(SERVER_PORT):
             try:
                 req = await request.json()
-                logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
+                logger.info(f"invocations start req:{req} url:http://127.0.0.1:{SERVER_PORT}/invocations")
                 response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=(200, 300))
                 if response.status_code != 200:
                     return json.dumps({
@@ -56,7 +56,7 @@ async def invocations(request: Request):
                 })
         else:
             sleep(1)
-            logger.info('waiting for comfy service to start...')
+            logger.info('waiting for service to start...')
 
 
 def is_port_open(port):

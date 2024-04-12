@@ -28,7 +28,7 @@ def dummy_function(*args, **kwargs):
     return None
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 
