@@ -17,7 +17,9 @@ if [ -z "$SERVICE_TYPE" ]; then
   exit 1
 fi
 
-export WEBUI_PORT=8080
+nginx &
+
+export WEBUI_PORT=8081
 export TAR_FILE="esd.tar"
 export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 

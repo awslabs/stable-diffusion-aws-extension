@@ -35,7 +35,7 @@ def handler(event, context):
 
     if not endpoint:
         # maybe the endpoint is not created by sde or already deleted
-        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
+        logger.info(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
         return {'statusCode': 200}
 
     ep_id = endpoint['EndpointDeploymentJobId']
@@ -78,7 +78,7 @@ def handler(event, context):
             except Exception as e:
                 logger.error(e)
 
-            ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
+            ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id['S']})
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(ep_id, 'error', event['FailureReason'])

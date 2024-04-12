@@ -16,7 +16,7 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
     rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
     mv s5cmd /usr/local/bin/
 
-COPY sd_nginx_proxy.conf /etc/nginx/sites-available/default
+COPY sd_nginx_proxy.conf /etc/nginx/nginx.conf
 
 ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
@@ -33,4 +33,9 @@ RUN chmod +x /serve.sh
 COPY inference/metrics.py /
 RUN chmod +x /metrics.py
 
-ENTRYPOINT ["bash", "/serve.sh"]
+COPY inference/serve.py /
+RUN chmod +x /serve.py
+
+#ENTRYPOINT ["bash", "/serve.sh"]
+ENTRYPOINT ["python3", "/serve.py"]
+#ENTRYPOINT ["nginx", "-g", "daemon off;"]
