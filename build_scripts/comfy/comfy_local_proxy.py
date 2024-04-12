@@ -357,19 +357,15 @@ def is_folder_unlocked(directory):
             time.sleep(1)
             if event_handler.file_changed:
                 logging.info(f"folder {directory} is still still changing..")
-                observer.stop()
             else:
                 logging.info(f"folder {directory} changing stopped")
                 result = True
-                observer.stop()
         else:
             logging.info(f"folder {directory} not stopped")
             result = True
-            observer.stop()
     except (KeyboardInterrupt, Exception) as e:
         logging.info(f"folder {directory} changed exception {e}")
-        observer.stop()
-    observer.join()
+    observer.stop()
     return result
 
 
@@ -399,7 +395,15 @@ class MyHandlerWithCheck(FileSystemEventHandler):
     def __init__(self):
         self.file_changed = False
 
-    def on_any_event(self, event):
+    def on_modified(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_deleted(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_created(self, event):
         logging.info(f"custom_node folder is changing {event.src_path}")
         self.file_changed = True
 
