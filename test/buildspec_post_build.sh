@@ -1,3 +1,7 @@
+#!/bin/bash
+
+chmod +x env.properties
+
 source env.properties
 
 echo "----------------------------------------------------------------"
@@ -72,9 +76,7 @@ if [ "$result" = "Passed" ]; then
     echo "----------------------------------------------------------------"
     echo "Remove the stack"
     echo "----------------------------------------------------------------"
-    echo "Waiting for stack to be deleted..."
     aws cloudformation delete-stack --stack-name "$STACK_NAME"
-    aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
   fi
 
   if [ "$CLEAN_RESOURCES" = "yes" ]; then

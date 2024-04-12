@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -euxo pipefail
 
 export STACK_NAME="Extension-for-Stable-Diffusion-on-AWS"
