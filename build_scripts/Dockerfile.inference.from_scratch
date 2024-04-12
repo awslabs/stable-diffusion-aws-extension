@@ -8,13 +8,15 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
     apt-get install --no-install-recommends -y \
                     git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
-                    pkg-config file curl protobuf-compiler mesa-utils \
+                    pkg-config file curl protobuf-compiler mesa-utils nginx \
                     python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
     rm -rf /var/lib/apt/lists/* && \
     wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
     tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
     rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
     mv s5cmd /usr/local/bin/
+
+COPY sd_nginx_proxy.conf /etc/nginx/sites-available/default
 
 ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
