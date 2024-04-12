@@ -37,15 +37,21 @@ async def ping():
 async def invocations(request: Request):
     while True:
         if is_port_open(SERVER_PORT):
-            req = await request.json()
-            logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
-            response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=200)
-            if response.status_code != 200:
+            try:
+                req = await request.json()
+                logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
+                response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=200)
+                if response.status_code != 200:
+                    return json.dumps({
+                        "status_code": response.status_code,
+                        "detail": f"service returned an error: {response.text}"
+                    })
+                return response.json()
+            except Exception as e:
                 return json.dumps({
-                    "status_code": response.status_code,
-                    "detail": f"service returned an error: {response.text}"
+                    "status_code": 500,
+                    "detail": f"service returned an error: {str(e)}"
                 })
-            return response.json()
         else:
             sleep(1)
             logger.info('waiting for comfy service to start...')
