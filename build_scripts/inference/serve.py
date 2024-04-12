@@ -1,73 +1,48 @@
-#!/usr/bin/env python
-
-import http.client
 import logging
-import os
 import socket
 import subprocess
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import sleep
-from typing import BinaryIO
+
+import requests
+import uvicorn
+from fastapi import FastAPI, Request, HTTPException
 
 logger = logging.getLogger(__name__)
-logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+logger.setLevel(logging.INFO)
+app = FastAPI()
+
+PHY_LOCALHOST = '127.0.0.1'
+COMFY_PORT = 8188
 
 
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/ping':
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(b'OK')
+@app.get("/ping")
+async def ping():
+    return {"message": "pong"}
+
+
+@app.post("/invocations")
+async def invocations(request: Request):
+    while True:
+        if is_port_open('127.0.0.1', 8081):
+            req = await request.json()
+            logger.info(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{COMFY_PORT}/invocations")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/invocations", json=req)
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code,
+                                    detail=f"service returned an error: {response.text}")
+            return response.json()
         else:
-            self.send_response(404)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(b'Not Found')
-
-    def do_POST(self):
-        if self.path == '/invocations':
-            while True:
-                if self.is_port_open('127.0.0.1', 8081):
-                    print('Port is open')
-                    response = self.forward_request(self.headers, self.rfile)
-                    self.send_response(response.status)
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(response.read())
-                else:
-                    sleep(1)
-                    print('Waiting for port to be open')
-
-        else:
-            self.send_response(404)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(b'Not Found')
-
-    def is_port_open(self, host, port):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(1)
-            result = sock.connect_ex((host, port))
-            return result == 0
-
-    def forward_request(self, headers, rfile: BinaryIO):
-        content_length = int(headers['Content-Length'])
-        post_data = rfile.read(content_length)
-        print(post_data)
-        conn = http.client.HTTPConnection('127.0.0.1', 8081, timeout=60 * 10)
-        conn.request("POST", "/invocations", post_data, headers)
-        return conn.getresponse()
+            sleep(1)
+            print('Waiting for port to be open')
 
 
-def run_server(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler):
-    server_address = ('', 8080)
-    httpd = server_class(server_address, handler_class)
-    print("Starting server on http://localhost:8080/")
-    httpd.serve_forever()
+def is_port_open(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        return result == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     subprocess.Popen(["bash", "/serve.sh"])
-    run_server()
+    uvicorn.run(app, host="0.0.0.0", port=8080)
