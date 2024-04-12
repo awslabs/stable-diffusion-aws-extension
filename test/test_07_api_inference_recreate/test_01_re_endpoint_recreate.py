@@ -85,7 +85,7 @@ class TestEndpointReCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_3_recreate_endpoint_async_for_comfy(self):
+    def test_3_recreate_comfy_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -98,7 +98,7 @@ class TestEndpointReCreateE2E:
             "instance_type": config.async_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": True,
-            "assign_to_roles": [config.role_sd_async],
+            "assign_to_roles": [config.role_comfy_async],
             "creator": config.username
         }
 
@@ -106,7 +106,7 @@ class TestEndpointReCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_4_recreate_endpoint_real_time_for_comfy(self):
+    def test_4_recreate_comfy_endpoint_real_time(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -119,7 +119,7 @@ class TestEndpointReCreateE2E:
             "instance_type": config.real_time_instance_type,
             "initial_instance_count": 1,
             "autoscaling_enabled": False,
-            "assign_to_roles": [config.role_sd_real_time],
+            "assign_to_roles": [config.role_comfy_real_time],
             "creator": config.username
         }
 
@@ -127,7 +127,7 @@ class TestEndpointReCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_5_recreate_endpoint_exists_for_comfy(self):
+    def test_5_recreate_comfy_endpoint_exists(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
