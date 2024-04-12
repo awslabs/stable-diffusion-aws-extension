@@ -166,6 +166,7 @@ def parse_constant(c: str) -> float:
 
 
 def sagemaker_api(_, app: FastAPI):
+    logger.info(app)
     logger.debug("Loading Sagemaker API Endpoints.")
     import threading
     from collections import deque
