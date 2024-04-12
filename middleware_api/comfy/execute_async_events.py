@@ -43,13 +43,13 @@ def handler(event, context):
 
     logger.info(result)
 
-    result = {
-        "prompt_id": '11111111-1111-1111',
-        "instance_id": 'comfy-real-time-test-rgihbd',
-        "status": 'success',
-        "output_path": f's3://{bucket_name}/images/',
-        "temp_path": f's3://{bucket_name}/images/'
-    }
+    # result = {
+    #     "prompt_id": '11111111-1111-1111',
+    #     "instance_id": 'comfy-real-time-test-rgihbd',
+    #     "status": 'success',
+    #     "output_path": f's3://{bucket_name}/images/',
+    #     "temp_path": f's3://{bucket_name}/images/'
+    # }
 
     result = InferenceResult(**result)
 

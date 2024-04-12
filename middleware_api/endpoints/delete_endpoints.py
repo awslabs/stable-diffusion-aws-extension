@@ -130,7 +130,7 @@ def get_endpoint_with_endpoint_name(endpoint_name: str):
         })
 
         if len(record_list) == 0:
-            logger.error("There is no endpoint deployment job info item with endpoint name: " + endpoint_name)
+            logger.info("There is no endpoint deployment job info item with endpoint name: " + endpoint_name)
             return {}
 
         logger.info(record_list[0])
