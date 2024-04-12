@@ -21,8 +21,6 @@ THREAD_CHECK_COUNT = 1
 CONDITION_POOL_MAX_COUNT = 10
 CONDITION_WAIT_TIME_OUT = 100000
 
-SD_PORT = os.environ.get('SD_PORT') or 24001
-
 
 def dummy_function(*args, **kwargs):
     return None
@@ -219,7 +217,7 @@ def sagemaker_api(_, app: FastAPI):
                     if image_type:
                         logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/sdapi/v1/txt2img',
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/txt2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp.update(response.json())
@@ -234,25 +232,25 @@ def sagemaker_api(_, app: FastAPI):
                     if image_type:
                         logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/sdapi/v1/img2img',
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/img2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp.update(response.json())
                     return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/sdapi/v1/interrogate',
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
                     return response.json()
                 elif req.task == 'extra-single-image':
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/sdapi/v1/extra-single-image',
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-single-image',
                                              json=payload)
                     return response.json()
                 elif req.task == 'extra-batch-images':
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/sdapi/v1/extra-batch-images',
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-batch-images',
                                              json=payload)
                     return response.json()
                 elif req.task == 'rembg':
-                    response = requests.post(url=f'http://0.0.0.0:{SD_PORT}/rembg', json=payload)
+                    response = requests.post(url=f'http://0.0.0.0:{req.port}/rembg', json=payload)
                     return response.json()
                 elif req.task == 'db-create-model':
                     r"""
