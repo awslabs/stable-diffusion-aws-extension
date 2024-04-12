@@ -70,8 +70,17 @@ def handler(event, context):
 
             endpoint_config_name = event['detail']['EndpointConfigName']
             model_name = event['detail']['ModelName']
-            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-            sagemaker.delete_model(ModelName=model_name)
+
+            try:
+                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            except Exception as e:
+                logger.error(e)
+
+            try:
+                sagemaker.delete_model(ModelName=model_name)
+            except Exception as e:
+                logger.error(e)
+
             ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
 
         if business_status == EndpointStatus.FAILED.value:
