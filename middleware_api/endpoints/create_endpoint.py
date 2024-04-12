@@ -144,6 +144,8 @@ def handler(raw_event, ctx):
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
             endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            logger.info(f"endpoint:")
+            logger.info(endpoint.__dict__)
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
