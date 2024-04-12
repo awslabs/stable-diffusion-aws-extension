@@ -143,7 +143,11 @@ def handler(raw_event, ctx):
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
+            logger.info("endpoint_row:")
+            logger.info(endpoint_row)
             endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            logger.info("endpoint:")
+            logger.info(endpoint.__dict__)
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
@@ -289,8 +293,6 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            # (Optional) Specify the max number of inflight invocations per instance
-            # If no value is provided, Amazon SageMaker will choose an optimal value for you
             "MaxConcurrentInvocationsPerInstance": 1
         }
     }

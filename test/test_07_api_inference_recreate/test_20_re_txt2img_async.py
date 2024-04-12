@@ -25,7 +25,7 @@ class TestTxt2ImgInferenceAsyncE2E:
     def teardown_class(self):
         pass
 
-    def test_1_txt2img_inference_async_create(self):
+    def test_1_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -52,7 +52,7 @@ class TestTxt2ImgInferenceAsyncE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param.json")
 
-    def test_2_txt2img_inference_async_exists(self):
+    def test_2_txt2img_async_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -64,7 +64,7 @@ class TestTxt2ImgInferenceAsyncE2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_5_txt2img_inference_async_start_and_succeed(self):
+    def test_5_txt2img_async_start_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -87,7 +87,7 @@ class TestTxt2ImgInferenceAsyncE2E:
                 api_instance=self.api,
                 job_id=inference_id
             )
-            logger.info(f"txt2img_inference_async is {status}")
+            logger.info(f"txt2img_async is {status}")
             if status == InferenceStatus.SUCCEED.value:
                 break
             if status == InferenceStatus.FAILED.value:

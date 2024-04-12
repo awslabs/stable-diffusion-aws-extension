@@ -64,27 +64,28 @@ def handler(event, context):
                 instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
                 update_endpoint_field(ep_id, 'current_instance_count', instance_count)
         else:
-            # sometime sagemaker don't send deleted event, so just use deleted status when deleting
-            update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
-            update_endpoint_field(ep_id, 'current_instance_count', 0)
 
-        # if endpoint is deleted, update the instance count to 0 and delete the config and model
-        if business_status == EndpointStatus.DELETED.value:
+            endpoint_config_name = event['detail']['EndpointConfigName']
+            model_name = event['detail']['ModelName']
+
             try:
-                endpoint_config_name = event['detail']['EndpointConfigName']
-                model_name = event['detail']['ModelName']
                 sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-                sagemaker.delete_model(ModelName=model_name)
-                ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
             except Exception as e:
-                logger.error(f"error deleting endpoint config and model with exception: {e}")
+                logger.error(e)
+
+            try:
+                sagemaker.delete_model(ModelName=model_name)
+            except Exception as e:
+                logger.error(e)
+
+            ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id})
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(ep_id, 'error', event['FailureReason'])
 
     except Exception as e:
         update_endpoint_field(ep_id, 'error', str(e))
-        logger.error(f"Error processing event with exception: {e}")
+        logger.error(e)
 
     return {'statusCode': 200}
 
@@ -310,11 +311,11 @@ def enable_autoscaling_real_time(item, variant_name):
     logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 
-def update_endpoint_field(endpoint_deployment_job_id, field_name, field_value):
-    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {endpoint_deployment_job_id}")
+def update_endpoint_field(endpoint_id, field_name, field_value):
+    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {endpoint_id}")
     ddb_service.update_item(
         table=sagemaker_endpoint_table,
-        key={'EndpointDeploymentJobId': endpoint_deployment_job_id['S']},
+        key={'EndpointDeploymentJobId': endpoint_id['S']},
         field_name=field_name,
         value=field_value
     )

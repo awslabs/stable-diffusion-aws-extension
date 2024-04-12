@@ -25,7 +25,7 @@ class TestRembgInferenceAsyncE2E:
     def teardown_class(self):
         pass
 
-    def test_1_rembg_inference_async_create(self):
+    def test_1_rembg_async_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -53,7 +53,7 @@ class TestRembgInferenceAsyncE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/rembg-api-params.json")
 
-    def test_2_rembg_inference_async_exists(self):
+    def test_2_rembg_async_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.REMBG.value
 
@@ -65,7 +65,7 @@ class TestRembgInferenceAsyncE2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_3_rembg_inference_async_and_succeed(self):
+    def test_3_rembg_async_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.REMBG.value
 
@@ -99,7 +99,7 @@ class TestRembgInferenceAsyncE2E:
         else:
             raise Exception("Inference execution timed out after 5 minutes.")
 
-    # def test_4_rembg_inference_async_content(self):
+    # def test_4_rembg_async_content(self):
     #     global inference_data
     #
     #     inference_id = inference_data["id"]

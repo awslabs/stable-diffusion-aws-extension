@@ -60,7 +60,7 @@ class TestTpsRealTimeE2E:
 
         ids = []
         for i in range(20):
-            ids.append(self.tps_inference_real_time_create())
+            ids.append(self.tps_real_time_create())
 
         threads = []
         for id in ids:
@@ -73,7 +73,7 @@ class TestTpsRealTimeE2E:
         for thread in threads:
             thread.join()
 
-    def tps_inference_real_time_create(self):
+    def tps_real_time_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

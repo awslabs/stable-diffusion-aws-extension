@@ -180,13 +180,13 @@ class TestSLaTxt2ImgAsync:
         upload_duration = (upload_end_time - upload_start_time).seconds
 
         wait_start_time = datetime.now()
-        result = self.sla_txt2img_inference_job_run_and_succeed(inference_id)
+        result = self.sla_txt2img_job_run_and_succeed(inference_id)
         wait_end_time = datetime.now()
         wait_duration = (wait_end_time - wait_start_time).seconds
 
         return result, inference_id, create_infer_duration, upload_duration, wait_duration
 
-    def sla_txt2img_inference_job_run_and_succeed(self, inference_id: str):
+    def sla_txt2img_job_run_and_succeed(self, inference_id: str):
 
         headers = {
             "x-api-key": config.api_key,
@@ -210,14 +210,14 @@ class TestSLaTxt2ImgAsync:
                 job_id=inference_id
             )
             if status == InferenceStatus.SUCCEED.value:
-                return self.sla_txt2img_inference_job_image(inference_id)
+                return self.sla_txt2img_job_image(inference_id)
             if status == InferenceStatus.FAILED.value:
                 return False
             time.sleep(0.5)
 
         return False
 
-    def sla_txt2img_inference_job_image(self, inference_id: str):
+    def sla_txt2img_job_image(self, inference_id: str):
         global inference_data
 
         headers = {
