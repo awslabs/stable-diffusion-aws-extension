@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 app = FastAPI()
 
-PHY_LOCALHOST = '127.0.0.1'
 COMFY_PORT = 8081
 
 
@@ -23,10 +22,10 @@ async def ping():
 @app.post("/invocations")
 async def invocations(request: Request):
     while True:
-        if is_port_open('127.0.0.1', 8081):
+        if is_port_open(8081):
             req = await request.json()
-            logger.info(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{COMFY_PORT}/invocations")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/invocations", json=req)
+            logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{COMFY_PORT}/invocations")
+            response = requests.post(f"http://127.0.0.1:{COMFY_PORT}/invocations", json=req)
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
                                     detail=f"service returned an error: {response.text}")
@@ -36,10 +35,10 @@ async def invocations(request: Request):
             logger.info('waiting for comfy service to start...')
 
 
-def is_port_open(host, port):
+def is_port_open(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(1)
-        result = sock.connect_ex((host, port))
+        result = sock.connect_ex(('127.0.0.1', port))
         return result == 0
 
 
