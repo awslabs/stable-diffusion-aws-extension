@@ -192,7 +192,7 @@ sd_accelerate_launch(){
   get_device_count
 
   python /metrics.py &
-#  python /serve.py &
+  python /serve.py &
 
   if [ "$INSTANCE_TYPE" == "ml.p4d.24xlarge" ]; then
     python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
