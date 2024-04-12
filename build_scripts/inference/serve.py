@@ -21,9 +21,6 @@ def handle_sigterm(signum, frame):
     print(frame)
 
 
-signal.signal(signal.SIGTERM, handle_sigterm)
-
-
 @app.get("/ping")
 async def ping():
     return {"message": "pong"}
@@ -53,5 +50,6 @@ def is_port_open(port):
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, handle_sigterm)
     subprocess.Popen(["bash", "/serve.sh"])
     uvicorn.run(app, host="0.0.0.0", port=8080)
