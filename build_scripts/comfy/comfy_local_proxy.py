@@ -199,7 +199,7 @@ def execute_proxy(func):
                 for future in done:
                     if future == execute_future:
                         execute_resp = future.result()
-                        if execute_resp.status_code == 200:
+                        if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
@@ -235,7 +235,7 @@ def execute_proxy(func):
 
             if not save_already:
                 execute_resp = execute_future.result()
-                if execute_resp.status_code == 200:
+                if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                     save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                     save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
@@ -348,18 +348,24 @@ def is_folder_unlocked(directory):
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=True)
     observer.start()
-    time.sleep(3)
+    time.sleep(1)
     result = False
     try:
         if event_handler.file_changed:
             logging.info(f"folder {directory} is still changing..")
-            observer.stop()
+            event_handler.file_changed = False
+            time.sleep(1)
+            if event_handler.file_changed:
+                logging.info(f"folder {directory} is still still changing..")
+            else:
+                logging.info(f"folder {directory} changing stopped")
+                result = True
         else:
+            logging.info(f"folder {directory} not stopped")
             result = True
-            observer.stop()
     except (KeyboardInterrupt, Exception) as e:
-        observer.stop()
-    observer.join()
+        logging.info(f"folder {directory} changed exception {e}")
+    observer.stop()
     return result
 
 
@@ -386,13 +392,20 @@ def is_file_unlocked(file_path):
 
 
 class MyHandlerWithCheck(FileSystemEventHandler):
-    class MyHandler(FileSystemEventHandler):
-        def __init__(self):
-            self.file_changed = False
+    def __init__(self):
+        self.file_changed = False
 
-        def on_any_event(self, event):
-            logging.info(f"custom_node folder is changing {event.src_path}")
-            self.file_changed = True
+    def on_modified(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_deleted(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
+
+    def on_created(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
 
 
 class MyHandlerWithSync(FileSystemEventHandler):
