@@ -35,6 +35,7 @@ async def ping():
 
 @app.post("/invocations")
 async def invocations(request: Request):
+    logger.info("invocations start")
     while True:
         if is_port_open(SERVER_PORT):
             try:
@@ -48,6 +49,7 @@ async def invocations(request: Request):
                     })
                 return response.json()
             except Exception as e:
+                logger.error(f"invocations error:{e}")
                 return json.dumps({
                     "status_code": 500,
                     "detail": f"service returned an error: {str(e)}"
