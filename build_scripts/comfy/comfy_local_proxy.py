@@ -348,16 +348,26 @@ def is_folder_unlocked(directory):
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=True)
     observer.start()
-    time.sleep(3)
+    time.sleep(1)
     result = False
     try:
         if event_handler.file_changed:
             logging.info(f"folder {directory} is still changing..")
-            observer.stop()
+            event_handler.file_changed = False
+            time.sleep(1)
+            if event_handler.file_changed:
+                logging.info(f"folder {directory} is still still changing..")
+                observer.stop()
+            else:
+                logging.info(f"folder {directory} changing stopped")
+                result = True
+                observer.stop()
         else:
+            logging.info(f"folder {directory} not stopped")
             result = True
             observer.stop()
     except (KeyboardInterrupt, Exception) as e:
+        logging.info(f"folder {directory} changed exception {e}")
         observer.stop()
     observer.join()
     return result
@@ -386,13 +396,12 @@ def is_file_unlocked(file_path):
 
 
 class MyHandlerWithCheck(FileSystemEventHandler):
-    class MyHandler(FileSystemEventHandler):
-        def __init__(self):
-            self.file_changed = False
+    def __init__(self):
+        self.file_changed = False
 
-        def on_any_event(self, event):
-            logging.info(f"custom_node folder is changing {event.src_path}")
-            self.file_changed = True
+    def on_any_event(self, event):
+        logging.info(f"custom_node folder is changing {event.src_path}")
+        self.file_changed = True
 
 
 class MyHandlerWithSync(FileSystemEventHandler):
