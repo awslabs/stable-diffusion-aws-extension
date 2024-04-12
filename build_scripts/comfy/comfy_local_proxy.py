@@ -199,7 +199,7 @@ def execute_proxy(func):
                 for future in done:
                     if future == execute_future:
                         execute_resp = future.result()
-                        if execute_resp.status_code == 200:
+                        if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
@@ -235,7 +235,7 @@ def execute_proxy(func):
 
             if not save_already:
                 execute_resp = execute_future.result()
-                if execute_resp.status_code == 200:
+                if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                     save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                     save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
