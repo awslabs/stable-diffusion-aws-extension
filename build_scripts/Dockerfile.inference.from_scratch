@@ -39,5 +39,5 @@ RUN chmod +x /metrics.py
 COPY inference/serve.py /
 RUN chmod +x /serve.py
 
-ENTRYPOINT ["bash", "/serve.sh"]
-#ENTRYPOINT ["/venv/bin/python", "/serve.py"]
+#ENTRYPOINT ["bash", "/serve.sh"]
+ENTRYPOINT ["/venv/bin/python", "/serve.py"]
