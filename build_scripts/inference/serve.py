@@ -28,7 +28,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/invocations':
-            # for loop
             while True:
                 if self.is_port_open('127.0.0.1', 8081):
                     print('Port is open')
@@ -39,7 +38,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                     self.wfile.write(response.read())
                 else:
                     sleep(1)
-                    logger.info('Waiting for port to be open')
+                    print('Waiting for port to be open')
 
         else:
             self.send_response(404)

@@ -22,7 +22,7 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions || exit 1
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "nginx" --single-branch
 cd stable-diffusion-aws-extension || exit 1
 
 if [ -n "$ESD_COMMIT_ID" ]; then

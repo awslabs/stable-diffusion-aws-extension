@@ -139,6 +139,8 @@ sd_listen_ready() {
     if [ "$RESPONSE_CODE" -eq 200 ]; then
         echo "Server is ready!"
 
+        sd_remove_unused_list
+
         start_at=$(date +%s)
 
         echo "collection big files..."
@@ -235,7 +237,6 @@ sd_launch_from_s3(){
 sd_launch_from_local(){
   set_conda
   sd_build_for_launch
-  sd_remove_unused_list
   sd_listen_ready &
   sd_accelerate_launch
 }
@@ -277,6 +278,8 @@ comfy_listen_ready() {
     RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" localhost:8080/ping)
     if [ "$RESPONSE_CODE" -eq 200 ]; then
         echo "Comfy Server is ready!"
+
+        comfy_remove_unused_list
 
         start_at=$(date +%s)
 
@@ -349,7 +352,6 @@ comfy_launch_from_s3(){
 comfy_launch_from_local(){
   set_conda
   comfy_build_for_launch
-  comfy_remove_unused_list
   comfy_listen_ready &
   comfy_accelerate_launch
 }
