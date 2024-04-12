@@ -16,6 +16,7 @@ echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
+aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
 python --version
 sudo yum install wget -y
@@ -25,6 +26,7 @@ make build
 
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
+aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
@@ -32,8 +34,6 @@ echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
 
 if [ "$DEPLOY_STACK" = "cdk" ]; then
-   aws cloudformation delete-stack --stack-name "$STACK_NAME"
-   aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
    pushd "../infrastructure"
    npm i -g pnpm
    pnpm i
@@ -56,16 +56,6 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                 ParameterKey=LogLevel,ParameterValue="INFO" \
                                                 ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
    aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
-fi
-
-if [ "$DEPLOY_STACK" = "update" ]; then
-   aws cloudformation update-stack --stack-name "$STACK_NAME" \
-                                   --template-url "$TEMPLATE_FILE" \
-                                   --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                                ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                                ParameterKey=LogLevel,ParameterValue="INFO" \
-                                                ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-   aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
 fi
 
 FINISHED_TIME=$(date +%s)
