@@ -38,7 +38,7 @@ async def invocations(request: Request):
         if is_port_open(SERVER_PORT):
             req = await request.json()
             logger.info(f"invocations start req:{req}  url:http://127.0.0.1:{SERVER_PORT}/invocations")
-            response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req)
+            response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=200)
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
                                     detail=f"service returned an error: {response.text}")
