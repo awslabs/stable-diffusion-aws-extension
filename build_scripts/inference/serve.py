@@ -56,8 +56,8 @@ async def invocations(request: Request):
                     "detail": f"service returned an error: {str(e)}"
                 })
         else:
-            sleep(1)
-            logger.info('waiting for service to start...')
+            sleep(2)
+            logger.info('an invocation waiting for service to start...')
 
 
 def is_port_open(port):
