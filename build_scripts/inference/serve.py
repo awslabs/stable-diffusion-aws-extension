@@ -35,11 +35,12 @@ async def ping():
 
 @app.post("/invocations")
 async def invocations(request: Request):
-    logger.info("invocations start")
+    logger.info("invocation received...")
     while True:
         if is_port_open(SERVER_PORT):
             try:
                 req = await request.json()
+                req['port'] = SERVER_PORT
                 logger.info(f"invocations start req:{req} url:http://127.0.0.1:{SERVER_PORT}/invocations")
                 response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=(200, 300))
                 if response.status_code != 200:
