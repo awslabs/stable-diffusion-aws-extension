@@ -54,7 +54,7 @@ class TestEndpointCreateE2E:
                 break
         pass
 
-    def test_2_no_available_endpoint(self):
+    def test_3_no_available_endpoint(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -86,7 +86,7 @@ class TestEndpointCreateE2E:
         resp = self.api.create_inference(headers=headers, data=data)
         assert resp.json()["message"] == 'no available Async endpoints for user "api"'
 
-    def test_3_create_sd_endpoint_async(self):
+    def test_4_create_sd_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -106,7 +106,7 @@ class TestEndpointCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_4_create_sd_endpoint_real_time(self):
+    def test_5_create_sd_endpoint_real_time(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
