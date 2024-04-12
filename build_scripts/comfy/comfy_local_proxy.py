@@ -157,6 +157,8 @@ def handle_sync_messages(server_use, msg_array):
             sync_msg_list.append(data)
             if event == 'finish':
                 already_synced = True
+            elif event == 'executed':
+                already_synced = True
     return already_synced
 
 
@@ -209,7 +211,7 @@ def execute_proxy(func):
                                 if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
                                     logging.error("there is no response from execute result !!!!!!!!")
                                     break
-                                elif response['data']['status'] != 'Completed':
+                                elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     time.sleep(2)
                                     i = i - 1
                                 else:
@@ -226,9 +228,9 @@ def execute_proxy(func):
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 logging.error("there is no response from sync msg by thread ")
-                                continue
-                            logging.debug(msg_response.json())
-                            already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
+                            else:
+                                logging.debug(msg_response.json())
+                                already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 # logging.info(msg_response.json())
@@ -236,8 +238,9 @@ def execute_proxy(func):
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         logging.error("there is no response from sync msg")
-                        continue
-                    already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
+                    else:
+                        logging.debug(msg_response.json())
+                        already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
                 execute_resp = execute_future.result()
@@ -249,7 +252,7 @@ def execute_proxy(func):
                         if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
                             logging.error("there is no response from sync executes")
                             break
-                        elif response['data']['status'] != 'Completed':
+                        elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             time.sleep(2)
                             i = i - 1
                         else:
