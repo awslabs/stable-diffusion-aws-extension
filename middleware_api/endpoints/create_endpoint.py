@@ -275,9 +275,9 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
 
 
 def _resolve_instance_invocations_num(instance_type: str):
-    if instance_type == 'ml.g5.8xlarge':
-        return 4
     if instance_type == 'ml.g5.12xlarge':
+        return 4
+    if instance_type == 'ml.p4d.24xlarge':
         return 8
     return 1
 
