@@ -67,7 +67,8 @@ class SdApp:
             self.cmd = [
                 "python", "main.py",
                 "--listen", self.host,
-                "--port", str(self.port)
+                "--port", str(self.port),
+                "--cuda_device", str(self.device_id),
             ]
 
         logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, self.cmd)
