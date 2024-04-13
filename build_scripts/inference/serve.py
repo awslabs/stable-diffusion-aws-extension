@@ -92,7 +92,7 @@ class SdApp:
     def _handle_output(self, pipe, _):
         with pipe:
             for line in iter(pipe.readline, ''):
-                if line:
+                if line.strip():
                     sys.stdout.write(f"{self.name}: {line}")
 
     def stop(self):
@@ -123,8 +123,6 @@ class SdApp:
             self.busy = True
 
             payload['port'] = self.port
-            logger.info(f"{self.name} controller_invocation start")
-            logger.info(payload)
 
             response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
             if response.status_code != 200:
@@ -134,8 +132,6 @@ class SdApp:
                 })
 
             self.busy = False
-
-            logger.info(f"{self.name} controller_invocation end")
 
             return response.json()
         except Exception as e:
