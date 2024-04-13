@@ -34,9 +34,10 @@ class SdApp:
         self.busy = False
         self.stdout_thread = None
         self.stderr_thread = None
+        self.cmd = None
 
     def start(self):
-        cmd = [
+        self.cmd = [
             "python", "launch.py",
             "--listen",
             "--port", str(self.port),
@@ -60,10 +61,10 @@ class SdApp:
             "--disable-nan-check",
         ]
 
-        logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, cmd)
+        logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, self.cmd)
 
         self.process = subprocess.Popen(
-            cmd,
+            self.cmd,
             cwd='/home/ubuntu/stable-diffusion-webui',
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
