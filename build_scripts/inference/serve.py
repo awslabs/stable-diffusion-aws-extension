@@ -62,11 +62,6 @@ class SdApp:
 
         logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, cmd)
 
-        def add_prefix_and_print(pipe, prefix):
-            with pipe:
-                for line in iter(pipe.readline, b''):
-                    sys.stdout.write(prefix + line.decode())
-
         self.process = subprocess.Popen(
             cmd,
             cwd='/home/ubuntu/stable-diffusion-webui',
