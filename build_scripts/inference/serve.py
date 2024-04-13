@@ -110,7 +110,7 @@ class SdApp:
         self.stop()
         self.start()
 
-    def is_ready(self):
+    def is_port_ready(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(1)
             result = sock.connect_ex(('127.0.0.1', self.port))
@@ -183,7 +183,7 @@ async def ping():
 async def invocations(request: Request):
     while True:
         app = get_available_app()
-        if app and not app.busy:
+        if app:
             return app.invocations(await request.json())
         else:
             sleep(1)
@@ -199,7 +199,7 @@ def get_poll_app():
 
 def get_available_app():
     app = get_poll_app()
-    if app and app.is_ready():
+    if app and app.is_port_ready() and not app.busy:
         return app
 
     return None
