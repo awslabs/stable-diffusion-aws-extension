@@ -183,10 +183,7 @@ sd_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
-  python /metrics.py &
   python /serve.py
-
-#  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
 sd_launch_from_s3(){
@@ -306,10 +303,7 @@ comfy_launch(){
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
-  python /metrics.py &
-
-  # todo maybe need optimize
-  python serve.py
+  python /serve.py
 }
 
 comfy_launch_from_s3(){
