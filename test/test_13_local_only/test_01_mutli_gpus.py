@@ -61,7 +61,7 @@ class TestMutilGps:
     def test_1_gpus_start_real_time_tps(self):
 
         ids = []
-        for i in range(6):
+        for i in range(10):
             id = self.tps_real_time_create()
             logger.info(f"inference created: {id}")
             ids.append(id)

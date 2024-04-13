@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import json
 import logging
@@ -8,7 +9,6 @@ import subprocess
 import sys
 import threading
 import time
-from time import sleep
 from typing import List
 
 import requests
@@ -161,7 +161,7 @@ def get_gpu_count():
 
 def signal_handler(signum, frame):
     logger.info(f"Received signal {signum} ({signal.strsignal(signum)})")
-    if signum in [signal.SIGINT, signal.SIGTERM]:
+    if signum in [signal.SIGINT, signal.SIGTERM, signal.SIGKILL, signal.SIGPIPE]:
         global exit_status
         exit_status = 1
         sys.exit(0)
@@ -176,25 +176,6 @@ def setup_signal_handlers():
             logger.info(f"Signal {sig} cannot be caught")
 
 
-@app.get("/ping")
-async def ping():
-    global exit_status
-    if exit_status:
-        return Response(content="pong", status_code=status.HTTP_502_BAD_GATEWAY)
-    return {"message": "pong"}
-
-
-@app.post("/invocations")
-async def invocations(request: Request):
-    while True:
-        app = get_available_app()
-        if app:
-            return app.invocations(await request.json())
-        else:
-            sleep(1)
-            logger.info('an invocation waiting for an available app...')
-
-
 def get_poll_app():
     for sd_app in apps:
         if sd_app.process and sd_app.process.poll() is None:
@@ -202,10 +183,22 @@ def get_poll_app():
     return None
 
 
+def get_all_available_apps():
+    list: List[SdApp] = []
+    for app in apps:
+        if app.is_port_ready() and not app.busy:
+            list.append(app)
+
+    return list
+
+
 def get_available_app():
-    app = get_poll_app()
-    if app and app.is_port_ready() and not app.busy:
-        return app
+    apps = get_all_available_apps()
+
+    logger.info(f"get_available_apps: {len(apps)}")
+
+    if apps:
+        return apps[0]
 
     return None
 
@@ -233,17 +226,53 @@ def check_sync():
                 logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
+            logger.info(f"check_sync error:{e}")
+            time.sleep(SLEEP_TIME)
+
+
+def check_apss():
+    logger.info("start check apps!")
+    while True:
+        try:
+            apps = get_all_available_apps()
+            logger.info(f"get_all_available_apps: {len(apps)}")
+            time.sleep(SLEEP_TIME)
+        except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
             time.sleep(SLEEP_TIME)
 
 
+@app.get("/ping")
+async def ping():
+    global exit_status
+    if exit_status:
+        return Response(content="pong", status_code=status.HTTP_502_BAD_GATEWAY)
+    return {"message": "pong"}
+
+
+@app.post("/invocations")
+async def invocations(request: Request):
+    while True:
+        app = get_available_app()
+        if app:
+            return app.invocations(await request.json())
+        else:
+            await asyncio.sleep(1)
+            logger.info('an invocation waiting for an available app...')
+
+
 if __name__ == "__main__":
     setup_signal_handlers()
+
     gpu_nums = get_gpu_count()
     start_apps(gpu_nums)
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+
+    check_apps_thread = threading.Thread(target=check_apss)
+    check_apps_thread.start()
 
     if service_type == 'comfy':
         queue_lock = threading.Lock()
         check_sync_thread = threading.Thread(target=check_sync)
         check_sync_thread.start()
+
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
