@@ -14,7 +14,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("controller")
+logger = logging.getLogger("Controller")
 logger.setLevel(logging.INFO)
 app = FastAPI()
 
@@ -78,7 +78,7 @@ class SdApp:
         self.stderr_thread.start()
 
     def _handle_output(self, pipe, _):
-        prefix = f"APP-{self.port}: "
+        prefix = f"App-{self.port}: "
         with pipe:
             for line in iter(pipe.readline, ''):
                 sys.stdout.write(prefix + line)
