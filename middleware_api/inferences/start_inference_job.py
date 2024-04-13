@@ -70,6 +70,7 @@ def inference_start(job: InferenceJob, username):
         }
 
     payload = InvocationsRequest(
+        id=job.InferenceJobId,
         task=job.taskType,
         username=username,
         models=models,

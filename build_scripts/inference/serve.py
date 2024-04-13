@@ -90,10 +90,10 @@ class SdApp:
         self.stderr_thread.start()
 
     def _handle_output(self, pipe, _):
-        prefix = f"{self.name}: "
         with pipe:
             for line in iter(pipe.readline, ''):
-                sys.stdout.write(prefix + line)
+                if line:
+                    sys.stdout.write(f"{self.name}: {line}")
 
     def stop(self):
         if self.process:
@@ -116,12 +116,14 @@ class SdApp:
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
 
-    async def invocations(self, payload):
+    async def invocations(self, payload, infer_id=None):
+        self.name = f"{service_type}-{self.port}-gpu{self.device_id}-{infer_id}"
+
         try:
             self.busy = True
 
             payload['port'] = self.port
-            logger.info(f"{self.name} controller_invocation start req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(f"{self.name} controller_invocation start")
             logger.info(payload)
 
             response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
@@ -133,7 +135,7 @@ class SdApp:
 
             self.busy = False
 
-            logger.info(f"{self.name} controller_invocation end req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(f"{self.name} controller_invocation end")
 
             return response.json()
         except Exception as e:
@@ -254,15 +256,21 @@ async def ping():
 
 @app.post("/invocations")
 async def invocations(request: Request):
-    logger.info("controller_invocation received")
+    payload = await request.json()
+
+    if service_type == 'sd':
+        infer_id = payload['id']
+    else:
+        infer_id = payload['prompt_id']
+
+    logger.info(f"controller_invocation {infer_id} received")
     while True:
         app = get_available_app()
         if app:
-            payload = await request.json()
-            return await app.invocations(payload)
+            return await app.invocations(payload=payload, infer_id=infer_id)
         else:
             await asyncio.sleep(1)
-            logger.info('an invocation waiting for an available app...')
+            logger.info(f'invocation {infer_id} waiting for an available app...')
 
 
 if __name__ == "__main__":
