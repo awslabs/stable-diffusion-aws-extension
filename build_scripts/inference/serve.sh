@@ -264,8 +264,6 @@ comfy_listen_ready() {
   while true; do
     RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" localhost:8080/ping)
     if [ "$RESPONSE_CODE" -eq 200 ]; then
-        echo "Comfy Server is ready!"
-
         comfy_remove_unused_list
 
         start_at=$(date +%s)

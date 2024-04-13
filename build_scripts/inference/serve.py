@@ -4,6 +4,7 @@ import os
 import signal
 import socket
 import subprocess
+import sys
 from time import sleep
 from typing import List
 
@@ -53,7 +54,12 @@ class SdApp:
             "--skip-version-check",
             "--disable-nan-check",
         ]
-        self.process = subprocess.Popen(cmd, cwd='/home/ubuntu/stable-diffusion-webui')
+        self.process = subprocess.Popen(
+            cmd,
+            cwd='/home/ubuntu/stable-diffusion-webui',
+            stdout=sys.stdout,
+            stderr=sys.stderr
+        )
         os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
@@ -129,10 +135,18 @@ async def invocations(request: Request):
             logger.info('an invocation waiting for an available app...')
 
 
-def get_available_app():
+def get_poll_app():
     for sd_app in apps:
-        if sd_app.is_ready() and sd_app.process and sd_app.process.poll() is None:
+        if sd_app.process and sd_app.process.poll() is None:
             return sd_app
+    return None
+
+
+def get_available_app():
+    app = get_poll_app()
+    if app and app.is_ready():
+        return app
+
     return None
 
 
@@ -146,8 +160,7 @@ def start_apps(nums: int):
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_sigterm)
-    # subprocess.Popen(["bash", "/serve.sh"])
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
-
     gpu_nums = get_gpu_count()
     start_apps(gpu_nums)
+    # subprocess.Popen(["bash", "/serve.sh"])
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
