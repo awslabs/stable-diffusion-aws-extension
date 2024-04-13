@@ -88,7 +88,7 @@ class SdApp:
         self.stderr_thread.start()
 
     def _handle_output(self, pipe, _):
-        prefix = f"{self.name}-{self.port}: "
+        prefix = f"{self.name}: "
         with pipe:
             for line in iter(pipe.readline, ''):
                 sys.stdout.write(prefix + line)
