@@ -10,7 +10,9 @@ import sys
 import threading
 import time
 from typing import List
-
+import aiohttp
+import json
+import asyncio
 import requests
 import uvicorn
 from fastapi import FastAPI, Request
@@ -30,7 +32,7 @@ class SdApp:
         self.host = "127.0.0.1"
         self.device_id = device_id
         self.port = 24000 + device_id
-        self.name = f"{service_type}-{self.port}-gpu{device_id}"
+        self.name = f"{service_type}-gpu{device_id}"
         self.process = None
         self.busy = False
         self.stdout_thread = None
@@ -117,23 +119,25 @@ class SdApp:
             return result == 0
 
     async def invocations(self, payload, infer_id=None):
-        self.name = f"{service_type}-{self.port}-gpu{self.device_id}-{infer_id}"
-
+        self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
         try:
             self.busy = True
-
             payload['port'] = self.port
+            url = f"http://127.0.0.1:{self.port}/invocations"
+            timeout = aiohttp.ClientTimeout(total=300)
 
-            response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
-            if response.status_code != 200:
-                return json.dumps({
-                    "status_code": response.status_code,
-                    "detail": f"service returned an error: {response.text}"
-                })
-
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, timeout=timeout) as response:
+                    if response.status != 200:
+                        result = json.dumps({
+                            "status_code": response.status,
+                            "detail": f"service returned an error: {await response.text()}"
+                        })
+                        self.busy = False
+                        return result
+                    response_data = await response.json()
             self.busy = False
-
-            return response.json()
+            return response_data
         except Exception as e:
             self.busy = False
             logger.error(f"invocations error:{e}")
@@ -194,8 +198,6 @@ def get_all_available_apps():
 
 def get_available_app():
     apps = get_all_available_apps()
-
-    logger.info(f"get_available_apps: {len(apps)}")
 
     if apps:
         return apps[0]

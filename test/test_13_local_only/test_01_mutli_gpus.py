@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 
 def task_to_run(inference_id):
     t_name = threading.current_thread().name
-    print(f"\nTask is running on thread: {t_name}, {inference_id}")
+    logger.info(f"Task is running on {t_name}, {inference_id}")
 
     headers = {
         "x-api-key": config.api_key,
