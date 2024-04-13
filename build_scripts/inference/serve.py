@@ -114,6 +114,27 @@ class SdApp:
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
 
+    def invocations(self, payload):
+        try:
+            app.busy = True
+            payload['port'] = self.port
+            logger.info(f"invocations start req: http://127.0.0.1:{self.port}/invocations")
+            response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
+            if response.status_code != 200:
+                return json.dumps({
+                    "status_code": response.status_code,
+                    "detail": f"service returned an error: {response.text}"
+                })
+            app.busy = False
+            return response.json()
+        except Exception as e:
+            app.busy = False
+            logger.error(f"invocations error:{e}")
+            return json.dumps({
+                "status_code": 500,
+                "detail": f"service returned an error: {str(e)}"
+            })
+
 
 apps: List[SdApp] = []
 
@@ -147,26 +168,7 @@ async def invocations(request: Request):
     while True:
         app = get_available_app()
         if app and not app.busy:
-            try:
-                app.busy = True
-                req = await request.json()
-                req['port'] = app.port
-                logger.info(f"invocations start req:{req} url:http://127.0.0.1:{app.port}/invocations")
-                response = requests.post(f"http://127.0.0.1:{app.port}/invocations", json=req, timeout=(200, 300))
-                if response.status_code != 200:
-                    return json.dumps({
-                        "status_code": response.status_code,
-                        "detail": f"service returned an error: {response.text}"
-                    })
-                app.busy = False
-                return response.json()
-            except Exception as e:
-                app.busy = False
-                logger.error(f"invocations error:{e}")
-                return json.dumps({
-                    "status_code": 500,
-                    "detail": f"service returned an error: {str(e)}"
-                })
+            return app.invocations(await request.json())
         else:
             sleep(2)
             logger.info('an invocation waiting for an available app...')
