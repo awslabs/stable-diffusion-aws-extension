@@ -119,8 +119,11 @@ class SdApp:
     def invocations(self, payload):
         try:
             self.busy = True
+
             payload['port'] = self.port
             logger.info(f"{self.name} invocations start req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(payload)
+
             response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
             if response.status_code != 200:
                 return json.dumps({
