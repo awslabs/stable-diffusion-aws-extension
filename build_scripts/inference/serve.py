@@ -22,6 +22,26 @@ COMFY_PORT = 8081
 SERVER_PORT = COMFY_PORT if service_type == 'comfy' else SD_PORT
 
 
+class SdApp:
+    def __init__(self, port):
+        self.host = "127.0.0.1"
+        self.port = port
+        self.process = None
+
+    def start(self):
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
+        self.process = subprocess.Popen(cmd)
+        os.environ['ALREADY_INIT'] = 'true'
+
+    def restart(self):
+        logger.info("Comfy app process is going to restart")
+        if self.process and self.process.poll() is None:
+            os.environ['ALREADY_INIT'] = 'false'
+            self.process.terminate()
+            self.process.wait()
+        self.start()
+
+
 def get_gpu_count():
     try:
         result = subprocess.run(['nvidia-smi', '-L'], capture_output=True, text=True, check=True)
