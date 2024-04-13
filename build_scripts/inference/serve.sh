@@ -186,12 +186,7 @@ sd_accelerate_launch(){
   python /metrics.py &
 #  python /serve.py &
 
-  if [ "$INSTANCE_TYPE" == "ml.p4d.24xlarge" ]; then
-    python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
-  else
-    python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
-    # accelerate launch launch.py --num_processes=1 --num_cpu_threads_per_process=$CUP_CORE_NUMS --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
-  fi
+  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
 sd_launch_from_s3(){
