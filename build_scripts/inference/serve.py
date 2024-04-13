@@ -28,7 +28,7 @@ class SdApp:
         self.host = "127.0.0.1"
         self.device_id = device_id
         self.port = 24000 + device_id
-        self.name = f"{service_type}-{self.port}"
+        self.name = f"{service_type}-{self.port}-gpu{device_id}"
         self.process = None
         self.busy = False
         self.stdout_thread = None
