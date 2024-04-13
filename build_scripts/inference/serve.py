@@ -28,6 +28,7 @@ class SdApp:
         self.host = "127.0.0.1"
         self.port = port
         self.process = None
+        self.busy = False
 
     def start(self):
         cmd = [
@@ -102,8 +103,9 @@ async def invocations(request: Request):
     logger.info("invocation received...")
     while True:
         app = get_available_app()
-        if app:
+        if app and not app.busy:
             try:
+                app.busy = True
                 req = await request.json()
                 req['port'] = app.port
                 logger.info(f"invocations start req:{req} url:http://127.0.0.1:{app.port}/invocations")
@@ -113,8 +115,10 @@ async def invocations(request: Request):
                         "status_code": response.status_code,
                         "detail": f"service returned an error: {response.text}"
                     })
+                app.busy = False
                 return response.json()
             except Exception as e:
+                app.busy = False
                 logger.error(f"invocations error:{e}")
                 return json.dumps({
                     "status_code": 500,
@@ -122,7 +126,7 @@ async def invocations(request: Request):
                 })
         else:
             sleep(2)
-            logger.info('an invocation waiting for service to start...')
+            logger.info('an invocation waiting for an available app...')
 
 
 def get_available_app():
