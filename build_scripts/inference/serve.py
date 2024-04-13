@@ -120,6 +120,8 @@ class SdApp:
         try:
             self.busy = True
 
+            time.sleep(10)
+
             payload['port'] = self.port
             logger.info(f"{self.name} invocations start req: http://127.0.0.1:{self.port}/invocations")
             logger.info(payload)
