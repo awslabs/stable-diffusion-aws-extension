@@ -121,7 +121,7 @@ class SdApp:
             self.busy = True
 
             payload['port'] = self.port
-            logger.info(f"{self.name} invocations start req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(f"{self.name} controller_invocation start req: http://127.0.0.1:{self.port}/invocations")
             logger.info(payload)
 
             response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
@@ -133,7 +133,7 @@ class SdApp:
 
             self.busy = False
 
-            logger.info(f"{self.name} invocations end req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(f"{self.name} controller_invocation end req: http://127.0.0.1:{self.port}/invocations")
 
             return response.json()
         except Exception as e:
@@ -254,6 +254,7 @@ async def ping():
 
 @app.post("/invocations")
 async def invocations(request: Request):
+    logger.info("controller_invocation received")
     while True:
         app = get_available_app()
         if app:
