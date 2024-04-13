@@ -35,7 +35,7 @@ class SdApp:
     def start(self):
         cmd = [
             "python", "launch.py",
-            "--listen", self.host,
+            "--listen",
             "--port", str(self.port),
             "--device-id", str(self.device_id),
             "--enable-insecure-extension-access",
@@ -57,8 +57,7 @@ class SdApp:
             "--disable-nan-check",
         ]
 
-        logger.info("Launching app on device %s, port: %s", self.device_id, self.port)
-        logger.info("Launching app with command: %s", cmd)
+        logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, cmd)
 
         self.process = subprocess.Popen(
             cmd,
@@ -82,6 +81,12 @@ class SdApp:
 
 
 apps: List[SdApp] = []
+
+
+def add_prefix_and_print(pipe, prefix):
+    with pipe:
+        for line in iter(pipe.readline, b''):
+            sys.stdout.write(prefix + line.decode())
 
 
 def get_gpu_count():
