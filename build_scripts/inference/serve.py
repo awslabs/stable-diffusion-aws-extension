@@ -32,6 +32,8 @@ class SdApp:
         self.busy = False
 
     def start(self):
+        logger.info("start app on port: %s", self.port)
+
         cmd = [
             "python", "launch.py",
             "--listen", self.host,
@@ -54,18 +56,17 @@ class SdApp:
             "--skip-version-check",
             "--disable-nan-check",
         ]
+
         self.process = subprocess.Popen(
             cmd,
             cwd='/home/ubuntu/stable-diffusion-webui',
             stdout=sys.stdout,
             stderr=sys.stderr
         )
-        os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
         logger.info("Comfy app process is going to restart")
         if self.process and self.process.poll() is None:
-            os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
             self.process.wait()
         self.start()
