@@ -33,7 +33,7 @@ class SdApp:
 
     def start(self):
         cmd = [
-            "python", "main.py",
+            "python", "launch.py",
             "--listen", self.host,
             "--port", str(self.port),
             "--enable-insecure-extension-access",
