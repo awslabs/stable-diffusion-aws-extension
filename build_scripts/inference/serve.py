@@ -264,13 +264,14 @@ async def invocations(request: Request):
         infer_id = payload['prompt_id']
 
     logger.info(f"controller_invocation {infer_id} received")
+
     while True:
         app = get_available_app()
         if app:
             return await app.invocations(payload=payload, infer_id=infer_id)
         else:
             await asyncio.sleep(1)
-            logger.info(f'invocation {infer_id} waiting for an available app...')
+            logger.info(f'controller_invocation {infer_id} waiting for an available app...')
 
 
 if __name__ == "__main__":
