@@ -116,11 +116,9 @@ class SdApp:
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
 
-    def invocations(self, payload):
+    async def invocations(self, payload):
         try:
             self.busy = True
-
-            time.sleep(10)
 
             payload['port'] = self.port
             logger.info(f"{self.name} invocations start req: http://127.0.0.1:{self.port}/invocations")
@@ -132,7 +130,11 @@ class SdApp:
                     "status_code": response.status_code,
                     "detail": f"service returned an error: {response.text}"
                 })
+
             self.busy = False
+
+            logger.info(f"{self.name} invocations end req: http://127.0.0.1:{self.port}/invocations")
+
             return response.json()
         except Exception as e:
             self.busy = False
@@ -161,7 +163,7 @@ def get_gpu_count():
 
 def signal_handler(signum, frame):
     logger.info(f"Received signal {signum} ({signal.strsignal(signum)})")
-    if signum in [signal.SIGINT, signal.SIGTERM, signal.SIGKILL, signal.SIGPIPE]:
+    if signum in [signal.SIGINT, signal.SIGTERM]:
         global exit_status
         exit_status = 1
         sys.exit(0)
@@ -255,7 +257,8 @@ async def invocations(request: Request):
     while True:
         app = get_available_app()
         if app:
-            return app.invocations(await request.json())
+            payload = await request.json()
+            return await app.invocations(payload)
         else:
             await asyncio.sleep(1)
             logger.info('an invocation waiting for an available app...')
