@@ -294,7 +294,7 @@ def sagemaker_api(_, app: FastAPI):
                                 input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
                                 logger.info(f"ckpt from local {input_path} {local_model_path}")
                             input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-                            logging.info("Check disk usage before download.")
+                            logger.info("Check disk usage before download.")
                             os.system("df -h")
                             logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
                             download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
@@ -306,7 +306,7 @@ def sagemaker_api(_, app: FastAPI):
                         create_model_func_args = copy.deepcopy(db_create_model_params)
                         local_response = create_model(**create_model_func_args)
                         target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
-                        logging.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
+                        logger.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
                         upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
                         config_file = os.path.join(target_local_model_dir, "db_config.json")
                         with open(config_file, 'r') as openfile:
@@ -336,11 +336,11 @@ def sagemaker_api(_, app: FastAPI):
                         delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
                         logger.info(delete_src_command)
                         os.system(delete_src_command)
-                        logging.info("Delete tgt model.")
+                        logger.info("Delete tgt model.")
                         delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
                         logger.info(delete_tgt_command)
                         os.system(delete_tgt_command)
-                        logging.info("Check disk usage after request.")
+                        logger.info("Check disk usage after request.")
                         os.system("df -h")
                 elif req.task == 'merge-checkpoint':
                     try:
@@ -387,14 +387,14 @@ def move_model_to_tmp(_, app: FastAPI):
     # logger.info("Create model dir")
     # os.system("mkdir models")
     # Move model dir to /tmp
-    logging.info("Copy model dir to tmp")
+    logger.info("Copy model dir to tmp")
     model_tmp_dir = f"models_{time.time()}"
     os.system(f"cp -rL models /tmp/{model_tmp_dir}")
     src_file_dict = get_file_md5_dict("models")
     tgt_file_dict = get_file_md5_dict(f"/tmp/{model_tmp_dir}")
     is_complete = True
     for file in src_file_dict:
-        logging.info(f"Src file {file} md5 {src_file_dict[file]}")
+        logger.info(f"Src file {file} md5 {src_file_dict[file]}")
         if file not in tgt_file_dict:
             is_complete = False
             break
@@ -407,11 +407,11 @@ def move_model_to_tmp(_, app: FastAPI):
         # logger.info("Delete tmp model dir")
         # os.system("rm -rf /tmp/models")
         # Link model dir
-        logging.info("Link model dir")
+        logger.info("Link model dir")
         os.system(f"ln -s /tmp/{model_tmp_dir} models")
     else:
-        logging.info("Failed to copy model dir, use the original dir")
-    logging.info("Check disk usage on app started")
+        logger.info("Failed to copy model dir, use the original dir")
+    logger.info("Check disk usage on app started")
     os.system("df -h")
 
 try:
