@@ -116,19 +116,19 @@ class SdApp:
 
     def invocations(self, payload):
         try:
-            app.busy = True
+            self.busy = True
             payload['port'] = self.port
-            logger.info(f"invocations start req: http://127.0.0.1:{self.port}/invocations")
+            logger.info(f"{self.name} invocations start req: http://127.0.0.1:{self.port}/invocations")
             response = requests.post(f"http://127.0.0.1:{self.port}/invocations", json=payload, timeout=(200, 300))
             if response.status_code != 200:
                 return json.dumps({
                     "status_code": response.status_code,
                     "detail": f"service returned an error: {response.text}"
                 })
-            app.busy = False
+            self.busy = False
             return response.json()
         except Exception as e:
-            app.busy = False
+            self.busy = False
             logger.error(f"invocations error:{e}")
             return json.dumps({
                 "status_code": 500,
@@ -152,10 +152,19 @@ def get_gpu_count():
         return 0
 
 
-def handle_sigterm(signum, frame):
-    logger.info("SIGTERM received, performing cleanup...")
-    logger.info(signum)
-    logger.info(frame)
+def signal_handler(signum, frame):
+    print(f"Received signal {signum} ({signal.strsignal(signum)})")
+    if signum in [signal.SIGINT, signal.SIGTERM]:
+        sys.exit(0)
+
+
+def setup_signal_handlers():
+    catchable_sigs = set(signal.Signals) - {signal.SIGKILL, signal.SIGSTOP}
+    for sig in catchable_sigs:
+        try:
+            signal.signal(sig, signal_handler)
+        except Exception as exc:
+            print(f"Signal {sig} cannot be caught")
 
 
 @app.get("/ping")
@@ -217,7 +226,7 @@ def check_sync():
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, handle_sigterm)
+    setup_signal_handlers()
     gpu_nums = get_gpu_count()
     start_apps(gpu_nums)
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
