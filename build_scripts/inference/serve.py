@@ -22,6 +22,19 @@ COMFY_PORT = 8081
 SERVER_PORT = COMFY_PORT if service_type == 'comfy' else SD_PORT
 
 
+def get_gpu_count():
+    try:
+        result = subprocess.run(['nvidia-smi', '-L'], capture_output=True, text=True, check=True)
+        gpu_count = result.stdout.count('\n')
+        return gpu_count
+    except subprocess.CalledProcessError as e:
+        print("Failed to run nvidia-smi:", e)
+        return 0
+    except Exception as e:
+        print("An error occurred:", e)
+        return 0
+
+
 def handle_sigterm(signum, frame):
     logger.info("SIGTERM received, performing cleanup...")
     logger.info(signum)
@@ -68,6 +81,7 @@ def is_port_open(port):
 
 
 if __name__ == "__main__":
+    print("GPU count:", get_gpu_count())
     signal.signal(signal.SIGTERM, handle_sigterm)
     subprocess.Popen(["bash", "/serve.sh"])
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")

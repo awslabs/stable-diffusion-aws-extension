@@ -274,6 +274,14 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+def _resolve_instance_invocations_num(instance_type: str):
+    if instance_type == 'ml.g5.8xlarge':
+        return 4
+    if instance_type == 'ml.g5.12xlarge':
+        return 8
+    return 1
+
+
 @tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type, event: CreateEndpointEvent):
@@ -293,7 +301,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            "MaxConcurrentInvocationsPerInstance": 1
+            "MaxConcurrentInvocationsPerInstance": _resolve_instance_invocations_num(instance_type),
         }
     }
 

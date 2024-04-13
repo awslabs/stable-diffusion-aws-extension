@@ -89,12 +89,6 @@ remove_unused(){
   rm -rf "$1"
 }
 
-get_device_count(){
-  echo "---------------------------------------------------------------------------------"
-  export CUDA_DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
-  echo "CUDA_DEVICE_COUNT: $CUDA_DEVICE_COUNT"
-}
-
 # -------------------- sd functions --------------------
 
 sd_remove_unused_list(){
@@ -189,15 +183,14 @@ sd_accelerate_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
-  get_device_count
-
   python /metrics.py &
 #  python /serve.py &
 
   if [ "$INSTANCE_TYPE" == "ml.p4d.24xlarge" ]; then
     python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
   else
-    accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+    accelerate launch launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+    # accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
   fi
 }
 
@@ -319,8 +312,6 @@ comfy_accelerate_launch(){
   cd /home/ubuntu/ComfyUI || exit 1
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
-
-  get_device_count
 
   python /metrics.py &
 
