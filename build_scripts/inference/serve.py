@@ -25,19 +25,19 @@ SERVER_PORT = COMFY_PORT if service_type == 'comfy' else SD_PORT
 
 
 class SdApp:
-    def __init__(self, port):
+    def __init__(self, device_id):
         self.host = "127.0.0.1"
-        self.port = port
+        self.device_id = device_id
+        self.port = 24000 + device_id
         self.process = None
         self.busy = False
 
     def start(self):
-        logger.info("start app on port: %s", self.port)
-
         cmd = [
             "python", "launch.py",
             "--listen", self.host,
             "--port", str(self.port),
+            "--device-id", str(self.device_id),
             "--enable-insecure-extension-access",
             "--api",
             "--api-log",
@@ -56,6 +56,9 @@ class SdApp:
             "--skip-version-check",
             "--disable-nan-check",
         ]
+
+        logger.info("Launching app on device %s, port: %s", self.device_id, self.port)
+        logger.info("Launching app with command: %s", cmd)
 
         self.process = subprocess.Popen(
             cmd,
@@ -153,8 +156,8 @@ def get_available_app():
 
 def start_apps(nums: int):
     logger.info(f"GPU count: {nums}")
-    for i in range(nums):
-        sd_app = SdApp(24000 + i)
+    for device_id in range(nums):
+        sd_app = SdApp(device_id)
         sd_app.start()
         apps.append(sd_app)
 
