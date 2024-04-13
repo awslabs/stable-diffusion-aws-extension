@@ -14,6 +14,7 @@ from typing import List
 import requests
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi import Response, status
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Controller")
@@ -21,6 +22,7 @@ logger.setLevel(logging.INFO)
 app = FastAPI()
 SLEEP_TIME = 30
 service_type = os.getenv('SERVICE_TYPE', 'sd')
+exit_status = 0
 
 
 class SdApp:
@@ -153,8 +155,10 @@ def get_gpu_count():
 
 
 def signal_handler(signum, frame):
-    print(f"Received signal {signum} ({signal.strsignal(signum)})")
+    logger.info(f"Received signal {signum} ({signal.strsignal(signum)})")
     if signum in [signal.SIGINT, signal.SIGTERM]:
+        global exit_status
+        exit_status = 1
         sys.exit(0)
 
 
@@ -164,11 +168,14 @@ def setup_signal_handlers():
         try:
             signal.signal(sig, signal_handler)
         except Exception as exc:
-            print(f"Signal {sig} cannot be caught")
+            logger.info(f"Signal {sig} cannot be caught")
 
 
 @app.get("/ping")
 async def ping():
+    global exit_status
+    if exit_status:
+        return Response(content="pong", status_code=status.HTTP_502_BAD_GATEWAY)
     return {"message": "pong"}
 
 
@@ -179,7 +186,7 @@ async def invocations(request: Request):
         if app and not app.busy:
             return app.invocations(await request.json())
         else:
-            sleep(2)
+            sleep(1)
             logger.info('an invocation waiting for an available app...')
 
 
