@@ -5,6 +5,7 @@ import signal
 import socket
 import subprocess
 import sys
+import threading
 from time import sleep
 from typing import List
 
@@ -31,6 +32,8 @@ class SdApp:
         self.port = 24000 + device_id
         self.process = None
         self.busy = False
+        self.stdout_thread = None
+        self.stderr_thread = None
 
     def start(self):
         cmd = [
@@ -59,18 +62,44 @@ class SdApp:
 
         logger.info("Launching app on device %s, port: %s, command: %s", self.device_id, self.port, cmd)
 
+        def add_prefix_and_print(pipe, prefix):
+            with pipe:
+                for line in iter(pipe.readline, b''):
+                    sys.stdout.write(prefix + line.decode())
+
         self.process = subprocess.Popen(
             cmd,
             cwd='/home/ubuntu/stable-diffusion-webui',
-            stdout=sys.stdout,
-            stderr=sys.stderr
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
         )
 
-    def restart(self):
-        logger.info("Comfy app process is going to restart")
-        if self.process and self.process.poll() is None:
+        self.stdout_thread = threading.Thread(target=self._handle_output, args=(self.process.stdout, "STDOUT"))
+        self.stderr_thread = threading.Thread(target=self._handle_output, args=(self.process.stderr, "STDERR"))
+
+        self.stdout_thread.start()
+        self.stderr_thread.start()
+
+    def _handle_output(self, pipe, stream_type):
+        prefix = f"{stream_type} {self.port}: "
+        with pipe:
+            for line in iter(pipe.readline, ''):
+                sys.stdout.write(prefix + line)
+
+    def stop(self):
+        if self.process:
             self.process.terminate()
             self.process.wait()
+            self.stdout_thread.join()
+            self.stderr_thread.join()
+
+    def __del__(self):
+        self.stop()
+
+    def restart(self):
+        logger.info("app process is going to restart")
+        self.stop()
         self.start()
 
     def is_ready(self):
@@ -81,12 +110,6 @@ class SdApp:
 
 
 apps: List[SdApp] = []
-
-
-def add_prefix_and_print(pipe, prefix):
-    with pipe:
-        for line in iter(pipe.readline, b''):
-            sys.stdout.write(prefix + line.decode())
 
 
 def get_gpu_count():
