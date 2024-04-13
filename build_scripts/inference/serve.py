@@ -78,7 +78,7 @@ class SdApp:
         self.stderr_thread.start()
 
     def _handle_output(self, pipe, stream_type):
-        prefix = f"{stream_type}-{self.port}:{self.device_id}: "
+        prefix = f"{stream_type}-APP-{self.port}: "
         with pipe:
             for line in iter(pipe.readline, ''):
                 sys.stdout.write(prefix + line)
