@@ -186,6 +186,7 @@ class EndpointDeploymentJob:
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
 class InvocationsRequest:
+    id: str
     task: str
     username: Optional[str]
     models: Optional[dict]

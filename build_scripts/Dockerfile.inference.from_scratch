@@ -31,4 +31,7 @@ RUN chmod +x /serve.sh
 COPY inference/metrics.py /
 RUN chmod +x /metrics.py
 
+COPY inference/serve.py /
+RUN chmod +x /serve.py
+
 ENTRYPOINT ["bash", "/serve.sh"]

@@ -22,13 +22,13 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions || exit 1
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "nginx" --single-branch
 cd stable-diffusion-aws-extension || exit 1
 
-if [ -n "$ESD_COMMIT_ID" ]; then
-  echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
-  git reset --hard "$ESD_COMMIT_ID"
-fi
+#if [ -n "$ESD_COMMIT_ID" ]; then
+#  echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
+#  git reset --hard "$ESD_COMMIT_ID"
+#fi
 
 # remove unused files for docker layer reuse
 if [ "$ON_DOCKER" == "true" ]; then
@@ -119,6 +119,8 @@ pip install insightface==0.7.3
 pip install boto3
 pip install aws_xray_sdk
 pip install deepspeed
+pip install fastapi
+pip install uvicorn
 
 export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
 export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"

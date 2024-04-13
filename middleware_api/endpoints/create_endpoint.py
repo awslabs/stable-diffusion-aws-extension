@@ -130,9 +130,9 @@ def handler(raw_event, ctx):
             short_id = event.endpoint_name
 
         endpoint_type = event.endpoint_type.lower()
-        model_name = f"{event.service_type}-model-{endpoint_type}-{short_id}"
-        endpoint_config_name = f"{event.service_type}-config-{endpoint_type}-{short_id}"
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
+        model_name = f"{endpoint_name}"
+        endpoint_config_name = f"{endpoint_name}"
 
         model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 
@@ -274,6 +274,14 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+def _resolve_instance_invocations_num(instance_type: str):
+    if instance_type == 'ml.g5.12xlarge':
+        return 4
+    if instance_type == 'ml.p4d.24xlarge':
+        return 8
+    return 1
+
+
 @tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type, event: CreateEndpointEvent):
@@ -293,7 +301,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            "MaxConcurrentInvocationsPerInstance": 1
+            "MaxConcurrentInvocationsPerInstance": _resolve_instance_invocations_num(instance_type),
         }
     }
 

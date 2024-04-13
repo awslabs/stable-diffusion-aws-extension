@@ -17,8 +17,8 @@ if [ -z "$SERVICE_TYPE" ]; then
   exit 1
 fi
 
-export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
+export SD_PORT=24001
 export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
@@ -85,14 +85,8 @@ find_and_remove_file(){
 }
 
 remove_unused(){
-  echo "rm $1"
+#  echo "rm $1"
   rm -rf "$1"
-}
-
-get_device_count(){
-  echo "---------------------------------------------------------------------------------"
-  export CUDA_DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
-  echo "CUDA_DEVICE_COUNT: $CUDA_DEVICE_COUNT"
 }
 
 # -------------------- sd functions --------------------
@@ -137,6 +131,8 @@ sd_listen_ready() {
     if [ "$RESPONSE_CODE" -eq 200 ]; then
         echo "Server is ready!"
 
+        sd_remove_unused_list
+
         start_at=$(date +%s)
 
         echo "collection big files..."
@@ -178,7 +174,7 @@ sd_build_for_launch(){
   bash install_sd.sh
 }
 
-sd_accelerate_launch(){
+sd_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate sd launch..."
 
@@ -187,15 +183,7 @@ sd_accelerate_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
-  get_device_count
-
-  python /metrics.py &
-
-  if [ "$INSTANCE_TYPE" == "ml.p4d.24xlarge" ]; then
-    python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
-  fi
-
-  accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+  python /serve.py
 }
 
 sd_launch_from_s3(){
@@ -227,15 +215,14 @@ sd_launch_from_s3(){
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
-    sd_accelerate_launch
+    sd_launch
 }
 
 sd_launch_from_local(){
   set_conda
   sd_build_for_launch
-  sd_remove_unused_list
   sd_listen_ready &
-  sd_accelerate_launch
+  sd_launch
 }
 
 # -------------------- comfy functions --------------------
@@ -274,7 +261,7 @@ comfy_listen_ready() {
   while true; do
     RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" localhost:8080/ping)
     if [ "$RESPONSE_CODE" -eq 200 ]; then
-        echo "Comfy Server is ready!"
+        comfy_remove_unused_list
 
         start_at=$(date +%s)
 
@@ -309,19 +296,14 @@ comfy_listen_ready() {
   done
 }
 
-comfy_accelerate_launch(){
+comfy_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
-  get_device_count
-
-  python /metrics.py &
-
-  # todo maybe need optimize
-  python serve.py
+  python /serve.py
 }
 
 comfy_launch_from_s3(){
@@ -341,15 +323,14 @@ comfy_launch_from_s3(){
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
-    comfy_accelerate_launch
+    comfy_launch
 }
 
 comfy_launch_from_local(){
   set_conda
   comfy_build_for_launch
-  comfy_remove_unused_list
   comfy_listen_ready &
-  comfy_accelerate_launch
+  comfy_launch
 }
 
 # -------------------- startup --------------------
@@ -358,10 +339,10 @@ if [ "$FULL_IMAGE" == "true" ]; then
   echo "Running on full docker image..."
   export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_accelerate_launch
+    sd_launch
     exit 1
   else
-    comfy_accelerate_launch
+    comfy_launch
     exit 1
   fi
 fi

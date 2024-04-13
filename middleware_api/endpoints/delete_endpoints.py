@@ -75,30 +75,19 @@ def delete_endpoint(endpoint_item):
     endpoint_name = endpoint_item['endpoint_name']['S']
     ep_id = endpoint_item['EndpointDeploymentJobId']['S']
 
-    endpoint = get_endpoint_in_sagemaker(endpoint_name)
+    update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
+    update_endpoint_field(ep_id, 'current_instance_count', 0)
 
+    endpoint = get_endpoint_in_sagemaker(endpoint_name)
     if endpoint is None:
         delete_endpoint_item(endpoint_item)
         return
 
-    update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
-    update_endpoint_field(ep_id, 'current_instance_count', 0)
-
-    # delete sagemaker endpoint
-    logger.info("endpoint")
-    logger.info(endpoint)
     sagemaker.delete_endpoint(EndpointName=endpoint_name)
-    config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-    if config:
-        logger.info("config")
-        logger.info(config)
-        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-        for ProductionVariant in config['ProductionVariants']:
-            sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
+    sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
+    sagemaker.delete_model(ModelName=endpoint_name)
 
-    response = cw_client.delete_alarms(
-        AlarmNames=[f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm'],
-    )
+    response = cw_client.delete_alarms(AlarmNames=[f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
     logger.info(f"delete_metric_alarm response: {response}")
 
     # delete ddb item
