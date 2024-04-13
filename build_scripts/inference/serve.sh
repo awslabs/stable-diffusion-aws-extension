@@ -174,7 +174,7 @@ sd_build_for_launch(){
   bash install_sd.sh
 }
 
-sd_accelerate_launch(){
+sd_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate sd launch..."
 
@@ -184,9 +184,9 @@ sd_accelerate_launch(){
   source venv/bin/activate
 
   python /metrics.py &
-#  python /serve.py &
+  python /serve.py
 
-  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+#  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port "$SD_PORT" --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
 sd_launch_from_s3(){
@@ -218,14 +218,14 @@ sd_launch_from_s3(){
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
-    sd_accelerate_launch
+    sd_launch
 }
 
 sd_launch_from_local(){
   set_conda
   sd_build_for_launch
   sd_listen_ready &
-  sd_accelerate_launch
+  sd_launch
 }
 
 # -------------------- comfy functions --------------------
@@ -301,7 +301,7 @@ comfy_listen_ready() {
   done
 }
 
-comfy_accelerate_launch(){
+comfy_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
@@ -331,14 +331,14 @@ comfy_launch_from_s3(){
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
-    comfy_accelerate_launch
+    comfy_launch
 }
 
 comfy_launch_from_local(){
   set_conda
   comfy_build_for_launch
   comfy_listen_ready &
-  comfy_accelerate_launch
+  comfy_launch
 }
 
 # -------------------- startup --------------------
@@ -347,10 +347,10 @@ if [ "$FULL_IMAGE" == "true" ]; then
   echo "Running on full docker image..."
   export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_accelerate_launch
+    sd_launch
     exit 1
   else
-    comfy_accelerate_launch
+    comfy_launch
     exit 1
   fi
 fi

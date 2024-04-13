@@ -5,6 +5,7 @@ import signal
 import socket
 import subprocess
 from time import sleep
+from typing import List
 
 import requests
 import uvicorn
@@ -29,8 +30,29 @@ class SdApp:
         self.process = None
 
     def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
-        self.process = subprocess.Popen(cmd)
+        cmd = [
+            "python", "main.py",
+            "--listen", self.host,
+            "--port", str(self.port),
+            "--enable-insecure-extension-access",
+            "--api",
+            "--api-log",
+            "--log-startup",
+            "--xformers",
+            "--no-half-vae",
+            "--no-download-sd-model",
+            "--no-hashing",
+            "--nowebui",
+            "--skip-torch-cuda-test",
+            "--skip-load-model-at-start",
+            "--disable-safe-unpickle",
+            "--skip-prepare-environment",
+            "--skip-python-version-check",
+            "--skip-install",
+            "--skip-version-check",
+            "--disable-nan-check",
+        ]
+        self.process = subprocess.Popen(cmd, cwd='/home/ubuntu/stable-diffusion-webui')
         os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
@@ -40,6 +62,15 @@ class SdApp:
             self.process.terminate()
             self.process.wait()
         self.start()
+
+    def is_ready(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', self.port))
+            return result == 0
+
+
+apps: List[SdApp] = []
 
 
 def get_gpu_count():
@@ -70,12 +101,13 @@ async def ping():
 async def invocations(request: Request):
     logger.info("invocation received...")
     while True:
-        if is_port_open(SERVER_PORT):
+        app = get_available_app()
+        if app:
             try:
                 req = await request.json()
-                req['port'] = SERVER_PORT
-                logger.info(f"invocations start req:{req} url:http://127.0.0.1:{SERVER_PORT}/invocations")
-                response = requests.post(f"http://127.0.0.1:{SERVER_PORT}/invocations", json=req, timeout=(200, 300))
+                req['port'] = app.port
+                logger.info(f"invocations start req:{req} url:http://127.0.0.1:{app.port}/invocations")
+                response = requests.post(f"http://127.0.0.1:{app.port}/invocations", json=req, timeout=(200, 300))
                 if response.status_code != 200:
                     return json.dumps({
                         "status_code": response.status_code,
@@ -93,15 +125,25 @@ async def invocations(request: Request):
             logger.info('an invocation waiting for service to start...')
 
 
-def is_port_open(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(1)
-        result = sock.connect_ex(('127.0.0.1', port))
-        return result == 0
+def get_available_app():
+    for sd_app in apps:
+        if sd_app.is_ready() and sd_app.process and sd_app.process.poll() is None:
+            return sd_app
+    return None
+
+
+def start_apps(nums: int):
+    logger.info(f"GPU count: {nums}")
+    for i in range(nums):
+        sd_app = SdApp(24000 + i)
+        sd_app.start()
+        apps.append(sd_app)
 
 
 if __name__ == "__main__":
-    print("GPU count:", get_gpu_count())
     signal.signal(signal.SIGTERM, handle_sigterm)
-    subprocess.Popen(["bash", "/serve.sh"])
+    # subprocess.Popen(["bash", "/serve.sh"])
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+
+    gpu_nums = get_gpu_count()
+    start_apps(gpu_nums)
