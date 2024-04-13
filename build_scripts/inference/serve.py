@@ -77,8 +77,8 @@ class SdApp:
         self.stdout_thread.start()
         self.stderr_thread.start()
 
-    def _handle_output(self, pipe, stream_type):
-        prefix = f"{stream_type}-APP-{self.port}: "
+    def _handle_output(self, pipe, _):
+        prefix = f"APP-{self.port}: "
         with pipe:
             for line in iter(pipe.readline, ''):
                 sys.stdout.write(prefix + line)
@@ -134,7 +134,6 @@ async def ping():
 
 @app.post("/invocations")
 async def invocations(request: Request):
-    logger.info("invocation received...")
     while True:
         app = get_available_app()
         if app and not app.busy:
