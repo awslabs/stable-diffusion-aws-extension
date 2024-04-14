@@ -68,9 +68,6 @@ def update_endpoint_field(ep: Endpoint, field_name, field_value):
 
 @tracer.capture_method
 def delete_endpoint(ep: Endpoint):
-    logger.info("endpoint_name")
-    logger.info(json.dumps(ep.__dict__))
-
     update_endpoint_field(ep, 'endpoint_status', EndpointStatus.DELETED.value)
     update_endpoint_field(ep, 'current_instance_count', 0)
 
