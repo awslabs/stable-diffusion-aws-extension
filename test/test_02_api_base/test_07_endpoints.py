@@ -35,9 +35,9 @@ class TestEndpointsApi:
                     "endpoint_name_list": [endpoint['endpoint_name']],
                 }
                 resp = self.api.delete_endpoints(headers=headers, data=data)
+                time.sleep(5)
                 if resp.status_code == 400:
                     logger.info(resp.json()['message'])
-                    time.sleep(5)
                     continue
                 break
 

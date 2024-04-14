@@ -39,9 +39,9 @@ class TestEndpointReCreateE2E:
                     ],
                 }
                 resp = self.api.delete_endpoints(headers=headers, data=data)
+                time.sleep(5)
                 if resp.status_code == 400:
                     logger.info(resp.json()['message'])
-                    sleep(5)
                     continue
                 else:
                     break
