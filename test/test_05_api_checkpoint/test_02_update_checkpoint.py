@@ -71,7 +71,8 @@ class TestUpdateCheckPointE2E:
         assert 'message' in resp.json()
 
     def test_2_checkpoint_unique_by_url(self):
-        sleep(5)
+        sleep(10)
+
         headers = {
             "x-api-key": config.api_key,
             "username": config.username,
