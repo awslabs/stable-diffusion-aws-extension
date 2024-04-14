@@ -109,6 +109,9 @@ def delete_endpoint_item(endpoint_item):
         keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
     )
 
+    if esd_version != 'dev':
+        bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_item['endpoint_name']['S']}").delete()
+
 
 @tracer.capture_method
 def get_endpoint_with_endpoint_name(endpoint_name: str):
