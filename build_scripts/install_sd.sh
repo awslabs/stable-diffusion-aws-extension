@@ -114,6 +114,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install --upgrade pip
+
 pip install onnxruntime-gpu
 pip install insightface==0.7.3
 pip install boto3

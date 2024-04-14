@@ -10,13 +10,15 @@ import sys
 import threading
 import time
 from typing import List
+
 import aiohttp
-import json
-import asyncio
+import boto3
 import requests
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi import Response, status
+
+sagemaker = boto3.client('sagemaker')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Controller")
@@ -24,10 +26,11 @@ logger.setLevel(logging.INFO)
 app = FastAPI()
 SLEEP_TIME = 30
 service_type = os.getenv('SERVICE_TYPE', 'sd')
-exit_status = 0
+endpoint_name = os.getenv('ENDPOINT_NAME')
+should_exit = 0
 
 
-class SdApp:
+class App:
     def __init__(self, device_id):
         self.host = "127.0.0.1"
         self.device_id = device_id
@@ -120,6 +123,7 @@ class SdApp:
 
     async def invocations(self, payload, infer_id=None):
         self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
+
         try:
             self.busy = True
             payload['port'] = self.port
@@ -147,7 +151,7 @@ class SdApp:
             })
 
 
-apps: List[SdApp] = []
+apps: List[App] = []
 
 
 def get_gpu_count():
@@ -166,8 +170,8 @@ def get_gpu_count():
 def signal_handler(signum, frame):
     logger.info(f"Received signal {signum} ({signal.strsignal(signum)})")
     if signum in [signal.SIGINT, signal.SIGTERM]:
-        global exit_status
-        exit_status = 1
+        global should_exit
+        should_exit = 1
         sys.exit(0)
 
 
@@ -188,7 +192,7 @@ def get_poll_app():
 
 
 def get_all_available_apps():
-    list: List[SdApp] = []
+    list: List[App] = []
     for app in apps:
         if app.is_port_ready() and not app.busy:
             list.append(app)
@@ -208,7 +212,7 @@ def get_available_app():
 def start_apps(nums: int):
     logger.info(f"GPU count: {nums}")
     for device_id in range(nums):
-        sd_app = SdApp(device_id)
+        sd_app = App(device_id)
         sd_app.start()
         apps.append(sd_app)
 
@@ -232,13 +236,14 @@ def check_sync():
             time.sleep(SLEEP_TIME)
 
 
-def check_apss():
+def check_apps():
     logger.info("start check apps!")
     while True:
+        time.sleep(SLEEP_TIME)
+        if should_exit:
+            return
         try:
-            apps = get_all_available_apps()
-            logger.info(f"get_all_available_apps: {len(apps)}")
-            time.sleep(SLEEP_TIME)
+            logger.info(f"all_apps: {len(apps)} all_available_apps: {len(get_all_available_apps())}")
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
             time.sleep(SLEEP_TIME)
@@ -246,8 +251,9 @@ def check_apss():
 
 @app.get("/ping")
 async def ping():
-    global exit_status
-    if exit_status:
+    global should_exit
+    if should_exit:
+        await asyncio.sleep(1800)
         return Response(content="pong", status_code=status.HTTP_502_BAD_GATEWAY)
     return {"message": "pong"}
 
@@ -272,18 +278,48 @@ async def invocations(request: Request):
             logger.info(f'controller_invocation {infer_id} waiting for an available app...')
 
 
+def stop():
+    global should_exit
+    should_exit = 1
+
+    logger.info("stopping...")
+    for cur_app in apps:
+        cur_app.stop()
+
+
+def check_endpoint():
+    while True:
+        time.sleep(10)
+        if should_exit:
+            return
+        try:
+            sagemaker.describe_endpoint(EndpointName=endpoint_name)
+        except Exception as e:
+            if 'Could not find endpoint' in str(e):
+                logger.info(f"Endpoint {endpoint_name} not found, stopping...")
+                stop()
+
+
+def run_server():
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+
+
 if __name__ == "__main__":
     setup_signal_handlers()
 
     gpu_nums = get_gpu_count()
     start_apps(gpu_nums)
 
-    check_apps_thread = threading.Thread(target=check_apss)
+    check_apps_thread = threading.Thread(target=check_apps, daemon=True)
     check_apps_thread.start()
+
+    check_endpoint_thread = threading.Thread(target=check_endpoint, daemon=True)
+    check_endpoint_thread.start()
+
+    server = threading.Thread(target=run_server)
+    server.start()
 
     if service_type == 'comfy':
         queue_lock = threading.Lock()
-        check_sync_thread = threading.Thread(target=check_sync)
+        check_sync_thread = threading.Thread(target=check_sync, daemon=True)
         check_sync_thread.start()
-
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")

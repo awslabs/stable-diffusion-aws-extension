@@ -34,28 +34,21 @@ cd ComfyUI || exit 1
 
 if [ "$ON_DOCKER" == "true" ]; then
   python3 -m venv venv
-
   source venv/bin/activate
+fi
 
-  pip install --upgrade pip
-  pip install -r requirements.txt
-  pip install boto3
-  pip install aws_xray_sdk
-  pip install fastapi
-  pip install uvicorn
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install boto3
+pip install aws_xray_sdk
+pip install fastapi
+pip install uvicorn
+pip install watchdog
+pip install python-dotenv
+
+if [ "$ON_DOCKER" == "true" ]; then
   pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
   pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
   pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   pip install open-clip-torch==2.20.0
-  pip install watchdog
-  pip install python-dotenv
-else
-  pip install --upgrade pip
-  pip install -r requirements.txt
-  pip install boto3
-  pip install aws_xray_sdk
-  pip install fastapi
-  pip install uvicorn
-  pip install watchdog
-  pip install python-dotenv
 fi
