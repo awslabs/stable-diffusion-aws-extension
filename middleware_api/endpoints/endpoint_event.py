@@ -7,8 +7,9 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from delete_endpoints import get_endpoint_with_endpoint_name
+from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
+from libs.utils import get_endpoint_by_name
 
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
@@ -31,29 +32,22 @@ def handler(event, context):
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
 
-    endpoint = get_endpoint_with_endpoint_name(endpoint_name)
-
-    if not endpoint:
-        # maybe the endpoint is not created by sde or already deleted
-        logger.info(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
-        return {'statusCode': 200}
-
-    ep_id = endpoint['EndpointDeploymentJobId']
+    endpoint = get_endpoint_by_name(endpoint_name)
 
     try:
         business_status = get_business_status(endpoint_status)
 
-        update_endpoint_field(ep_id, 'endpoint_status', business_status)
+        update_endpoint_field(endpoint, 'endpoint_status', business_status)
 
         if business_status == EndpointStatus.IN_SERVICE.value:
             # start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
             # deploy_seconds = int((datetime.now() - start_time).total_seconds())
             # update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', deploy_seconds)
             current_time = str(datetime.now())
-            update_endpoint_field(ep_id, 'endTime', current_time)
+            update_endpoint_field(endpoint, 'endTime', current_time)
 
             # if it is the first time in service
-            if 'endTime' not in endpoint:
+            if not endpoint.endTime:
                 check_and_enable_autoscaling(endpoint, 'prod')
 
         # update the instance count if the endpoint is not deleting or deleted
@@ -62,7 +56,7 @@ def handler(event, context):
             logger.info(f"Endpoint status: {status}")
             if 'ProductionVariants' in status:
                 instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
-                update_endpoint_field(ep_id, 'current_instance_count', instance_count)
+                update_endpoint_field(endpoint, 'current_instance_count', instance_count)
         else:
 
             try:
@@ -77,69 +71,63 @@ def handler(event, context):
             except Exception as e:
                 logger.error(e)
 
-            ddb_service.delete_item(sagemaker_endpoint_table, keys={'EndpointDeploymentJobId': ep_id['S']})
+            ddb_service.delete_item(sagemaker_endpoint_table,
+                                    keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
 
         if business_status == EndpointStatus.FAILED.value:
-            update_endpoint_field(ep_id, 'error', event['FailureReason'])
+            update_endpoint_field(endpoint, 'error', event['FailureReason'])
 
     except Exception as e:
-        update_endpoint_field(ep_id, 'error', str(e))
+        update_endpoint_field(endpoint, 'error', str(e))
         logger.error(e)
 
     return {'statusCode': 200}
 
 
-def check_and_enable_autoscaling(item, variant_name):
-    autoscaling = item['autoscaling']['BOOL']
-
-    logger.info(f"item: {item}")
-
-    if str(autoscaling) == 'True':
-        enable_autoscaling(item, variant_name)
+def check_and_enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
+    if ep.autoscaling:
+        enable_autoscaling(ep, variant_name)
     else:
-        logger.info(f'autoscaling_enabled is {autoscaling}, no need to enable autoscaling')
+        logger.info(f'no need to enable autoscaling')
 
 
 @tracer.capture_method
-def enable_autoscaling(item, variant_name):
+def enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
     tracer.put_annotation("variant_name", variant_name)
-    endpoint_name = item['endpoint_name']['S']
-    endpoint_type = item['endpoint_type']['S']
-    max_instance_number = int(item['max_instance_number']['N'])
+    max_instance_number = int(ep.max_instance_number)
 
     min_instance_number = 0
-    if endpoint_type == EndpointType.RealTime.value:
+    if ep.endpoint_type == EndpointType.RealTime.value:
         min_instance_number = 1
 
-    if 'min_instance_number' in item:
-        min_instance_number = int(item['min_instance_number']['N'])
+    if ep.min_instance_number is not None:
+        min_instance_number = int(ep.min_instance_number)
 
     # Register scalable target
     response = autoscaling_client.register_scalable_target(
         ServiceNamespace='sagemaker',
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ResourceId='endpoint/' + ep.endpoint_name + '/variant/' + variant_name,
         ScalableDimension='sagemaker:variant:DesiredInstanceCount',
         MinCapacity=min_instance_number,
         MaxCapacity=max_instance_number,
     )
     logger.info(f"Register scalable target response: {response}")
 
-    if endpoint_type == EndpointType.Async.value:
-        enable_autoscaling_async(item, variant_name)
+    if ep.endpoint_type == EndpointType.Async.value:
+        enable_autoscaling_async(ep, variant_name)
 
-    if endpoint_type == EndpointType.RealTime.value:
-        enable_autoscaling_real_time(item, variant_name)
+    if ep.endpoint_type == EndpointType.RealTime.value:
+        enable_autoscaling_real_time(ep, variant_name)
 
 
-def enable_autoscaling_async(item, variant_name):
+def enable_autoscaling_async(ep: EndpointDeploymentJob, variant_name):
     target_value = 3
-    endpoint_name = item['endpoint_name']['S']
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
-        PolicyName=f"{endpoint_name}-Invocations-ScalingPolicy",
+        PolicyName=f"{ep.endpoint_name}-Invocations-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,  # Endpoint name
+        ResourceId='endpoint/' + ep.endpoint_name + '/variant/' + variant_name,  # Endpoint name
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
         PolicyType="TargetTrackingScaling",  # 'StepScaling'|'TargetTrackingScaling'
         TargetTrackingScalingPolicyConfiguration={
@@ -148,7 +136,7 @@ def enable_autoscaling_async(item, variant_name):
             "CustomizedMetricSpecification": {
                 "MetricName": "ApproximateBacklogSizePerInstance",
                 "Namespace": "AWS/SageMaker",
-                "Dimensions": [{"Name": "EndpointName", "Value": endpoint_name}],
+                "Dimensions": [{"Name": "EndpointName", "Value": ep.endpoint_name}],
                 "Statistic": "Average",
             },
             "ScaleInCooldown": 180,
@@ -191,15 +179,15 @@ def enable_autoscaling_async(item, variant_name):
             Threshold=target_value,
             ComparisonOperator=comparison_operator,
             AlarmActions=response.get('MetricAlarms')[0]['AlarmActions'],
-            Dimensions=[{'Name': 'EndpointName', 'Value': endpoint_name}]
+            Dimensions=[{'Name': 'EndpointName', 'Value': ep.endpoint_name}]
         )
         logger.info(f"Put metric alarm response")
         logger.info(response)
 
     step_policy_response = autoscaling_client.put_scaling_policy(
-        PolicyName=f"{endpoint_name}-HasBacklogWithoutCapacity-ScalingPolicy",
+        PolicyName=f"{ep.endpoint_name}-HasBacklogWithoutCapacity-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the service that provides the resource.
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ResourceId='endpoint/' + ep.endpoint_name + '/variant/' + variant_name,
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
         PolicyType="StepScaling",  # 'StepScaling' or 'TargetTrackingScaling'
         StepScalingPolicyConfiguration={
@@ -220,7 +208,7 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Put step scaling policy response: {step_policy_response}")
 
     cw_client.put_metric_alarm(
-        AlarmName=f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm',
+        AlarmName=f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm',
         MetricName='HasBacklogWithoutCapacity',
         Namespace='AWS/SageMaker',
         Statistic='Average',
@@ -231,26 +219,25 @@ def enable_autoscaling_async(item, variant_name):
         ComparisonOperator='GreaterThanOrEqualToThreshold',
         TreatMissingData='missing',
         Dimensions=[
-            {'Name': 'EndpointName', 'Value': endpoint_name},
+            {'Name': 'EndpointName', 'Value': ep.endpoint_name},
         ],
         AlarmActions=[step_policy_response['PolicyARN']]
     )
     logger.info(f"Put metric alarm response: {step_policy_response}")
 
-    logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
+    logger.info(f"Autoscaling has been enabled for the endpoint: {ep.endpoint_name}")
 
 
 @tracer.capture_method
-def enable_autoscaling_real_time(item, variant_name):
+def enable_autoscaling_real_time(ep: EndpointDeploymentJob, variant_name):
     tracer.put_annotation("variant_name", variant_name)
     target_value = 5
-    endpoint_name = item['endpoint_name']['S']
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
-        PolicyName=f"{endpoint_name}-Invocations-ScalingPolicy",
+        PolicyName=f"{ep.endpoint_name}-Invocations-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,  # Endpoint name
+        ResourceId='endpoint/' + ep.endpoint_name + '/variant/' + variant_name,  # Endpoint name
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
         PolicyType="TargetTrackingScaling",  # 'StepScaling'|'TargetTrackingScaling'
         TargetTrackingScalingPolicyConfiguration={
@@ -300,21 +287,21 @@ def enable_autoscaling_real_time(item, variant_name):
             ComparisonOperator=comparison_operator,
             AlarmActions=response.get('MetricAlarms')[0]['AlarmActions'],
             Dimensions=[
-                {'Name': 'EndpointName', 'Value': endpoint_name},
+                {'Name': 'EndpointName', 'Value': ep.endpoint_name},
                 {'Name': 'VariantName', 'Value': 'prod'},
             ]
         )
         logger.info(f"Put metric alarm response")
         logger.info(response)
 
-    logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
+    logger.info(f"Autoscaling has been enabled for the endpoint: {ep.endpoint_name}")
 
 
-def update_endpoint_field(endpoint_id, field_name, field_value):
-    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {endpoint_id}")
+def update_endpoint_field(ep: EndpointDeploymentJob, field_name, field_value):
+    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {ep.EndpointDeploymentJobId}")
     ddb_service.update_item(
         table=sagemaker_endpoint_table,
-        key={'EndpointDeploymentJobId': endpoint_id['S']},
+        key={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
         field_name=field_name,
         value=field_value
     )

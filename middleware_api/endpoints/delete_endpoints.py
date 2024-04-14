@@ -9,8 +9,9 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
+from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import response_error
+from libs.utils import response_error, get_endpoint_by_name
 
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
@@ -40,65 +41,52 @@ class DeleteEndpointEvent:
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
-        # todo will be removed
-        # permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
 
-        # delete sagemaker endpoints in the same loop
         event = DeleteEndpointEvent(**json.loads(raw_event['body']))
 
         for endpoint_name in event.endpoint_name_list:
-            endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
-            if endpoint_item:
-                delete_endpoint(endpoint_item)
-            else:
-                try:
-                    sagemaker.delete_endpoint(EndpointName=endpoint_name)
-                    sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
-                    sagemaker.delete_model(ModelName=endpoint_name)
-                except Exception as e:
-                    logger.error(e)
+            try:
+                ep = get_endpoint_by_name(endpoint_name)
+                delete_endpoint(ep)
+            except Exception as e:
+                logger.error(e)
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
         return response_error(e)
 
 
-def update_endpoint_field(endpoint_id, field_name, field_value):
-    logger.info(f"Updating {field_name} to {field_value} for: {endpoint_id}")
+def update_endpoint_field(ep: EndpointDeploymentJob, field_name, field_value):
+    logger.info(f"Updating {field_name} to {field_value} for: {ep.EndpointDeploymentJobId}")
     ddb_service.update_item(
         table=sagemaker_endpoint_table,
-        key={'EndpointDeploymentJobId': endpoint_id},
+        key={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
         field_name=field_name,
         value=field_value
     )
 
 
 @tracer.capture_method
-def delete_endpoint(endpoint_item):
-    tracer.put_annotation("endpoint_item", endpoint_item)
+def delete_endpoint(ep: EndpointDeploymentJob):
     logger.info("endpoint_name")
-    logger.info(json.dumps(endpoint_item))
+    logger.info(json.dumps(ep))
 
-    endpoint_name = endpoint_item['endpoint_name']['S']
-    ep_id = endpoint_item['EndpointDeploymentJobId']['S']
+    update_endpoint_field(ep, 'endpoint_status', EndpointStatus.DELETED.value)
+    update_endpoint_field(ep, 'current_instance_count', 0)
 
-    update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
-    update_endpoint_field(ep_id, 'current_instance_count', 0)
-
-    endpoint = get_endpoint_in_sagemaker(endpoint_name)
+    endpoint = get_endpoint_in_sagemaker(ep.endpoint_name)
     if endpoint is None:
-        delete_endpoint_item(endpoint_item)
+        delete_endpoint_item(ep)
         return
 
-    sagemaker.delete_endpoint(EndpointName=endpoint_name)
-    sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
-    sagemaker.delete_model(ModelName=endpoint_name)
+    sagemaker.delete_endpoint(EndpointName=ep.endpoint_name)
+    sagemaker.delete_endpoint_config(EndpointConfigName=ep.endpoint_name)
+    sagemaker.delete_model(ModelName=ep.endpoint_name)
 
-    response = cw_client.delete_alarms(AlarmNames=[f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
+    response = cw_client.delete_alarms(AlarmNames=[f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
     logger.info(f"delete_metric_alarm response: {response}")
 
-    # delete ddb item
-    delete_endpoint_item(endpoint_item)
+    delete_endpoint_item(ep)
 
 
 @tracer.capture_method
@@ -110,30 +98,11 @@ def get_endpoint_in_sagemaker(endpoint_name):
         return None
 
 
-def delete_endpoint_item(endpoint_item):
+def delete_endpoint_item(ep: EndpointDeploymentJob):
     ddb_service.delete_item(
         table=sagemaker_endpoint_table,
-        keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
+        keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
     )
 
     if esd_version != 'dev':
-        bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_item['endpoint_name']['S']}").delete()
-
-
-@tracer.capture_method
-def get_endpoint_with_endpoint_name(endpoint_name: str):
-    tracer.put_annotation("endpoint_name", endpoint_name)
-    try:
-        record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
-            'endpoint_name': endpoint_name,
-        })
-
-        if len(record_list) == 0:
-            logger.info("There is no endpoint deployment job info item with endpoint name: " + endpoint_name)
-            return {}
-
-        logger.info(record_list[0])
-        return record_list[0]
-    except Exception as e:
-        logger.error(e)
-        return {}
+        bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.EndpointDeploymentJobId}").delete()
