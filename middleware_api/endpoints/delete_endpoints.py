@@ -45,11 +45,8 @@ def handler(raw_event, ctx):
         event = DeleteEndpointEvent(**json.loads(raw_event['body']))
 
         for endpoint_name in event.endpoint_name_list:
-            try:
-                ep = get_endpoint_by_name(endpoint_name)
-                delete_endpoint(ep)
-            except Exception as e:
-                logger.error(e, exc_info=True)
+            ep = get_endpoint_by_name(endpoint_name)
+            delete_endpoint(ep)
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
