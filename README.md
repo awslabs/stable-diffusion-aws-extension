@@ -130,7 +130,6 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ├── install.sh --  script to set the webui and extension to specific version
 ├── javascript -- javascript code for the extension
 ├── middleware_api -- middleware api denifition and lambda code
-├── pre-flight.sh -- version compatibility check & install
 ├── sagemaker_entrypoint_json.py -- wrapper function for SageMaker
 ├── scripts -- extension related code for WebUI
 └── utils.py -- wrapper function for configure options

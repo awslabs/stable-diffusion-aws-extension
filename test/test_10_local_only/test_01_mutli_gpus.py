@@ -24,11 +24,8 @@ def task_to_run(inference_id):
     }
     api = Api(config)
 
-    resp = api.start_inference_job(job_id=inference_id, headers=headers)
+    api.start_inference_job(job_id=inference_id, headers=headers)
     logger.info(f"start_inference_job: {inference_id}")
-    # assert resp.status_code == 200, resp.dumps()
-    # assert 'img_presigned_urls' in resp.json()['data'], resp.dumps()
-    # assert len(resp.json()['data']['img_presigned_urls']) > 0, resp.dumps()
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")

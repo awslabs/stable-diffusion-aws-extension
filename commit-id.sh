@@ -7,7 +7,7 @@ FIND_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=" "INITIAL_SUPPORT_COMMIT_CONTROLNET=" "
 REPLACE_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=$1" "INITIAL_SUPPORT_COMMIT_CONTROLNET=$2" "INITIAL_SUPPORT_COMMIT_DREAMBOOTH=$3" "INITIAL_SUPPORT_COMMIT_REMBG=$4" "INITIAL_SUPPORT_COMMIT_SAM=$5")
 
 # Array of files
-FILES=("pre-flight.sh" "pre-flight.bat" "install.sh" "install.bat")
+FILES=("install.sh" "install.bat")
 
 # helper function to hint the script usage
 function usage {

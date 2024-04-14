@@ -345,11 +345,11 @@ if [ "$FULL_IMAGE" == "true" ]; then
   fi
 fi
 
-endpoint_path="s3://$S3_BUCKET_NAME/$S3_LOCATION/$TAR_FILE"
-echo "Checking $endpoint_path files..."
-s5cmd ls "$endpoint_path" &> /dev/null
-# shellcheck disable=SC2181
-if [ $? -eq 0 ]; then
+S3_PATH="s3://$S3_BUCKET_NAME/$S3_LOCATION/$TAR_FILE"
+echo "Checking $S3_PATH files..."
+# shellcheck disable=SC2086
+output=$(s5cmd ls $S3_PATH 2>&1)
+if [[ $? -eq 0 && ! -z "$output" ]]; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_s3
     exit 1
