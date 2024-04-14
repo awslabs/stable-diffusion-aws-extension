@@ -50,6 +50,13 @@ def handler(raw_event, ctx):
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
             if endpoint_item:
                 delete_endpoint(endpoint_item)
+            else:
+                try:
+                    sagemaker.delete_endpoint(EndpointName=endpoint_name)
+                    sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
+                    sagemaker.delete_model(ModelName=endpoint_name)
+                except Exception as e:
+                    logger.error(e)
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
