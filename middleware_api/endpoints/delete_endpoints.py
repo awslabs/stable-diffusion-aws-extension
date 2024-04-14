@@ -49,7 +49,7 @@ def handler(raw_event, ctx):
                 ep = get_endpoint_by_name(endpoint_name)
                 delete_endpoint(ep)
             except Exception as e:
-                logger.error(e)
+                logger.error(e, exc_info=True)
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
@@ -94,7 +94,7 @@ def get_endpoint_in_sagemaker(endpoint_name):
     try:
         return sagemaker.describe_endpoint(EndpointName=endpoint_name)
     except (BotoCoreError, ClientError) as error:
-        logger.error(error)
+        logger.error(error, exc_info=True)
         return None
 
 

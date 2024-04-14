@@ -80,7 +80,7 @@ def check_status(training_job: TrainJob):
         try:
             notify_user(training_job)
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
 
         # todo: update checkpoints
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={

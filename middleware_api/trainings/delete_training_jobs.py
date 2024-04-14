@@ -54,7 +54,7 @@ def handler(event, ctx):
             try:
                 sagemaker.stop_training_job(TrainingJobName=training['sagemaker_train_name'])
             except Exception as e:
-                logger.error(e)
+                logger.error(e, exc_info=True)
 
             bucket.objects.filter(Prefix=f"kohya/train/{training_id}").delete()
 
