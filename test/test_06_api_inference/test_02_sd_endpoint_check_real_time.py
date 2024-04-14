@@ -42,15 +42,15 @@ class TestEndpointRealTimeCheckE2E:
 
         assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=50)
+        timeout = datetime.now() + timedelta(minutes=20)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()
             if result:
                 break
-            time.sleep(50)
+            time.sleep(15)
         else:
-            raise Exception("Function execution timed out after 30 minutes.")
+            raise Exception("Create Endpoint timed out after 20 minutes.")
 
     def endpoints_wait_for_in_service(self):
         headers = {

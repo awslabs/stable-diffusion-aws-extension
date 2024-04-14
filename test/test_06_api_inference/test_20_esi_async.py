@@ -104,7 +104,7 @@ class TestEsiInferenceAsyncE2E:
                 raise Exception(f"Inference job {inference_id} failed.")
             time.sleep(5)
         else:
-            raise Exception("Inference execution timed out after 5 minutes.")
+            raise Exception("Inference timed out after 5 minutes.")
 
     def test_4_esi_async_content(self):
         global inference_data

@@ -80,7 +80,7 @@ class TestTxt2ImgInferenceAsyncE2E:
 
         assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
 
-        timeout = datetime.now() + timedelta(minutes=7)
+        timeout = datetime.now() + timedelta(minutes=2)
 
         while datetime.now() < timeout:
             status = get_inference_job_status(
@@ -95,7 +95,7 @@ class TestTxt2ImgInferenceAsyncE2E:
                 raise Exception(f"Inference job {inference_id} failed.")
             time.sleep(7)
         else:
-            raise Exception(f"Inference execution {inference_id} timed out after 7 minutes.")
+            raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
 
     def test_6_txt2img_async_content(self):
         global inference_data

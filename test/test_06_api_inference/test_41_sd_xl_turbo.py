@@ -180,4 +180,4 @@ class TestTurboE2E:
                 raise Exception(f"Inference job {inference_id} failed.")
             time.sleep(5)
         else:
-            raise Exception("Inference execution timed out after 4 minutes.")
+            raise Exception("Inference timed out after 4 minutes.")

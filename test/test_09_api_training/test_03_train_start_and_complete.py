@@ -1,6 +1,9 @@
 from __future__ import print_function
 
 import logging
+import time
+from datetime import datetime
+from datetime import timedelta
 
 import pytest
 
@@ -105,3 +108,37 @@ class TestTrainStartCompleteE2E:
 
         resp = self.api.create_training_job(headers=headers, data=payload)
         assert resp.status_code == 201, resp.dumps()
+
+    def test_3_wait_train_jobs_complete(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        resp = self.api.list_trainings(headers=headers)
+
+        assert resp.status_code == 200, resp.dumps()
+        assert resp.json()["statusCode"] == 200
+        assert 'trainings' in resp.json()["data"]
+        train_jobs = resp.json()["data"]["trainings"]
+        assert len(train_jobs) > 0
+        for trainJob in train_jobs:
+
+            timeout = datetime.now() + timedelta(minutes=20)
+
+            while datetime.now() < timeout:
+                resp = self.api.get_training_job(job_id=trainJob["id"], headers=headers)
+                assert resp.status_code == 200, resp.dumps()
+                job_status = resp.json()["data"]['job_status']
+                sagemaker_train_name = resp.json()["data"]['sagemaker_train_name']
+
+                if job_status == "Failed" or job_status == "Fail":
+                    raise Exception(f"Train {sagemaker_train_name} is {job_status}. {resp.json()}")
+
+                if job_status == "Completed":
+                    break
+
+                logger.info(f"Train {sagemaker_train_name} is %s", job_status)
+                time.sleep(20)
+            else:
+                raise Exception("Train timed out after 20 minutes.")

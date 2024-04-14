@@ -19,7 +19,7 @@ fi
 
 export TAR_FILE="esd.tar"
 export SD_PORT=24001
-export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
+export S3_LOCATION="endpoint-$ENDPOINT_NAME-$ESD_VERSION"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"

@@ -211,7 +211,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         global inference_data
         prompt_id = inference_data["prompt_id"]
 
-        timeout = datetime.now() + timedelta(minutes=7)
+        timeout = datetime.now() + timedelta(minutes=5)
 
         while datetime.now() < timeout:
             resp = self.api.get_execute_job(headers=headers, prompt_id=prompt_id)
@@ -224,4 +224,4 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
                 raise Exception(f"execute {prompt_id} failed.")
             time.sleep(7)
         else:
-            raise Exception(f"execute {prompt_id} timed out after 7 minutes.")
+            raise Exception(f"execute {prompt_id} timed out after 5 minutes.")

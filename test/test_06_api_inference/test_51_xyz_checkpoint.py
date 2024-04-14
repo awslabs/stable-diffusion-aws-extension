@@ -94,4 +94,4 @@ class TestXyzCheckpointE2E:
                 raise Exception("Inference job failed.")
             time.sleep(5)
         else:
-            raise Exception("Inference execution timed out after 2 minutes.")
+            raise Exception("Inference timed out after 2 minutes.")
