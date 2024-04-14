@@ -307,6 +307,9 @@ def run_server():
 if __name__ == "__main__":
     setup_signal_handlers()
 
+    server = threading.Thread(target=run_server)
+    server.start()
+
     gpu_nums = get_gpu_count()
     start_apps(gpu_nums)
 
@@ -315,9 +318,6 @@ if __name__ == "__main__":
 
     check_endpoint_thread = threading.Thread(target=check_endpoint, daemon=True)
     check_endpoint_thread.start()
-
-    server = threading.Thread(target=run_server)
-    server.start()
 
     if service_type == 'comfy':
         queue_lock = threading.Lock()

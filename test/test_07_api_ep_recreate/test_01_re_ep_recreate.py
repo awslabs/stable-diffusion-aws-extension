@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import logging
+import time
 from time import sleep
 
 import config as config
@@ -146,3 +147,7 @@ class TestEndpointReCreateE2E:
 
         resp = self.api.create_endpoint(headers=headers, data=data)
         assert "Cannot create already existing model" in resp.json()["message"]
+
+    def test_6_recreate_wait(self):
+        time.sleep(4)
+        pass
