@@ -42,6 +42,9 @@ logger.info(f"config.test_fast: {test_fast}")
 is_gcr = region_name.startswith("cn-")
 logger.info(f"config.is_gcr: {is_gcr}")
 
+is_local = os.environ.get("SNS_ARN") is None
+logger.info(f"config.is_local: {is_local}")
+
 role_name = "role_name"
 logger.info(f"config.role_name: {role_name}")
 

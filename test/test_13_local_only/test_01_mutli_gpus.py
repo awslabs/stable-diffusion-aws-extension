@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import logging
-import os
 import threading
 
 import pytest
@@ -32,7 +31,7 @@ def task_to_run(inference_id):
     # assert len(resp.json()['data']['img_presigned_urls']) > 0, resp.dumps()
 
 
-@pytest.mark.skipif(os.environ.get("SNS_ARN"), reason="local test only")
+@pytest.mark.skipif(not config.is_local, reason="local test only")
 class TestMutilGps:
     def setup_class(self):
         self.api = Api(config)
