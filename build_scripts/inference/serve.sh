@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -euxo pipefail
+
 # -------------------- common init --------------------
 
 if [ -z "$ESD_VERSION" ]; then
@@ -18,7 +20,7 @@ if [ -z "$SERVICE_TYPE" ]; then
 fi
 
 export TAR_FILE="esd.tar"
-export S3_LOCATION="endpoint/$ESD_VERSION/$ENDPOINT_NAME"
+export S3_LOCATION="endpoint-$ESD_VERSION-$ENDPOINT_NAME"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
@@ -345,11 +347,9 @@ if [ "$FULL_IMAGE" == "true" ]; then
   fi
 fi
 
-S3_PATH="s3://$S3_BUCKET_NAME/$S3_LOCATION/$TAR_FILE"
-echo "Checking $S3_PATH files..."
-# shellcheck disable=SC2086
-output=$(s5cmd ls $S3_PATH 2>&1)
-if [[ $? -eq 0 && ! -z "$output" ]]; then
+echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
+output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
+if echo "$output" | grep -q "$S3_LOCATION"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_s3
     exit 1
