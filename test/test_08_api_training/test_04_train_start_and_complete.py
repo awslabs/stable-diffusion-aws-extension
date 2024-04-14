@@ -33,8 +33,8 @@ class TestTrainStartCompleteE2E:
         assert resp.status_code == 200, resp.dumps()
         assert resp.json()["statusCode"] == 200
         assert 'trainings' in resp.json()["data"]
-        trainJobs = resp.json()["data"]["trainings"]
-        for trainJob in trainJobs:
+        jobs = resp.json()["data"]["trainings"]
+        for trainJob in jobs:
             data = {
                 "training_id_list": [trainJob["id"]],
             }

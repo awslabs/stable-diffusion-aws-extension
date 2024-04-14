@@ -25,7 +25,7 @@ class TestWaitTrainCompleteE2E:
     def teardown_class(self):
         pass
 
-    def test_2_wait_train_wd14_job_complete(self):
+    def test_1_wait_train_jobs_complete(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -39,17 +39,21 @@ class TestWaitTrainCompleteE2E:
         train_jobs = resp.json()["data"]["trainings"]
         assert len(train_jobs) > 0
         for trainJob in train_jobs:
+
             timeout = datetime.now() + timedelta(minutes=50)
 
             while datetime.now() < timeout:
                 resp = self.api.get_training_job(job_id=trainJob["id"], headers=headers)
                 assert resp.status_code == 200, resp.dumps()
                 job_status = resp.json()["data"]['job_status']
+
                 if job_status == "Failed" or job_status == "Fail":
                     raise Exception(f"Train is {job_status}. {resp.json()}")
+
                 if job_status == "Completed":
                     continue
+
                 logger.info("Train job is %s", job_status)
                 time.sleep(20)
             else:
-                raise Exception("Function execution timed out after 30 minutes.")
+                raise Exception("Function execution timed out after 50 minutes.")

@@ -22,13 +22,13 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions || exit 1
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "nginx" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 cd stable-diffusion-aws-extension || exit 1
 
-#if [ -n "$ESD_COMMIT_ID" ]; then
-#  echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
-#  git reset --hard "$ESD_COMMIT_ID"
-#fi
+if [ -n "$ESD_COMMIT_ID" ]; then
+  echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
+  git reset --hard "$ESD_COMMIT_ID"
+fi
 
 # remove unused files for docker layer reuse
 if [ "$ON_DOCKER" == "true" ]; then
