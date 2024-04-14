@@ -70,8 +70,8 @@ export class DeleteEndpointsApi {
       actions: [
         'sagemaker:DeleteModel',
         'sagemaker:DeleteEndpoint',
-        'sagemaker:DescribeEndpoint',
         'sagemaker:DeleteEndpointConfig',
+        'sagemaker:DescribeEndpoint',
         'sagemaker:DescribeEndpointConfig',
       ],
       resources: [
