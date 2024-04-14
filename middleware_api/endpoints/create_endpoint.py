@@ -13,7 +13,7 @@ from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted
-from libs.data_types import EndpointDeploymentJob
+from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
@@ -145,7 +145,7 @@ def handler(raw_event, ctx):
         for endpoint_row in endpoint_rows:
             logger.info("endpoint_row:")
             logger.info(endpoint_row)
-            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            endpoint = Endpoint(**(ddb_service.deserialize(endpoint_row)))
             logger.info("endpoint:")
             logger.info(endpoint.__dict__)
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
@@ -181,7 +181,7 @@ def handler(raw_event, ctx):
             sagemaker.delete_model(ModelName=model_name)
             return bad_request(message=str(e))
 
-        data = EndpointDeploymentJob(
+        data = Endpoint(
             EndpointDeploymentJobId=endpoint_id,
             endpoint_name=endpoint_name,
             startTime=str(datetime.now()),
