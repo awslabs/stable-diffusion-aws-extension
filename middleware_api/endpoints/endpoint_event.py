@@ -7,7 +7,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from libs.data_types import EndpointDeploymentJob
+from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import get_endpoint_by_name
 
@@ -84,7 +84,7 @@ def handler(event, context):
     return {'statusCode': 200}
 
 
-def check_and_enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
+def check_and_enable_autoscaling(ep: Endpoint, variant_name):
     if ep.autoscaling:
         enable_autoscaling(ep, variant_name)
     else:
@@ -92,7 +92,7 @@ def check_and_enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
 
 
 @tracer.capture_method
-def enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
+def enable_autoscaling(ep: Endpoint, variant_name):
     tracer.put_annotation("variant_name", variant_name)
     max_instance_number = int(ep.max_instance_number)
 
@@ -120,7 +120,7 @@ def enable_autoscaling(ep: EndpointDeploymentJob, variant_name):
         enable_autoscaling_real_time(ep, variant_name)
 
 
-def enable_autoscaling_async(ep: EndpointDeploymentJob, variant_name):
+def enable_autoscaling_async(ep: Endpoint, variant_name):
     target_value = 3
 
     # Define scaling policy
@@ -229,7 +229,7 @@ def enable_autoscaling_async(ep: EndpointDeploymentJob, variant_name):
 
 
 @tracer.capture_method
-def enable_autoscaling_real_time(ep: EndpointDeploymentJob, variant_name):
+def enable_autoscaling_real_time(ep: Endpoint, variant_name):
     tracer.put_annotation("variant_name", variant_name)
     target_value = 5
 
@@ -297,7 +297,7 @@ def enable_autoscaling_real_time(ep: EndpointDeploymentJob, variant_name):
     logger.info(f"Autoscaling has been enabled for the endpoint: {ep.endpoint_name}")
 
 
-def update_endpoint_field(ep: EndpointDeploymentJob, field_name, field_value):
+def update_endpoint_field(ep: Endpoint, field_name, field_value):
     logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {ep.EndpointDeploymentJobId}")
     ddb_service.update_item(
         table=sagemaker_endpoint_table,

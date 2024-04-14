@@ -164,7 +164,7 @@ class InferenceJob:
 
 
 @dataclass
-class EndpointDeploymentJob:
+class Endpoint:
     EndpointDeploymentJobId: str
     autoscaling: bool = None
     max_instance_number: str = None
@@ -185,7 +185,7 @@ class EndpointDeploymentJob:
 
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
-class InvocationsRequest:
+class InvocationRequest:
     id: str
     task: str
     username: Optional[str]

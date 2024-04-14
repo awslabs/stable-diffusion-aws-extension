@@ -14,7 +14,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
-from libs.data_types import InferenceJob, EndpointDeploymentJob
+from libs.data_types import InferenceJob, Endpoint
 from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_json
 from start_inference_job import inference_start
@@ -71,12 +71,9 @@ def handler(raw_event: dict, context: LambdaContext):
             )
 
         # check if endpoint table for endpoint status and existence
-        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name,
-                                                          event.inference_type,
-                                                          username)
-        endpoint_name = inference_endpoint.endpoint_name
-        endpoint_id = inference_endpoint.EndpointDeploymentJobId
-        instance_type = inference_endpoint.instance_type
+        ep = _schedule_inference_endpoint(event.sagemaker_endpoint_name,
+                                          event.inference_type,
+                                          username)
 
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
@@ -96,9 +93,9 @@ def handler(raw_event: dict, context: LambdaContext):
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
-                'sagemaker_inference_endpoint_id': endpoint_id,
-                'sagemaker_inference_instance_type': instance_type,
-                'sagemaker_inference_endpoint_name': endpoint_name,
+                'sagemaker_inference_endpoint_id': ep.EndpointDeploymentJobId,
+                'sagemaker_inference_instance_type': ep.instance_type,
+                'sagemaker_inference_endpoint_name': ep.endpoint_name,
             },
         )
         resp = {
@@ -212,13 +209,13 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
 
         if sagemaker_endpoint_raw['endpoint_status'] != 'InService':
             raise Exception(f'sagemaker endpoint is not ready with status: {sagemaker_endpoint_raw["endpoint_status"]}')
-        return EndpointDeploymentJob(**sagemaker_endpoint_raw)
+        return Endpoint(**sagemaker_endpoint_raw)
     elif user_id:
         sagemaker_endpoint_raws = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         user_roles = get_user_roles(ddb_service, user_table, user_id)
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
-            endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
+            endpoint = Endpoint(**ddb_service.deserialize(row))
             if endpoint.service_type != '' and endpoint.service_type != 'sd':
                 continue
             if endpoint.status == 'deleted':
