@@ -40,7 +40,7 @@ export class SagemakerEndpointEvents {
       effect: Effect.ALLOW,
       actions: [
         'dynamodb:UpdateItem',
-        'dynamodb:Scan',
+        'dynamodb:Query',
         'dynamodb:GetItem',
         'dynamodb:DeleteItem',
       ],
