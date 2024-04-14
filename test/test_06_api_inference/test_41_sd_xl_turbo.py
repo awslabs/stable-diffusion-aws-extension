@@ -171,7 +171,7 @@ class TestTurboE2E:
                 api_instance=self.api,
                 job_id=inference_id
             )
-            logger.info(f"sd xl turbo inference is {status}")
+            logger.info(f"sd xl turbo Async is {status}")
             if status == InferenceStatus.SUCCEED.value:
                 break
             if status == InferenceStatus.FAILED.value:
