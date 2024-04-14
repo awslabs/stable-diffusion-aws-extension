@@ -5,17 +5,21 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
-from utils.helper import upload_with_put, get_inference_job_status, get_inference_job_image, update_oas
+from utils.helper import upload_with_put, get_inference_job_status, update_oas
 
 logger = logging.getLogger(__name__)
 
 inference_data = {}
 
 
-class TestTxt2ImgInferenceAsyncCn1E2E:
+@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
+@pytest.mark.skipif(config.test_fast, reason="test_fast")
+class TestTxt2ImgAsyncAfterTrainWd14E2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -36,6 +40,8 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
             "task_type": InferenceType.TXT2IMG.value,
             "models": {
                 "Stable-diffusion": [config.default_model_id],
+                "VAE": ["Automatic"],
+                "Lora": [f"{config.train_wd14_model_name}.safetensors"],
                 "embeddings": []
             },
         }
@@ -50,8 +56,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
         assert inference_data["type"] == InferenceType.TXT2IMG.value
         assert len(inference_data["api_params_s3_upload_url"]) > 0
 
-        upload_with_put(inference_data["api_params_s3_upload_url"],
-                        "./data/api_params/txt2img_controlnet_depth_leres.json")
+        upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param_train.json")
 
     def test_2_txt2img_async_exists(self):
         global inference_data
@@ -65,7 +70,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_5_txt2img_async_start_cn1_and_succeed(self):
+    def test_3_txt2img_async_start_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -81,7 +86,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
 
         assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
 
-        timeout = datetime.now() + timedelta(minutes=7)
+        timeout = datetime.now() + timedelta(minutes=2)
 
         while datetime.now() < timeout:
             status = get_inference_job_status(
@@ -96,21 +101,9 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
                 raise Exception(f"Inference job {inference_id} failed.")
             time.sleep(7)
         else:
-            raise Exception(f"Inference execution {inference_id} timed out after 7 minutes.")
+            raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
 
-    def test_6_txt2img_cn1_async_content(self):
-        global inference_data
-        assert inference_data["type"] == InferenceType.TXT2IMG.value
-
-        inference_id = inference_data["id"]
-
-        get_inference_job_image(
-            api_instance=self.api,
-            job_id=inference_id,
-            target_file="./data/api_params/txt2img_controlnet_depth_leres.png"
-        )
-
-    def test_7_txt2img_async_delete_succeed(self):
+    def test_4_txt2img_async_delete_succeed(self):
 
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value

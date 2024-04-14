@@ -1,11 +1,7 @@
-from __future__ import print_function
-
 import logging
 import time
 from datetime import datetime
 from datetime import timedelta
-
-import pytest
 
 import config as config
 from utils.api import Api
@@ -13,12 +9,8 @@ from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
-endpoint_name = f"sd-async-{config.endpoint_name}"
 
-
-@pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
-@pytest.mark.skipif(config.test_fast, reason="test_fast")
-class TestEndpointCheckForTrainE2E:
+class TestEndpointReCheckForComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -28,7 +20,7 @@ class TestEndpointCheckForTrainE2E:
     def teardown_class(self):
         pass
 
-    def test_1_list_endpoints_status(self):
+    def test_1_list_async_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -44,17 +36,17 @@ class TestEndpointCheckForTrainE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert config.comfy_async_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=50)
+        timeout = datetime.now() + timedelta(minutes=20)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()
             if result:
                 break
-            time.sleep(50)
+            time.sleep(25)
         else:
-            raise Exception("Function execution timed out after 30 minutes.")
+            raise Exception("Create Endpoint timed out after 20 minutes.")
 
     def endpoints_wait_for_in_service(self):
         headers = {
@@ -70,13 +62,14 @@ class TestEndpointCheckForTrainE2E:
         assert resp.status_code == 200, resp.dumps()
 
         for endpoint in resp.json()['data']["endpoints"]:
-            if endpoint["endpoint_name"] == endpoint_name:
-                if endpoint["endpoint_status"] == "Failed":
-                    raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
-                if endpoint["endpoint_status"] != "InService":
-                    logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
-                    return False
-                else:
+            if endpoint["endpoint_name"] == config.comfy_async_ep_name:
+                if endpoint["endpoint_status"] == "InService":
                     return True
+
+                if endpoint["endpoint_status"] == "Failed":
+                    raise Exception(f"Endpoint {config.comfy_async_ep_name} is failed")
+
+                logger.info(f"{config.comfy_async_ep_name} is {endpoint['endpoint_status']}")
+                return False
 
         return False

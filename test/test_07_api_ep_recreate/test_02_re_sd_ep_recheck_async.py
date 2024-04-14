@@ -11,10 +11,10 @@ from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
-endpoint_name = f"sd-real-time-{config.endpoint_name}"
+endpoint_name = f"sd-async-{config.endpoint_name}"
 
 
-class TestEndpointRealTimeCheckE2E:
+class TestEndpointCheckE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -24,7 +24,7 @@ class TestEndpointRealTimeCheckE2E:
     def teardown_class(self):
         pass
 
-    def test_1_list_real_time_endpoints_status(self):
+    def test_1_list_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -42,7 +42,7 @@ class TestEndpointRealTimeCheckE2E:
 
         assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=50)
+        timeout = datetime.now() + timedelta(minutes=20)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()
@@ -50,7 +50,7 @@ class TestEndpointRealTimeCheckE2E:
                 break
             time.sleep(50)
         else:
-            raise Exception("Function execution timed out after 30 minutes.")
+            raise Exception("Create Endpoint timed out after 20 minutes.")
 
     def endpoints_wait_for_in_service(self):
         headers = {

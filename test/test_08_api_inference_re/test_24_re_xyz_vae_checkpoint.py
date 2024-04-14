@@ -16,11 +16,11 @@ from utils.helper import upload_with_put, get_inference_job_status, \
 logger = logging.getLogger(__name__)
 
 filename = "v1-5-pruned-emaonly.safetensors"
-api_params_filename = "./data/api_params/xyz_checkpoint_api_param.json"
+api_params_filename = "./data/api_params/xyz_vae_api_param.json"
 inference_data = {}
 
 
-class TestXyzCheckpointE2E:
+class TestXyzVaeE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -35,7 +35,7 @@ class TestXyzCheckpointE2E:
             delete_inference_jobs([inference_data['id']])
 
     @pytest.mark.skip(reason="not ready")
-    def test_1_xyz_checkpoint_txt2img_job_create(self):
+    def test_1_xyz_vae_txt2img_job_create(self):
 
         headers = {
             "x-api-key": config.api_key,
@@ -49,7 +49,8 @@ class TestXyzCheckpointE2E:
                 "Stable-diffusion": [filename],
                 "embeddings": []
             },
-            "filters": {}
+            "filters": {
+            }
         }
 
         resp = self.api.create_inference(headers=headers, data=data)
@@ -64,7 +65,7 @@ class TestXyzCheckpointE2E:
         upload_with_put(inference_data["api_params_s3_upload_url"], api_params_filename)
 
     @pytest.mark.skip(reason="not ready")
-    def test_2_xyz_checkpoint_txt2img_job_succeed(self):
+    def test_2_xyz_vae_txt2img_job_succeed(self):
 
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
@@ -87,11 +88,11 @@ class TestXyzCheckpointE2E:
                 api_instance=self.api,
                 job_id=inference_id
             )
-            logger.info(f"xyz inference is {status}")
+            logger.info(f"xyz vae inference is {status}")
             if status == InferenceStatus.SUCCEED.value:
                 break
             if status == InferenceStatus.FAILED.value:
                 raise Exception("Inference job failed.")
             time.sleep(5)
         else:
-            raise Exception("Inference execution timed out after 2 minutes.")
+            raise Exception("Inference timed out after 2 minutes.")
