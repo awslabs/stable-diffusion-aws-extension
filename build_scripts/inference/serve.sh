@@ -18,7 +18,6 @@ if [ -z "$SERVICE_TYPE" ]; then
 fi
 
 export TAR_FILE="esd.tar"
-export SD_PORT=24001
 export S3_LOCATION="endpoint/$ESD_VERSION/$ENDPOINT_NAME"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
@@ -85,7 +84,6 @@ find_and_remove_file(){
 }
 
 remove_unused(){
-#  echo "rm $1"
   rm -rf "$1"
 }
 
@@ -347,9 +345,11 @@ if [ "$FULL_IMAGE" == "true" ]; then
   fi
 fi
 
-echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
-output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
-if echo "$output" | grep -q "$S3_LOCATION"; then
+endpoint_path="s3://$S3_BUCKET_NAME/$S3_LOCATION/$TAR_FILE"
+echo "Checking $endpoint_path files..."
+s5cmd ls "$endpoint_path" &> /dev/null
+# shellcheck disable=SC2181
+if [ $? -eq 0 ]; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_s3
     exit 1
