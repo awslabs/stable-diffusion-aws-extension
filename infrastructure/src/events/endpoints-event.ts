@@ -46,6 +46,7 @@ export class SagemakerEndpointEvents {
       ],
       resources: [
         this.endpointDeploymentTable.tableArn,
+        `${this.endpointDeploymentTable.tableArn}/*`,
         this.multiUserTable.tableArn,
       ],
     }));

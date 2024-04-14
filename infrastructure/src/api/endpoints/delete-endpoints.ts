@@ -88,12 +88,12 @@ export class DeleteEndpointsApi {
         'dynamodb:PutItem',
         'dynamodb:DeleteItem',
         'dynamodb:UpdateItem',
-        'dynamodb:Query',
         'dynamodb:Describe*',
         'dynamodb:List*',
       ],
       resources: [
         this.endpointDeploymentTable.tableArn,
+        `${this.endpointDeploymentTable.tableArn}/*`,
         this.multiUserTable.tableArn,
       ],
     }));
