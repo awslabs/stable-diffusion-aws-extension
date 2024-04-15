@@ -79,7 +79,8 @@ def inference_start(job: InferenceJob, username):
         payload_string=job.payload_string
     )
 
-    log_json("inference payload", job.__dict__)
+    log_json("inference job", job.__dict__)
+    log_json("inference invoke payload", payload.__dict__)
 
     update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
 
