@@ -179,6 +179,12 @@ def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name
                                                      inference_id=job.InferenceJobId)
                 logger.info(f"split prediction: {prediction}")
                 output_path = f"{output_path}, {prediction.output_path}"
+        else:
+            prediction = predictor_async_predict(endpoint_name=endpoint_name,
+                                                 data=payload.__dict__,
+                                                 inference_id=job.InferenceJobId)
+            logger.info(f"prediction: {prediction}")
+            output_path = prediction.output_path
     else:
         prediction = predictor_async_predict(endpoint_name=endpoint_name,
                                              data=payload.__dict__,
