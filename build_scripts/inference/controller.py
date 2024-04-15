@@ -27,6 +27,8 @@ app = FastAPI()
 SLEEP_TIME = 30
 service_type = os.getenv('SERVICE_TYPE', 'sd')
 endpoint_name = os.getenv('ENDPOINT_NAME')
+sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
+start_port = int(sagemaker_safe_port_range.split('-')[0])
 should_exit = 0
 
 
@@ -34,7 +36,7 @@ class App:
     def __init__(self, device_id):
         self.host = "127.0.0.1"
         self.device_id = device_id
-        self.port = 24000 + device_id
+        self.port = start_port + device_id
         self.name = f"{service_type}-gpu{device_id}"
         self.process = None
         self.busy = False
@@ -215,6 +217,7 @@ def get_available_app():
 
 def start_apps(nums: int):
     logger.info(f"GPU count: {nums}")
+    logger.info(f"Safe start port: {start_port}")
     for device_id in range(nums):
         sd_app = App(device_id)
         sd_app.start()
