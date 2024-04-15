@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import logging
-import threading
 
 import pytest
 
@@ -13,23 +12,16 @@ from utils.helper import update_oas, upload_with_put
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+headers = {
+    "x-api-key": config.api_key,
+    "username": config.username
+}
 
-def task_to_run(inference_id):
-    t_name = threading.current_thread().name
-    logger.info(f"Task is running on {t_name}, {inference_id}")
-
-    headers = {
-        "x-api-key": config.api_key,
-        "username": config.username
-    }
-    api = Api(config)
-
-    api.start_inference_job(job_id=inference_id, headers=headers)
-    logger.info(f"start_inference_job: {inference_id}")
+inference_id = ''
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestMutilGps:
+class TestMutilGPUsSingleTask:
     def setup_class(self):
         self.api = Api(config)
         update_oas(self.api)
@@ -39,10 +31,6 @@ class TestMutilGps:
         pass
 
     def test_0_gpus_clear_inferences_jobs(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
         resp = self.api.list_inferences(headers, params={"limit": 100})
         assert resp.status_code == 200, resp.dumps()
         inferences = resp.json()['data']['inferences']
@@ -54,31 +42,7 @@ class TestMutilGps:
         }
         self.api.delete_inferences(data=data, headers=headers)
 
-    def test_1_gpus_start_real_time_tps(self):
-
-        ids = []
-        for i in range(20):
-            id = self.tps_real_time_create()
-            logger.info(f"inference created: {id}")
-            ids.append(id)
-
-        threads = []
-        for id in ids:
-            thread = threading.Thread(target=task_to_run, args=(id,))
-            threads.append(thread)
-
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-    def tps_real_time_create(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
+    def test_2_create_job(self):
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
@@ -93,6 +57,13 @@ class TestMutilGps:
 
         inference_data = resp.json()['data']["inference"]
 
-        upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param.json")
+        upload_with_put(inference_data["api_params_s3_upload_url"],
+                        "./data/api_params/txt2img_api_param_batch_size.json")
+        global inference_id
+        inference_id = inference_data['id']
 
-        return inference_data['id']
+    def test_3_gpus_start_real_time_tps(self):
+        global inference_id
+
+        self.api.start_inference_job(job_id=inference_id, headers=headers)
+        logger.info(f"infer_id: {inference_id}")
