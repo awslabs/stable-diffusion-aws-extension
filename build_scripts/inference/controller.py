@@ -77,6 +77,8 @@ class App:
                 "python", "main.py",
                 "--listen", self.host,
                 "--port", str(self.port),
+                "--output-directory", f"/home/ubuntu/ComfyUI/output/{self.device_id}/",
+                "--temp-directory", f"/home/ubuntu/ComfyUI/temp/{self.device_id}/",
                 "--cuda-device", str(self.device_id),
             ]
 
@@ -129,7 +131,10 @@ class App:
 
         try:
             self.busy = True
+
             payload['port'] = self.port
+            payload['out_path'] = self.device_id
+
             url = f"http://127.0.0.1:{self.port}/invocations"
             timeout = aiohttp.ClientTimeout(total=300)
 

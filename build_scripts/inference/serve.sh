@@ -183,9 +183,9 @@ sd_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
-  # python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 
-  python /controller.py
+   # python /controller.py
 }
 
 sd_launch_from_s3(){
@@ -303,10 +303,10 @@ comfy_launch(){
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
-  python serve.py
+#  python serve.py
 
   # use controller
-  # python /controller.py
+   python /controller.py
 }
 
 comfy_launch_from_s3(){
