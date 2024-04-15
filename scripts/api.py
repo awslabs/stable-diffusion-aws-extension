@@ -177,10 +177,7 @@ def sagemaker_api(_, app: FastAPI):
 
     @app.post("/invocations")
     def invocations(req: InvocationsRequest):
-        """
-        Check the current state of Dreambooth processes.
-        @return:
-        """
+
         logger.info(f'-------invocation on port {req.port}------')
         logger.info(json.dumps(req.__dict__, default=str))
 
