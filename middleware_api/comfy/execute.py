@@ -19,7 +19,7 @@ from common.excepts import BadRequestException
 from common.response import ok, created
 from common.util import s3_scan_files, generate_presigned_url_for_keys
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
-from libs.enums import ComfyExecuteType
+from libs.enums import ComfyExecuteType, EndpointStatus
 from libs.utils import get_endpoint_by_name, response_error
 
 tracer = Tracer()
@@ -81,8 +81,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     ep = get_endpoint_by_name(endpoint_name)
 
-    if ep.endpoint_status != 'InService':
-        raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService.")
+    if ep.endpoint_status not in [EndpointStatus.IN_SERVICE.value, EndpointStatus.UPDATING.value]:
+        raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService or Updating.")
 
     logger.info(f"endpoint: {ep}")
 

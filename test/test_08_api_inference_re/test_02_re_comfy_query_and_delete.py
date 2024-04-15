@@ -19,12 +19,12 @@ class TestTxt2ImgQueryAndDeleteComfyE2E:
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_async_batch_create(self):
+    def test_1_comfy_re_txt2img_async_batch_create(self):
         count = 20
         for i in range(count):
-            self.comfy_txt2img_async_create()
+            self.comfy_re_txt2img_async_create()
 
-    def comfy_txt2img_async_create(self):
+    def comfy_re_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
         }
@@ -184,7 +184,7 @@ class TestTxt2ImgQueryAndDeleteComfyE2E:
         assert resp.json()["statusCode"] == 201
         logger.info(f"execute created: {resp.json()['data']['prompt_id']}")
 
-    def test_2_comfy_txt2img_list(self):
+    def test_2_comfy_re_txt2img_list(self):
         last_evaluated_key = None
         while True:
             resp = self.executes_list(exclusive_start_key=last_evaluated_key)
@@ -203,7 +203,7 @@ class TestTxt2ImgQueryAndDeleteComfyE2E:
                                       params={"exclusive_start_key": exclusive_start_key, "limit": 20})
         return resp
 
-    def test_4_comfy_txt2img_clean(self):
+    def test_4_comfy_re_txt2img_clean(self):
         last_evaluated_key = None
         while True:
             resp = self.executes_list(exclusive_start_key=last_evaluated_key)
@@ -226,7 +226,7 @@ class TestTxt2ImgQueryAndDeleteComfyE2E:
             if not last_evaluated_key:
                 break
 
-    def test_5_comfy_txt2img_check_clean(self):
+    def test_5_comfy_re_txt2img_check_clean(self):
         resp = self.executes_list()
         executes = resp.json()['data']['executes']
         assert len(executes) == 0, resp.dumps()
