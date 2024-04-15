@@ -48,7 +48,7 @@ COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
 
-COPY inference/serve.py /
-RUN chmod +x /serve.py
+COPY inference/controller.py /
+RUN chmod +x /controller.py
 
 ENTRYPOINT ["bash", "/serve.sh"]
