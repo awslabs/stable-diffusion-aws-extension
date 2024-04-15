@@ -173,7 +173,7 @@ def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name
             upload_json_to_s3(split_file, params_payload)
             payload.param_s3 = split_file
             for i in range(batch_size):
-                payload.image_index = i
+                payload.task_index = i
                 prediction = predictor_async_predict(endpoint_name=endpoint_name,
                                                      data=payload.__dict__,
                                                      inference_id=job.InferenceJobId)
