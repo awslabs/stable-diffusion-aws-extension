@@ -144,8 +144,6 @@ def encode_pil_to_base64(pil_image):
 def encode_no_json(obj):
     if isinstance(obj, numpy.ndarray):
         return encode_pil_to_base64(Image.fromarray(obj))
-        # return obj.tolist()
-        # return "base64 str"
     elif isinstance(obj, Image.Image):
         return encode_pil_to_base64(obj)
     elif isinstance(obj, enum.Enum):
