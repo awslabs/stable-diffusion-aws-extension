@@ -5,7 +5,6 @@ import os
 import boto3
 from aws_lambda_powertools import Tracer
 from common.sns_util import send_message_to_sns
-from common.util import load_json_from_s3
 
 from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job
 from start_inference_job import update_inference_job_table
@@ -63,9 +62,5 @@ def handler(event, context):
     # Get the task type
     job = get_inference_job(inference_id)
     task_type = job.get('taskType', 'txt2img')
-
-    # input_location = message["responseParameters"]["inputLocation"]
-    # input_payload = load_json_from_s3(input_location)
-    # logger.info(f"Input payload: {input_payload}")
 
     parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)

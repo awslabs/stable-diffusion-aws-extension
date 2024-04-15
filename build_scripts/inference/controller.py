@@ -127,9 +127,6 @@ class App:
 
         self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
 
-        if 'task_index' in payload and payload['task_index'] is not None:
-            self.name = f"{self.name}-{payload['task_index']}"
-
         try:
             self.busy = True
             payload['port'] = self.port
