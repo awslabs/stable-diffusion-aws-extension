@@ -13,6 +13,7 @@ from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted
+from common.util import resolve_instance_invocations_num
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
@@ -274,14 +275,6 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
-def _resolve_instance_invocations_num(instance_type: str):
-    if instance_type == 'ml.g5.12xlarge':
-        return 4
-    if instance_type == 'ml.p4d.24xlarge':
-        return 8
-    return 1
-
-
 @tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type, event: CreateEndpointEvent):
@@ -301,7 +294,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            "MaxConcurrentInvocationsPerInstance": _resolve_instance_invocations_num(instance_type),
+            "MaxConcurrentInvocationsPerInstance": resolve_instance_invocations_num(instance_type),
         }
     }
 

@@ -39,6 +39,14 @@ def get_query_param(event, param_name: str, default=None):
     return default
 
 
+def resolve_instance_invocations_num(instance_type: str):
+    if instance_type == 'ml.g5.12xlarge':
+        return 4
+    if instance_type == 'ml.p4d.24xlarge':
+        return 8
+    return 1
+
+
 def query_data(data, paths):
     value = data
     for path in paths:
@@ -110,10 +118,7 @@ def save_json_to_file(json_string: str, folder_path: str, file_name: str):
 
 
 @tracer.capture_method
-def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
-    '''
-    Upload the JSON file from the specified bucket and key
-    '''
+def upload_json_to_s3(file_key: str, json_data: dict):
     try:
         s3.put_object(Body=json.dumps(json_data), Bucket=bucket_name, Key=file_key)
         logger.info(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")

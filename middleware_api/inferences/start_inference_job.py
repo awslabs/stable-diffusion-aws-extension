@@ -13,6 +13,7 @@ from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import accepted
+from common.util import resolve_instance_invocations_num, load_json_from_s3, upload_json_to_s3
 from get_inference_job import get_infer_data
 from inference_libs import parse_sagemaker_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationRequest
@@ -153,11 +154,35 @@ def predictor_async_predict(endpoint_name, data, inference_id):
 @tracer.capture_method
 def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name):
     tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
-    prediction = predictor_async_predict(endpoint_name=endpoint_name,
-                                         data=payload.__dict__,
-                                         inference_id=job.InferenceJobId)
-    logger.info(f"prediction: {prediction}")
-    output_path = prediction.output_path
+
+    output_path = ""
+    instance_invocations_num = resolve_instance_invocations_num(job.inference_type)
+    if instance_invocations_num > 1:
+        # may need to split a task
+        logger.info(f"instance_invocations_num: {instance_invocations_num}")
+        input_body_s3 = job.params.get('input_body_s3')
+        params_payload = load_json_from_s3(input_body_s3)
+        logger.info(f"params_payload: {params_payload}")
+        batch_size = params_payload.get('batch_size', 1)
+        if batch_size > 1:
+            logger.info(f"batch_size: {batch_size}")
+            params_payload['batch_size'] = 1
+            # write payload to s3
+            upload_json_to_s3(f"{input_body_s3}.split", params_payload)
+            payload.param_s3 = f"{input_body_s3}.split"
+            for i in range(batch_size):
+                payload.image_index = i
+                prediction = predictor_async_predict(endpoint_name=endpoint_name,
+                                                     data=payload.__dict__,
+                                                     inference_id=job.InferenceJobId)
+                logger.info(f"split prediction: {prediction}")
+                output_path = f"{output_path}, {prediction.output_path}"
+    else:
+        prediction = predictor_async_predict(endpoint_name=endpoint_name,
+                                             data=payload.__dict__,
+                                             inference_id=job.InferenceJobId)
+        logger.info(f"prediction: {prediction}")
+        output_path = prediction.output_path
 
     # update the ddb job status to 'inprogress' and save to ddb
     job.status = 'inprogress'
@@ -167,6 +192,7 @@ def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name
     data = {
         'InferenceJobId': job.InferenceJobId,
         'status': job.status,
+
         # todo inference will remove in the next version
         'inference': {
             'inference_id': job.InferenceJobId,
