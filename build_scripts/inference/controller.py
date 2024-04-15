@@ -127,9 +127,6 @@ class App:
 
         self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
 
-        if 'task_index' in payload and payload['task_index'] is not None:
-            self.name = f"{self.name}-{payload['task_index']}"
-
         try:
             self.busy = True
             payload['port'] = self.port
@@ -273,9 +270,6 @@ async def invocations(request: Request):
         infer_id = payload['id']
     else:
         infer_id = payload['prompt_id']
-
-    if 'task_index' in payload and payload['task_index'] is not None:
-        infer_id = f"{infer_id}-{payload['task_index']}"
 
     logger.info(f"controller_invocation {infer_id} received")
 
