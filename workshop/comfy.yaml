@@ -247,6 +247,7 @@ Resources:
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
           # sudo journalctl -u comfy --no-pager -n 200
+          # wget -O /ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true
 
   ComfyEIP:
     Type: AWS::EC2::EIP
