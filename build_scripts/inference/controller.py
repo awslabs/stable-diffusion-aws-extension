@@ -274,6 +274,9 @@ async def invocations(request: Request):
     else:
         infer_id = payload['prompt_id']
 
+    if 'task_index' in payload and payload['task_index'] is not None:
+        infer_id = f"{infer_id}-{payload['task_index']}"
+
     logger.info(f"controller_invocation {infer_id} received")
 
     while True:
