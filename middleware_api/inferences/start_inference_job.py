@@ -169,8 +169,9 @@ def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name
             logger.info(f"batch_size: {batch_size}")
             params_payload['batch_size'] = 1
             # write payload to s3
-            upload_json_to_s3(f"{input_body_s3}.split", params_payload)
-            payload.param_s3 = f"{input_body_s3}.split"
+            split_file = f"{input_body_s3}.split.json"
+            upload_json_to_s3(split_file, params_payload)
+            payload.param_s3 = split_file
             for i in range(batch_size):
                 payload.image_index = i
                 prediction = predictor_async_predict(endpoint_name=endpoint_name,
