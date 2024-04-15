@@ -298,7 +298,7 @@ comfy_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
-
+  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
   python /serve.py

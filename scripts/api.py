@@ -382,13 +382,11 @@ def get_file_md5_dict(path):
 
 
 def move_model_to_tmp(_, app: FastAPI):
-    # os.system("rm -rf models")
-    # Create model dir
-    # logger.info("Create model dir")
-    # os.system("mkdir models")
-    # Move model dir to /tmp
     logger.info("Copy model dir to tmp")
-    model_tmp_dir = f"models_{time.time()}"
+    model_tmp_dir = f"models"
+    # for mutil gpus
+    if os.path.exists(f"/tmp/{model_tmp_dir}"):
+        return
     os.system(f"cp -rL models /tmp/{model_tmp_dir}")
     src_file_dict = get_file_md5_dict("models")
     tgt_file_dict = get_file_md5_dict(f"/tmp/{model_tmp_dir}")
@@ -403,10 +401,6 @@ def move_model_to_tmp(_, app: FastAPI):
             break
     if is_complete:
         os.system(f"rm -rf models")
-        # Delete tmp model dir
-        # logger.info("Delete tmp model dir")
-        # os.system("rm -rf /tmp/models")
-        # Link model dir
         logger.info("Link model dir")
         os.system(f"ln -s /tmp/{model_tmp_dir} models")
     else:
