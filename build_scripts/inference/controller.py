@@ -127,10 +127,9 @@ class App:
 
     async def invocations(self, payload, infer_id=None):
 
-        self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
-
         try:
             self.busy = True
+            self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
 
             payload['port'] = self.port
             payload['out_path'] = self.device_id
@@ -148,7 +147,10 @@ class App:
                         self.busy = False
                         return result
                     response_data = await response.json()
+
             self.busy = False
+            self.name = f"{service_type}-gpu{self.device_id}"
+
             return response_data
         except Exception as e:
             self.busy = False
