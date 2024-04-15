@@ -122,7 +122,11 @@ class App:
             return result == 0
 
     async def invocations(self, payload, infer_id=None):
+
         self.name = f"{service_type}-gpu{self.device_id}-{infer_id}"
+
+        if 'task_index' in payload:
+            self.name = f"{self.name}-{payload['task_index']}"
 
         try:
             self.busy = True
@@ -261,8 +265,6 @@ async def ping():
 @app.post("/invocations")
 async def invocations(request: Request):
     payload = await request.json()
-
-    logger.info(payload)
 
     if service_type == 'sd':
         infer_id = payload['id']

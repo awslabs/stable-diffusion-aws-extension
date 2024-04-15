@@ -183,6 +183,8 @@ sd_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
+  # python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+
   python /controller.py
 }
 
@@ -302,6 +304,7 @@ comfy_launch(){
   source venv/bin/activate
 
   python serve.py
+
   # use controller
   # python /controller.py
 }
