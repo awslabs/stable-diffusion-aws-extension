@@ -120,6 +120,7 @@ def save_json_to_file(json_string: str, folder_path: str, file_name: str):
 @tracer.capture_method
 def upload_json_to_s3(file_key: str, json_data: dict):
     try:
+        file_key = file_key.replace(f"s3://{bucket_name}/", '')
         s3.put_object(Body=json.dumps(json_data), Bucket=bucket_name, Key=file_key)
         logger.info(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")
     except Exception as e:

@@ -157,7 +157,7 @@ def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name
     tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
 
     output_path = ""
-    instance_invocations_num = resolve_instance_invocations_num(job.inference_type)
+    instance_invocations_num = resolve_instance_invocations_num(job.params['sagemaker_inference_instance_type'])
     if instance_invocations_num > 1:
         # may need to split a task
         logger.info(f"instance_invocations_num: {instance_invocations_num}")
