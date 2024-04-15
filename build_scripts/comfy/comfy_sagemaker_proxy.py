@@ -248,15 +248,26 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        sync_local_outputs_to_s3(f'output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}', f'{ROOT_PATH}/output/{out_path}' if out_path else f'{ROOT_PATH}/output')
-        sync_local_outputs_to_s3(f'temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}', f'{ROOT_PATH}/temp/{out_path}' if out_path else f'{ROOT_PATH}/temp')
+        s3_out_path = f'output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}'
+        s3_temp_path = f'temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}'
+        local_out_path = f'{ROOT_PATH}/output/{out_path}' if out_path else f'{ROOT_PATH}/output'
+        local_temp_path = f'{ROOT_PATH}/temp/{out_path}' if out_path else f'{ROOT_PATH}/temp'
+
+        logger.info(f"s3_out_path is {s3_out_path} and s3_temp_path is {s3_temp_path} and local_out_path is {local_out_path} and local_temp_path is {local_temp_path}")
+
+        sync_local_outputs_to_s3(s3_out_path, local_out_path)
+        sync_local_outputs_to_s3(s3_temp_path, local_temp_path)
+
         response_body = {
             "prompt_id": prompt_id,
             "instance_id": GEN_INSTANCE_ID,
             "status": "success",
-            "output_path": f's3://{BUCKET}/comfy/output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}',
-            "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}',
+            "output_path": f's3://{BUCKET}/comfy/{s3_out_path}',
+            "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
+
+        logger.info(f"execute inference response is {response_body}")
+
         executing = False
         message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
         sen_sqs_msg(message_body, prompt_id)
