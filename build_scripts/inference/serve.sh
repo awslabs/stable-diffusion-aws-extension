@@ -183,7 +183,7 @@ sd_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
-  python /serve.py
+  python /controller.py
 }
 
 sd_launch_from_s3(){
@@ -303,7 +303,7 @@ comfy_launch(){
 
   python serve.py
   # use controller
-#  python /serve.py
+  # python /controller.py
 }
 
 comfy_launch_from_s3(){
