@@ -188,6 +188,10 @@ def sync_local_outputs_to_base64(local_path):
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
     json_data = await request.json()
+    if 'out_path' in json_data and json_data['out_path']:
+        out_path = json_data['out_path']
+    else:
+        out_path = None
     logger.info(f"invocations start json_data:{json_data}")
     global need_sync
     need_sync = json_data["need_sync"]
@@ -244,14 +248,14 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        sync_local_outputs_to_s3(f'output/{prompt_id}', f'{ROOT_PATH}/output')
-        sync_local_outputs_to_s3(f'temp/{prompt_id}', f'{ROOT_PATH}/temp')
+        sync_local_outputs_to_s3(f'output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}', f'{ROOT_PATH}/output/{out_path}' if out_path else f'{ROOT_PATH}/output')
+        sync_local_outputs_to_s3(f'temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}', f'{ROOT_PATH}/temp/{out_path}' if out_path else f'{ROOT_PATH}/temp')
         response_body = {
             "prompt_id": prompt_id,
             "instance_id": GEN_INSTANCE_ID,
             "status": "success",
-            "output_path": f's3://{BUCKET}/comfy/output/{prompt_id}',
-            "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
+            "output_path": f's3://{BUCKET}/comfy/output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}',
+            "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}',
         }
         executing = False
         message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
