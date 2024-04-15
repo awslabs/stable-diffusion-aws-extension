@@ -44,11 +44,16 @@ def get_query_param(event, param_name: str, default=None):
     return default
 
 
-def resolve_instance_invocations_num(instance_type: str):
+def resolve_instance_invocations_num(instance_type: str, service_type: str):
+    if service_type == "sd":
+        return 1
+
     if instance_type == 'ml.g5.12xlarge':
         return 4
+
     if instance_type == 'ml.p4d.24xlarge':
         return 8
+
     return 1
 
 

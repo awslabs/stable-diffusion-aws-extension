@@ -294,7 +294,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            "MaxConcurrentInvocationsPerInstance": resolve_instance_invocations_num(instance_type),
+            "MaxConcurrentInvocationsPerInstance": resolve_instance_invocations_num(instance_type, event.service_type),
         }
     }
 
