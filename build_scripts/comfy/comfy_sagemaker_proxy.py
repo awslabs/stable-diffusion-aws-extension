@@ -248,10 +248,10 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        s3_out_path = f'output/{prompt_id}/{out_path}' if out_path else f'output/{prompt_id}'
-        s3_temp_path = f'temp/{prompt_id}/{out_path}' if out_path else f'temp/{prompt_id}'
-        local_out_path = f'{ROOT_PATH}/output/{out_path}' if out_path else f'{ROOT_PATH}/output'
-        local_temp_path = f'{ROOT_PATH}/temp/{out_path}' if out_path else f'{ROOT_PATH}/temp'
+        s3_out_path = f'output/{prompt_id}/{out_path}' if out_path is not None  else f'output/{prompt_id}'
+        s3_temp_path = f'temp/{prompt_id}/{out_path}' if out_path is not None else f'temp/{prompt_id}'
+        local_out_path = f'{ROOT_PATH}/output/{out_path}' if out_path is not None else f'{ROOT_PATH}/output'
+        local_temp_path = f'{ROOT_PATH}/temp/{out_path}' if out_path is not None else f'{ROOT_PATH}/temp'
 
         logger.info(f"s3_out_path is {s3_out_path} and s3_temp_path is {s3_temp_path} and local_out_path is {local_out_path} and local_temp_path is {local_temp_path}")
 
