@@ -64,8 +64,8 @@ def handler(event, context):
     job = get_inference_job(inference_id)
     task_type = job.get('taskType', 'txt2img')
 
-    input_location = message["responseParameters"]["inputLocation"]
-    input_payload = load_json_from_s3(input_location)
-    logger.info(f"Input payload: {input_payload}")
+    # input_location = message["responseParameters"]["inputLocation"]
+    # input_payload = load_json_from_s3(input_location)
+    # logger.info(f"Input payload: {input_payload}")
 
     parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)
