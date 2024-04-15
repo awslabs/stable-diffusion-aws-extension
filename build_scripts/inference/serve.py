@@ -262,6 +262,8 @@ async def ping():
 async def invocations(request: Request):
     payload = await request.json()
 
+    logger.info(payload)
+
     if service_type == 'sd':
         infer_id = payload['id']
     else:

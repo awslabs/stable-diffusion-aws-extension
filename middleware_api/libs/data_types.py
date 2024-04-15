@@ -192,3 +192,5 @@ class InvocationRequest:
     models: Optional[dict]
     param_s3: Optional[str] = None
     payload_string: Optional[str] = None
+    # if enable split
+    image_index: Optional[int] = None
