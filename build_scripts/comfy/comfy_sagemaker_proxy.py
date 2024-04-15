@@ -188,7 +188,7 @@ def sync_local_outputs_to_base64(local_path):
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
     json_data = await request.json()
-    if 'out_path' in json_data and json_data['out_path']:
+    if 'out_path' in json_data and json_data['out_path'] is not None:
         out_path = json_data['out_path']
     else:
         out_path = None
@@ -248,7 +248,7 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        s3_out_path = f'output/{prompt_id}/{out_path}' if out_path is not None  else f'output/{prompt_id}'
+        s3_out_path = f'output/{prompt_id}/{out_path}' if out_path is not None else f'output/{prompt_id}'
         s3_temp_path = f'temp/{prompt_id}/{out_path}' if out_path is not None else f'temp/{prompt_id}'
         local_out_path = f'{ROOT_PATH}/output/{out_path}' if out_path is not None else f'{ROOT_PATH}/output'
         local_temp_path = f'{ROOT_PATH}/temp/{out_path}' if out_path is not None else f'{ROOT_PATH}/temp'
