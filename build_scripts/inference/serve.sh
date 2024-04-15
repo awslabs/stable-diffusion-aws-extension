@@ -301,7 +301,9 @@ comfy_launch(){
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 
-  python /serve.py
+  python serve.py
+  # use controller
+#  python /serve.py
 }
 
 comfy_launch_from_s3(){
