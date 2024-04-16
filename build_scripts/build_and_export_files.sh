@@ -12,11 +12,12 @@ docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "
 docker images "$tag_name"
 
 docker rm "$tag_name" || true
-
 docker create --name "$tag_name" "$tag_name"
 rm -rf  "/tmp/$tag_name"
 mkdir -p "/tmp/$tag_name"
 docker cp "$tag_name:/home/ubuntu" "/tmp/$tag_name/"
+docker rm "$tag_name" || true
+
 tar -cf "$tag_name.tar" -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
 ls -la "$tag_name.tar"
 

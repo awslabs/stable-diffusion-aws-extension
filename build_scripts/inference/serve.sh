@@ -156,8 +156,6 @@ sd_cache_endpoint() {
   end_at=$(date +%s)
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
-
-  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*"
 }
 
 sd_build(){
@@ -176,9 +174,6 @@ sd_launch(){
 
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
-
-  echo "find cuda"
-  find /home/ubuntu/stable-diffusion-webui -type d -name "*cuda*" 2>/dev/null
 
   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 
@@ -218,14 +213,14 @@ sd_launch_from_private_s3(){
 sd_launch_from_public_s3(){
     CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$S3_BUCKET_NAME/$CACHE_PATH" /home/ubuntu/
+    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "download file: $cost seconds"
 
     start_at=$(date +%s)
-    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
-    rm -rf $TAR_FILE
+    tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
+    rm -rf "$SERVICE_TYPE.tar"
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
@@ -301,8 +296,6 @@ comfy_cache_endpoint() {
   end_at=$(date +%s)
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
-
-  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*"
 }
 
 comfy_launch(){
@@ -341,14 +334,14 @@ comfy_launch_from_private_s3(){
 comfy_launch_from_public_s3(){
     CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$S3_BUCKET_NAME/$CACHE_PATH" /home/ubuntu/
+    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "download file: $cost seconds"
 
     start_at=$(date +%s)
-    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
-    rm -rf $TAR_FILE
+    tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
+    rm -rf "$SERVICE_TYPE.tar"
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
@@ -373,7 +366,7 @@ fi
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 
-echo "Checking endpoint name cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
+echo "Checking endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_private_s3 "$CACHE_ENDPOINT"
@@ -384,7 +377,7 @@ if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   fi
 fi
 
-echo "Checking public cache: s3://$S3_BUCKET_NAME/$CACHE_PUBLIC"
+echo "Checking public cache: s3://$CACHE_PUBLIC"
 if [ "$SERVICE_TYPE" == "sd" ]; then
   sd_launch_from_public_s3 "$CACHE_PUBLIC"
   exit 1
