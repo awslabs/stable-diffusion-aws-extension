@@ -61,9 +61,3 @@ docker images
 echo "docker push $fullname"
 docker push "$fullname"
 echo "docker push $fullname Completed"
-
-curl -sSL "https://raw.githubusercontent.com/elonniu/s5cmd/main/install.sh" | bash;
-docker create --name file "$fullname"
-docker cp file:/home/ubuntu /tmp/
-tar -cf ubuntu.tar -C /tmp/ubuntu . > /dev/null 2>&1
-ls -la

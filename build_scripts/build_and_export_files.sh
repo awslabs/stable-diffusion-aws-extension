@@ -2,8 +2,8 @@
 
 set -euxo pipefail
 
-dockerfile=$1
-tag_name=$2
+export dockerfile=$1
+export tag_name=$2
 
 curl -sSL "https://raw.githubusercontent.com/elonniu/s5cmd/main/install.sh" | bash > /dev/null 2>&1
 
@@ -16,7 +16,7 @@ rm -rf  "/tmp/$tag_name"
 mkdir -p "/tmp/$tag_name"
 docker cp "$tag_name:/home/ubuntu" "/tmp/$tag_name/"
 tar -cf "$tag_name.tar" -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
-ls -la
+ls -la "$tag_name.tar"
 
 mkdir -p ~/.aws
 echo "[default]
