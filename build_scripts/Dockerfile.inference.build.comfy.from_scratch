@@ -27,8 +27,11 @@ RUN mkdir -p /home/ubuntu/conda/lib/ && \
     wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
 
 COPY install_comfy.sh /home/ubuntu/
+COPY trim_comfy.sh /home/ubuntu/
+
 RUN cd /home/ubuntu || exit 1 && \
-    bash install_comfy.sh
+    bash install_comfy.sh && \
+    bash trim_comfy.sh
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh

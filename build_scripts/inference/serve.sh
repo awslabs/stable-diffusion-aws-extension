@@ -68,63 +68,7 @@ download_conda(){
   wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
 }
 
-find_and_remove_dir(){
-  dir=$1
-  name=$2
-  echo "deleting dir $name in $dir ..."
-  find "$dir" -type d \( -name "$name" \) | while read file; do
-    remove_unused "$file";
-  done
-}
-
-find_and_remove_file(){
-  dir=$1
-  name=$2
-  echo "deleting file $name in $dir ..."
-  find "$dir" -type f \( -name "$name" \) | while read file; do
-    remove_unused "$file";
-  done
-}
-
-remove_unused(){
-  rm -rf "$1"
-}
-
 # -------------------- sd functions --------------------
-
-sd_remove_unused_files(){
-  echo "---------------------------------------------------------------------------------"
-  echo "deleting unused files..."
-
-  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
-  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
-  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
-  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
-  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/workshop
-
-  remove_unused /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
-  remove_unused /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
-  remove_unused /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
-
-  find_and_remove_dir /home/ubuntu/stable-diffusion-webui ".git"
-  find_and_remove_dir /home/ubuntu/stable-diffusion-webui ".github"
-
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui ".gitignore"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CHANGELOG"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CHANGELOG.md"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "README"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "README.md"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "NOTICE"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "NOTICE.md"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CODE_OF_CONDUCT.md"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE.md"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE.txt"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CODEOWNERS"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.jpg"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.png"
-  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.gif"
-}
 
 sd_cache_endpoint() {
   start_at=$(date +%s)
@@ -277,35 +221,12 @@ sd_launch_from_public_s3(){
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
-    sd_remove_unused_files
+    /trim_sd.sh
     sd_cache_endpoint
     sd_launch
 }
 
 # -------------------- comfy functions --------------------
-
-comfy_remove_unused_files(){
-  echo "---------------------------------------------------------------------------------"
-  echo "deleting unused files..."
-
-  find_and_remove_dir /home/ubuntu/ComfyUI ".git"
-  find_and_remove_dir /home/ubuntu/ComfyUI ".github"
-
-  find_and_remove_file /home/ubuntu/ComfyUI ".gitignore"
-  find_and_remove_file /home/ubuntu/ComfyUI "README.md"
-  find_and_remove_file /home/ubuntu/ComfyUI "CHANGELOG"
-  find_and_remove_file /home/ubuntu/ComfyUI "CHANGELOG.md"
-  find_and_remove_file /home/ubuntu/ComfyUI "CODE_OF_CONDUCT.md"
-  find_and_remove_file /home/ubuntu/ComfyUI "NOTICE"
-  find_and_remove_file /home/ubuntu/ComfyUI "NOTICE.md"
-  find_and_remove_file /home/ubuntu/ComfyUI "CODEOWNERS"
-  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE"
-  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE.md"
-  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE.txt"
-  find_and_remove_file /home/ubuntu/ComfyUI "*.gif"
-  find_and_remove_file /home/ubuntu/ComfyUI "*.png"
-  find_and_remove_file /home/ubuntu/ComfyUI "*.jpg"
-}
 
 comfy_install_build(){
   cd /home/ubuntu || exit 1
@@ -389,7 +310,7 @@ comfy_launch_from_public_s3(){
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
-    comfy_remove_unused_files
+    /trim_comfy.sh
     comfy_cache_endpoint
     comfy_launch
 }
@@ -434,13 +355,13 @@ download_conda
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_install_build
-    sd_remove_unused_files
+    /trim_sd.sh
     sd_cache_endpoint
     sd_launch
     exit 1
 else
     comfy_install_build
-    comfy_remove_unused_files
+    /trim_comfy.sh
     comfy_cache_endpoint
     comfy_launch
     exit 1

@@ -3,9 +3,9 @@
 set -euxo pipefail
 
 export dockerfile=$1
-export tag_name=$2
-export container_name="$tag_name-$REGION"
-export tag_name="$tag_name-$REGION"
+export service_type=$2
+export tag_name="$service_type-$REGION"
+export container_name="$service_type-$REGION"
 
 curl -sSL "https://raw.githubusercontent.com/elonniu/s5cmd/main/install.sh" | bash > /dev/null 2>&1
 
@@ -33,7 +33,7 @@ export AWS_DEFAULT_REGION=$REGION
 upload_file(){
   version=$1
   bucket="aws-gcr-solutions-$REGION"
-  key="stable-diffusion-aws-extension-github-mainline/$version/$tag_name.tar"
+  key="stable-diffusion-aws-extension-github-mainline/$version/$service_type.tar"
 
   s5cmd sync "$tag_name.tar" "s3://$bucket/$key"
   aws s3api put-object-acl --region "$REGION" --bucket "$bucket" --key "$key" --acl public-read
