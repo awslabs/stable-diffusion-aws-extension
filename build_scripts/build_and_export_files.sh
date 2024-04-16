@@ -15,7 +15,7 @@ docker create --name "$tag_name" "$tag_name"
 rm -rf  "/tmp/$tag_name"
 mkdir -p "/tmp/$tag_name"
 docker cp "$tag_name:/home/ubuntu" "/tmp/$tag_name/"
-tar -cf ubuntu.tar -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
+tar -cf "$tag_name.tar" -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
 ls -la
 
 mkdir -p ~/.aws
@@ -28,6 +28,6 @@ export AWS_DEFAULT_REGION=$REGION
 bucket="aws-gcr-solutions-$REGION"
 key="stable-diffusion-aws-extension-github-mainline/$BUILD_VERSION/$tag_name.tar"
 
-s5cmd sync ubuntu.tar "s3://$bucket/$key"
+s5cmd cp "$tag_name.tar" "s3://$bucket/$key"
 
 aws s3api put-object-acl --region "$REGION" --bucket "$bucket" --key "$key" --acl public-read
