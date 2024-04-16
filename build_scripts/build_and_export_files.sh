@@ -22,4 +22,9 @@ mkdir -p ~/.aws
 echo "[default]
 region = $REGION" > ~/.aws/config
 
-s5cmd sync ubuntu.tar "s3://aws-gcr-solutions-$REGION/stable-diffusion-aws-extension-github-mainline/$BUILD_VERSION/ubuntu.tar"
+bucket="aws-gcr-solutions-$REGION"
+key="stable-diffusion-aws-extension-github-mainline/$BUILD_VERSION/$tag_name.tar"
+
+s5cmd sync ubuntu.tar "s3://$bucket/$key"
+
+aws s3api put-object-acl --region "$REGION" --bucket "$bucket" --key "$key" --acl public-read
