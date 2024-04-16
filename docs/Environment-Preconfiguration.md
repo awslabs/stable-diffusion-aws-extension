@@ -2,7 +2,7 @@
 
 #### **Option 1 (Recommended)**: Use one-click AWS Cloudformation template to install the EC2 instance with WebUI and extension
 
-1. Download the CloudFormation Template from [link](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)
+1. Download the CloudFormation Template from [Link](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)
 
 2. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/)
 
