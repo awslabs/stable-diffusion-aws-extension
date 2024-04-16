@@ -22,6 +22,9 @@ mkdir -p ~/.aws
 echo "[default]
 region = $REGION" > ~/.aws/config
 
+export AWS_REGION=$REGION
+export AWS_DEFAULT_REGION=$REGION
+
 bucket="aws-gcr-solutions-$REGION"
 key="stable-diffusion-aws-extension-github-mainline/$BUILD_VERSION/$tag_name.tar"
 
