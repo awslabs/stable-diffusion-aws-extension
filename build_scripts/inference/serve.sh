@@ -92,7 +92,7 @@ remove_unused(){
 
 # -------------------- sd functions --------------------
 
-sd_remove_unused_list(){
+sd_remove_unused_files(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting unused files..."
 
@@ -156,16 +156,8 @@ sd_cache_endpoint() {
   end_at=$(date +%s)
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
-}
 
-copy_to_instance_type() {
-  if [ -z "$EXTENSIONS" ]; then
-    start_at=$(date +%s)
-    s5cmd sync "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/*" "s3://$S3_BUCKET_NAME/$CACHE_INSTANCE_TYPE/"
-    end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "sync endpoint files to instance: $cost seconds"
-  fi
+  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/*"
 }
 
 sd_build(){
@@ -199,7 +191,7 @@ sd_launch_from_s3(){
     echo "download file: $cost seconds"
 
     start_at=$(date +%s)
-    rm -rf /home/ubuntu/stable-diffusion-webui/models
+#    rm -rf /home/ubuntu/stable-diffusion-webui/models
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
@@ -207,13 +199,13 @@ sd_launch_from_s3(){
     echo "decompress file: $cost seconds"
 
     # remove soft link after decompress
-    rm -rf /home/ubuntu/stable-diffusion-webui/models
+#    rm -rf /home/ubuntu/stable-diffusion-webui/models
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
-    mkdir -p models/VAE
-    mkdir -p models/Stable-diffusion
+#    mkdir -p models/VAE
+#    mkdir -p models/Stable-diffusion
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
@@ -222,7 +214,7 @@ sd_launch_from_s3(){
 
 # -------------------- comfy functions --------------------
 
-comfy_remove_unused_list(){
+comfy_remove_unused_files(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting unused files..."
 
@@ -277,6 +269,8 @@ comfy_cache_endpoint() {
   end_at=$(date +%s)
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
+
+  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/*"
 }
 
 comfy_launch(){
@@ -356,16 +350,14 @@ download_conda
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_build
-    sd_remove_unused_list
+    sd_remove_unused_files
     sd_cache_endpoint
-    copy_to_instance_type
     sd_launch
     exit 1
 else
     comfy_build
-    comfy_remove_unused_list
+    comfy_remove_unused_files
     comfy_cache_endpoint
-    copy_to_instance_type
     comfy_launch
     exit 1
 fi
