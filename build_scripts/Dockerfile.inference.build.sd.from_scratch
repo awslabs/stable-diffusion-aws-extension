@@ -48,7 +48,7 @@ RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sd
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_128.onnx' 'https://huggingface.co/elonniu/esd/resolve/main/inswapper_128.onnx'
 
 RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
-    wget https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx
+    wget -q https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx
 
 COPY inference/default_config.yaml /home/ubuntu/stable-diffusion-webui/
 
