@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -48,7 +49,10 @@ logger.info(f"config.is_local: {is_local}")
 role_name = "role_name"
 logger.info(f"config.role_name: {role_name}")
 
-endpoint_name = "test"
+
+current_time = datetime.utcnow().strftime("%m-%d-%H-%M-%S")
+
+endpoint_name = f"test-{current_time}"
 logger.info(f"config.endpoint_name: {endpoint_name}")
 
 dataset_name = "dataset_name"
@@ -91,8 +95,8 @@ if is_gcr:
     train_instance_type = "ml.g4dn.2xlarge"
 logger.info(f"config.train_instance_type: {train_instance_type}")
 
-comfy_async_ep_name = "comfy-async-test"
-comfy_real_time_ep_name = "comfy-real-time-test"
+comfy_async_ep_name = f"comfy-async-test-{current_time}"
+comfy_real_time_ep_name = f"comfy-real-time-test-{current_time}"
 
 compare_content = os.environ.get("COMPARE_CONTENT", "true")
 logger.info(f"config.compare_content: {compare_content}")

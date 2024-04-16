@@ -152,7 +152,7 @@ class TestEndpointCreateE2E:
         }
 
         data = {
-            "endpoint_name": "test",
+            "endpoint_name": config.endpoint_name,
             "service_type": "comfy",
             "endpoint_type": "Async",
             "instance_type": config.async_instance_type,
@@ -173,7 +173,7 @@ class TestEndpointCreateE2E:
         }
 
         data = {
-            "endpoint_name": "test",
+            "endpoint_name": config.endpoint_name,
             "service_type": "comfy",
             "endpoint_type": "Real-time",
             "instance_type": config.real_time_instance_type,
@@ -194,7 +194,7 @@ class TestEndpointCreateE2E:
         }
 
         data = {
-            "endpoint_name": "test",
+            "endpoint_name": config.endpoint_name,
             "endpoint_type": 'Async',
             "service_type": "comfy",
             "instance_type": config.async_instance_type,

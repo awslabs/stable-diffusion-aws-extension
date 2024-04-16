@@ -20,6 +20,7 @@ mkdir -p "/tmp/$tag_name"
 docker cp "$container_name:/home/ubuntu" "/tmp/$tag_name/"
 docker rm "$container_name" || true
 
+rm -rf "$tag_name.tar"
 tar -cf "$tag_name.tar" -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
 ls -la "$tag_name.tar"
 

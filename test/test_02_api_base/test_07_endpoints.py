@@ -30,6 +30,7 @@ class TestEndpointsApi:
 
         endpoints = resp.json()['data']['endpoints']
         for endpoint in endpoints:
+            logger.info(f"Deleting endpoint {endpoint['endpoint_name']}")
             while True:
                 data = {
                     "endpoint_name_list": [endpoint['endpoint_name']],
@@ -39,7 +40,8 @@ class TestEndpointsApi:
                 if resp.status_code == 400:
                     logger.info(resp.json()['message'])
                     continue
-                break
+                else:
+                    break
 
     def test_1_endpoints_delete_async_before(self):
         headers = {
@@ -204,7 +206,7 @@ class TestEndpointsApi:
         }
 
         data = {
-            "endpoint_name": "test",
+            "endpoint_name": config.endpoint_name,
             "endpoint_type": "Async",
             "instance_type": config.async_instance_type,
             "initial_instance_count": 1000,
