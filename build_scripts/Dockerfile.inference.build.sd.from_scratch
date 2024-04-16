@@ -47,11 +47,10 @@ RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sd
 
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_128.onnx' 'https://huggingface.co/elonniu/esd/resolve/main/inswapper_128.onnx'
 
-RUN mkdir -p '/root/.u2net/' && \
-    wget -qO '/root/.u2net/u2net_human_seg.onnx' 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx'
+RUN cd /home/ubuntu/ || exit 1 && \
+    wget https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx
 
-RUN mkdir -p /root/.cache/huggingface/accelerate
-COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
+COPY inference/default_config.yaml /home/ubuntu/
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh

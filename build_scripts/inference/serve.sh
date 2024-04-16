@@ -116,6 +116,14 @@ sd_launch(){
 
   ls -la /home/ubuntu/
 
+  mkdir -p /root/.u2net/
+  mv /home/ubuntu/u2net_human_seg.onnx /root/.u2net/
+
+  if [[ $AWS_REGION == *"cn-"* ]]; then
+    mkdir -p /root/.cache/huggingface/accelerate
+    mv /home/ubuntu/default_config.yaml /root/.cache/huggingface/accelerate/
+  fi
+
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
