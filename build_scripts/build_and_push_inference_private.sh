@@ -54,7 +54,7 @@ aws ecr get-login-password --region "$region" | docker login --username AWS --pa
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
+export fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
 echo "docker build $fullname"
 docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "$fullname" -f "$dockerfile" .
 docker images
