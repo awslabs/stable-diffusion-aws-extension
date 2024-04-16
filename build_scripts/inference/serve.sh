@@ -20,8 +20,8 @@ if [ -z "$SERVICE_TYPE" ]; then
 fi
 
 export TAR_FILE="esd.tar"
-export CACHE_ENDPOINT_NAME="endpoint-$ESD_VERSION-$SERVICE_TYPE-$ENDPOINT_NAME"
-export CACHE_INSTANCE_TYPE="endpoint-$ESD_VERSION-$SERVICE_TYPE-$INSTANCE_TYPE"
+export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$SERVICE_TYPE-$ENDPOINT_NAME"
+export CACHE_PUBLIC="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
@@ -134,7 +134,7 @@ sd_cache_endpoint() {
   big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +2520k)
   for file in $big_files; do
     key=$(echo "$file" | cut -d'/' -f4-)
-    echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/$key" >> "$upload_files"
+    echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/$key" >> "$upload_files"
   done
 
   echo "tar files..."
@@ -144,11 +144,11 @@ sd_cache_endpoint() {
   find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
   tar -cf $TAR_FILE -T "$filelist"
 
-  echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/" >> "$upload_files"
-  echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/conda/" >> "$upload_files"
+  echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/" >> "$upload_files"
+  echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/conda/" >> "$upload_files"
 
   # for ReActor
-  echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/insightface/" >> "$upload_files"
+  echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/insightface/" >> "$upload_files"
 
   echo "upload files..."
   s5cmd run "$upload_files"
@@ -157,7 +157,7 @@ sd_cache_endpoint() {
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
 
-  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/*"
+  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*"
 }
 
 sd_build(){
@@ -185,7 +185,7 @@ sd_launch(){
    # python /controller.py
 }
 
-sd_launch_from_s3(){
+sd_launch_from_private_s3(){
     CACHE_PATH=$1
     start_at=$(date +%s)
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
@@ -212,6 +212,35 @@ sd_launch_from_s3(){
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
+    sd_launch
+}
+
+sd_launch_from_public_s3(){
+    CACHE_PATH=$1
+    start_at=$(date +%s)
+    s5cmd --log=error cp "s3://$S3_BUCKET_NAME/$CACHE_PATH" /home/ubuntu/
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "download file: $cost seconds"
+
+    start_at=$(date +%s)
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
+    rm -rf $TAR_FILE
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "decompress file: $cost seconds"
+
+    cd /home/ubuntu/stable-diffusion-webui/ || exit 1
+
+    mkdir -p models/Lora
+    mkdir -p models/hypernetworks
+
+    if [ -z "$EXTENSIONS" ]; then
+        echo "No extensions specified, just install the environment and launch from local..."
+    fi
+
+    sd_remove_unused_files
+    sd_cache_endpoint
     sd_launch
 }
 
@@ -253,7 +282,7 @@ comfy_cache_endpoint() {
   big_files=$(find "/home/ubuntu/ComfyUI" -type f -size +2520k)
   for file in $big_files; do
     key=$(echo "$file" | cut -d'/' -f4-)
-    echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/$key" >> "$upload_files"
+    echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/$key" >> "$upload_files"
   done
 
   echo "tar files..."
@@ -263,8 +292,8 @@ comfy_cache_endpoint() {
   find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
   tar -cf $TAR_FILE -T "$filelist"
 
-  echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/" >> "$upload_files"
-  echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/conda/" >> "$upload_files"
+  echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/" >> "$upload_files"
+  echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/conda/" >> "$upload_files"
 
   echo "upload files..."
   s5cmd run "$upload_files"
@@ -273,7 +302,7 @@ comfy_cache_endpoint() {
   cost=$((end_at-start_at))
   echo "sync endpoint files: $cost seconds"
 
-  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME/*"
+  s5cmd ls "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*"
 }
 
 comfy_launch(){
@@ -291,7 +320,7 @@ comfy_launch(){
   python /controller.py
 }
 
-comfy_launch_from_s3(){
+comfy_launch_from_private_s3(){
     CACHE_PATH=$1
     start_at=$(date +%s)
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
@@ -306,6 +335,26 @@ comfy_launch_from_s3(){
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
+    comfy_launch
+}
+
+comfy_launch_from_public_s3(){
+    CACHE_PATH=$1
+    start_at=$(date +%s)
+    s5cmd --log=error cp "s3://$S3_BUCKET_NAME/$CACHE_PATH" /home/ubuntu/
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "download file: $cost seconds"
+
+    start_at=$(date +%s)
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
+    rm -rf $TAR_FILE
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "decompress file: $cost seconds"
+
+    comfy_remove_unused_files
+    comfy_cache_endpoint
     comfy_launch
 }
 
@@ -324,28 +373,24 @@ fi
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 
-echo "Checking endpoint name cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT_NAME"
-if echo "$output" | grep -q "$CACHE_ENDPOINT_NAME"; then
+echo "Checking endpoint name cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
+if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_launch_from_s3 "$CACHE_ENDPOINT_NAME"
+    sd_launch_from_private_s3 "$CACHE_ENDPOINT"
     exit 1
   else
-    comfy_launch_from_s3 "$CACHE_ENDPOINT_NAME"
+    comfy_launch_from_private_s3 "$CACHE_ENDPOINT"
     exit 1
   fi
 fi
 
-if [ -z "$EXTENSIONS" ]; then
-  echo "Checking instance type cache: s3://$S3_BUCKET_NAME/$CACHE_INSTANCE_TYPE"
-  if echo "$output" | grep -q "$CACHE_INSTANCE_TYPE"; then
-    if [ "$SERVICE_TYPE" == "sd" ]; then
-      sd_launch_from_s3 "$CACHE_INSTANCE_TYPE"
-      exit 1
-    else
-      comfy_launch_from_s3 "$CACHE_INSTANCE_TYPE"
-      exit 1
-    fi
-  fi
+echo "Checking public cache: s3://$S3_BUCKET_NAME/$CACHE_PUBLIC"
+if [ "$SERVICE_TYPE" == "sd" ]; then
+  sd_launch_from_public_s3 "$CACHE_PUBLIC"
+  exit 1
+else
+  comfy_launch_from_public_s3 "$CACHE_PUBLIC"
+  exit 1
 fi
 
 echo "No cache found in S3, just install the environment and launch from local..."
