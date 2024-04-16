@@ -1,4 +1,5 @@
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+#FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 
 SHELL ["/bin/bash", "-c"]
 

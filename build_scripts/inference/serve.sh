@@ -177,6 +177,9 @@ sd_launch(){
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
 
+  echo "find cuda"
+  find /home/ubuntu/stable-diffusion-webui -type d -name "*cuda*" 2>/dev/null
+
   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 
    # python /controller.py
@@ -191,7 +194,7 @@ sd_launch_from_s3(){
     echo "download file: $cost seconds"
 
     start_at=$(date +%s)
-#    rm -rf /home/ubuntu/stable-diffusion-webui/models
+    rm -rf /home/ubuntu/stable-diffusion-webui/models
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
@@ -199,13 +202,13 @@ sd_launch_from_s3(){
     echo "decompress file: $cost seconds"
 
     # remove soft link after decompress
-#    rm -rf /home/ubuntu/stable-diffusion-webui/models
+    rm -rf /home/ubuntu/stable-diffusion-webui/models
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
-#    mkdir -p models/VAE
-#    mkdir -p models/Stable-diffusion
+    mkdir -p models/VAE
+    mkdir -p models/Stable-diffusion
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
