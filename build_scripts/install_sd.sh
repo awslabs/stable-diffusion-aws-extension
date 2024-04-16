@@ -66,44 +66,6 @@ cd sd-webui-reactor || exit 1
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REACTOR}
 cd ../
 
-# if $EXTENSIONS is not empty, it will be executed
-if [ -n "$EXTENSIONS" ]; then
-    echo "---------------------------------------------------------------------------------"
-    echo "install extensions..."
-
-    read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
-
-    for git_repo in "${array[@]}"; do
-      IFS='#' read -r -a repo <<< "$git_repo"
-
-      git_repo=${repo[0]}
-      repo_name=$(basename -s .git "$git_repo")
-      repo_branch=${repo[1]}
-      commit_sha=${repo[2]}
-
-      echo "rm -rf $repo_name for install $git_repo"
-      rm -rf "$repo_name"
-
-      start_at=$(date +%s)
-
-      echo "git clone $git_repo"
-      git clone "$git_repo"
-
-      cd "$repo_name" || exit 1
-
-      echo "git checkout $repo_branch"
-      git checkout "$repo_branch"
-
-      echo "git reset --hard $commit_sha"
-      git reset --hard "$commit_sha"
-      cd ..
-
-      end_at=$(date +%s)
-      cost=$((end_at-start_at))
-      echo "git clone $git_repo: $cost seconds"
-    done
-fi
-
 echo "---------------------------------------------------------------------------------"
 echo "build esd..."
 

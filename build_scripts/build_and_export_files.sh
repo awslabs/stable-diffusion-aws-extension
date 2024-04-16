@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export dockerfile=$1
 export tag_name=$2
+export container_name="$tag_name-$REGION"
+export tag_name="$tag_name-$REGION"
 
 curl -sSL "https://raw.githubusercontent.com/elonniu/s5cmd/main/install.sh" | bash > /dev/null 2>&1
 
@@ -11,12 +13,12 @@ echo "docker build $tag_name"
 docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "$tag_name" -f "$dockerfile" .
 docker images "$tag_name"
 
-docker rm "$tag_name" || true
-docker create --name "$tag_name" "$tag_name"
+docker rm "$container_name" || true
+docker create --name "$container_name" "$tag_name"
 rm -rf  "/tmp/$tag_name"
 mkdir -p "/tmp/$tag_name"
-docker cp "$tag_name:/home/ubuntu" "/tmp/$tag_name/"
-docker rm "$tag_name" || true
+docker cp "$container_name:/home/ubuntu" "/tmp/$tag_name/"
+docker rm "$container_name" || true
 
 tar -cf "$tag_name.tar" -C "/tmp/$tag_name/ubuntu" . > /dev/null 2>&1
 ls -la "$tag_name.tar"

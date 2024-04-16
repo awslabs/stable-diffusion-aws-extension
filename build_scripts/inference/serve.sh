@@ -158,7 +158,7 @@ sd_cache_endpoint() {
   echo "sync endpoint files: $cost seconds"
 }
 
-sd_build(){
+sd_install_build(){
   cd /home/ubuntu || exit 1
   bash install_sd.sh
 }
@@ -230,9 +230,52 @@ sd_launch_from_public_s3(){
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
-    if [ -z "$EXTENSIONS" ]; then
-        echo "No extensions specified, just install the environment and launch from local..."
+    # if $EXTENSIONS is not empty, it will be executed
+    if [ -n "$EXTENSIONS" ]; then
+        echo "---------------------------------------------------------------------------------"
+        echo "install extensions..."
+
+        cd extensions || exit 1
+
+        read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
+
+        for git_repo in "${array[@]}"; do
+          IFS='#' read -r -a repo <<< "$git_repo"
+
+          git_repo=${repo[0]}
+          repo_name=$(basename -s .git "$git_repo")
+          repo_branch=${repo[1]}
+          commit_sha=${repo[2]}
+
+          echo "rm -rf $repo_name for install $git_repo"
+          rm -rf "$repo_name"
+
+          start_at=$(date +%s)
+
+          echo "git clone $git_repo"
+          git clone "$git_repo"
+
+          cd "$repo_name" || exit 1
+
+          echo "git checkout $repo_branch"
+          git checkout "$repo_branch"
+
+          echo "git reset --hard $commit_sha"
+          git reset --hard "$commit_sha"
+          cd ..
+
+          end_at=$(date +%s)
+          cost=$((end_at-start_at))
+          echo "git clone $git_repo: $cost seconds"
+        done
+
+        cd /home/ubuntu/stable-diffusion-webui/ || exit 1
+        echo "---------------------------------------------------------------------------------"
+        echo "build for launch..."
+        python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --disable-nan-check --exit
     fi
+
+    cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
     sd_remove_unused_files
     sd_cache_endpoint
@@ -264,7 +307,7 @@ comfy_remove_unused_files(){
   find_and_remove_file /home/ubuntu/ComfyUI "*.jpg"
 }
 
-comfy_build(){
+comfy_install_build(){
   cd /home/ubuntu || exit 1
   bash install_comfy.sh
 }
@@ -390,13 +433,13 @@ echo "No cache found in S3, just install the environment and launch from local..
 download_conda
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_build
+    sd_install_build
     sd_remove_unused_files
     sd_cache_endpoint
     sd_launch
     exit 1
 else
-    comfy_build
+    comfy_install_build
     comfy_remove_unused_files
     comfy_cache_endpoint
     comfy_launch

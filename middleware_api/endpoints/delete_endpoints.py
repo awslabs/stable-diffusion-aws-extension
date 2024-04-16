@@ -101,5 +101,4 @@ def delete_endpoint_item(ep: Endpoint):
         keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
     )
 
-    if esd_version != 'dev':
-        bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.EndpointDeploymentJobId}").delete()
+    bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()
