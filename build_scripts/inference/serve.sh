@@ -20,7 +20,7 @@ if [ -z "$SERVICE_TYPE" ]; then
 fi
 
 export TAR_FILE="esd.tar"
-export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$SERVICE_TYPE-$ENDPOINT_NAME"
+export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$ENDPOINT_NAME"
 export CACHE_PUBLIC="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)

@@ -11,6 +11,8 @@ echo "docker build $tag_name"
 docker build --build-arg ESD_COMMIT_ID="$CODEBUILD_RESOLVED_SOURCE_VERSION" -t "$tag_name" -f "$dockerfile" .
 docker images "$tag_name"
 
+docker rm "$tag_name" || true
+
 docker create --name "$tag_name" "$tag_name"
 rm -rf  "/tmp/$tag_name"
 mkdir -p "/tmp/$tag_name"
