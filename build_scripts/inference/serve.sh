@@ -329,9 +329,8 @@ if [ "$FULL_IMAGE" == "true" ]; then
 fi
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
-
-echo "Checking endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
+  echo "Use endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_private_s3 "$CACHE_ENDPOINT"
     exit 1
@@ -341,7 +340,7 @@ if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   fi
 fi
 
-echo "Checking public cache: s3://$CACHE_PUBLIC"
+echo "Use public cache: s3://$CACHE_PUBLIC"
 if [ "$SERVICE_TYPE" == "sd" ]; then
   sd_launch_from_public_s3 "$CACHE_PUBLIC"
   exit 1

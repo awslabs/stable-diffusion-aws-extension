@@ -19,6 +19,7 @@ find_and_remove_file(){
 }
 
 remove_unused(){
+  echo "removing $1 ..."
   rm -rf "$1"
 }
 
