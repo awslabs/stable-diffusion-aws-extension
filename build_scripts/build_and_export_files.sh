@@ -28,6 +28,6 @@ export AWS_DEFAULT_REGION=$REGION
 bucket="aws-gcr-solutions-$REGION"
 key="stable-diffusion-aws-extension-github-mainline/$BUILD_VERSION/$tag_name.tar"
 
-s5cmd cp "$tag_name.tar" "s3://$bucket/$key"
+s5cmd sync "$tag_name.tar" "s3://$bucket/$key"
 
 aws s3api put-object-acl --region "$REGION" --bucket "$bucket" --key "$key" --acl public-read
