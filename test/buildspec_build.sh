@@ -56,8 +56,12 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                       ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                       ParameterKey=LogLevel,ParameterValue="INFO" \
                                                       ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" 2>&1)
-      UPDATE_STATUS=$?
 
+      echo "=================="
+      echo "$UPDATE_STATUS"
+      echo "=================="
+
+      UPDATE_STATUS=$?
       if [ $UPDATE_STATUS -eq 0 ]; then
           echo "Update in progress..."
           aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
