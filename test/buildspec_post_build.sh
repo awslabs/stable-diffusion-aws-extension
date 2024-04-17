@@ -163,10 +163,10 @@ source venv/bin/activate
 make testk test_10_client_clean
 make testk test_11_api_clean
 
-if [ "$result" = "Passed" ]; then
-  echo "----------------------------------------------------------------"
-  echo "Delete log groups"
-  echo "----------------------------------------------------------------"
-  aws logs describe-log-groups | jq -r '.logGroups[].logGroupName' | grep 'Extension-for-Stable' | xargs -I {} aws logs delete-log-group --log-group-name {}
-fi
+#if [ "$result" = "Passed" ]; then
+#  echo "----------------------------------------------------------------"
+#  echo "Delete log groups"
+#  echo "----------------------------------------------------------------"
+#  aws logs describe-log-groups | jq -r '.logGroups[].logGroupName' | grep 'Extension-for-Stable' | xargs -I {} aws logs delete-log-group --log-group-name {}
+#fi
 
