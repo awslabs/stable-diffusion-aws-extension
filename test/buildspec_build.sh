@@ -40,7 +40,6 @@ fi
 if [ "$DEPLOY_STACK" = "template" ]; then
   if aws cloudformation describe-stacks --stack-name "$STACK_NAME" &> /dev/null; then
       echo "Stack exists, attempting to update..."
-      echo "=================="
       UPDATE_OUTPUT=$(aws cloudformation update-stack \
                                          --stack-name "$STACK_NAME" \
                                          --template-url "$TEMPLATE_FILE" \
@@ -53,8 +52,6 @@ if [ "$DEPLOY_STACK" = "template" ]; then
 
 
       echo "$UPDATE_STATUS"
-      echo "=================="
-
       UPDATE_STATUS=$?
       if [ $UPDATE_STATUS -eq 0 ]; then
           echo "Update in progress..."
