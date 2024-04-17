@@ -46,7 +46,7 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
 fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
-   stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
+   stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" 2>&1)
    if [ "$stack_info" != "" ]; then
       result=$(aws cloudformation update-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
