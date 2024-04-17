@@ -48,6 +48,7 @@ fi
 if [ "$DEPLOY_STACK" = "template" ]; then
   if aws cloudformation describe-stacks --stack-name "$STACK_NAME" &> /dev/null; then
       echo "Stack exists, attempting to update..."
+      echo "=================="
       UPDATE_OUTPUT=$(aws cloudformation update-stack \
                                          --stack-name "$STACK_NAME" \
                                          --template-url "$TEMPLATE_FILE" \
@@ -57,7 +58,7 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                       ParameterKey=LogLevel,ParameterValue="INFO" \
                                                       ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" 2>&1)
 
-      echo "=================="
+
       echo "$UPDATE_STATUS"
       echo "=================="
 
