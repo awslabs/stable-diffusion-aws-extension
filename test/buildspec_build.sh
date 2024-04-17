@@ -18,12 +18,6 @@ aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
 #aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
-python --version
-sudo yum install wget -y
-
-cd stable-diffusion-aws-extension/test
-make build
-
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 #aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
@@ -56,7 +50,8 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                          --parameters ParameterKey=Email,ParameterValue="example@example.com" \
                                                       ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                       ParameterKey=LogLevel,ParameterValue="INFO" \
-                                                      ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" 2>&1)
+                                                      ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
+                                         2>&1)
 
 
       echo "$UPDATE_STATUS"
@@ -89,6 +84,12 @@ if [ "$DEPLOY_STACK" = "template" ]; then
       echo "Creation completed."
   fi
 fi
+
+python --version
+sudo yum install wget -y
+
+cd stable-diffusion-aws-extension/test
+make build
 
 FINISHED_TIME=$(date +%s)
 export DEPLOY_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
