@@ -47,7 +47,7 @@ fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
    stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" 2>&1)
-   if [ "$stack_info" != "" ]; then
+   if [[ -n $stack_info && ! $stack_info =~ "does not exist" ]]; then
       result=$(aws cloudformation update-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
                                       --capabilities CAPABILITY_NAMED_IAM \
@@ -63,7 +63,6 @@ if [ "$DEPLOY_STACK" = "template" ]; then
       else
          aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
       fi
-
    else
       aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
