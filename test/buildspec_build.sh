@@ -46,14 +46,43 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
 fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
-  aws cloudformation create-stack --stack-name "$STACK_NAME" \
-                                  --template-url "$TEMPLATE_FILE" \
-                                  --capabilities CAPABILITY_NAMED_IAM \
-                                  --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                               ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                               ParameterKey=LogLevel,ParameterValue="INFO" \
-                                               ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-  aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+  if aws cloudformation describe-stacks --stack-name "$STACK_NAME" &> /dev/null; then
+      echo "Stack exists, attempting to update..."
+      UPDATE_OUTPUT=$(aws cloudformation update-stack \
+                                         --stack-name "$STACK_NAME" \
+                                         --template-url "$TEMPLATE_FILE" \
+                                         --capabilities CAPABILITY_NAMED_IAM \
+                                         --parameters ParameterKey=Email,ParameterValue="example@example.com" \
+                                                      ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
+                                                      ParameterKey=LogLevel,ParameterValue="INFO" \
+                                                      ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" 2>&1)
+      UPDATE_STATUS=$?
+
+      if [ $UPDATE_STATUS -eq 0 ]; then
+          echo "Update in progress..."
+          aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+          echo "Update completed."
+      else
+          echo "$UPDATE_OUTPUT" | grep "No updates are to be performed" &> /dev/null
+          if [ $? -eq 0 ]; then
+              echo "No updates needed."
+          else
+              echo "Update failed: $UPDATE_OUTPUT"
+              exit 1
+          fi
+      fi
+  else
+      echo "Stack does not exist, creating..."
+      aws cloudformation create-stack --stack-name "$STACK_NAME" \
+                                      --template-url "$TEMPLATE_FILE" \
+                                      --capabilities CAPABILITY_NAMED_IAM \
+                                      --parameters ParameterKey=Email,ParameterValue="example@example.com" \
+                                                   ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
+                                                   ParameterKey=LogLevel,ParameterValue="INFO" \
+                                                   ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
+      aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
+      echo "Creation completed."
+  fi
 fi
 
 FINISHED_TIME=$(date +%s)
