@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euxo pipefail
-
 export STACK_NAME="Extension-for-Stable-Diffusion-on-AWS"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export API_BUCKET=esd-test-$ACCOUNT_ID-$AWS_DEFAULT_REGION
