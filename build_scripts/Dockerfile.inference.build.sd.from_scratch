@@ -38,14 +38,12 @@ RUN cd /home/ubuntu || exit 1 && \
 #    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
 #    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
 #    python3 clip_init.py
-#    mkdir openai && \
-#    cd openai && \
-#    git clone https://huggingface.co/openai/clip-vit-large-patch14
 
- RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
-     mkdir openai && \
-     cd openai && \
-     git clone https://huggingface.co/openai/clip-vit-large-patch14
+# -------------------------- accelerate in gcr --------------------------
+RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
+    mkdir openai && \
+    cd openai && \
+    git clone https://huggingface.co/openai/clip-vit-large-patch14
 
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt' 'https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt'
 
@@ -56,6 +54,7 @@ RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
     wget -q https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx
 
 COPY inference/default_config.yaml /home/ubuntu/stable-diffusion-webui/
+# -------------------------- accelerate in gcr --------------------------
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
