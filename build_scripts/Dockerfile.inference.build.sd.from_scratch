@@ -42,6 +42,11 @@ RUN cd /home/ubuntu || exit 1 && \
 #    cd openai && \
 #    git clone https://huggingface.co/openai/clip-vit-large-patch14
 
+ RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
+     mkdir openai && \
+     cd openai && \
+     git clone https://huggingface.co/openai/clip-vit-large-patch14
+
 RUN wget -qO '/home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt' 'https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt'
 
 # for ReActor
