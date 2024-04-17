@@ -169,4 +169,3 @@ make testk test_11_api_clean
 #  echo "----------------------------------------------------------------"
 #  aws logs describe-log-groups | jq -r '.logGroups[].logGroupName' | grep 'Extension-for-Stable' | xargs -I {} aws logs delete-log-group --log-group-name {}
 #fi
-
