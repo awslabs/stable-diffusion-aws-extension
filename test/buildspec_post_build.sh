@@ -7,6 +7,10 @@ source env.properties
 echo "----------------------------------------------------------------"
 printenv
 
+aws cloudformation delete-stack --stack-name "comfy-stack"
+aws cloudformation delete-stack --stack-name "webui-stack"
+#aws cloudformation delete-stack --stack-name "$STACK_NAME"
+
 if [ -z "$ACCOUNT_ID" ]; then
   echo "ACCOUNT_ID is not set"
   exit 1
@@ -71,11 +75,6 @@ if [ "$result" = "Passed" ]; then
   properties+=("rembg Task: OK")
   properties+=("extra-single-image Task: OK")
   properties+=("train_instance_type: ${TRAIN_INSTANCE_TYPE}")
-
-#  echo "----------------------------------------------------------------"
-#  echo "Remove the stack"
-#  echo "----------------------------------------------------------------"
-#  aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
   if [ "$CLEAN_RESOURCES" = "yes" ]; then
      aws s3 rb "s3://$API_BUCKET" --force

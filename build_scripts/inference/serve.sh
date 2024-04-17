@@ -91,9 +91,6 @@ sd_cache_endpoint() {
   echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/" >> "$upload_files"
   echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/conda/" >> "$upload_files"
 
-  # for ReActor
-  echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/insightface/" >> "$upload_files"
-
   echo "upload files..."
   s5cmd run "$upload_files"
 

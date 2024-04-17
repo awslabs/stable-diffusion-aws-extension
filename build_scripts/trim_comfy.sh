@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "cancel temp"
+exit 0
+
 find_and_remove_dir(){
   dir=$1
   name=$2

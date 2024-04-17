@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euxo pipefail
-
 export STACK_NAME="Extension-for-Stable-Diffusion-on-AWS"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export API_BUCKET=esd-test-$ACCOUNT_ID-$AWS_DEFAULT_REGION
@@ -18,12 +16,6 @@ aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
 #aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
-python --version
-sudo yum install wget -y
-
-cd stable-diffusion-aws-extension/test
-make build
-
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 #aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
@@ -34,7 +26,7 @@ echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
 
 if [ "$DEPLOY_STACK" = "cdk" ]; then
-   pushd "../infrastructure"
+   pushd "stable-diffusion-aws-extension/infrastructure"
    npm i -g pnpm
    pnpm i
    npx cdk deploy --parameters Email="example@amazon.com" \
@@ -46,18 +38,36 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
 fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
-   stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
-   if [ "$stack_info" != "" ]; then
-      aws cloudformation update-stack --stack-name "$STACK_NAME" \
-                                      --template-url "$TEMPLATE_FILE" \
-                                      --capabilities CAPABILITY_NAMED_IAM \
-                                      --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                                   ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                                   ParameterKey=LogLevel,ParameterValue="INFO" \
-                                                   ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
-                                                    2>&1 | grep -q "No updates are to be performed" || true
-      aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME" 2>&1 | grep -q "No updates are to be performed" || true
-   else
+  if aws cloudformation describe-stacks --stack-name "$STACK_NAME" &> /dev/null; then
+      echo "Stack exists, attempting to update..."
+      UPDATE_OUTPUT=$(aws cloudformation update-stack \
+                                         --stack-name "$STACK_NAME" \
+                                         --template-url "$TEMPLATE_FILE" \
+                                         --capabilities CAPABILITY_NAMED_IAM \
+                                         --parameters ParameterKey=Email,ParameterValue="example@example.com" \
+                                                      ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
+                                                      ParameterKey=LogLevel,ParameterValue="INFO" \
+                                                      ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
+                                         2>&1)
+
+
+      echo "$UPDATE_STATUS"
+      UPDATE_STATUS=$?
+      if [ $UPDATE_STATUS -eq 0 ]; then
+          echo "Update in progress..."
+          aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+          echo "Update completed."
+      else
+          echo "$UPDATE_OUTPUT" | grep "No updates are to be performed" &> /dev/null
+          if [ $? -eq 0 ]; then
+              echo "No updates needed."
+          else
+              echo "Update failed: $UPDATE_OUTPUT"
+              exit 1
+          fi
+      fi
+  else
+      echo "Stack does not exist, creating..."
       aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
                                       --capabilities CAPABILITY_NAMED_IAM \
@@ -66,8 +76,15 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                    ParameterKey=LogLevel,ParameterValue="INFO" \
                                                    ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
       aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
-   fi
+      echo "Creation completed."
+  fi
 fi
+
+python --version
+sudo yum install wget -y
+
+cd stable-diffusion-aws-extension/test || exit 1
+make build
 
 FINISHED_TIME=$(date +%s)
 export DEPLOY_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
