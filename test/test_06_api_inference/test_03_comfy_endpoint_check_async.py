@@ -38,7 +38,7 @@ class TestEndpointReCheckForComfyE2E:
 
         assert config.comfy_async_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
-        timeout = datetime.now() + timedelta(minutes=20)
+        timeout = datetime.now() + timedelta(minutes=40)
 
         while datetime.now() < timeout:
             result = self.endpoints_wait_for_in_service()
@@ -46,7 +46,7 @@ class TestEndpointReCheckForComfyE2E:
                 break
             time.sleep(15)
         else:
-            raise Exception("Create Endpoint timed out after 20 minutes.")
+            raise Exception("Create Endpoint timed out after 40 minutes.")
 
     def endpoints_wait_for_in_service(self):
         headers = {

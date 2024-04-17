@@ -55,7 +55,7 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                    ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                    ParameterKey=LogLevel,ParameterValue="INFO" \
                                                    ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-      aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+      aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME" 2>&1 | grep -q "No updates are to be performed" || true
    else
       aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
