@@ -161,11 +161,6 @@ if [ -n "$SNS_ARN" ]; then
           --message "{\"default\": \"$message\"}"
 fi
 
-source venv/bin/activate
-
-make testk test_10_client_clean
-make testk test_11_api_clean
-
 #if [ "$result" = "Passed" ]; then
 #  echo "----------------------------------------------------------------"
 #  echo "Delete log groups"
