@@ -9,7 +9,7 @@ printenv
 
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
-aws cloudformation delete-stack --stack-name "$STACK_NAME"
+#aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
 if [ -z "$ACCOUNT_ID" ]; then
   echo "ACCOUNT_ID is not set"
