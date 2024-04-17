@@ -26,7 +26,7 @@ echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
 
 if [ "$DEPLOY_STACK" = "cdk" ]; then
-   pushd "../infrastructure"
+   pushd "stable-diffusion-aws-extension/infrastructure"
    npm i -g pnpm
    pnpm i
    npx cdk deploy --parameters Email="example@amazon.com" \
@@ -83,7 +83,7 @@ fi
 python --version
 sudo yum install wget -y
 
-cd stable-diffusion-aws-extension/test
+cd stable-diffusion-aws-extension/test || exit 1
 make build
 
 FINISHED_TIME=$(date +%s)
