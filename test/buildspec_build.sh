@@ -16,7 +16,7 @@ echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
-#aws cloudformation delete-stack --stack-name "$STACK_NAME"
+aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
 python --version
 sudo yum install wget -y
@@ -26,7 +26,7 @@ make build
 
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
-#aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
@@ -46,33 +46,14 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
 fi
 
 if [ "$DEPLOY_STACK" = "template" ]; then
-   stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" 2>&1)
-   if [[ -n $stack_info && ! $stack_info =~ "does not exist" ]]; then
-      result=$(aws cloudformation update-stack --stack-name "$STACK_NAME" \
-                                      --template-url "$TEMPLATE_FILE" \
-                                      --capabilities CAPABILITY_NAMED_IAM \
-                                      --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                                   ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                                   ParameterKey=LogLevel,ParameterValue="INFO" \
-                                                   ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
-                                                    2>&1)
-
-      need_wait=$(echo "$result" | grep -q "No updates are to be performed")
-      if [ "$need_wait" != "" ]; then
-         echo "$result"
-      else
-         aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
-      fi
-   else
-      aws cloudformation create-stack --stack-name "$STACK_NAME" \
-                                      --template-url "$TEMPLATE_FILE" \
-                                      --capabilities CAPABILITY_NAMED_IAM \
-                                      --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                                   ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                                   ParameterKey=LogLevel,ParameterValue="INFO" \
-                                                   ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
-      aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
-   fi
+  aws cloudformation create-stack --stack-name "$STACK_NAME" \
+                                  --template-url "$TEMPLATE_FILE" \
+                                  --capabilities CAPABILITY_NAMED_IAM \
+                                  --parameters ParameterKey=Email,ParameterValue="example@example.com" \
+                                               ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
+                                               ParameterKey=LogLevel,ParameterValue="INFO" \
+                                               ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
+  aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 fi
 
 FINISHED_TIME=$(date +%s)
