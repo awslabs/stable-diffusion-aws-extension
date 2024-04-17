@@ -7,6 +7,9 @@ source env.properties
 echo "----------------------------------------------------------------"
 printenv
 
+aws cloudformation delete-stack --stack-name "comfy-stack"
+aws cloudformation delete-stack --stack-name "webui-stack"
+
 if [ -z "$ACCOUNT_ID" ]; then
   echo "ACCOUNT_ID is not set"
   exit 1

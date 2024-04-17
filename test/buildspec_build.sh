@@ -48,15 +48,22 @@ fi
 if [ "$DEPLOY_STACK" = "template" ]; then
    stack_info=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
    if [ "$stack_info" != "" ]; then
-      aws cloudformation update-stack --stack-name "$STACK_NAME" \
+      result=$(aws cloudformation update-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
                                       --capabilities CAPABILITY_NAMED_IAM \
                                       --parameters ParameterKey=Email,ParameterValue="example@example.com" \
                                                    ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                    ParameterKey=LogLevel,ParameterValue="INFO" \
                                                    ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
-                                                    2>&1 | grep -q "No updates are to be performed" || true
-      aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME" 2>&1 | grep -q "No updates are to be performed" || true
+                                                    2>&1)
+
+      need_wait=$(echo "$result" | grep -q "No updates are to be performed")
+      if [ "$need_wait" != "" ]; then
+         echo "$result"
+      else
+         aws cloudformation wait stack-update-complete --stack-name "$STACK_NAME"
+      fi
+
    else
       aws cloudformation create-stack --stack-name "$STACK_NAME" \
                                       --template-url "$TEMPLATE_FILE" \
