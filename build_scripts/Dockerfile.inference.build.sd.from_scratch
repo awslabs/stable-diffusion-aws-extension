@@ -35,10 +35,10 @@ RUN cd /home/ubuntu || exit 1 && \
 
 COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
 RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
-    source venv/bin/activate python && \
-    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
-    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
-    python3 clip_init.py
+    source venv/bin/activate python
+#    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
+#    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
+#    python3 clip_init.py
 #    mkdir openai && \
 #    cd openai && \
 #    git clone https://huggingface.co/openai/clip-vit-large-patch14
