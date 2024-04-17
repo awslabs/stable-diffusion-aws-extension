@@ -49,9 +49,6 @@ if [ "$DEPLOY_STACK" = "template" ]; then
                                                       ParameterKey=LogLevel,ParameterValue="INFO" \
                                                       ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322" \
                                          2>&1)
-
-
-      echo "$UPDATE_STATUS"
       UPDATE_STATUS=$?
       if [ $UPDATE_STATUS -eq 0 ]; then
           echo "Update in progress..."
