@@ -34,7 +34,7 @@ export AWS_DEFAULT_REGION=$REGION
 upload_file(){
   version=$1
   bucket="aws-gcr-solutions-$REGION"
-  key="esd/$version/$service_type.tar"
+  key="stable-diffusion-aws-extension-github-mainline/$version/$service_type.tar"
 
   s5cmd sync "$tag_name.tar" "s3://$bucket/$key"
   aws s3api put-object-acl --region "$REGION" --bucket "$bucket" --key "$key" --acl public-read
