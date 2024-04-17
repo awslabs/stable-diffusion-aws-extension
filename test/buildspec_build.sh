@@ -99,6 +99,8 @@ export API_GATEWAY_URL_TOKEN=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] 
 echo "export API_GATEWAY_URL=$API_GATEWAY_URL" >> env.properties
 echo "export API_GATEWAY_URL_TOKEN=$API_GATEWAY_URL_TOKEN" >> env.properties
 
+set -euxo pipefail
+
 echo "----------------------------------------------------------------"
 echo "Running pytest..."
 echo "----------------------------------------------------------------"
