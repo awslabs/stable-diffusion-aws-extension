@@ -141,23 +141,17 @@ sd_launch_from_private_s3(){
     echo "download file: $cost seconds"
 
     start_at=$(date +%s)
-    # rm -rf /home/ubuntu/stable-diffusion-webui/models
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
-    # remove soft link after decompress
-    # rm -rf /home/ubuntu/stable-diffusion-webui/models
-    # s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
-
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
-    # mkdir -p models/VAE
-    # mkdir -p models/Stable-diffusion
-    mkdir -p models/Lora
-    mkdir -p models/hypernetworks
+    mkdir -p models/Lora || true
+    mkdir -p models/hypernetworks || true
+    mkdir -p models/ControlNet || true
 
     sd_launch
 }
