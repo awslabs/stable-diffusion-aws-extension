@@ -21,7 +21,10 @@ fi
 
 export TAR_FILE="esd.tar"
 export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$ENDPOINT_NAME"
-export CACHE_PUBLIC="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar"
+
+# Use verified cache version file v1.5.0-eca5bc2 for production
+export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/esd/$ESD_VERSION/sd.tar"
+export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/esd/$ESD_VERSION/comfy.tar"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
@@ -351,12 +354,13 @@ if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   fi
 fi
 
-echo "Use public cache: s3://$CACHE_PUBLIC"
 if [ "$SERVICE_TYPE" == "sd" ]; then
-  sd_launch_from_public_s3 "$CACHE_PUBLIC"
+  echo "Use public cache: s3://$CACHE_PUBLIC_SD"
+  sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
   exit 1
 else
-  comfy_launch_from_public_s3 "$CACHE_PUBLIC"
+  echo "Use public cache: s3://$CACHE_PUBLIC_COMFY"
+  comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
   exit 1
 fi
 
