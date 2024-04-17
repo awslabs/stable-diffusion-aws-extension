@@ -72,10 +72,10 @@ if [ "$result" = "Passed" ]; then
   properties+=("extra-single-image Task: OK")
   properties+=("train_instance_type: ${TRAIN_INSTANCE_TYPE}")
 
-  echo "----------------------------------------------------------------"
-  echo "Remove the stack"
-  echo "----------------------------------------------------------------"
-  aws cloudformation delete-stack --stack-name "$STACK_NAME"
+#  echo "----------------------------------------------------------------"
+#  echo "Remove the stack"
+#  echo "----------------------------------------------------------------"
+#  aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
   if [ "$CLEAN_RESOURCES" = "yes" ]; then
      aws s3 rb "s3://$API_BUCKET" --force
