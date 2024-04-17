@@ -363,20 +363,3 @@ else
   comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
   exit 1
 fi
-
-echo "No cache found in S3, just install the environment and launch from local..."
-download_conda
-
-if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_install_build
-    /trim_sd.sh
-    sd_cache_endpoint
-    sd_launch
-    exit 1
-else
-    comfy_install_build
-    /trim_comfy.sh
-    comfy_cache_endpoint
-    comfy_launch
-    exit 1
-fi
