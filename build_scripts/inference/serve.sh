@@ -22,11 +22,11 @@ fi
 export TAR_FILE="esd.tar"
 export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$ENDPOINT_NAME"
 
-# Use verified cache version file for production: v1.5.0-00cca78
-export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/esd/v1.5.0-00cca78/sd.tar"
+# Use verified cache version file for production: v1.5.0-13a3277
+export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/esd/v1.5.0-13a3277/sd.tar"
 
-# Use verified cache version file for production: v1.5.0-00cca78
-export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/esd/v1.5.0-00cca78/comfy.tar"
+# Use verified cache version file for production: v1.5.0-13a3277
+export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/esd/v1.5.0-13a3277/comfy.tar"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
