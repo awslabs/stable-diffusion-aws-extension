@@ -49,7 +49,7 @@ logger.info(f"config.is_local: {is_local}")
 role_name = "role_name"
 logger.info(f"config.role_name: {role_name}")
 
-current_time = datetime.utcnow().strftime("%m-%d-%H-%M-%S")
+current_time = datetime.utcnow().strftime("%m%d%H%M%S")
 
 endpoint_name = f"test-{current_time}"
 logger.info(f"config.endpoint_name: {endpoint_name}")
