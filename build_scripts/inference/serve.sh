@@ -60,12 +60,18 @@ echo "--------------------------------------------------------------------------
 
 # -------------------- common functions --------------------
 
+set_conda(){
+    echo "set conda environment..."
+    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+}
+
 download_conda(){
   echo "---------------------------------------------------------------------------------"
-  echo "set conda environment..."
+  echo "downloading conda ..."
   mkdir -p /home/ubuntu/conda/lib/
   wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
   wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
+  set_conda
 }
 
 # -------------------- sd functions --------------------
@@ -108,8 +114,7 @@ sd_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate sd launch..."
 
-  echo "set conda environment..."
-  export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+  set_conda
 
   ls -la /home/ubuntu/
 
@@ -265,8 +270,7 @@ comfy_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate comfy launch..."
 
-  echo "set conda environment..."
-  export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+  set_conda
 
   cd /home/ubuntu/ComfyUI || exit 1
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
