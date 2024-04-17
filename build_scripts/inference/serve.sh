@@ -317,6 +317,9 @@ comfy_launch_from_public_s3(){
 # -------------------- startup --------------------
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
+
+  download_conda
+
   if [ "$SERVICE_TYPE" == "sd" ]; then
       sd_install_build
       /trim_sd.sh
