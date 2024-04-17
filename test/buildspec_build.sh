@@ -16,7 +16,7 @@ echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
-aws cloudformation delete-stack --stack-name "$STACK_NAME"
+#aws cloudformation delete-stack --stack-name "$STACK_NAME"
 
 python --version
 sudo yum install wget -y
@@ -26,7 +26,7 @@ make build
 
 aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
 aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
-aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+#aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
