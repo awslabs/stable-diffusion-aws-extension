@@ -164,6 +164,15 @@ class Api:
             params=params
         )
 
+    def prepare(self, headers=None, data=None):
+        return self.req(
+            "POST",
+            "prepare",
+            headers=headers,
+            operation_id='',
+            data=data
+        )
+
     def create_role(self, headers=None, data=None):
         return self.req(
             "POST",
