@@ -20,7 +20,6 @@ ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
 ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-ENV FULL_IMAGE true
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
     wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10 && \

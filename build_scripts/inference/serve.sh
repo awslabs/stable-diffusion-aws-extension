@@ -316,14 +316,19 @@ comfy_launch_from_public_s3(){
 
 # -------------------- startup --------------------
 
-if [ "$FULL_IMAGE" == "true" ]; then
-  echo "Running on full docker image..."
+if [[ $IMAGE_URL == *"dev"* ]]; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_launch
-    exit 1
+      sd_install_build
+      /trim_sd.sh
+      sd_cache_endpoint
+      sd_launch
+      exit 1
   else
-    comfy_launch
-    exit 1
+      comfy_install_build
+      /trim_comfy.sh
+      comfy_cache_endpoint
+      comfy_launch
+      exit 1
   fi
 fi
 

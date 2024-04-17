@@ -20,7 +20,6 @@ ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
 ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-ENV FULL_IMAGE true
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
     wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10 && \
@@ -33,9 +32,9 @@ RUN cd /home/ubuntu || exit 1 && \
     bash install_sd.sh && \
     bash /trim_sd.sh
 
-COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
-RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
-    source venv/bin/activate python
+#COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
+# RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
+#    source venv/bin/activate python
 #    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
 #    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
 #    python3 clip_init.py

@@ -25,7 +25,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
     def teardown_class(self):
         pass
 
-    def test_1_txt2img_async_create(self):
+    def test_1_txt2img_re_async_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -53,7 +53,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
         upload_with_put(inference_data["api_params_s3_upload_url"],
                         "./data/api_params/txt2img_controlnet_depth_leres.json")
 
-    def test_2_txt2img_async_exists(self):
+    def test_2_txt2img_re_async_exists(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -65,7 +65,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
         resp = self.api.get_inference_job(headers=headers, job_id=inference_data["id"])
         assert resp.status_code == 200, resp.dumps()
 
-    def test_5_txt2img_async_start_cn1_and_succeed(self):
+    def test_5_txt2img_re_async_start_cn1_and_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -98,7 +98,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
         else:
             raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
 
-    def test_6_txt2img_cn1_async_content(self):
+    def test_6_txt2img_re_cn1_async_content(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -110,7 +110,7 @@ class TestTxt2ImgInferenceAsyncCn1E2E:
             target_file="./data/api_params/txt2img_controlnet_depth_leres.png"
         )
 
-    def test_7_txt2img_async_delete_succeed(self):
+    def test_7_txt2img_re_async_delete_succeed(self):
 
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
