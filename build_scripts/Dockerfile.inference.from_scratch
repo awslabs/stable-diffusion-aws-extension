@@ -21,7 +21,6 @@ ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
 ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-ENV FULL_IMAGE false
 
 COPY install_sd.sh /home/ubuntu/
 COPY install_comfy.sh /home/ubuntu/
