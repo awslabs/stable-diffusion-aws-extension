@@ -6,7 +6,6 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { ApiValidators } from '../../shared/validator';
 
 
 export interface DeleteExecutesApiProps {
@@ -43,7 +42,7 @@ export class DeleteExecutesApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: ApiValidators.bodyValidator,
+      // requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },

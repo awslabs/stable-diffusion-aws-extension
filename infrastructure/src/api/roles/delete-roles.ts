@@ -5,6 +5,7 @@ import {
   JsonSchemaVersion,
   LambdaIntegration,
   Model,
+  RequestValidator,
   Resource,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -12,7 +13,6 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteRolesApiProps {
   router: Resource;

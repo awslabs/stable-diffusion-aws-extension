@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
@@ -8,7 +8,6 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -48,7 +47,7 @@ export class CreateTrainingJobApi {
 
     this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: ApiValidators.bodyValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
         $default: this.createRequestBodyModel(),
       },
@@ -386,6 +385,16 @@ export class CreateTrainingJobApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.id}-create-train-validator`,
+      {
+        restApi: this.props.router.api,
+        validateRequestBody: true,
+      });
   }
 
   private apiLambda() {

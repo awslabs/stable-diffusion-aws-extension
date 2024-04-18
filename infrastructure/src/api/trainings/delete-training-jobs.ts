@@ -5,6 +5,7 @@ import {
   JsonSchemaVersion,
   LambdaIntegration,
   Model,
+  RequestValidator,
   Resource,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -14,7 +15,6 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_TRAIN_ID } from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteTrainingJobsApiProps {
   router: Resource;
@@ -57,7 +57,7 @@ export class DeleteTrainingJobsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: ApiValidators.bodyValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -97,6 +97,16 @@ export class DeleteTrainingJobsApi {
           ],
         },
         contentType: 'application/json',
+      });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-train-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
       });
   }
 
