@@ -5,7 +5,6 @@ import {
   JsonSchemaVersion,
   LambdaIntegration,
   Model,
-  RequestValidator,
   Resource,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -15,6 +14,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_CHECKPOINT_ID } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteCheckpointsApiProps {
   router: Resource;
@@ -54,7 +54,7 @@ export class DeleteCheckpointsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.createRequestValidator(),
+        requestValidator: ApiValidators.validator,
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -94,16 +94,6 @@ export class DeleteCheckpointsApi {
           ],
         },
         contentType: 'application/json',
-      });
-  }
-
-  private createRequestValidator() {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-ckpt-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
       });
   }
 

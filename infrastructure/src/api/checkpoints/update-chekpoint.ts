@@ -1,12 +1,13 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_STATUS, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 
 export interface UpdateCheckPointApiProps {
@@ -55,7 +56,7 @@ export class UpdateCheckPointApi {
       .addMethod(this.httpMethod, lambdaIntegration,
         {
           apiKeyRequired: true,
-          requestValidator: this.createRequestValidator(),
+          requestValidator: ApiValidators.validator,
           requestModels: {
             'application/json': this.createRequestBodyModel(),
           },
@@ -293,16 +294,6 @@ export class UpdateCheckPointApi {
       },
       contentType: 'application/json',
     });
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-update-ckpt-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
   }
 
   private apiRenameLambda() {
