@@ -179,10 +179,21 @@ function updateProgress(groupName, fileName, progress, part, total) {
 }
 
 function uploadFileToS3(files, groupName, username) {
-    const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
-        document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
-    const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
-        document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
+    const apiGatewayUrl = document.querySelector("#aws_api_url > label > textarea")?
+        document.querySelector("#aws_api_url > label > textarea")["value"]: "";
+    const apiToken = document.querySelector("#aws_api_gateway_url_token > label > textarea")?
+        document.querySelector("#aws_api_gateway_url_token > label > textarea")["value"]: "";
+
+    if (!apiGatewayUrl) {
+        alert("Please load the API URL (ApiGatewayUrl) by click refresh button in API and User Settings tab.");
+        return;
+    }
+
+    if (!apiToken) {
+        alert("Please load the API Token (ApiGatewayUrlToken) by click refresh button in API and User Settings tab.");
+        return;
+    }
+
     const presignedUrls = [];
     const filenames = [];
     const fileArrays = [];
@@ -208,7 +219,8 @@ function uploadFileToS3(files, groupName, username) {
     fetch(url, {
         method: "POST",
         headers: {
-            'x-api-key': apiKey
+            'x-api-key': apiKey,
+            'username': username,
         },
         body: JSON.stringify(payload),
     })
