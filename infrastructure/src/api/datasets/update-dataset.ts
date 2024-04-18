@@ -1,12 +1,11 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_STATUS, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
 
 
 export interface UpdateDatasetApiProps {
@@ -53,7 +52,7 @@ export class UpdateDatasetApi {
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, lambdaIntegration, {
         apiKeyRequired: true,
-        requestValidator: ApiValidators.bodyValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -180,6 +179,16 @@ export class UpdateDatasetApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createRequestValidator() {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-dataset-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
   }
 
   private apiLambda() {

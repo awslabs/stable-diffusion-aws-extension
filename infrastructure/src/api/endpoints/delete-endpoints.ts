@@ -1,13 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteEndpointsApiProps {
   router: Resource;
@@ -46,7 +45,7 @@ export class DeleteEndpointsApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: ApiValidators.bodyValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -159,6 +158,13 @@ export class DeleteEndpointsApi {
         ],
       },
       contentType: 'application/json',
+    });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-del-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
     });
   }
 
