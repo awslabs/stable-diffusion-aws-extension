@@ -14,7 +14,6 @@ import {
   SCHEMA_INFER_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
 
 
 export interface ExecuteApiProps {
@@ -57,7 +56,7 @@ export class ExecuteApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: ApiValidators.validator,
+      // requestValidator: this.createRequestValidator(),
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
