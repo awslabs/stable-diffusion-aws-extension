@@ -22,10 +22,10 @@ fi
 export TAR_FILE="esd.tar"
 export CACHE_ENDPOINT="endpoint-$ESD_VERSION-$ENDPOINT_NAME"
 
-# Use verified cache version file for production: v1.5.0-13a3277
+# Use verified cache version file for production: v1.5.0-fe21616
 export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/sd.tar"
 
-# Use verified cache version file for production: v1.5.0-13a3277
+# Use verified cache version file for production: v1.5.0-fe21616
 export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
@@ -76,6 +76,7 @@ download_conda(){
   mkdir -p /home/ubuntu/conda/lib/
   wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
   wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
+  wget -qO /home/ubuntu/conda/lib/libnvinfer.so.8 https://huggingface.co/elonniu/esd/resolve/main/libnvinfer.so.8
   set_conda
 }
 
