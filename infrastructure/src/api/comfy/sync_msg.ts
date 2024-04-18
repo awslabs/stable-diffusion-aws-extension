@@ -1,6 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -56,7 +56,7 @@ export class SyncMsgApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      // requestValidator: this.createRequestValidator(),
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -169,14 +169,5 @@ export class SyncMsgApi {
     });
   }
 
-  private createRequestValidator() {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-sync-msg-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-  }
 }
 

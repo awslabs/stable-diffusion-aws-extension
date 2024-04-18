@@ -149,19 +149,17 @@ properties+=("PYTHON_311_VERSION: ${PYTHON_311_VERSION}")
 properties+=("PYTHON_PIP_VERSION: ${PYTHON_PIP_VERSION}")
 properties+=("CODEBUILD_BUILD_IMAGE: ${CODEBUILD_BUILD_IMAGE}")
 
-echo -e "$message"
-aws sns publish \
-        --region "$SNS_REGION" \
-        --topic-arn "$SNS_ARN" \
-        --message-structure json \
-        --subject "SD&Comfy $CODE_BRANCH $CASE_PASSED_RESULT $AWS_DEFAULT_REGION" \
-        --message-attributes '{"key": {"DataType": "String", "StringValue": "value"}}' \
-        --message "{\"default\": \"$message\"}"
-
-source venv/bin/activate
-
-make testk test_10_client_clean
-make testk test_11_api_clean
+if [ -n "$SNS_ARN" ]; then
+  unset AWS_PROFILE
+  echo -e "$message"
+  aws sns publish \
+          --region "$SNS_REGION" \
+          --topic-arn "$SNS_ARN" \
+          --message-structure json \
+          --subject "SD&Comfy $CODE_BRANCH $CASE_PASSED_RESULT $AWS_DEFAULT_REGION" \
+          --message-attributes '{"key": {"DataType": "String", "StringValue": "value"}}' \
+          --message "{\"default\": \"$message\"}"
+fi
 
 #if [ "$result" = "Passed" ]; then
 #  echo "----------------------------------------------------------------"
