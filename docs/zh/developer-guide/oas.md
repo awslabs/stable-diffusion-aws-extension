@@ -1,2 +1,2 @@
-- [1.5.0](https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/docs/oas-1.5.0.json){:target="_blank"}
-- [1.4.0](https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/docs/oas-1.4.0.json){:target="_blank"}
+- [1.5.0](https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json){:
+  target="_blank"}
