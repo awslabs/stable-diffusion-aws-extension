@@ -185,12 +185,12 @@ function uploadFileToS3(files, groupName, username) {
         document.querySelector("#aws_api_gateway_url_token > label > textarea")["value"]: "";
 
     if (!apiGatewayUrl) {
-        alert("Please load the API Gateway URL by click refresh button.");
+        alert("Please load the API URL (ApiGatewayUrl) by click refresh button in API and User Settings tab.");
         return;
     }
 
     if (!apiToken) {
-        alert("Please load the API Gateway Token by click refresh button.");
+        alert("Please load the API Token (ApiGatewayUrlToken) by click refresh button in API and User Settings tab.");
         return;
     }
 
