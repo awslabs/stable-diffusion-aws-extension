@@ -56,7 +56,6 @@ export class ExecuteApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      // requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },

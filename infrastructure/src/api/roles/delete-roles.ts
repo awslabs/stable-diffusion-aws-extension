@@ -51,7 +51,7 @@ export class DeleteRolesApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: ApiValidators.bodyValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -133,6 +133,16 @@ export class DeleteRolesApi {
           ],
         },
         contentType: 'application/json',
+      });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-role-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
       });
   }
 
