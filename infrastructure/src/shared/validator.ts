@@ -4,10 +4,10 @@ import { Construct } from 'constructs';
 
 export class ApiValidators {
 
-  public static validator: RequestValidator;
+  public static bodyValidator: RequestValidator;
 
-  public static createValidator(scope: Construct, restApi: RestApi, name: string) {
-    return new RequestValidator(
+  public static createBodyValidator(scope: Construct, restApi: RestApi, name: string) {
+    ApiValidators.bodyValidator =new RequestValidator(
       scope,
       `${name}-validator`,
       {
@@ -15,6 +15,5 @@ export class ApiValidators {
         validateRequestBody: true,
       });
   }
-
 
 }

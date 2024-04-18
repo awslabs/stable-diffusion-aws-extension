@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -25,6 +25,7 @@ import {
   SCHEMA_ENDPOINT_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -87,7 +88,7 @@ export class CreateEndpointApi {
 
     this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -353,14 +354,6 @@ export class CreateEndpointApi {
           'assign_to_roles',
         ],
       },
-    });
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-      validateRequestParameters: false,
     });
   }
 

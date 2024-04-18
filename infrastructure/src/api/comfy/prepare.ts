@@ -7,6 +7,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 
 export interface PrepareApiProps {
@@ -55,7 +56,7 @@ export class PrepareApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      // requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
