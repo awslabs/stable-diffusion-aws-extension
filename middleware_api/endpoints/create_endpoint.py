@@ -13,7 +13,8 @@ from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted
-from libs.data_types import EndpointDeploymentJob
+from common.util import resolve_instance_invocations_num
+from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
@@ -91,9 +92,6 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    if region.startswith("cn-"):
-        return f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-inference:{event.service_type}-{esd_version}"
-
     return f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-inference:{esd_version}"
 
 
@@ -130,9 +128,9 @@ def handler(raw_event, ctx):
             short_id = event.endpoint_name
 
         endpoint_type = event.endpoint_type.lower()
-        model_name = f"{event.service_type}-model-{endpoint_type}-{short_id}"
-        endpoint_config_name = f"{event.service_type}-config-{endpoint_type}-{short_id}"
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
+        model_name = f"{endpoint_name}"
+        endpoint_config_name = f"{endpoint_name}"
 
         model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 
@@ -143,7 +141,11 @@ def handler(raw_event, ctx):
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
-            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            logger.info("endpoint_row:")
+            logger.info(endpoint_row)
+            endpoint = Endpoint(**(ddb_service.deserialize(endpoint_row)))
+            logger.info("endpoint:")
+            logger.info(endpoint.__dict__)
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
@@ -177,7 +179,7 @@ def handler(raw_event, ctx):
             sagemaker.delete_model(ModelName=model_name)
             return bad_request(message=str(e))
 
-        data = EndpointDeploymentJob(
+        data = Endpoint(
             EndpointDeploymentJobId=endpoint_id,
             endpoint_name=endpoint_name,
             startTime=str(datetime.now()),
@@ -289,9 +291,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             }
         },
         "ClientConfig": {
-            # (Optional) Specify the max number of inflight invocations per instance
-            # If no value is provided, Amazon SageMaker will choose an optimal value for you
-            "MaxConcurrentInvocationsPerInstance": 1
+            "MaxConcurrentInvocationsPerInstance": resolve_instance_invocations_num(instance_type, event.service_type),
         }
     }
 

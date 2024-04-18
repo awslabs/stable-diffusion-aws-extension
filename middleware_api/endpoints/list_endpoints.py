@@ -9,7 +9,7 @@ from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param
-from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
+from libs.data_types import Endpoint, PARTITION_KEYS, Role
 from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
     response_error, decode_last_key, encode_last_key
@@ -78,7 +78,7 @@ def handler(event, ctx):
                 row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
             logger.info(f"row: {row}")
-            endpoint = EndpointDeploymentJob(**row)
+            endpoint = Endpoint(**row)
             if 'sagemaker_endpoint' in requestor_permissions and \
                     'list' in requestor_permissions['sagemaker_endpoint'] and \
                     endpoint.owner_group_or_role and \

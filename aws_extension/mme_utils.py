@@ -12,6 +12,9 @@ try:
 except Exception:
     print('default modules load fails')
 
+logger = logging.getLogger("sd_proxy")
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors"]
 models_type_list = ['Stable-diffusion', 'hypernetworks', 'Lora', 'ControlNet', 'embeddings', 'VAE']
 models_used_count = {key: ModelsRef() for key in models_type_list}
@@ -112,28 +115,28 @@ def upload_model(model_type, model_name, model_s3_pos):
 
 def download_and_update(model_type, model_s3_pos):
     #download from s3
-    logging.info(f's5cmd sync "{model_s3_pos}" ./')
+    logger.info(f's5cmd sync "{model_s3_pos}" ./')
     os.system(f's5cmd sync "{model_s3_pos}" ./')
     tar_name = model_s3_pos.split('/')[-1]
-    logging.info(tar_name)
+    logger.info(tar_name)
     command = f'file --mime-type -b ./"{tar_name}"'
     file_type = subprocess.check_output(command, shell=True).decode('utf-8').strip()
-    logging.info(f"file_type is {file_type}")
+    logger.info(f"file_type is {file_type}")
     if file_type == TAR_TYPE_FILE:
-        logging.info("model type is tar")
+        logger.info("model type is tar")
         os.system(f"tar xvf '{tar_name}'")
         os.system(f"rm '{tar_name}'")
         os.system("df -h")
     else:
         os.system(f"rm '{tar_name}'")  # 使用引号括起文件名
-        logging.info(f"model type is origin file type: {file_type}")
+        logger.info(f"model type is origin file type: {file_type}")
         prefix_name = model_s3_pos.split('.')[0]
         if model_type == 'embeddings':
             os.system(f's5cmd sync "{prefix_name}"* ./{model_type}/')
         else:
             os.system(f's5cmd sync "{prefix_name}"* ./models/{model_type}/')
 
-    logging.info("download finished")
+    logger.info("download finished")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()
     if model_type == 'hypernetworks':

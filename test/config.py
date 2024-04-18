@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -42,10 +43,13 @@ logger.info(f"config.test_fast: {test_fast}")
 is_gcr = region_name.startswith("cn-")
 logger.info(f"config.is_gcr: {is_gcr}")
 
+is_local = os.environ.get("SNS_ARN") is None
+logger.info(f"config.is_local: {is_local}")
+
 role_name = "role_name"
 logger.info(f"config.role_name: {role_name}")
 
-endpoint_name = "test"
+endpoint_name = datetime.utcnow().strftime("%m%d%H%M%S")
 logger.info(f"config.endpoint_name: {endpoint_name}")
 
 dataset_name = "dataset_name"
@@ -88,11 +92,17 @@ if is_gcr:
     train_instance_type = "ml.g4dn.2xlarge"
 logger.info(f"config.train_instance_type: {train_instance_type}")
 
-comfy_async_ep_name = "comfy-async-test"
-comfy_real_time_ep_name = "comfy-real-time-test"
+comfy_async_ep_name = f"comfy-async-{endpoint_name}"
+comfy_real_time_ep_name = f"comfy-real-time-{endpoint_name}"
 
 compare_content = os.environ.get("COMPARE_CONTENT", "true")
 logger.info(f"config.compare_content: {compare_content}")
 
 webui_stack = "webui-stack"
 comfy_stack = "comfy-stack"
+
+role_sd_async = "sd_async"
+role_sd_real_time = "sd_real_time"
+
+role_comfy_async = "comfy_async"
+role_comfy_real_time = "comfy_real_time"

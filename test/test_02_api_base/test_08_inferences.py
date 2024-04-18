@@ -117,7 +117,7 @@ class TestInferencesApi:
         assert resp.status_code == 404, resp.dumps()
         assert f'inference with id {job_id} not found' == resp.json()["message"]
 
-    def test_11_inference_one_api_payload_string_check(self):
+    def test_11_one_api_payload_string_check(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

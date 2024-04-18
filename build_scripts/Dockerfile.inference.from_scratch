@@ -1,4 +1,5 @@
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+#FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 
 SHELL ["/bin/bash", "-c"]
 
@@ -9,7 +10,7 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get install --no-install-recommends -y \
                     git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
                     pkg-config file curl protobuf-compiler mesa-utils \
-                    python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+                    python3-dev libaio-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
     rm -rf /var/lib/apt/lists/* && \
     wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
     tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
@@ -20,15 +21,16 @@ ARG ESD_COMMIT_ID
 ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
 ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-ENV FULL_IMAGE false
 
 COPY install_sd.sh /home/ubuntu/
 COPY install_comfy.sh /home/ubuntu/
+COPY trim_sd.sh /
+COPY trim_comfy.sh /
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
 
-COPY inference/metrics.py /
-RUN chmod +x /metrics.py
+COPY inference/controller.py /
+RUN chmod +x /controller.py
 
 ENTRYPOINT ["bash", "/serve.sh"]

@@ -27,3 +27,5 @@ tmp.png
 response.json
 schema.json
 oas.json
+.ckpt
+s5cmd

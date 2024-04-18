@@ -45,9 +45,9 @@ export class RestApiGateway {
         types: [EndpointType.EDGE],
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: Cors.ALL_ORIGINS, // You can also provide a list of specific origins ['https://example.com']
-        allowMethods: Cors.ALL_METHODS, // You can also provide a list of specific methods ['GET', 'POST', 'OPTIONS']
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'], // Customize as needed
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+        allowHeaders: ['*'],
       },
     });
 

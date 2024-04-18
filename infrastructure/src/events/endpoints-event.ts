@@ -40,12 +40,13 @@ export class SagemakerEndpointEvents {
       effect: Effect.ALLOW,
       actions: [
         'dynamodb:UpdateItem',
-        'dynamodb:Scan',
+        'dynamodb:Query',
         'dynamodb:GetItem',
         'dynamodb:DeleteItem',
       ],
       resources: [
         this.endpointDeploymentTable.tableArn,
+        `${this.endpointDeploymentTable.tableArn}/*`,
         this.multiUserTable.tableArn,
       ],
     }));
@@ -53,7 +54,9 @@ export class SagemakerEndpointEvents {
     newRole.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        'sagemaker:DeleteModel',
         'sagemaker:DeleteEndpoint',
+        'sagemaker:DeleteEndpointConfig',
         'sagemaker:DescribeEndpoint',
         'sagemaker:DescribeEndpointConfig',
         'sagemaker:UpdateEndpointWeightsAndCapacities',

@@ -123,7 +123,7 @@ class TestTurboE2E:
         global checkpoint_id
         assert checkpoint_id in [checkpoint["id"] for checkpoint in resp.json()['data']["checkpoints"]]
 
-    def test_4_turbo_txt2img_inference_async_job_create(self):
+    def test_4_turbo_txt2img_async_job_create(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -149,7 +149,7 @@ class TestTurboE2E:
 
         upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/turbo_api_param.json")
 
-    def test_5_turbo_txt2img_inference_async_job_succeed(self):
+    def test_5_turbo_txt2img_async_job_succeed(self):
         global inference_data
         assert inference_data["type"] == InferenceType.TXT2IMG.value
 
@@ -171,13 +171,14 @@ class TestTurboE2E:
                 api_instance=self.api,
                 job_id=inference_id
             )
-            logger.info(f"sd xl turbo inference is {status}")
+            logger.info(f"sd xl turbo Async is {status}")
             if status == InferenceStatus.SUCCEED.value:
                 break
             if status == InferenceStatus.FAILED.value:
                 logger.error(resp.dumps())
                 logger.error(inference_data)
+                # break
                 raise Exception(f"Inference job {inference_id} failed.")
             time.sleep(5)
         else:
-            raise Exception("Inference execution timed out after 4 minutes.")
+            raise Exception("Inference timed out after 4 minutes.")

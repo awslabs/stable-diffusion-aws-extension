@@ -1,10 +1,15 @@
+import base64
+import enum
 import json
 import logging
 import os
 from functools import reduce
+from io import BytesIO
 from typing import Dict
 
 import boto3
+import numpy
+from PIL import Image, PngImagePlugin
 from aws_lambda_powertools import Tracer
 
 from libs.comfy_data_types import InferenceResult
@@ -37,6 +42,19 @@ def get_query_param(event, param_name: str, default=None):
             return queries[param_name]
 
     return default
+
+
+def resolve_instance_invocations_num(instance_type: str, service_type: str):
+    if service_type == "sd":
+        return 1
+
+    if instance_type == 'ml.g5.12xlarge':
+        return 4
+
+    if instance_type == 'ml.p4d.24xlarge':
+        return 8
+
+    return 1
 
 
 def query_data(data, paths):
@@ -109,14 +127,45 @@ def save_json_to_file(json_string: str, folder_path: str, file_name: str):
     return file_path
 
 
+def get_pil_metadata(pil_image):
+    # Copy any text-only metadata
+    metadata = PngImagePlugin.PngInfo()
+    for key, value in pil_image.info.items():
+        if isinstance(key, str) and isinstance(value, str):
+            metadata.add_text(key, value)
+
+    return metadata
+
+
+def encode_pil_to_base64(pil_image):
+    with BytesIO() as output_bytes:
+        pil_image.save(output_bytes, "PNG", pnginfo=get_pil_metadata(pil_image))
+        bytes_data = output_bytes.getvalue()
+
+    base64_str = str(base64.b64encode(bytes_data), "utf-8")
+    return "data:image/png;base64," + base64_str
+
+
+def encode_no_json(obj):
+    if isinstance(obj, numpy.ndarray):
+        return encode_pil_to_base64(Image.fromarray(obj))
+    elif isinstance(obj, Image.Image):
+        return encode_pil_to_base64(obj)
+    elif isinstance(obj, enum.Enum):
+        return obj.value
+    elif hasattr(obj, '__dict__'):
+        return obj.__dict__
+    else:
+        logger.debug(f'may not able to json dumps {type(obj)}: {str(obj)}')
+        return str(obj)
+
+
 @tracer.capture_method
-def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
-    '''
-    Upload the JSON file from the specified bucket and key
-    '''
+def upload_json_to_s3(file_key: str, json_data: dict):
     try:
-        s3.put_object(Body=json.dumps(json_data), Bucket=bucket_name, Key=file_key)
-        logger.info(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")
+        file_key = file_key.replace(f"s3://{bucket_name}/", '')
+        s3.put_object(Body=json.dumps(json_data, indent=4, default=encode_no_json), Bucket=bucket_name, Key=file_key)
+        logger.info(f"Dictionary uploaded to s3://{bucket_name}/{file_key}")
     except Exception as e:
         logger.info(f"Error uploading dictionary: {e}")
 

@@ -40,9 +40,13 @@ Parameters:
 Mappings:
   RegionToAmiId:
     us-east-1:
-      AMI: ami-031f210ebaaf07489
+      AMI: ami-0e4cc88070dfcf17b
     us-east-2:
-      AMI: ami-06a02b78678ead6d7
+      AMI: ami-0a48cc2a4a0988c70
+    ap-southeast-1:
+      AMI: ami-09a7fb29eb7375468
+    ap-northeast-1:
+      AMI: ami-0a1f6795aeb907a68
 
 Resources:
   ComfyVPC:
@@ -179,8 +183,8 @@ Resources:
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
-          sudo add-apt-repository ppa:deadsnakes/ppa
-          sudo apt update
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          sudo apt update -y
           sudo apt install wget python3.10 python3.10-venv python3-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
@@ -243,6 +247,7 @@ Resources:
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
           # sudo journalctl -u comfy --no-pager -n 200
+          # wget -O /ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true
 
   ComfyEIP:
     Type: AWS::EC2::EIP

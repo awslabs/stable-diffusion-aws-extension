@@ -319,6 +319,11 @@ export class Middleware extends Stack {
       description: 'ESD Version',
     });
 
+    new CfnOutput(this, 'EsdReleaseTime', {
+      value: new Date().toISOString(),
+      description: 'ESD Release Time',
+    });
+
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {
       value: restApi.apiGateway.url,

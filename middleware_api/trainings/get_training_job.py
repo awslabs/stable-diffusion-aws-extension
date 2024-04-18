@@ -40,6 +40,7 @@ def handler(event, ctx):
             'params': item['params'],
             'timestamp': str(item['timestamp']),
             'train_type': item['train_type'],
+            'sagemaker_train_name': item['sagemaker_train_name'],
         }
 
         return ok(data=data, decimal=True)

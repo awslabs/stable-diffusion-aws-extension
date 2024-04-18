@@ -13,6 +13,7 @@ template = "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-s
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")
 @pytest.mark.skipif(config.test_fast, reason="test_fast")
+@pytest.mark.skipif(config.is_local, reason="codebuild test only")
 class TestWebUiClient:
 
     @classmethod

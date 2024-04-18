@@ -11,7 +11,7 @@ from botocore.exceptions import ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
 from common.response import unauthorized, forbidden, not_found, bad_request
-from libs.data_types import PARTITION_KEYS, User, Role, EndpointDeploymentJob
+from libs.data_types import PARTITION_KEYS, User, Role, Endpoint
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def get_endpoint_by_name(endpoint_name: str):
     if len(items) == 0:
         raise NotFoundException(f'endpoint with name {endpoint_name} not found')
 
-    return EndpointDeploymentJob(**items[0])
+    return Endpoint(**items[0])
 
 
 def log_json(title, payload: any = None):

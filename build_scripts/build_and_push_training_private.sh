@@ -88,6 +88,7 @@ echo $fullname
 
 docker build  -t ${image_name}:${tag} -f ${dockerfile} .
 docker tag ${image_name} ${fullname}
+docker images
 docker push ${fullname}
 echo "docker push ${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 echo "Completed"

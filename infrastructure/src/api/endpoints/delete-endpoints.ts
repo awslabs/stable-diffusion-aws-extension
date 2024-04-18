@@ -70,8 +70,8 @@ export class DeleteEndpointsApi {
       actions: [
         'sagemaker:DeleteModel',
         'sagemaker:DeleteEndpoint',
-        'sagemaker:DescribeEndpoint',
         'sagemaker:DeleteEndpointConfig',
+        'sagemaker:DescribeEndpoint',
         'sagemaker:DescribeEndpointConfig',
       ],
       resources: [
@@ -90,10 +90,10 @@ export class DeleteEndpointsApi {
         'dynamodb:UpdateItem',
         'dynamodb:Describe*',
         'dynamodb:List*',
-        'dynamodb:Scan',
       ],
       resources: [
         this.endpointDeploymentTable.tableArn,
+        `${this.endpointDeploymentTable.tableArn}/*`,
         this.multiUserTable.tableArn,
       ],
     }));

@@ -15,7 +15,7 @@ from common.excepts import BadRequestException
 from common.response import accepted
 from get_inference_job import get_infer_data
 from inference_libs import parse_sagemaker_result, update_inference_job_table
-from libs.data_types import InferenceJob, InvocationsRequest
+from libs.data_types import InferenceJob, InvocationRequest
 from libs.enums import EndpointType
 from libs.utils import response_error, permissions_check, log_json
 
@@ -69,7 +69,8 @@ def inference_start(job: InferenceJob, username):
             **job.params['used_models'],
         }
 
-    payload = InvocationsRequest(
+    payload = InvocationRequest(
+        id=job.InferenceJobId,
         task=job.taskType,
         username=username,
         models=models,
@@ -77,7 +78,8 @@ def inference_start(job: InferenceJob, username):
         payload_string=job.payload_string
     )
 
-    log_json("inference payload", job.__dict__)
+    log_json("inference job", job.__dict__)
+    log_json("inference invoke payload", payload.__dict__)
 
     update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
 
@@ -88,7 +90,7 @@ def inference_start(job: InferenceJob, username):
 
 
 @tracer.capture_method
-def real_time_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
+def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name):
     tracer.put_annotation(key="InferenceJobId", value=job.InferenceJobId)
     sagemaker_out = predictor_real_time_predict(endpoint_name=endpoint_name,
                                                 data=payload.__dict__,
@@ -150,8 +152,9 @@ def predictor_async_predict(endpoint_name, data, inference_id):
 
 
 @tracer.capture_method
-def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
+def async_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name):
     tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
+
     prediction = predictor_async_predict(endpoint_name=endpoint_name,
                                          data=payload.__dict__,
                                          inference_id=job.InferenceJobId)
@@ -166,6 +169,7 @@ def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_nam
     data = {
         'InferenceJobId': job.InferenceJobId,
         'status': job.status,
+
         # todo inference will remove in the next version
         'inference': {
             'inference_id': job.InferenceJobId,
