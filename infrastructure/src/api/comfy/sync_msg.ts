@@ -7,6 +7,7 @@ import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { ApiValidators } from '../../shared/validator';
 
 
 export interface SyncMsgApiProps {
@@ -56,7 +57,7 @@ export class SyncMsgApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      // requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.validator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },

@@ -7,7 +7,7 @@ export class ApiValidators {
   public static validator: RequestValidator;
 
   public static createValidator(scope: Construct, restApi: RestApi, name: string) {
-    return new RequestValidator(
+    ApiValidators.validator =new RequestValidator(
       scope,
       `${name}-validator`,
       {
