@@ -5,7 +5,6 @@ import {
   JsonSchemaVersion,
   LambdaIntegration,
   Model,
-  RequestValidator,
   Resource,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -14,6 +13,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteInferenceJobsApiProps {
   router: Resource;
@@ -58,7 +58,7 @@ export class DeleteInferenceJobsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.createRequestValidator(),
+        requestValidator: ApiValidators.bodyValidator,
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -100,16 +100,6 @@ export class DeleteInferenceJobsApi {
           ],
         },
         contentType: 'application/json',
-      });
-  }
-
-  private createRequestValidator() {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-infer-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
       });
   }
 
