@@ -61,7 +61,7 @@ export class RestApiGateway {
     ApiModels.schema404 = ApiModels.createAPiModel(this.scope, api, SCHEMA_404, '404');
     ApiModels.schema504 = ApiModels.createAPiModel(this.scope, api, SCHEMA_504, '504');
 
-    ApiValidators.createValidator(this.scope, api, 'esd-api');
+    ApiValidators.createBodyValidator(this.scope, api, 'esd-api-body');
 
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey('sd-extension-api-key', {

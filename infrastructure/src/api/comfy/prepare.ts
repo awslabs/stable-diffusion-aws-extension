@@ -56,7 +56,7 @@ export class PrepareApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: ApiValidators.validator,
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
