@@ -76,7 +76,6 @@ download_conda(){
   mkdir -p /home/ubuntu/conda/lib/
   wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
   wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
-  wget -qO /home/ubuntu/conda/lib/libnvinfer.so.8 https://huggingface.co/elonniu/esd/resolve/main/libnvinfer.so.8
   set_conda
 }
 
