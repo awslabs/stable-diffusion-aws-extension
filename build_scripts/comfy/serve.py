@@ -334,7 +334,7 @@ def get_available_app():
         return None
     for item in available_apps:
         if item.is_port_ready() and not item.busy:
-            return app
+            return item
 
 
 def check_sync():
