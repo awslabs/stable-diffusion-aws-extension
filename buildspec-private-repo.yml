@@ -60,8 +60,8 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - echo "./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference xiujua_dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}"
-      - ./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference xiujua_dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo "./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+      - ./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
 
