@@ -28,9 +28,14 @@ jobs:
           python3 -m pip install mkdocs-material
           python3 -m pip install mkdocs-include-markdown-plugin==3.8.1
           python3 -m pip install mkdocs-macros-plugin
-
+          python3 -m pip install mkdocs-material
+          python3 -m pip install mkdocs-render-swagger-plugin
+          python3 -m pip install pymdown-extensions
       - name: Build mkdocs
         run: |
+          wget -qO ./docs/zh/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
+          wget -qO ./docs/jp/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
+          wget -qO ./docs/en/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
           mkdocs build -f ./docs/mkdocs.en.yml
           mkdocs build -f ./docs/mkdocs.zh.yml
           mkdocs build -f ./docs/mkdocs.ja.yml
