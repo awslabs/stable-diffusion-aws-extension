@@ -185,8 +185,8 @@ def sync_local_outputs_to_base64(local_path):
         return {}
 
 
-@server.PromptServer.instance.routes.post("/invocations")
-async def invocations(request):
+@server.PromptServer.instance.routes.post("/execute_proxy")
+async def execute_proxy(request):
     json_data = await request.json()
     if 'out_path' in json_data and json_data['out_path'] is not None:
         out_path = json_data['out_path']
