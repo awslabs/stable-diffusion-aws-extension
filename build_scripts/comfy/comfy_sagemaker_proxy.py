@@ -6,6 +6,7 @@ import os
 import sys
 import tarfile
 import time
+import uuid
 from dataclasses import dataclass
 from typing import Optional
 
@@ -28,7 +29,7 @@ REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
 
-GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
+GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID') if 'ENDPOINT_INSTANCE_ID' in os.environ and os.environ.get('ENDPOINT_INSTANCE_ID') else str(uuid.uuid4())
 ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
 ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
