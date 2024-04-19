@@ -324,7 +324,7 @@ def start_comfy_servers():
         global apps
         if apps is None:
             apps = []
-        apps = apps.append(comfy_app)
+        apps.append(comfy_app)
 
 
 def get_available_app():
