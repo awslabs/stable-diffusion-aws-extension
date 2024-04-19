@@ -51,6 +51,7 @@ export class RootAPI {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
+        description: 'Response Model RootAPIResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
