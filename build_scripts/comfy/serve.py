@@ -45,8 +45,8 @@ async def send_request(request_obj):
     if comfy_app is None:
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
     comfy_app.busy = True
-    logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/invocations")
-    response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/invocations", json=request_obj)
+    logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
+    response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
     comfy_app.busy = False
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code,
@@ -73,8 +73,8 @@ async def invocations(request: Request):
         logger.info(f"Starting single invocation on {comfy_app.port} {req}")
         result = []
         for request_obj in req:
-            logger.info(f"invocations start req:{request_obj}  url:{PHY_LOCALHOST}:{comfy_app.port}/invocations")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/invocations", json=request_obj)
+            logger.info(f"invocations start req:{request_obj}  url:{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code,
                                     detail=f"COMFY service returned an error: {response.text}")
