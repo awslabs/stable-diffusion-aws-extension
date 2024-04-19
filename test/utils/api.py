@@ -64,7 +64,7 @@ class Api:
         return self.req(
             "GET",
             "ping",
-            operation_id='PingResponse',
+            operation_id='Ping',
             headers=headers
         )
 
