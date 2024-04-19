@@ -32,6 +32,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 endpoint_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+sqs_url = os.environ.get('MERGE_SQS_URL')
+
 index_name = "endpoint_name-startTime-index"
 predictors = {}
 
@@ -57,6 +59,18 @@ class ExecuteEvent:
     client_id: Optional[str] = None
     need_prepare: bool = False
     prepare_props: Optional[PrepareProps] = None
+    multi_async = Optional[bool] = False
+
+
+def sen_sqs_msg(message_body, endpoint_name):
+    sqs_client = boto3.client('sqs', region_name=region)
+    response = sqs_client.send_message(
+        QueueUrl=sqs_url,
+        MessageBody=json.dumps(message_body),
+        MessageGroupId=endpoint_name
+    )
+    message_id = response['MessageId']
+    return message_id
 
 
 def build_s3_images_request(prompt_id, bucket_name, s3_path):
@@ -112,11 +126,18 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         output_path='',
         temp_path='',
         output_files=[],
-        temp_files=[]
+        temp_files=[],
+        multi_async=event.multi_async,
+        batch_id=''
     )
 
-    if ep.endpoint_type == 'Async':
-        resp = async_inference(payload, inference_id, ep.endpoint_name)
+    if event.multi_async and ep.endpoint_type == 'Async':
+        sen_sqs_msg(inference_job.__dict__, endpoint_name)
+        return created(data=response_schema(inference_job), decimal=True)
+
+    elif ep.endpoint_type == 'Async':
+        resp = async_inference([payload], inference_id, ep.endpoint_name)
+        # TODO status check and save
         logger.info(f"async inference response: {resp}")
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=response_schema(inference_job), decimal=True)

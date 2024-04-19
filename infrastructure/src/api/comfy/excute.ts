@@ -1,5 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -22,6 +22,7 @@ export interface ExecuteApiProps {
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
+  mergeQueue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
 }
 
@@ -34,6 +35,7 @@ export class ExecuteApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
+  private readonly mergeQueue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
     this.scope = scope;
@@ -43,6 +45,7 @@ export class ExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
+    this.mergeQueue = props.mergeQueue;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -228,6 +231,15 @@ export class ExecuteApi {
       ],
       resources: ['*'],
     }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sqs:SendMessage',
+      ],
+      resources: [this.mergeQueue.queueArn],
+    }));
+
     return newRole;
   }
 
@@ -246,6 +258,7 @@ export class ExecuteApi {
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
+        MERGE_SQS_URL: this.mergeQueue.queueUrl,
       },
       layers: [this.layer],
     });
