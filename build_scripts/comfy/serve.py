@@ -42,6 +42,8 @@ is_multi_gpu=False
 
 async def send_request(request_obj):
     comfy_app = check_available_app(True)
+    if comfy_app is None:
+        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
     comfy_app.busy = True
     logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/invocations")
     response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/invocations", json=request_obj)
@@ -66,7 +68,7 @@ async def invocations(request: Request):
     else:
         comfy_app = check_available_app(True)
         if comfy_app is None:
-            raise HTTPException(status_code=500,detail=f"COMFY service not available")
+            raise HTTPException(status_code=500,detail=f"COMFY service not available for single")
         req = await request.json()
         logger.info(f"Starting single invocation on {comfy_app.port} {req}")
         result = []
@@ -187,7 +189,8 @@ def get_available_app(need_check_busy: bool):
             if item.is_port_ready() and not item.busy:
                 return item
         else:
-            return item
+            if item.is_port_ready():
+                return item
     return None
 
 
