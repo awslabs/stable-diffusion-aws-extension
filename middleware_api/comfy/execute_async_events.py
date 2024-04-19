@@ -39,9 +39,9 @@ def handler(event, context):
         logger.error("Not a valid sagemaker inference result message")
         return
 
-    result = load_json_from_s3(message['responseParameters']['outputLocation'])
+    results = load_json_from_s3(message['responseParameters']['outputLocation'])
 
-    logger.info(result)
+    logger.info(results)
 
     # result = {
     #     "prompt_id": '11111111-1111-1111',
@@ -50,22 +50,22 @@ def handler(event, context):
     #     "output_path": f's3://{bucket_name}/images/',
     #     "temp_path": f's3://{bucket_name}/images/'
     # }
+    for item in results:
+        result = InferenceResult(**item)
 
-    result = InferenceResult(**result)
+        result = s3_scan_files(result)
 
-    result = s3_scan_files(result)
+        if message["invocationStatus"] != "Completed":
+            result.status = "failed"
 
-    if message["invocationStatus"] != "Completed":
-        result.status = "failed"
+        logger.info(result)
 
-    logger.info(result)
-
-    update_inference_job_table(prompt_id=result.prompt_id, key="status", value=result.status)
-    update_inference_job_table(prompt_id=result.prompt_id, key="output_path", value=result.output_path)
-    update_inference_job_table(prompt_id=result.prompt_id, key="output_files", value=result.output_files)
-    update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
-    update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
-    update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
+        update_inference_job_table(prompt_id=result.prompt_id, key="status", value=result.status)
+        update_inference_job_table(prompt_id=result.prompt_id, key="output_path", value=result.output_path)
+        update_inference_job_table(prompt_id=result.prompt_id, key="output_files", value=result.output_files)
+        update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
+        update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
+        update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
     return {}
 
