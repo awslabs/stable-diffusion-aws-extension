@@ -33,10 +33,8 @@ logger.setLevel(logging.INFO)
 sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
 start_port = int(sagemaker_safe_port_range.split('-')[0])
 global apps
-apps = []
 
 global is_multi_gpu
-is_multi_gpu = False
 
 
 class ProcessState(Enum):
@@ -324,6 +322,8 @@ def start_comfy_servers():
         comfy_app = ComfyApp(host=LOCALHOST, port=port)
         comfy_app.start()
         global apps
+        if apps is None:
+            apps = []
         apps = apps.append(comfy_app)
 
 
