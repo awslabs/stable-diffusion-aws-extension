@@ -50,7 +50,7 @@ def handler(raw_event, ctx):
             if endpoint_name in execute_merge_req and execute_merge_req.get(endpoint_name) and len(execute_merge_req.get(endpoint_name)) > 0:
                 execute_merge_req.get(endpoint_name).append(inference_job.__dict__)
             else:
-                batch_id = uuid.uuid4().hex
+                batch_id = str(uuid.uuid4())
                 execute_merge_req[endpoint_name] = [inference_job.__dict__]
                 execute_merge_req_batch_id[endpoint_name] = batch_id
             inference_job.batch_id = execute_merge_req_batch_id.get(endpoint_name)
