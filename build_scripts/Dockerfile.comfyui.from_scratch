@@ -19,6 +19,19 @@ RUN mkdir -p /home/ubuntu/tools
 RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
 RUN tar xzvf /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /home/ubuntu/tools/
 
+RUN adduser --disabled-password --gecos '' ubuntu && \
+    apt-get update -y && \
+    apt-get install --no-install-recommends -y \
+                    git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc \
+                    pkg-config file curl protobuf-compiler mesa-utils \
+                    python3-dev libaio-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    mv s5cmd /usr/local/bin/
+
+
 # prepare environment fow ComfyUI
 RUN pip install -r /home/ubuntu/requirements.txt && \
     pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
