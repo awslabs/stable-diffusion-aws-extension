@@ -122,19 +122,11 @@ class ComfyApp:
         self.busy = False
 
     def start(self):
-        # cmd = "python main.py  --listen {} --port {}".format(self.host, self.port)
-        # self.process = Process(target=os.system, args=(cmd,))
-        # self.process.start()
         cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
         self.process = subprocess.Popen(cmd)
         os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
-        # if self.process and self.process.is_alive():
-        #     self.process.terminate()
-        #     self.start()
-        # else:
-        #     logger.info("Comfy app process is not running.")
         logger.info("Comfy app process is going to restart")
         if self.process and self.process.poll() is None:
             os.environ['ALREADY_INIT'] = 'false'
@@ -175,8 +167,6 @@ def start_comfy_servers():
         comfy_app = ComfyApp(host=LOCALHOST, port=port)
         comfy_app.start()
         global available_apps
-        if available_apps is None:
-            available_apps = []
         available_apps.append(comfy_app)
 
 
