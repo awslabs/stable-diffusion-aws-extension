@@ -318,7 +318,7 @@ def start_comfy_servers():
         is_multi_gpu = True
     else:
         is_multi_gpu = False
-    for gpu_num in gpu_nums:
+    for gpu_num in range(gpu_nums):
         logger.info(f"start comfy server by device_id: {gpu_num}")
         port = start_port + gpu_num
         comfy_app = ComfyApp(host=LOCALHOST, port=port)
