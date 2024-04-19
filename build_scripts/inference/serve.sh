@@ -325,41 +325,41 @@ comfy_launch_from_public_s3(){
 
 # -------------------- startup --------------------
 
-#if [[ $IMAGE_URL == *"dev"* ]]; then
-#  download_conda
-#  if [ "$SERVICE_TYPE" == "sd" ]; then
-#      sd_install_build
-#      /trim_sd.sh
-#      sd_cache_endpoint
-#      sd_launch
-#      exit 1
-#  else
-#      comfy_install_build
-#      /trim_comfy.sh
-#      comfy_cache_endpoint
-#      comfy_launch
-#      exit 1
-#  fi
-#fi
-
-output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
-if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
-  echo "Use endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
+if [[ $IMAGE_URL == *"dev"* ]]; then
+  download_conda
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_launch_from_private_s3 "$CACHE_ENDPOINT"
-    exit 1
+      sd_install_build
+      /trim_sd.sh
+      sd_cache_endpoint
+      sd_launch
+      exit 1
   else
-    comfy_launch_from_private_s3 "$CACHE_ENDPOINT"
-    exit 1
+      comfy_install_build
+      /trim_comfy.sh
+#      comfy_cache_endpoint
+      comfy_launch
+      exit 1
   fi
 fi
 
-if [ "$SERVICE_TYPE" == "sd" ]; then
-  echo "Use public cache: s3://$CACHE_PUBLIC_SD"
-  sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
-  exit 1
-else
-  echo "Use public cache: s3://$CACHE_PUBLIC_COMFY"
-  comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
-  exit 1
-fi
+#output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
+#if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
+#  echo "Use endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
+#  if [ "$SERVICE_TYPE" == "sd" ]; then
+#    sd_launch_from_private_s3 "$CACHE_ENDPOINT"
+#    exit 1
+#  else
+#    comfy_launch_from_private_s3 "$CACHE_ENDPOINT"
+#    exit 1
+#  fi
+#fi
+#
+#if [ "$SERVICE_TYPE" == "sd" ]; then
+#  echo "Use public cache: s3://$CACHE_PUBLIC_SD"
+#  sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
+#  exit 1
+#else
+#  echo "Use public cache: s3://$CACHE_PUBLIC_COMFY"
+#  comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
+#  exit 1
+#fi
