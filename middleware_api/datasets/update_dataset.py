@@ -32,15 +32,15 @@ def handler(raw_event, context):
     try:
         logger.info(json.dumps(raw_event))
         event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
-        dataset_id = raw_event['pathParameters']['id']
+        dataset_name = raw_event['pathParameters']['id']
 
         permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         raw_dataset_info = ddb_service.get_item(table=dataset_info_table, key_values={
-            'dataset_name': dataset_id
+            'dataset_name': dataset_name
         })
         if not raw_dataset_info or len(raw_dataset_info) == 0:
-            return not_found(message=f'dataset {dataset_id} is not found')
+            return not_found(message=f'dataset {dataset_name} is not found')
 
         dataset_info = DatasetInfo(**raw_dataset_info)
         new_status = DatasetStatus[event.status]

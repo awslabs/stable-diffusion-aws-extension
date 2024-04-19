@@ -36,7 +36,7 @@ export class PingApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        operationName: 'PingResponse',
+        operationName: 'Ping',
         methodResponses: [
           ApiModels.methodResponse(this.responseModel()),
           ApiModels.methodResponses400(),

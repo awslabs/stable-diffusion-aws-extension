@@ -7,9 +7,9 @@
   },
   "servers": [
     {
-      "url": "https://{ApiGatewayUrl}.execute-api.{Region}.{Domain}/prod/",
+      "url": "https://{ApiId}.execute-api.{Region}.{Domain}/prod/",
       "variables": {
-        "ApiGatewayUrl": {
+        "ApiId": {
           "default": "xxxxxx"
         },
         "Region": {
@@ -83,9 +83,9 @@
             "api_key": []
           }
         ],
-        "summary": "RootAPI",
+        "summary": "Root API (RootAPI)",
         "tags": [
-          "Others"
+          "Service"
         ]
       },
       "options": {
@@ -2907,7 +2907,7 @@
     },
     "/ping": {
       "get": {
-        "operationId": "PingResponse",
+        "operationId": "Ping",
         "responses": {
           "200": {
             "description": "200 response",
@@ -2983,7 +2983,7 @@
             "api_key": []
           }
         ],
-        "summary": "Ping API (PingResponse)",
+        "summary": "Ping API (Ping)",
         "tags": [
           "Service"
         ]
@@ -3089,9 +3089,9 @@
             "api_key": []
           }
         ],
-        "summary": "CreatePrepare",
+        "summary": "Create Prepare (CreatePrepare)",
         "tags": [
-          "Others"
+          "Prepare"
         ]
       },
       "options": {
@@ -3195,9 +3195,9 @@
             "api_key": []
           }
         ],
-        "summary": "GetPrepare",
+        "summary": "Get Prepare (GetPrepare)",
         "tags": [
-          "Others"
+          "Prepare"
         ]
       },
       "options": {
@@ -3573,7 +3573,7 @@
     },
     "/sync": {
       "post": {
-        "operationId": "SyncMsg",
+        "operationId": "SyncMessage",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3642,9 +3642,9 @@
             "api_key": []
           }
         ],
-        "summary": "SyncMsg",
+        "summary": "Sync Message (SyncMessage)",
         "tags": [
-          "Others"
+          "Sync"
         ]
       },
       "options": {
@@ -3679,7 +3679,7 @@
     },
     "/sync/{id}": {
       "get": {
-        "operationId": "GetSyncMsg",
+        "operationId": "GetSyncMessage",
         "parameters": [
           {
             "name": "id",
@@ -3748,9 +3748,9 @@
             "api_key": []
           }
         ],
-        "summary": "GetSyncMsg",
+        "summary": "Get Sync Message (GetSyncMessage)",
         "tags": [
-          "Others"
+          "Sync"
         ]
       },
       "options": {
@@ -8773,6 +8773,14 @@
     {
       "name": "Trainings",
       "description": "Manage Trainings"
+    },
+    {
+      "name": "Prepare",
+      "description": "Sync files to Endpoint"
+    },
+    {
+      "name": "Sync",
+      "description": "Sync Message from Endpoint"
     },
     {
       "name": "Others",

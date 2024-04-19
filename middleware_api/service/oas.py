@@ -70,7 +70,11 @@ tags = [
 ]
 
 summaries = {
-    "PingResponse": {
+    "RootAPI": {
+        "summary": "Root API",
+        "tags": ["Service"]
+    },
+    "Ping": {
         "summary": "Ping API",
         "tags": ["Service"]
     },
@@ -240,9 +244,9 @@ def handler(event: dict, context: LambdaContext):
 
         json_schema['servers'] = [
             {
-                "url": "https://{ApiGatewayUrl}.execute-api.{Region}.{Domain}/prod/",
+                "url": "https://{ApiId}.execute-api.{Region}.{Domain}/prod/",
                 "variables": {
-                    "ApiGatewayUrl": {
+                    "ApiId": {
                         "default": "xxxxxx"
                     },
                     "Region": {
