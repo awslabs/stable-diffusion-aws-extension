@@ -89,7 +89,7 @@ def ping():
     comfy_app = check_available_app(False)
     if comfy_app is None:
         raise HTTPException(status_code=500)
-    logger.info(f"check status start   url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    logger.info(f"check status start url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
     response = requests.get(f"http://{PHY_LOCALHOST}:{comfy_app.port}/queue")
     if response.status_code != 200:
         raise HTTPException(status_code=500)
