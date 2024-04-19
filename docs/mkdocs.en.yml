@@ -44,7 +44,6 @@ nav:
         - API Inference Process: developer-guide/api_inference_process.md
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
-        - OpenAPI Specification: developer-guide/oas.md
         - API Version & Details:
             - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md

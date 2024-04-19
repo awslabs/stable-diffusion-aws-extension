@@ -2,36 +2,32 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
-    "description": "Extension for Stable Diffusion on AWS API - v1.5.0-fe21616",
-    "version": "v1.5.0"
+    "description": "Extension for Stable Diffusion on AWS API - dev",
+    "version": "dev"
   },
   "servers": [
     {
-      "url": "{ApiGatewayUrl}",
+      "url": "https://{ApiGatewayUrl}.execute-api.{Region}.{Domain}/prod/",
       "variables": {
         "ApiGatewayUrl": {
-          "default": "https://xxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod/"
+          "default": "xxxxxx"
+        },
+        "Region": {
+          "default": "ap-northeast-1"
+        },
+        "Domain": {
+          "default": "amazonaws.com"
         }
       }
     }
   ],
   "paths": {
-    "/inferences/{id}": {
+    "/": {
       "get": {
-        "operationId": "GetInferenceJob",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "RootAPI",
         "responses": {
-          "404": {
-            "description": "404 response",
+          "401": {
+            "description": "401 response",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -42,7 +38,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/404"
+                  "$ref": "#/components/schemas/401"
                 }
               }
             }
@@ -59,24 +55,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetInferenceJobResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
+                  "$ref": "#/components/schemas/RootAPIResponse"
                 }
               }
             }
@@ -103,19 +82,13 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "RootAPI",
+        "tags": [
+          "Others"
         ]
       },
       "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "204": {
             "description": "204 response",
@@ -138,15 +111,19 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/roles": {
+    "/api": {
       "get": {
-        "operationId": "ListRoles",
+        "operationId": "GetApiOAS",
         "responses": {
-          "404": {
-            "description": "404 response",
+          "401": {
+            "description": "401 response",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -157,7 +134,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/404"
+                  "$ref": "#/components/schemas/401"
                 }
               }
             }
@@ -174,24 +151,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListRolesResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
+                  "$ref": "#/components/schemas/GetApiOASResponse"
                 }
               }
             }
@@ -218,216 +178,10 @@
           {
             "api_key": []
           }
-        ]
-      },
-      "post": {
-        "operationId": "CreateRole",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRole"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "201 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateRoleResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "DeleteRoles",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteRoles"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/204"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
+        ],
+        "summary": "Get OAS (GetApiOAS)",
+        "tags": [
+          "Service"
         ]
       },
       "options": {
@@ -453,132 +207,11 @@
             },
             "content": {}
           }
-        }
-      }
-    },
-    "/trainings/{id}": {
-      "get": {
-        "operationId": "GetTraining",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTrainResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
         },
-        "security": [
-          {
-            "api_key": []
-          }
+        "summary": "",
+        "tags": [
+          "Others"
         ]
-      },
-      "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
       }
     },
     "/checkpoints": {
@@ -695,6 +328,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "List Checkpoints (ListCheckpoints)",
+        "tags": [
+          "Checkpoints"
         ]
       },
       "post": {
@@ -817,6 +454,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Create Checkpoint (CreateCheckpoint)",
+        "tags": [
+          "Checkpoints"
         ]
       },
       "delete": {
@@ -922,6 +563,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Delete Checkpoints (DeleteCheckpoints)",
+        "tags": [
+          "Checkpoints"
         ]
       },
       "options": {
@@ -947,17 +592,1008 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/sync": {
-      "post": {
-        "operationId": "SyncMsg",
+    "/checkpoints/{id}": {
+      "put": {
+        "operationId": "UpdateCheckpoint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SyncMsg"
+                "$ref": "#/components/schemas/UpdateCheckPoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "504": {
+            "description": "504 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/504"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCheckpointResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "202 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCheckpointNameResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Update Checkpoint (UpdateCheckpoint)",
+        "tags": [
+          "Checkpoints"
+        ]
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/config": {
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/datasets": {
+      "get": {
+        "operationId": "ListDatasets",
+        "parameters": [
+          {
+            "name": "exclusive_start_key",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dataset_status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDatasetsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List Datasets (ListDatasets)",
+        "tags": [
+          "Datasets"
+        ]
+      },
+      "post": {
+        "operationId": "CreateDataset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDataset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "504": {
+            "description": "504 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/504"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "201 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDatasetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Create Dataset (CreateDataset)",
+        "tags": [
+          "Datasets"
+        ]
+      },
+      "delete": {
+        "operationId": "DeleteDatasets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteDatasets"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/204"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Delete Datasets (DeleteDatasets)",
+        "tags": [
+          "Datasets"
+        ]
+      },
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/datasets/{id}": {
+      "get": {
+        "operationId": "GetDataset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDatasetResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get Dataset (GetDataset)",
+        "tags": [
+          "Datasets"
+        ]
+      },
+      "put": {
+        "operationId": "UpdateDataset",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDataset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateDatasetsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Update Dataset (UpdateDataset)",
+        "tags": [
+          "Datasets"
+        ]
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/endpoints": {
+      "get": {
+        "operationId": "ListEndpoints",
+        "parameters": [
+          {
+            "name": "exclusive_start_key",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListEndpointsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List Endpoints (ListEndpoints)",
+        "tags": [
+          "Endpoints"
+        ]
+      },
+      "post": {
+        "operationId": "CreateEndpoint",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEndpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "202 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateEndpointResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Create Endpoint (CreateEndpoint)",
+        "tags": [
+          "Endpoints"
+        ]
+      },
+      "delete": {
+        "operationId": "DeleteEndpoints",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteEndpoints"
               }
             }
           },
@@ -998,32 +1634,6 @@
               }
             }
           },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "responses": {
           "204": {
             "description": "204 response",
             "headers": {
@@ -1031,67 +1641,12 @@
                 "schema": {
                   "type": "string"
                 }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/prepare/{id}": {
-      "get": {
-        "operationId": "GetPrepare",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
               }
             },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
+                  "$ref": "#/components/schemas/204"
                 }
               }
             }
@@ -1118,19 +1673,13 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Delete Endpoints (DeleteEndpoints)",
+        "tags": [
+          "Endpoints"
         ]
       },
       "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "204": {
             "description": "204 response",
@@ -1152,275 +1701,12 @@
               }
             },
             "content": {}
-          }
-        }
-      }
-    },
-    "/inferences/{id}/start": {
-      "put": {
-        "operationId": "StartInferences",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "504": {
-            "description": "504 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/504"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StartInferenceJobRealtimeResponse"
-                }
-              }
-            }
-          },
-          "202": {
-            "description": "202 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StartInferenceJobAsyncResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
           }
         },
-        "security": [
-          {
-            "api_key": []
-          }
+        "summary": "",
+        "tags": [
+          "Others"
         ]
-      },
-      "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/sync/{id}": {
-      "get": {
-        "operationId": "GetSyncMsg",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
       }
     },
     "/executes": {
@@ -1516,6 +1802,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "List Executes (ListExecutes)",
+        "tags": [
+          "Executes"
         ]
       },
       "post": {
@@ -1604,6 +1894,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Create Execute (CreateExecute)",
+        "tags": [
+          "Executes"
         ]
       },
       "delete": {
@@ -1692,462 +1986,10 @@
           {
             "api_key": []
           }
-        ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/api": {
-      "get": {
-        "operationId": "GetApiOAS",
-        "responses": {
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetApiOASResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/template": {
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/users": {
-      "get": {
-        "operationId": "ListUsers",
-        "parameters": [
-          {
-            "name": "show_password",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
         ],
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListUsersResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "post": {
-        "operationId": "CreateUser",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUser"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "201 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateUserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "DeleteUsers",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteUsers"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/204"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
+        "summary": "Delete Executes (DeleteExecutes)",
+        "tags": [
+          "Executes"
         ]
       },
       "options": {
@@ -2173,436 +2015,11 @@
             },
             "content": {}
           }
-        }
-      }
-    },
-    "/prepare": {
-      "post": {
-        "operationId": "CreatePrepare",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Prepare"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
+        "summary": "",
+        "tags": [
+          "Others"
         ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/trainings": {
-      "get": {
-        "operationId": "ListTrainings",
-        "parameters": [
-          {
-            "name": "exclusive_start_key",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListTrainingsResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "post": {
-        "operationId": "CreateTraining",
-        "requestBody": {
-          "content": {
-            "$default": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTrainingJob"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "201 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateTrainResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "DeleteTrainings",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteTrainingJobs"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/204"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
       }
     },
     "/executes/{id}": {
@@ -2709,6 +2126,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Get Execute (GetExecute)",
+        "tags": [
+          "Executes"
         ]
       },
       "options": {
@@ -2744,771 +2165,11 @@
             },
             "content": {}
           }
-        }
-      }
-    },
-    "/ping": {
-      "get": {
-        "operationId": "PingResponse",
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PingResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
         },
-        "security": [
-          {
-            "api_key": []
-          }
+        "summary": "",
+        "tags": [
+          "Others"
         ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/datasets": {
-      "get": {
-        "operationId": "ListDatasets",
-        "parameters": [
-          {
-            "name": "exclusive_start_key",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "dataset_status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListDatasetsResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "post": {
-        "operationId": "CreateDataset",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDataset"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "504": {
-            "description": "504 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/504"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "201 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateDatasetResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "DeleteDatasets",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteDatasets"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/204"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/": {
-      "get": {
-        "operationId": "RootAPI",
-        "responses": {
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RootAPIResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/datasets/{id}": {
-      "get": {
-        "operationId": "GetDataset",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "404 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/404"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetDatasetResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "put": {
-        "operationId": "UpdateDataset",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDataset"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "200 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateDatasetsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "400 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/400"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "401 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/401"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "403 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/403"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ]
-      },
-      "options": {
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
-      }
-    },
-    "/config": {
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        }
       }
     },
     "/inferences": {
@@ -3611,6 +2272,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "List Inferences (ListInferences)",
+        "tags": [
+          "Inferences"
         ]
       },
       "post": {
@@ -3750,6 +2415,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Create Inference Job (CreateInferenceJob)",
+        "tags": [
+          "Inferences"
         ]
       },
       "delete": {
@@ -3838,6 +2507,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Delete Inference Jobs (DeleteInferenceJobs)",
+        "tags": [
+          "Inferences"
         ]
       },
       "options": {
@@ -3863,29 +2536,44 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/endpoints": {
+    "/inferences/{id}": {
       "get": {
-        "operationId": "ListEndpoints",
+        "operationId": "GetInferenceJob",
         "parameters": [
           {
-            "name": "exclusive_start_key",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
+            "name": "id",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
         "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
           "200": {
             "description": "200 response",
             "headers": {
@@ -3898,7 +2586,157 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListEndpointsResponse"
+                  "$ref": "#/components/schemas/GetInferenceJobResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get Inference Job (GetInferenceJob)",
+        "tags": [
+          "Inferences"
+        ]
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/inferences/{id}/start": {
+      "put": {
+        "operationId": "StartInferences",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "504": {
+            "description": "504 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/504"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartInferenceJobRealtimeResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "202 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartInferenceJobAsyncResponse"
                 }
               }
             }
@@ -3959,15 +2797,539 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Start Inference Job (StartInferences)",
+        "tags": [
+          "Inferences"
         ]
       },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/model": {
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/node": {
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/ping": {
+      "get": {
+        "operationId": "PingResponse",
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Ping API (PingResponse)",
+        "tags": [
+          "Service"
+        ]
+      },
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/prepare": {
       "post": {
-        "operationId": "CreateEndpoint",
+        "operationId": "CreatePrepare",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateEndpoint"
+                "$ref": "#/components/schemas/Prepare"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "CreatePrepare",
+        "tags": [
+          "Others"
+        ]
+      },
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/prepare/{id}": {
+      "get": {
+        "operationId": "GetPrepare",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "GetPrepare",
+        "tags": [
+          "Others"
+        ]
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/roles": {
+      "get": {
+        "operationId": "ListRoles",
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRolesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List Roles (ListRoles)",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "post": {
+        "operationId": "CreateRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRole"
               }
             }
           },
@@ -3991,8 +3353,8 @@
               }
             }
           },
-          "202": {
-            "description": "202 response",
+          "201": {
+            "description": "201 response",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -4003,7 +3365,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateEndpointResponse"
+                  "$ref": "#/components/schemas/CreateRoleResponse"
                 }
               }
             }
@@ -4064,21 +3426,42 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Create Role (CreateRole)",
+        "tags": [
+          "Roles"
         ]
       },
       "delete": {
-        "operationId": "DeleteEndpoints",
+        "operationId": "DeleteRoles",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteEndpoints"
+                "$ref": "#/components/schemas/DeleteRoles"
               }
             }
           },
           "required": true
         },
         "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
           "400": {
             "description": "400 response",
             "headers": {
@@ -4152,6 +3535,10 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Delete Roles (DeleteRoles)",
+        "tags": [
+          "Roles"
         ]
       },
       "options": {
@@ -4177,10 +3564,89 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/node": {
+    "/sync": {
+      "post": {
+        "operationId": "SyncMsg",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncMsg"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "SyncMsg",
+        "tags": [
+          "Others"
+        ]
+      },
       "options": {
         "responses": {
           "204": {
@@ -4204,12 +3670,16 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/checkpoints/{id}": {
-      "put": {
-        "operationId": "UpdateCheckpoint",
+    "/sync/{id}": {
+      "get": {
+        "operationId": "GetSyncMsg",
         "parameters": [
           {
             "name": "id",
@@ -4220,19 +3690,9 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCheckPoint"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "504": {
-            "description": "504 response",
+          "400": {
+            "description": "400 response",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -4243,7 +3703,160 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/504"
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "GetSyncMsg",
+        "tags": [
+          "Others"
+        ]
+      },
+      "options": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/template": {
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/trainings": {
+      "get": {
+        "operationId": "ListTrainings",
+        "parameters": [
+          {
+            "name": "exclusive_start_key",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
                 }
               }
             }
@@ -4260,13 +3873,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateCheckpointResponse"
+                  "$ref": "#/components/schemas/ListTrainingsResponse"
                 }
               }
             }
           },
-          "202": {
-            "description": "202 response",
+          "401": {
+            "description": "401 response",
             "headers": {
               "Access-Control-Allow-Origin": {
                 "schema": {
@@ -4277,7 +3890,82 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateCheckpointNameResponse"
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List Trainings (ListTrainings)",
+        "tags": [
+          "Trainings"
+        ]
+      },
+      "post": {
+        "operationId": "CreateTraining",
+        "requestBody": {
+          "content": {
+            "$default": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingJob"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "201 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTrainResponse"
                 }
               }
             }
@@ -4338,6 +4026,242 @@
           {
             "api_key": []
           }
+        ],
+        "summary": "Create Training (CreateTraining)",
+        "tags": [
+          "Trainings"
+        ]
+      },
+      "delete": {
+        "operationId": "DeleteTrainings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteTrainingJobs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/204"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Delete Trainings (DeleteTrainings)",
+        "tags": [
+          "Trainings"
+        ]
+      },
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
+    "/trainings/{id}": {
+      "get": {
+        "operationId": "GetTraining",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTrainResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get Training (GetTraining)",
+        "tags": [
+          "Trainings"
         ]
       },
       "options": {
@@ -4373,10 +4297,340 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     },
-    "/model": {
+    "/users": {
+      "get": {
+        "operationId": "ListUsers",
+        "parameters": [
+          {
+            "name": "show_password",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUsersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List Users (ListUsers)",
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "CreateUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUser"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "201 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Create User (CreateUser)",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "DeleteUsers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteUsers"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/204"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Delete Users (DeleteUsers)",
+        "tags": [
+          "Users"
+        ]
+      },
       "options": {
         "responses": {
           "204": {
@@ -4400,7 +4654,11 @@
             },
             "content": {}
           }
-        }
+        },
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
       }
     }
   },
@@ -4855,7 +5113,8 @@
               200
             ]
           }
-        }
+        },
+        "description": "Response Model for Ping API"
       },
       "GetTrainResponse": {
         "title": "GetTrainingJob",
@@ -4966,7 +5225,8 @@
       "GetApiOASResponse": {
         "title": "ApiDoc",
         "type": "object",
-        "additionalProperties": true
+        "additionalProperties": true,
+        "description": "Response Model for OAS"
       },
       "ListRolesResponse": {
         "title": "ListRoles",
@@ -7335,7 +7595,8 @@
               200
             ]
           }
-        }
+        },
+        "description": "Response Model RootAPIResponse"
       },
       "Execute": {
         "title": "Execute",
@@ -8475,5 +8736,47 @@
         "in": "header"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Service",
+      "description": "Service API"
+    },
+    {
+      "name": "Roles",
+      "description": "Manage Roles"
+    },
+    {
+      "name": "Users",
+      "description": "Manage Users"
+    },
+    {
+      "name": "Endpoints",
+      "description": "Manage Endpoints"
+    },
+    {
+      "name": "Checkpoints",
+      "description": "Manage Checkpoints"
+    },
+    {
+      "name": "Inferences",
+      "description": "Manage Inferences"
+    },
+    {
+      "name": "Executes",
+      "description": "Manage Executes"
+    },
+    {
+      "name": "Datasets",
+      "description": "Manage Datasets"
+    },
+    {
+      "name": "Trainings",
+      "description": "Manage Trainings"
+    },
+    {
+      "name": "Others",
+      "description": "Others API"
+    }
+  ]
 }

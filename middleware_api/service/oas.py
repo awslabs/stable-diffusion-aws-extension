@@ -56,6 +56,14 @@ tags = [
         "description": "Manage Trainings"
     },
     {
+        "name": "Prepare",
+        "description": "Sync files to Endpoint"
+    },
+    {
+        "name": "Sync",
+        "description": "Sync Message from Endpoint"
+    },
+    {
         "name": "Others",
         "description": "Others API"
     },
@@ -130,7 +138,6 @@ summaries = {
         "summary": "Delete Users",
         "tags": ["Users"]
     },
-
     "ListTrainings": {
         "summary": "List Trainings",
         "tags": ["Trainings"]
@@ -195,6 +202,22 @@ summaries = {
         "summary": "Delete Endpoints",
         "tags": ["Endpoints"]
     },
+    "SyncMessage": {
+        "summary": "Sync Message",
+        "tags": ["Sync"]
+    },
+    "GetSyncMessage": {
+        "summary": "Get Sync Message",
+        "tags": ["Sync"]
+    },
+    "CreatePrepare": {
+        "summary": "Create Prepare",
+        "tags": ["Prepare"]
+    },
+    "GetPrepare": {
+        "summary": "Get Prepare",
+        "tags": ["Prepare"]
+    },
 }
 
 
@@ -217,11 +240,17 @@ def handler(event: dict, context: LambdaContext):
 
         json_schema['servers'] = [
             {
-                "url": "{ApiGatewayUrl}",
+                "url": "https://{ApiGatewayUrl}.execute-api.{Region}.{Domain}/prod/",
                 "variables": {
                     "ApiGatewayUrl": {
-                        "default": "https://xxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod/"
-                    }
+                        "default": "xxxxxx"
+                    },
+                    "Region": {
+                        "default": "ap-northeast-1"
+                    },
+                    "Domain": {
+                        "default": "amazonaws.com"
+                    },
                 }
             }
         ]
@@ -281,8 +310,11 @@ def summary(method: any):
     if 'operationId' in method:
         if method['operationId'] in summaries:
             item = summaries[method['operationId']]
-            item["summary"] = item["summary"] + f" ({method['operationId']})"
-            return item
+
+            return {
+                "summary": item["summary"] + f" ({method['operationId']})",
+                "tags": item['tags'],
+            }
 
         return {
             "summary": method['operationId'],
