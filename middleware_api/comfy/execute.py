@@ -59,7 +59,7 @@ class ExecuteEvent:
     client_id: Optional[str] = None
     need_prepare: bool = False
     prepare_props: Optional[PrepareProps] = None
-    multi_async = Optional[bool] = False
+    multi_async: bool = False
 
 
 def sen_sqs_msg(message_body, endpoint_name):
