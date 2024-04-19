@@ -41,20 +41,7 @@ is_multi_gpu=False
 
 
 async def send_request(request_obj):
-    comfy_app = get_available_app()
-    i = 0
-    while comfy_app is None:
-        comfy_app = get_available_app()
-        if comfy_app is None:
-            await asyncio.sleep(1)
-            i += 1
-            if i >= 3:
-                logger.info(f"There is no available comfy_app for {i} attempts.")
-                break
-    if comfy_app is None:
-        logger.info(f"There is no available comfy_app! Ignoring this request: {request_obj}")
-        return None
-
+    comfy_app = check_available_app(True)
     comfy_app.busy = True
     logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/invocations")
     response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/invocations", json=request_obj)
@@ -77,7 +64,9 @@ async def invocations(request: Request):
         logger.info(f'Finished invocations {results}')
         return results
     else:
-        comfy_app = get_available_app()
+        comfy_app = check_available_app(True)
+        if comfy_app is None:
+            raise HTTPException(status_code=500,detail=f"COMFY service not available")
         req = await request.json()
         logger.info(f"Starting single invocation on {comfy_app.port} {req}")
         result = []
@@ -95,8 +84,16 @@ def ping():
     init_already = os.environ.get('ALREADY_INIT')
     if init_already and init_already.lower() == 'false':
         raise HTTPException(status_code=500)
-    else:
-        return {'status': 'Healthy'}
+    # else:
+    #     return {'status': 'Healthy'}
+    comfy_app = check_available_app(False)
+    if comfy_app is None:
+        raise HTTPException(status_code=500)
+    logger.info(f"check status start   url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    response = requests.get(f"http://{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    if response.status_code != 200:
+        raise HTTPException(status_code=500)
+    return {'status': 'Healthy'}
 
 
 class Api:
@@ -149,23 +146,6 @@ class ComfyApp:
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
 
-    async def execute_entry(self, req):
-        self.busy = True
-        req['out_path'] = self.port
-        logger.info(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{self.port}/execute_proxy")
-        response = requests.post(f"http://{PHY_LOCALHOST}:{self.port}/execute_proxy", json=req)
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code,
-                                detail=f"COMFY service returned an error: {response.text}")
-        return response.json()
-
-    def check_status(self):
-        logger.info(f"check status start   url:{PHY_LOCALHOST}:{self.port}/queue")
-        response = requests.get(f"http://{PHY_LOCALHOST}:{self.port}/queue")
-        if response.status_code != 200:
-            return False
-        return True
-
 
 def get_gpu_count():
     try:
@@ -198,20 +178,41 @@ def start_comfy_servers():
         available_apps.append(comfy_app)
 
 
-def get_available_app():
+def get_available_app(need_check_busy: bool):
     global available_apps
     if available_apps is None:
         return None
     for item in available_apps:
-        if item.is_port_ready() and not item.busy:
+        if need_check_busy:
+            if item.is_port_ready() and not item.busy:
+                return item
+        else:
             return item
+    return None
+
+
+def check_available_app(need_check_busy: bool):
+    comfy_app = get_available_app(need_check_busy)
+    i = 0
+    while comfy_app is None:
+        comfy_app = get_available_app(need_check_busy)
+        if comfy_app is None:
+            asyncio.sleep(1)
+            i += 1
+            if i >= 3:
+                logger.info(f"There is no available comfy_app for {i} attempts.")
+                break
+    if comfy_app is None:
+        logger.info(f"There is no available comfy_app! Ignoring this request")
+        return None
+    return comfy_app
 
 
 def check_sync():
     logger.info("start check_sync!")
     while True:
         try:
-            comfy_app = get_available_app()
+            comfy_app = check_available_app(False)
             if comfy_app is None:
                 raise HTTPException(status_code=500,
                                     detail=f"COMFY service returned an error: no avaliable app")
