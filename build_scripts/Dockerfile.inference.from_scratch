@@ -23,8 +23,6 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 COPY install_sd.sh /home/ubuntu/
 COPY install_comfy.sh /home/ubuntu/
-COPY trim_sd /
-COPY trim_comfy /
 
 COPY inference/serve /
 RUN chmod +x /serve
