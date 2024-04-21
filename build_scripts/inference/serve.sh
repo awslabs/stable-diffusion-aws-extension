@@ -1,0 +1,5 @@
+#!/bin/bash
+
+arch
+
+/serve
