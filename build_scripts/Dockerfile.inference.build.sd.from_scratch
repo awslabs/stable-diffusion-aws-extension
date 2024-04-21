@@ -26,11 +26,11 @@ RUN mkdir -p /home/ubuntu/conda/lib/ && \
     wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
 
 COPY install_sd.sh /home/ubuntu/
-COPY trim_sd.sh /
+COPY trim_sd /
 
 RUN cd /home/ubuntu || exit 1 && \
     bash install_sd.sh && \
-    bash /trim_sd.sh
+    bash /trim_sd
 
 #COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
 # RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
@@ -56,10 +56,10 @@ RUN cd /home/ubuntu/stable-diffusion-webui/ || exit 1 && \
 COPY inference/default_config.yaml /home/ubuntu/stable-diffusion-webui/
 # -------------------------- accelerate in gcr --------------------------
 
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
+COPY inference/serve /
+RUN chmod +x /serve
 
 COPY inference/controller.py /
 RUN chmod +x /controller.py
 
-ENTRYPOINT ["bash", "/serve.sh"]
+ENTRYPOINT ["bash", "/serve"]
