@@ -1,5 +1,4 @@
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
-#FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 
 SHELL ["/bin/bash", "-c"]
 
@@ -24,13 +23,13 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 COPY install_sd.sh /home/ubuntu/
 COPY install_comfy.sh /home/ubuntu/
-COPY trim_sd.sh /
-COPY trim_comfy.sh /
+COPY trim_sd /
+COPY trim_comfy /
 
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
+COPY inference/serve /
+RUN chmod +x /serve
 
 COPY inference/controller.py /
 RUN chmod +x /controller.py
 
-ENTRYPOINT ["bash", "/serve.sh"]
+ENTRYPOINT ["bash", "/serve"]
