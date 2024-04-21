@@ -72,7 +72,6 @@ set_conda(){
 
 download_conda(){
   echo "---------------------------------------------------------------------------------"
-  echo "downloading conda ..."
   mkdir -p /home/ubuntu/conda/lib/
   wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
   wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
@@ -245,7 +244,6 @@ comfy_install_build(){
 comfy_cache_endpoint() {
   start_at=$(date +%s)
 
-  echo "collection big files..."
   upload_files=$(mktemp)
   big_files=$(find "/home/ubuntu/ComfyUI" -type f -size +2520k)
   for file in $big_files; do
@@ -263,12 +261,10 @@ comfy_cache_endpoint() {
   echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/" >> "$upload_files"
   echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/conda/" >> "$upload_files"
 
-  echo "upload files..."
   s5cmd run "$upload_files"
 
   end_at=$(date +%s)
   cost=$((end_at-start_at))
-  echo "sync endpoint files: $cost seconds"
 }
 
 comfy_launch(){
@@ -344,7 +340,6 @@ comfy_launch_from_public_s3(){
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
-  echo "Use endpoint cache: s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT"
   if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_private_s3 "$CACHE_ENDPOINT"
     exit 1
@@ -355,11 +350,9 @@ if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
 fi
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
-  echo "Use public cache: s3://$CACHE_PUBLIC_SD"
   sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
   exit 1
 else
-  echo "Use public cache: s3://$CACHE_PUBLIC_COMFY"
   comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
   exit 1
 fi
