@@ -2,8 +2,8 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
-    "description": "Extension for Stable Diffusion on AWS API - dev",
-    "version": "dev"
+    "description": "Extension for Stable Diffusion on AWS API - v1.5.0-42f41ac",
+    "version": "v1.5.0"
   },
   "servers": [
     {
