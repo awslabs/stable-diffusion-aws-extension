@@ -3,7 +3,7 @@ FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py
 # update environment
 RUN apt-get update -y
 
-RUN mkdir /home/ubuntu/ComfyUI && \
+RUN mkdir /home/ubuntu && \
     git clone https://github.com/comfyanonymous/ComfyUI.git /home/ubuntu/ComfyUI
     # git -C /home/ubuntu checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf
 
