@@ -20,7 +20,6 @@ import psutil
 from enum import Enum
 
 TIMEOUT_KEEP_ALIVE = 30
-# COMFY_PORT = 8188
 SAGEMAKER_PORT = 8080
 LOCALHOST = '0.0.0.0'
 PHY_LOCALHOST = '127.0.0.1'
@@ -35,53 +34,9 @@ logger.setLevel(logging.INFO)
 
 sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
 start_port = int(sagemaker_safe_port_range.split('-')[0])
-global available_apps
-available_apps=[]
+available_apps = []
+is_multi_gpu = False
 
-global is_multi_gpu
-is_multi_gpu=False
-
-
-# async def send_request(request_obj):
-#     comfy_app = check_available_app(True)
-#     try:
-#         if comfy_app is None:
-#             raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
-#         logger.info(f"Starting on {comfy_app.port} {request_obj}")
-#         comfy_app.busy = True
-#         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
-#         response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
-#         comfy_app.busy = False
-#         if response.status_code != 200:
-#             raise HTTPException(status_code=response.status_code,
-#                                 detail=f"COMFY service returned an error: {response.text}")
-#         return response.json()
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
-#     finally:
-#         comfy_app.busy = False
-#
-#
-# async def invocations(request: Request):
-#     global is_multi_gpu
-#     if is_multi_gpu:
-#         gpu_nums = get_gpu_count()
-#         logger.info(f"Number of GPUs: {gpu_nums}")
-#         req = await request.json()
-#         logger.info(f"Starting multi invocation {req}")
-#         tasks = [send_request(request_obj) for request_obj in req]
-#         results = await asyncio.gather(*tasks)
-#         logger.info(f'Finished invocations {results}')
-#         return results
-#     else:
-#         req = await request.json()
-#         result = []
-#         logger.info(f"Starting single invocation request is: {req}")
-#         for request_obj in req:
-#             response = send_request(request_obj)
-#             result.append(response)
-#         logger.info(f"Finished invocations result: {result}")
-#         return result
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
@@ -140,8 +95,7 @@ def ping():
     init_already = os.environ.get('ALREADY_INIT')
     if init_already and init_already.lower() == 'false':
         raise HTTPException(status_code=500)
-    # else:
-    #     return {'status': 'Healthy'}
+
     comfy_app = check_available_app(False)
     if comfy_app is None:
         raise HTTPException(status_code=500)
@@ -177,7 +131,9 @@ class ComfyApp:
         self.busy = False
 
     def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory", f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",f"/home/ubuntu/ComfyUI/temp/{self.device_id}/","--cuda-device", str(self.device_id)]
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
+               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
+               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
         self.process = subprocess.Popen(cmd)
         os.environ['ALREADY_INIT'] = 'true'
 
@@ -222,7 +178,6 @@ def start_comfy_servers():
         port = start_port + gpu_num
         comfy_app = ComfyApp(host=LOCALHOST, port=port, device_id=gpu_num)
         comfy_app.start()
-        global available_apps
         available_apps.append(comfy_app)
 
 
@@ -247,7 +202,7 @@ def check_available_app(need_check_busy: bool):
     while comfy_app is None:
         comfy_app = get_available_app(need_check_busy)
         if comfy_app is None:
-            asyncio.sleep(1)
+            time.sleep(1)
             i += 1
             if i >= 3:
                 logger.info(f"There is no available comfy_app for {i} attempts.")
@@ -284,15 +239,10 @@ if __name__ == "__main__":
     api = Api(app, queue_lock)
     start_comfy_servers()
 
-    # comfy_app = ComfyApp()
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
-
     check_sync_thread = threading.Thread(target=check_sync)
 
-    # comfy_app.start()
     api_process.start()
     check_sync_thread.start()
 
     api_process.join()
-
-
