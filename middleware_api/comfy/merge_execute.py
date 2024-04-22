@@ -63,7 +63,7 @@ def handler(raw_event, ctx):
             if not message or 'body' not in message:
                 logger.error("ignore empty msg")
                 return ok()
-            if not "body" in message or not message['body']:
+            if not message['body']:
                 logger.error("ignore empty body msg")
                 return ok()
             merge_job = json.loads(message['body'])
