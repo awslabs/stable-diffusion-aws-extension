@@ -79,6 +79,7 @@ async def invocations(request: Request):
                 raise HTTPException(status_code=response.status_code,
                                     detail=f"COMFY service returned an error: {response.text}")
             result.append(response.json())
+        logger.info(f"Finished invocations result: {result}")
         return result
 
 
