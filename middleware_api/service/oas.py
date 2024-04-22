@@ -275,7 +275,7 @@ def handler(event: dict, context: LambdaContext):
                 'Access-Control-Allow-Methods': '*',
                 'Access-Control-Allow-Credentials': True,
             },
-            'body': json.dumps(json_schema, cls=DecimalEncoder, indent=2)
+            'body': json.dumps(asdict(json_schema), cls=DecimalEncoder, indent=2)
         }
 
         return payload
