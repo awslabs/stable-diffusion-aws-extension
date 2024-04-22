@@ -57,7 +57,7 @@ export class GetSyncMsgApi {
 
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
-      operationName: 'GetSyncMsg',
+      operationName: 'GetSyncMessage',
       methodResponses: [
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),

@@ -103,6 +103,7 @@ def _trigger_sagemaker_training_job(
     """
 
     data = {
+        "id": train_job.id,
         "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
         "params": train_job.params,
         "s3-input-path": train_job.input_s3_location,

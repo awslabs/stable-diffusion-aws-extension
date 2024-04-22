@@ -59,7 +59,7 @@ export class SyncMsgApi {
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
-      operationName: 'SyncMsg',
+      operationName: 'SyncMessage',
       methodResponses: [
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),

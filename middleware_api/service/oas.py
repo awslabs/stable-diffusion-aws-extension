@@ -18,6 +18,212 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 esd_version = os.environ.get("ESD_VERSION")
 
+tags = [
+    {
+        "name": "Service",
+        "description": "Service API"
+    },
+    {
+        "name": "Roles",
+        "description": "Manage Roles"
+    },
+    {
+        "name": "Users",
+        "description": "Manage Users"
+    },
+    {
+        "name": "Endpoints",
+        "description": "Manage Endpoints"
+    },
+    {
+        "name": "Checkpoints",
+        "description": "Manage Checkpoints"
+    },
+    {
+        "name": "Inferences",
+        "description": "Manage Inferences"
+    },
+    {
+        "name": "Executes",
+        "description": "Manage Executes"
+    },
+    {
+        "name": "Datasets",
+        "description": "Manage Datasets"
+    },
+    {
+        "name": "Trainings",
+        "description": "Manage Trainings"
+    },
+    {
+        "name": "Prepare",
+        "description": "Sync files to Endpoint"
+    },
+    {
+        "name": "Sync",
+        "description": "Sync Message from Endpoint"
+    },
+    {
+        "name": "Others",
+        "description": "Others API"
+    },
+]
+
+summaries = {
+    "RootAPI": {
+        "summary": "Root API",
+        "tags": ["Service"]
+    },
+    "Ping": {
+        "summary": "Ping API",
+        "tags": ["Service"]
+    },
+    "ListRoles": {
+        "summary": "List Roles",
+        "tags": ["Roles"]
+    },
+    "GetInferenceJob": {
+        "summary": "Get Inference Job",
+        "tags": ["Inferences"]
+    },
+    "CreateRole": {
+        "summary": "Create Role",
+        "tags": ["Roles"]
+    },
+    "DeleteRoles": {
+        "summary": "Delete Roles",
+        "tags": ["Roles"]
+    },
+    "GetTraining": {
+        "summary": "Get Training",
+        "tags": ["Trainings"]
+    },
+    "ListCheckpoints": {
+        "summary": "List Checkpoints",
+        "tags": ["Checkpoints"]
+    },
+    "CreateCheckpoint": {
+        "summary": "Create Checkpoint",
+        "tags": ["Checkpoints"]
+    },
+    "DeleteCheckpoints": {
+        "summary": "Delete Checkpoints",
+        "tags": ["Checkpoints"]
+    },
+    "StartInferences": {
+        "summary": "Start Inference Job",
+        "tags": ["Inferences"]
+    },
+    "ListExecutes": {
+        "summary": "List Executes",
+        "tags": ["Executes"]
+    },
+    "CreateExecute": {
+        "summary": "Create Execute",
+        "tags": ["Executes"]
+    },
+    "DeleteExecutes": {
+        "summary": "Delete Executes",
+        "tags": ["Executes"]
+    },
+    "GetApiOAS": {
+        "summary": "Get OAS",
+        "tags": ["Service"]
+    },
+    "ListUsers": {
+        "summary": "List Users",
+        "tags": ["Users"]
+    },
+    "CreateUser": {
+        "summary": "Create User",
+        "tags": ["Users"]
+    },
+    "DeleteUsers": {
+        "summary": "Delete Users",
+        "tags": ["Users"]
+    },
+    "ListTrainings": {
+        "summary": "List Trainings",
+        "tags": ["Trainings"]
+    },
+    "CreateTraining": {
+        "summary": "Create Training",
+        "tags": ["Trainings"]
+    },
+    "DeleteTrainings": {
+        "summary": "Delete Trainings",
+        "tags": ["Trainings"]
+    },
+    "GetExecute": {
+        "summary": "Get Execute",
+        "tags": ["Executes"]
+    },
+    "ListDatasets": {
+        "summary": "List Datasets",
+        "tags": ["Datasets"]
+    },
+    "UpdateCheckpoint": {
+        "summary": "Update Checkpoint",
+        "tags": ["Checkpoints"]
+    },
+    "CreateDataset": {
+        "summary": "Create Dataset",
+        "tags": ["Datasets"]
+    },
+    "DeleteDatasets": {
+        "summary": "Delete Datasets",
+        "tags": ["Datasets"]
+    },
+    "GetDataset": {
+        "summary": "Get Dataset",
+        "tags": ["Datasets"]
+    },
+    "UpdateDataset": {
+        "summary": "Update Dataset",
+        "tags": ["Datasets"]
+    },
+    "ListInferences": {
+        "summary": "List Inferences",
+        "tags": ["Inferences"]
+    },
+    "CreateInferenceJob": {
+        "summary": "Create Inference Job",
+        "tags": ["Inferences"]
+    },
+    "DeleteInferenceJobs": {
+        "summary": "Delete Inference Jobs",
+        "tags": ["Inferences"]
+    },
+    "ListEndpoints": {
+        "summary": "List Endpoints",
+        "tags": ["Endpoints"]
+    },
+    "CreateEndpoint": {
+        "summary": "Create Endpoint",
+        "tags": ["Endpoints"]
+    },
+    "DeleteEndpoints": {
+        "summary": "Delete Endpoints",
+        "tags": ["Endpoints"]
+    },
+    "SyncMessage": {
+        "summary": "Sync Message",
+        "tags": ["Sync"]
+    },
+    "GetSyncMessage": {
+        "summary": "Get Sync Message",
+        "tags": ["Sync"]
+    },
+    "CreatePrepare": {
+        "summary": "Create Prepare",
+        "tags": ["Prepare"]
+    },
+    "GetPrepare": {
+        "summary": "Get Prepare",
+        "tags": ["Prepare"]
+    },
+}
+
 
 @tracer.capture_lambda_handler
 def handler(event: dict, context: LambdaContext):
@@ -38,14 +244,30 @@ def handler(event: dict, context: LambdaContext):
 
         json_schema['servers'] = [
             {
-                "url": "{ApiGatewayUrl}",
+                "url": "https://{ApiId}.execute-api.{Region}.{Domain}/prod/",
                 "variables": {
-                    "ApiGatewayUrl": {
-                        "default": "https://xxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod/"
-                    }
+                    "ApiId": {
+                        "default": "xxxxxx"
+                    },
+                    "Region": {
+                        "default": "ap-northeast-1"
+                    },
+                    "Domain": {
+                        "default": "amazonaws.com"
+                    },
                 }
             }
         ]
+
+        json_schema['tags'] = tags
+
+        for path in json_schema['paths']:
+            for method in json_schema['paths'][path]:
+                meta = summary(json_schema['paths'][path][method])
+                json_schema['paths'][path][method]['summary'] = meta["summary"]
+                json_schema['paths'][path][method]['tags'] = meta["tags"]
+
+        json_schema['paths'] = dict(sorted(json_schema['paths'].items(), key=lambda x: x[0]))
 
         payload = {
             'isBase64Encoded': False,
@@ -86,3 +308,24 @@ def replace_null(data):
             else:
                 data[i] = replace_null(item)
     return data
+
+
+def summary(method: any):
+    if 'operationId' in method:
+        if method['operationId'] in summaries:
+            item = summaries[method['operationId']]
+
+            return {
+                "summary": item["summary"] + f" ({method['operationId']})",
+                "tags": item['tags'],
+            }
+
+        return {
+            "summary": method['operationId'],
+            "tags": ["Others"],
+        }
+
+    return {
+        "summary": "",
+        "tags": ["Others"],
+    }
