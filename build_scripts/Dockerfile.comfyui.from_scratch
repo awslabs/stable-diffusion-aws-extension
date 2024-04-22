@@ -1,3 +1,4 @@
+#local test not really use ,do not delete!
 FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 
 # update environment
