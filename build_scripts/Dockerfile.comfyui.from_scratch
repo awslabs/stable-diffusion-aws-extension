@@ -42,7 +42,7 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 RUN echo "/home/ubuntu/ComfyUI" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
-WORKDIR /home/ubuntu
+WORKDIR /home/ubuntu/ComfyUI
 
 ENV ON_DOCKER true
 #ENV SAGEMAKER_PROGRAM /home/ubuntu/main.py
