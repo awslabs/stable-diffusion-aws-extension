@@ -66,13 +66,13 @@ async def invocations(request: Request):
         logger.info(f'Finished invocations {results}')
         return results
     else:
-        comfy_app = check_available_app(True)
-        if comfy_app is None:
-            raise HTTPException(status_code=500,detail=f"COMFY service not available for single")
         req = await request.json()
-        logger.info(f"Starting single invocation on {comfy_app.port} {req}")
         result = []
         for request_obj in req:
+            comfy_app = check_available_app(True)
+            logger.info(f"Starting multi invocation on {comfy_app.port} {req}")
+            if comfy_app is None:
+                raise HTTPException(status_code=500, detail=f"COMFY service not available for single")
             logger.info(f"invocations start req:{request_obj}  url:{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
             if response.status_code != 200:

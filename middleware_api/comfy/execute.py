@@ -132,7 +132,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     )
 
     if event.multi_async and ep.endpoint_type == 'Async':
-        sen_sqs_msg(inference_job.__dict__, endpoint_name)
+        save_item = inference_job.__dict__
+        sen_sqs_msg({"event": payload, "save_item": save_item, "inference_id": inference_id}, endpoint_name)
         return created(data=response_schema(inference_job), decimal=True)
 
     elif ep.endpoint_type == 'Async':
