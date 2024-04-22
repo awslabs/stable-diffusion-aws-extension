@@ -115,14 +115,15 @@ class Api:
 
 
 class ComfyApp:
-    def __init__(self, host, port):
+    def __init__(self, host, port, device_id):
         self.host = host
         self.port = port
+        self.device_id = device_id
         self.process = None
         self.busy = False
 
     def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory", f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",f"/home/ubuntu/ComfyUI/temp/{self.device_id}/","--cuda-device", str(self.device_id)]
         self.process = subprocess.Popen(cmd)
         os.environ['ALREADY_INIT'] = 'true'
 
@@ -164,7 +165,7 @@ def start_comfy_servers():
     for gpu_num in range(gpu_nums):
         logger.info(f"start comfy server by device_id: {gpu_num}")
         port = start_port + gpu_num
-        comfy_app = ComfyApp(host=LOCALHOST, port=port)
+        comfy_app = ComfyApp(host=LOCALHOST, port=port, device_id=gpu_num)
         comfy_app.start()
         global available_apps
         available_apps.append(comfy_app)
