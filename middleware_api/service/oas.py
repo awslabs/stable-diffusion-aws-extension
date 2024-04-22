@@ -49,12 +49,20 @@ class Parameter:
     schema: Optional[Schema] = None
 
     def to_dict(self):
+        if self.schema:
+            return {
+                "name": self.name,
+                "description": self.description,
+                "in": self.location,
+                "required": self.required,
+                "schema": self.schema.to_dict(),
+            }
+
         return {
             "name": self.name,
             "description": self.description,
             "in": self.location,
             "required": self.required,
-            "schema": self.schema.to_dict() if self.schema else None,
         }
 
 
@@ -67,7 +75,7 @@ class APISchema:
 
 header_user_name = Parameter(
     name="username",
-    description="Username (default: api)",
+    description="Username",
     location="header",
     required=True,
     schema=Schema(type="string", default="api")

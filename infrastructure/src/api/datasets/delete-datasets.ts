@@ -5,7 +5,6 @@ import {
   JsonSchemaVersion,
   LambdaIntegration,
   Model,
-  RequestValidator,
   Resource,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -15,6 +14,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DATASET_NAME } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface DeleteDatasetsApiProps {
   router: Resource;
@@ -62,7 +62,7 @@ export class DeleteDatasetsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.createRequestValidator(),
+        requestValidator: ApiValidators.bodyValidator,
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
@@ -103,16 +103,6 @@ export class DeleteDatasetsApi {
           ],
         },
         contentType: 'application/json',
-      });
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-dataset-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
       });
   }
 

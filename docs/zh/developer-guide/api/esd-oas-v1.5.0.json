@@ -214,17 +214,7 @@
         "tags": [
           "Service"
         ],
-        "parameters": [
-          {
-            "name": "username",
-            "description": "Request Username",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "default": "api",
-            }
-          }
-        ]
+        "parameters": []
       },
       "options": {
         "responses": {
@@ -281,31 +271,34 @@
           {
             "name": "username",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Filter by username"
+            "schema": null,
+            "description": "Filter by username",
+            "required": false
           },
           {
             "name": "per_page",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "page",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Page Index"
+            "schema": null,
+            "description": "Page Index",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -515,7 +508,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createcheckpointcreateckptvalidatorb769fdeb-ffh9ksxe6xrh",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -529,8 +522,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -638,7 +637,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deletecheckpointsdelckptvalidator4749c3b3-mouxz6pwfiil",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -652,8 +651,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -713,15 +718,19 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": null,
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "requestBody": {
@@ -843,7 +852,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "updatecheckpointupdateckptvalidator3f0716f6-huptzgzgm2pd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -959,23 +968,27 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Exclusive Start Key"
+            "schema": null,
+            "description": "Exclusive Start Key",
+            "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -1151,7 +1164,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createdatasetcreatedatasetvalidator08fe56c2-wqm1dfbdjpai",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -1165,8 +1178,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -1274,7 +1293,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deletedatasetsdeldatasetvalidator8ffb32cf-hf7eujrsz0ly",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -1288,8 +1307,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -1349,15 +1374,19 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": null,
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -1453,15 +1482,19 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "ID"
+            "schema": null,
+            "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "requestBody": {
@@ -1549,7 +1582,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "updatedatasetupdatedatasetvalidator33100b6c-vpfzvhudwrv6",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -1617,15 +1650,19 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": null,
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "requestBody": {
@@ -1797,23 +1834,27 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Exclusive Start Key"
+            "schema": null,
+            "description": "Exclusive Start Key",
+            "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -2006,7 +2047,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createendpointcreateepvalidator1de6d3fd-z7dmyyvptkj3",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -2020,8 +2061,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -2112,7 +2159,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deleteendpointsdelepvalidator32fd4f77-kit8vlgy5xz4",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -2126,8 +2173,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -2186,23 +2239,27 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Exclusive Start Key"
+            "schema": null,
+            "description": "Exclusive Start Key",
+            "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -2391,8 +2448,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -2496,8 +2559,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -2556,16 +2625,20 @@
           {
             "name": "id",
             "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "required": false,
+            "schema": null,
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -2726,31 +2799,34 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Exclusive Start Key"
+            "schema": null,
+            "description": "Exclusive Start Key",
+            "required": false
           },
           {
             "name": "type",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Inference task type: txt2img, img2img"
+            "schema": null,
+            "description": "Inference task type: txt2img, img2img",
+            "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -2977,7 +3053,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createinferencejobcreateinfervalidator9adae683-t0kormz9st5j",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -2991,8 +3067,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -3083,7 +3165,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deleteinferencejobsdelinfervalidatorb38072cb-vutvtq2qy1cq",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -3097,8 +3179,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -3157,16 +3245,20 @@
           {
             "name": "id",
             "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "required": false,
+            "schema": null,
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -3310,16 +3402,20 @@
           {
             "name": "id",
             "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "required": false,
+            "schema": null,
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -3941,8 +4037,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -4008,8 +4110,14 @@
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -4220,8 +4328,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -4329,7 +4443,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createrolecreaterolevalidatorff6e58d1-t70xxhypze4j",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -4343,8 +4457,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -4452,7 +4572,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deleterolesdelrolevalidatorfce726f0-zw97vswpzibt",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -4466,8 +4586,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -4603,8 +4729,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -4670,8 +4802,14 @@
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -4847,23 +4985,27 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Exclusive Start Key"
+            "schema": null,
+            "description": "Exclusive Start Key",
+            "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Limit Per Page"
+            "schema": null,
+            "description": "Limit Per Page",
+            "required": false
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -5056,7 +5198,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createtrainingjobcreatetrainvalidator53937cd3-escxrp9chsdt",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -5070,8 +5212,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -5179,7 +5327,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deletetrainingjobsdeltrainvalidatorb44721a8-fq3zcfegcntr",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -5193,8 +5341,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -5253,16 +5407,20 @@
           {
             "name": "id",
             "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "required": false,
+            "schema": null,
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ],
         "responses": {
@@ -5507,8 +5665,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -5616,7 +5780,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "createusercreateuservalidatorf2bb4667-k1rhd0nseguj",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -5630,8 +5794,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -5739,7 +5909,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "deleteusersdeleteuservalidatorb271bab0-6kyrdnpwyxat",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
         "x-amazon-apigateway-integration": {
           "type": "aws_proxy",
           "httpMethod": "POST",
@@ -5753,8 +5923,14 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Request Username",
-            "in": "header"
+            "description": "Username (default: api)",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api",
+              "description": null
+            }
           }
         ]
       },
@@ -9985,71 +10161,7 @@
     }
   },
   "x-amazon-apigateway-request-validators": {
-    "createendpointcreateepvalidator1de6d3fd-z7dmyyvptkj3": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "updatedatasetupdatedatasetvalidator33100b6c-vpfzvhudwrv6": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createcheckpointcreateckptvalidatorb769fdeb-ffh9ksxe6xrh": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createtrainingjobcreatetrainvalidator53937cd3-escxrp9chsdt": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createrolecreaterolevalidatorff6e58d1-t70xxhypze4j": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deleteinferencejobsdelinfervalidatorb38072cb-vutvtq2qy1cq": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deleteusersdeleteuservalidatorb271bab0-6kyrdnpwyxat": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "updatecheckpointupdateckptvalidator3f0716f6-huptzgzgm2pd": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createinferencejobcreateinfervalidator9adae683-t0kormz9st5j": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deleteendpointsdelepvalidator32fd4f77-kit8vlgy5xz4": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createdatasetcreatedatasetvalidator08fe56c2-wqm1dfbdjpai": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deletetrainingjobsdeltrainvalidatorb44721a8-fq3zcfegcntr": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deletecheckpointsdelckptvalidator4749c3b3-mouxz6pwfiil": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deletedatasetsdeldatasetvalidator8ffb32cf-hf7eujrsz0ly": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "createusercreateuservalidatorf2bb4667-k1rhd0nseguj": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
     "esdapivalidatorb43244ef-j4ky0bbhwswd": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    },
-    "deleterolesdelrolevalidatorfce726f0-zw97vswpzibt": {
       "validateRequestParameters": false,
       "validateRequestBody": true
     }
