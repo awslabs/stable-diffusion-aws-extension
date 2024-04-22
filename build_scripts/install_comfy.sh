@@ -13,7 +13,7 @@ cd ComfyUI || exit 1
 git reset --hard ${INITIAL_COMFY_COMMIT_ROOT}
 cd ../
 
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujua_dev" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 if [ -n "$ESD_COMMIT_ID" ]; then
   cd stable-diffusion-aws-extension || exit 1
   echo "reset to ESD_COMMIT_ID: $ESD_COMMIT_ID"
