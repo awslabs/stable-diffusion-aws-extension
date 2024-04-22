@@ -34,10 +34,11 @@ class Tag:
 class Parameter:
     name: str
     description: str
-    in_: str
+    location: str
+    schema: Optional[dict] = None
 
     def to_dict(self):
-        return {"name": self.name, "description": self.description, "in": self.in_}
+        return {"name": self.name, "description": self.description, "in": self.location}
 
 
 @dataclass
@@ -94,7 +95,9 @@ summaries = {
     "ListCheckpoints": APISchema(
         summary="List Checkpoints",
         tags=["Checkpoints"],
-        parameters=[Parameter(name="username", description="Filter by username", in_="query")]
+        parameters=[
+            Parameter(name="username", description="Filter by username", location="query"),
+        ]
     ),
     "CreateCheckpoint": APISchema(
         summary="Create Checkpoint",
@@ -290,7 +293,6 @@ def handler(event: dict, context: LambdaContext):
 
         return payload
     except Exception as e:
-
         return response_error(e)
 
 
@@ -302,9 +304,15 @@ def merge_parameters(schema: APISchema, item: dict):
         return []
 
     for param in schema.parameters:
+
+        update = False
         for original_para in item['parameters']:
-            if param.name == original_para['name'] and param.in_ == original_para['in']:
+            if param.name == original_para['name'] and param.location == original_para['in']:
                 original_para.update(param.to_dict())
+                update = True
+
+        if update is False:
+            item['parameters'].append(param.to_dict())
 
     return item['parameters']
 
