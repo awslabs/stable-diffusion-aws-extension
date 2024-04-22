@@ -294,7 +294,7 @@ def merge_parameters(schema: APISchema, item: dict):
     for param in schema.parameters:
         for original_para in item['parameters']:
             if param.name == original_para['name']:
-                original_para.update(param)
+                original_para.update(param.__dict__)
 
     return item['parameters']
 
