@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -17,6 +19,21 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 esd_version = os.environ.get("ESD_VERSION")
+
+
+@dataclass
+class Parameter:
+    name: str
+    description: str
+    in_: str = None
+
+
+@dataclass
+class APISchema:
+    summary: str
+    tags: List[str]
+    parameters: Optional[List[Parameter]] = field(default_factory=list)
+
 
 tags = [
     {
@@ -70,10 +87,10 @@ tags = [
 ]
 
 summaries = {
-    "RootAPI": {
-        "summary": "Root API",
-        "tags": ["Service"]
-    },
+    "RootAPI": APISchema(
+        summary="Root API",
+        tags=["Service"]
+    ),
     "Ping": {
         "summary": "Ping API",
         "tags": ["Service"]
@@ -100,7 +117,14 @@ summaries = {
     },
     "ListCheckpoints": {
         "summary": "List Checkpoints",
-        "tags": ["Checkpoints"]
+        "tags": ["Checkpoints"],
+        "parameters": [
+            {
+                "name": "username",
+                "in": "query",
+                "description": "Filter by username",
+            }
+        ]
     },
     "CreateCheckpoint": {
         "summary": "Create Checkpoint",
@@ -230,11 +254,17 @@ def handler(event: dict, context: LambdaContext):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {context}')
 
+    api_id = event['requestContext']['apiId']
+
     try:
         response = client.get_export(
-            restApiId=event['requestContext']['apiId'],
+            restApiId=api_id,
             stageName='prod',
             exportType='oas30',
+            accepts='application/json',
+            parameters={
+                'extensions': 'apigateway'
+            }
         )
 
         oas = response['body'].read()
@@ -266,6 +296,8 @@ def handler(event: dict, context: LambdaContext):
                 meta = summary(json_schema['paths'][path][method])
                 json_schema['paths'][path][method]['summary'] = meta["summary"]
                 json_schema['paths'][path][method]['tags'] = meta["tags"]
+                json_schema['paths'][path][method]['parameters'] = merge_parameters(meta['parameters'],
+                                                                                    json_schema['paths'][path][method])
 
         json_schema['paths'] = dict(sorted(json_schema['paths'].items(), key=lambda x: x[0]))
 
@@ -286,6 +318,18 @@ def handler(event: dict, context: LambdaContext):
     except Exception as e:
 
         return response_error(e)
+
+
+def merge_parameters(parameters: list, item: dict):
+    if 'parameters' not in item:
+        return []
+
+    for param in parameters:
+        for original_para in item['parameters']:
+            if param['name'] == original_para['name']:
+                original_para.update(param)
+
+    return item['parameters']
 
 
 def replace_null(data):
@@ -314,18 +358,25 @@ def summary(method: any):
     if 'operationId' in method:
         if method['operationId'] in summaries:
             item = summaries[method['operationId']]
+            if 'parameters' in item:
+                parameters = item["parameters"]
+            else:
+                parameters = []
 
             return {
                 "summary": item["summary"] + f" ({method['operationId']})",
                 "tags": item['tags'],
+                "parameters": parameters,
             }
 
         return {
             "summary": method['operationId'],
             "tags": ["Others"],
+            "parameters": [],
         }
 
     return {
         "summary": "",
         "tags": ["Others"],
+        "parameters": [],
     }
