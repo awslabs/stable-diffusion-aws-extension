@@ -22,6 +22,12 @@ esd_version = os.environ.get("ESD_VERSION")
 
 
 @dataclass
+class Tag:
+    name: str
+    description: str
+
+
+@dataclass
 class Parameter:
     name: str
     description: str
@@ -36,54 +42,18 @@ class APISchema:
 
 
 tags = [
-    {
-        "name": "Service",
-        "description": "Service API"
-    },
-    {
-        "name": "Roles",
-        "description": "Manage Roles"
-    },
-    {
-        "name": "Users",
-        "description": "Manage Users"
-    },
-    {
-        "name": "Endpoints",
-        "description": "Manage Endpoints"
-    },
-    {
-        "name": "Checkpoints",
-        "description": "Manage Checkpoints"
-    },
-    {
-        "name": "Inferences",
-        "description": "Manage Inferences"
-    },
-    {
-        "name": "Executes",
-        "description": "Manage Executes"
-    },
-    {
-        "name": "Datasets",
-        "description": "Manage Datasets"
-    },
-    {
-        "name": "Trainings",
-        "description": "Manage Trainings"
-    },
-    {
-        "name": "Prepare",
-        "description": "Sync files to Endpoint"
-    },
-    {
-        "name": "Sync",
-        "description": "Sync Message from Endpoint"
-    },
-    {
-        "name": "Others",
-        "description": "Others API"
-    },
+    Tag(name="Service", description="Service API"),
+    Tag(name="Roles", description="Manage Roles"),
+    Tag(name="Users", description="Manage Users"),
+    Tag(name="Endpoints", description="Manage Endpoints"),
+    Tag(name="Checkpoints", description="Manage Checkpoints"),
+    Tag(name="Inferences", description="Manage Inferences"),
+    Tag(name="Executes", description="Manage Executes"),
+    Tag(name="Datasets", description="Manage Datasets"),
+    Tag(name="Trainings", description="Manage Trainings"),
+    Tag(name="Prepare", description="Sync files to Endpoint"),
+    Tag(name="Sync", description="Sync Message from Endpoint"),
+    Tag(name="Others", description="Others API")
 ]
 
 summaries = {
@@ -91,161 +61,155 @@ summaries = {
         summary="Root API",
         tags=["Service"]
     ),
-    "Ping": {
-        "summary": "Ping API",
-        "tags": ["Service"]
-    },
-    "ListRoles": {
-        "summary": "List Roles",
-        "tags": ["Roles"]
-    },
-    "GetInferenceJob": {
-        "summary": "Get Inference Job",
-        "tags": ["Inferences"]
-    },
-    "CreateRole": {
-        "summary": "Create Role",
-        "tags": ["Roles"]
-    },
-    "DeleteRoles": {
-        "summary": "Delete Roles",
-        "tags": ["Roles"]
-    },
-    "GetTraining": {
-        "summary": "Get Training",
-        "tags": ["Trainings"]
-    },
-    "ListCheckpoints": {
-        "summary": "List Checkpoints",
-        "tags": ["Checkpoints"],
-        "parameters": [
-            {
-                "name": "username",
-                "in": "query",
-                "description": "Filter by username",
-            }
-        ]
-    },
-    "CreateCheckpoint": {
-        "summary": "Create Checkpoint",
-        "tags": ["Checkpoints"]
-    },
-    "DeleteCheckpoints": {
-        "summary": "Delete Checkpoints",
-        "tags": ["Checkpoints"]
-    },
-    "StartInferences": {
-        "summary": "Start Inference Job",
-        "tags": ["Inferences"]
-    },
-    "ListExecutes": {
-        "summary": "List Executes",
-        "tags": ["Executes"]
-    },
-    "CreateExecute": {
-        "summary": "Create Execute",
-        "tags": ["Executes"]
-    },
-    "DeleteExecutes": {
-        "summary": "Delete Executes",
-        "tags": ["Executes"]
-    },
-    "GetApiOAS": {
-        "summary": "Get OAS",
-        "tags": ["Service"]
-    },
-    "ListUsers": {
-        "summary": "List Users",
-        "tags": ["Users"]
-    },
-    "CreateUser": {
-        "summary": "Create User",
-        "tags": ["Users"]
-    },
-    "DeleteUsers": {
-        "summary": "Delete Users",
-        "tags": ["Users"]
-    },
-    "ListTrainings": {
-        "summary": "List Trainings",
-        "tags": ["Trainings"]
-    },
-    "CreateTraining": {
-        "summary": "Create Training",
-        "tags": ["Trainings"]
-    },
-    "DeleteTrainings": {
-        "summary": "Delete Trainings",
-        "tags": ["Trainings"]
-    },
-    "GetExecute": {
-        "summary": "Get Execute",
-        "tags": ["Executes"]
-    },
-    "ListDatasets": {
-        "summary": "List Datasets",
-        "tags": ["Datasets"]
-    },
-    "UpdateCheckpoint": {
-        "summary": "Update Checkpoint",
-        "tags": ["Checkpoints"]
-    },
-    "CreateDataset": {
-        "summary": "Create Dataset",
-        "tags": ["Datasets"]
-    },
-    "DeleteDatasets": {
-        "summary": "Delete Datasets",
-        "tags": ["Datasets"]
-    },
-    "GetDataset": {
-        "summary": "Get Dataset",
-        "tags": ["Datasets"]
-    },
-    "UpdateDataset": {
-        "summary": "Update Dataset",
-        "tags": ["Datasets"]
-    },
-    "ListInferences": {
-        "summary": "List Inferences",
-        "tags": ["Inferences"]
-    },
-    "CreateInferenceJob": {
-        "summary": "Create Inference Job",
-        "tags": ["Inferences"]
-    },
-    "DeleteInferenceJobs": {
-        "summary": "Delete Inference Jobs",
-        "tags": ["Inferences"]
-    },
-    "ListEndpoints": {
-        "summary": "List Endpoints",
-        "tags": ["Endpoints"]
-    },
-    "CreateEndpoint": {
-        "summary": "Create Endpoint",
-        "tags": ["Endpoints"]
-    },
-    "DeleteEndpoints": {
-        "summary": "Delete Endpoints",
-        "tags": ["Endpoints"]
-    },
-    "SyncMessage": {
-        "summary": "Sync Message",
-        "tags": ["Sync"]
-    },
-    "GetSyncMessage": {
-        "summary": "Get Sync Message",
-        "tags": ["Sync"]
-    },
-    "CreatePrepare": {
-        "summary": "Create Prepare",
-        "tags": ["Prepare"]
-    },
-    "GetPrepare": {
-        "summary": "Get Prepare",
-        "tags": ["Prepare"]
-    },
+    "Ping": APISchema(
+        summary="Ping API",
+        tags=["Service"]
+    ),
+    "ListRoles": APISchema(
+        summary="List Roles",
+        tags=["Roles"]
+    ),
+    "GetInferenceJob": APISchema(
+        summary="Get Inference Job",
+        tags=["Inferences"]
+    ),
+    "CreateRole": APISchema(
+        summary="Create Role",
+        tags=["Roles"]
+    ),
+    "DeleteRoles": APISchema(
+        summary="Delete Roles",
+        tags=["Roles"]
+    ),
+    "GetTraining": APISchema(
+        summary="Get Training",
+        tags=["Trainings"]
+    ),
+    "ListCheckpoints": APISchema(
+        summary="List Checkpoints",
+        tags=["Checkpoints"],
+        parameters=[Parameter(name="username", description="Filter by username", in_="query")]
+    ),
+    "CreateCheckpoint": APISchema(
+        summary="Create Checkpoint",
+        tags=["Checkpoints"]
+    ),
+    "DeleteCheckpoints": APISchema(
+        summary="Delete Checkpoints",
+        tags=["Checkpoints"]
+    ),
+    "StartInferences": APISchema(
+        summary="Start Inference Job",
+        tags=["Inferences"]
+    ),
+    "ListExecutes": APISchema(
+        summary="List Executes",
+        tags=["Executes"]
+    ),
+    "CreateExecute": APISchema(
+        summary="Create Execute",
+        tags=["Executes"]
+    ),
+    "DeleteExecutes": APISchema(
+        summary="Delete Executes",
+        tags=["Executes"]
+    ),
+    "GetApiOAS": APISchema(
+        summary="Get OAS",
+        tags=["Service"]
+    ),
+    "ListUsers": APISchema(
+        summary="List Users",
+        tags=["Users"]
+    ),
+    "CreateUser": APISchema(
+        summary="Create User",
+        tags=["Users"]
+    ),
+    "DeleteUsers": APISchema(
+        summary="Delete Users",
+        tags=["Users"]
+    ),
+    "ListTrainings": APISchema(
+        summary="List Trainings",
+        tags=["Trainings"]
+    ),
+    "CreateTraining": APISchema(
+        summary="Create Training",
+        tags=["Trainings"]
+    ),
+    "DeleteTrainings": APISchema(
+        summary="Delete Trainings",
+        tags=["Trainings"]
+    ),
+    "GetExecute": APISchema(
+        summary="Get Execute",
+        tags=["Executes"]
+    ),
+    "ListDatasets": APISchema(
+        summary="List Datasets",
+        tags=["Datasets"]
+    ),
+    "UpdateCheckpoint": APISchema(
+        summary="Update Checkpoint",
+        tags=["Checkpoints"]
+    ),
+    "CreateDataset": APISchema(
+        summary="Create Dataset",
+        tags=["Datasets"]
+    ),
+    "DeleteDatasets": APISchema(
+        summary="Delete Datasets",
+        tags=["Datasets"]
+    ),
+    "GetDataset": APISchema(
+        summary="Get Dataset",
+        tags=["Datasets"]
+    ),
+    "UpdateDataset": APISchema(
+        summary="Update Dataset",
+        tags=["Datasets"]
+    ),
+    "ListInferences": APISchema(
+        summary="List Inferences",
+        tags=["Inferences"]
+    ),
+    "CreateInferenceJob": APISchema(
+        summary="Create Inference Job",
+        tags=["Inferences"]
+    ),
+    "DeleteInferenceJobs": APISchema(
+        summary="Delete Inference Jobs",
+        tags=["Inferences"]
+    ),
+    "ListEndpoints": APISchema(
+        summary="List Endpoints",
+        tags=["Endpoints"]
+    ),
+    "CreateEndpoint": APISchema(
+        summary="Create Endpoint",
+        tags=["Endpoints"]
+    ),
+    "DeleteEndpoints": APISchema(
+        summary="Delete Endpoints",
+        tags=["Endpoints"]
+    ),
+    "SyncMessage": APISchema(
+        summary="Sync Message",
+        tags=["Sync"]
+    ),
+    "GetSyncMessage": APISchema(
+        summary="Get Sync Message",
+        tags=["Sync"]
+    ),
+    "CreatePrepare": APISchema(
+        summary="Create Prepare",
+        tags=["Prepare"]
+    ),
+    "GetPrepare": APISchema(
+        summary="Get Prepare",
+        tags=["Prepare"]
+    ),
 }
 
 
