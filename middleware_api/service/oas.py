@@ -28,7 +28,17 @@ class Schema:
     description: Optional[str] = None
 
     def to_dict(self):
-        return self.__dict__
+        data = {
+            "type": self.type,
+        }
+
+        if self.default:
+            data["default"] = self.default
+
+        if self.description:
+            data["description"] = self.description
+
+        return data
 
 
 @dataclass
