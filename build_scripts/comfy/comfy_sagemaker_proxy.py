@@ -384,7 +384,7 @@ async def restart(self):
     global executing
     if executing is True:
         logger.info(f"other inference doing cannot reboot!!!!!!!!")
-        return {"message": "other inference doing cannot reboot"}
+        return ok({"message": "other inference doing cannot reboot"})
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
@@ -392,7 +392,7 @@ async def restart(self):
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")
-        return {"message": "no need to reboot by constant"}
+        return ok({"message": "no need to reboot by constant"})
 
     logger.info("rebooting !!!!!!!!")
     try:
