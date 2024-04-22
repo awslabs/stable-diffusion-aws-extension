@@ -257,7 +257,7 @@ def handler(event: dict, context: LambdaContext):
 
         for path in json_schema['paths']:
             for method in json_schema['paths'][path]:
-                meta = summary(json_schema['paths'][path][method])
+                meta = supplement_schema(json_schema['paths'][path][method])
                 json_schema['paths'][path][method]['summary'] = meta["summary"]
                 json_schema['paths'][path][method]['tags'] = meta["tags"]
                 json_schema['paths'][path][method]['parameters'] = merge_parameters(meta['parameters'],
@@ -285,6 +285,9 @@ def handler(event: dict, context: LambdaContext):
 
 
 def merge_parameters(parameters: list, item: dict):
+    if not parameters:
+        return []
+
     if 'parameters' not in item:
         return []
 
@@ -318,7 +321,7 @@ def replace_null(data):
     return data
 
 
-def summary(method: any):
+def supplement_schema(method: any):
     if 'operationId' in method:
         if method['operationId'] in summaries:
             item = summaries[method['operationId']]
