@@ -13,11 +13,7 @@ import socket
 import uvicorn
 from fastapi import APIRouter, FastAPI, Request, HTTPException
 
-import multiprocessing
-import queue
 import time
-import psutil
-from enum import Enum
 
 TIMEOUT_KEEP_ALIVE = 30
 SAGEMAKER_PORT = 8080
