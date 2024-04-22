@@ -212,7 +212,7 @@ export class CropDatasetApi {
       entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
-      index: 'crop_dataset.py',
+      index: 'crop_dataset_handler.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
