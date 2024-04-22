@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-
+s3_client = boto3.client('s3')
 
 @tracer.capture_lambda_handler
 def handler(event, context):
@@ -54,7 +54,7 @@ def resize_image(src_img_s3_path, max_resolution="512x512", interpolation='lancz
     local_src_file_path = os.path.join(local_src_folder, os.path.basename(key_src))
     local_dst_file_path = os.path.join(local_dst_folder, os.path.basename(key_src))
 
-    download_file_from_s3(bucket_name, key_src, local_src_file_path)
+    s3_client.download_file(bucket_name, key_src, local_src_file_path)
 
     # Select interpolation method
     if interpolation == 'lanczos':
