@@ -258,9 +258,9 @@ def handler(event: dict, context: LambdaContext):
         for path in json_schema['paths']:
             for method in json_schema['paths'][path]:
                 meta = supplement_schema(json_schema['paths'][path][method])
-                json_schema['paths'][path][method]['summary'] = meta["summary"]
-                json_schema['paths'][path][method]['tags'] = meta["tags"]
-                json_schema['paths'][path][method]['parameters'] = merge_parameters(meta['parameters'],
+                json_schema['paths'][path][method]['summary'] = meta.summary
+                json_schema['paths'][path][method]['tags'] = meta.tags
+                json_schema['paths'][path][method]['parameters'] = merge_parameters(meta,
                                                                                     json_schema['paths'][path][method])
 
         json_schema['paths'] = dict(sorted(json_schema['paths'].items(), key=lambda x: x[0]))
@@ -284,14 +284,14 @@ def handler(event: dict, context: LambdaContext):
         return response_error(e)
 
 
-def merge_parameters(parameters: List[Parameter], item: dict):
-    if not parameters:
+def merge_parameters(schema: APISchema, item: dict):
+    if not schema.parameters:
         return []
 
     if 'parameters' not in item:
         return []
 
-    for param in parameters:
+    for param in schema.parameters:
         for original_para in item['parameters']:
             if param.name == original_para['name']:
                 original_para.update(param)
@@ -330,20 +330,20 @@ def supplement_schema(method: any):
             else:
                 parameters = []
 
-            return {
-                "summary": item.summary + f" ({method['operationId']})",
-                "tags": item.tags,
-                "parameters": parameters,
-            }
+            return APISchema(
+                summary=item.summary + f" ({method['operationId']})",
+                tags=item.tags,
+                parameters=parameters
+            )
 
-        return {
-            "summary": method['operationId'],
-            "tags": ["Others"],
-            "parameters": [],
-        }
+        return APISchema(
+            summary=method['operationId'],
+            tags=["Others"],
+            parameters=[]
+        )
 
-    return {
-        "summary": "",
-        "tags": ["Others"],
-        "parameters": [],
-    }
+    return APISchema(
+        summary="",
+        tags=["Others"],
+        parameters=[]
+    )
