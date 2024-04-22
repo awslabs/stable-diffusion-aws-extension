@@ -142,7 +142,7 @@ export class ComfyApiStack extends Construct {
     new MergeExecuteApi(
       scope, 'MergeExecute', <ExecuteApiProps>{
         httpMethod: 'POST',
-        router: props.routers.executes,
+        router: props.routers.merge,
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,

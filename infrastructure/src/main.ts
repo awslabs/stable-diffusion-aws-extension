@@ -131,6 +131,7 @@ export class Middleware extends Stack {
       'config',
       'prepare',
       'sync',
+      'merge',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
     cfnApi.addPropertyOverride('EndpointConfiguration', {
