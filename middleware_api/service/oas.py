@@ -324,15 +324,15 @@ def replace_null(data):
 def supplement_schema(method: any):
     if 'operationId' in method:
         if method['operationId'] in summaries:
-            item = summaries[method['operationId']]
-            if 'parameters' in item:
-                parameters = item["parameters"]
+            item: APISchema = summaries[method['operationId']]
+            if item.parameters:
+                parameters = item.parameters
             else:
                 parameters = []
 
             return {
-                "summary": item["summary"] + f" ({method['operationId']})",
-                "tags": item['tags'],
+                "summary": item.summary + f" ({method['operationId']})",
+                "tags": item.tags,
                 "parameters": parameters,
             }
 
