@@ -17,7 +17,7 @@ RUN pip install fastapi && \
 # download s5cmd
 RUN mkdir -p /home/ubuntu/tools
 RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
-RUN tar xzvf /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /home/ubuntu/tools/
+RUN tar xzvf /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /
 
 RUN wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz && \
     tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz && \
