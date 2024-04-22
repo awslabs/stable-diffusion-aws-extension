@@ -10,8 +10,6 @@ from aws_lambda_powertools import Tracer
 from common.response import ok
 from libs.utils import response_error
 
-from common.ddb_service.client import DynamoDbUtilsService
-from libs.comfy_data_types import ComfyExecuteTable
 
 from execute import async_inference
 
