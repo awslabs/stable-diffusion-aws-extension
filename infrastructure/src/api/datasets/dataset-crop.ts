@@ -29,6 +29,7 @@ export class CropDatasetApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly baseId: string;
+  private readonly role: aws_iam.Role;
 
   constructor(scope: Construct, id: string, props: CropDatasetApiProps) {
     this.scope = scope;
@@ -40,6 +41,8 @@ export class CropDatasetApi {
     this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+
+    this.role = this.iamRole();
 
     const lambdaFunction = this.apiLambda();
 
@@ -182,7 +185,7 @@ export class CropDatasetApi {
       index: 'crop_dataset.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: this.role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -201,7 +204,7 @@ export class CropDatasetApi {
       index: 'crop_dataset.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: this.role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
