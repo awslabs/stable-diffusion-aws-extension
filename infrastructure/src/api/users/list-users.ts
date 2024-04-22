@@ -54,9 +54,6 @@ export class ListUsersApi {
     this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
       operationName: 'ListUsers',
-      requestParameters: {
-        'method.request.querystring.show_password': false,
-      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),

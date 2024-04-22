@@ -50,7 +50,14 @@ class APISchema:
 
 
 header_user_name = Parameter(name="username", description="Request Username", location="header", required=True)
+
+path_id = Parameter(name="id", description="ID", location="path")
+path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
+
 query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
+query_page = Parameter(name="page", description="Page Index", location="query")
+query_per_page = Parameter(name="per_page", description="Limit Per Page", location="query")
+query_exclusive_start_key = Parameter(name="exclusive_start_key", description="Exclusive Start Key", location="query")
 
 tags = [
     Tag(name="Service", description="Service API").to_dict(),
@@ -87,7 +94,8 @@ summaries = {
         summary="Get Inference Job",
         tags=["Inferences"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_id
         ]
     ),
     "CreateRole": APISchema(
@@ -108,7 +116,8 @@ summaries = {
         summary="Get Training",
         tags=["Trainings"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_id
         ]
     ),
     "ListCheckpoints": APISchema(
@@ -116,6 +125,8 @@ summaries = {
         tags=["Checkpoints"],
         parameters=[
             header_user_name,
+            query_page,
+            query_per_page,
             Parameter(name="username", description="Filter by username", location="query"),
         ]
     ),
@@ -137,14 +148,17 @@ summaries = {
         summary="Start Inference Job",
         tags=["Inferences"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_id
         ]
     ),
     "ListExecutes": APISchema(
         summary="List Executes",
         tags=["Executes"],
         parameters=[
-            header_user_name
+            header_user_name,
+            query_limit,
+            query_exclusive_start_key
         ]
     ),
     "CreateExecute": APISchema(
@@ -193,7 +207,9 @@ summaries = {
         summary="List Trainings",
         tags=["Trainings"],
         parameters=[
-            header_user_name
+            header_user_name,
+            query_limit,
+            query_exclusive_start_key
         ]
     ),
     "CreateTraining": APISchema(
@@ -214,28 +230,41 @@ summaries = {
         summary="Get Execute",
         tags=["Executes"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_id
         ]
     ),
     "ListDatasets": APISchema(
         summary="List Datasets",
         tags=["Datasets"],
         parameters=[
-            header_user_name
+            header_user_name,
+            query_limit,
+            query_exclusive_start_key
         ]
     ),
     "CropDataset": APISchema(
         summary="Create new Crop Dataset",
         tags=["Datasets"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_dataset_name
+        ]
+    ),
+    "GetDataset": APISchema(
+        summary="Get Dataset",
+        tags=["Datasets"],
+        parameters=[
+            header_user_name,
+            path_dataset_name
         ]
     ),
     "UpdateCheckpoint": APISchema(
         summary="Update Checkpoint",
         tags=["Checkpoints"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_dataset_name
         ]
     ),
     "CreateDataset": APISchema(
@@ -252,25 +281,22 @@ summaries = {
             header_user_name
         ]
     ),
-    "GetDataset": APISchema(
-        summary="Get Dataset",
-        tags=["Datasets"],
-        parameters=[
-            header_user_name
-        ]
-    ),
     "UpdateDataset": APISchema(
         summary="Update Dataset",
         tags=["Datasets"],
         parameters=[
-            header_user_name
+            header_user_name,
+            path_id
         ]
     ),
     "ListInferences": APISchema(
         summary="List Inferences",
         tags=["Inferences"],
         parameters=[
-            header_user_name
+            header_user_name,
+            query_limit,
+            query_exclusive_start_key,
+            Parameter(name="type", description="Inference task type: txt2img, img2img", location="query"),
         ]
     ),
     "CreateInferenceJob": APISchema(
@@ -291,7 +317,9 @@ summaries = {
         summary="List Endpoints",
         tags=["Endpoints"],
         parameters=[
-            header_user_name
+            header_user_name,
+            query_limit,
+            query_exclusive_start_key
         ]
     ),
     "CreateEndpoint": APISchema(
