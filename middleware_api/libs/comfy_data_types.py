@@ -53,6 +53,8 @@ class ComfyExecuteTable:
     output_files: Optional[List[str]] = None
     temp_path: Optional[str] = ''
     temp_files: Optional[List[str]] = ''
+    multi_async: Optional[bool] = False
+    batch_id: Optional[str] = None
 
 
 @dataclass

@@ -6,6 +6,7 @@ import os
 import sys
 import tarfile
 import time
+import uuid
 from dataclasses import dataclass
 from typing import Optional
 
@@ -28,7 +29,7 @@ REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
 
-GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
+GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID') if 'ENDPOINT_INSTANCE_ID' in os.environ and os.environ.get('ENDPOINT_INSTANCE_ID') else str(uuid.uuid4())
 ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
 ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
@@ -185,8 +186,8 @@ def sync_local_outputs_to_base64(local_path):
         return {}
 
 
-@server.PromptServer.instance.routes.post("/invocations")
-async def invocations(request):
+@server.PromptServer.instance.routes.post("/execute_proxy")
+async def execute_proxy(request):
     json_data = await request.json()
     if 'out_path' in json_data and json_data['out_path'] is not None:
         out_path = json_data['out_path']
@@ -265,12 +266,11 @@ async def invocations(request):
             "output_path": f's3://{BUCKET}/comfy/{s3_out_path}',
             "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
-
+        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
+        sen_sqs_msg(message_body, prompt_id)
         logger.info(f"execute inference response is {response_body}")
 
         executing = False
-        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
-        sen_sqs_msg(message_body, prompt_id)
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
@@ -383,7 +383,7 @@ async def restart(self):
     global executing
     if executing is True:
         logger.info(f"other inference doing cannot reboot!!!!!!!!")
-        return {"message": "other inference doing cannot reboot"}
+        return ok({"message": "other inference doing cannot reboot"})
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
@@ -391,7 +391,7 @@ async def restart(self):
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")
-        return {"message": "no need to reboot by constant"}
+        return ok({"message": "no need to reboot by constant"})
 
     logger.info("rebooting !!!!!!!!")
     try:

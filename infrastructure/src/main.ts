@@ -131,6 +131,7 @@ export class Middleware extends Stack {
       'config',
       'prepare',
       'sync',
+      'merge',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
     cfnApi.addPropertyOverride('EndpointConfiguration', {
@@ -198,6 +199,11 @@ export class Middleware extends Stack {
       visibilityTimeout: 900,
     });
 
+    const sqsMergeStack = new SqsStack(this, 'comfy-merge-sqs', {
+      name: 'SyncComfyMergeJob',
+      visibilityTimeout: 900,
+    });
+
     const apis = new ComfyApiStack(this, 'comfy-api', <ComfyInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
@@ -214,6 +220,7 @@ export class Middleware extends Stack {
       executeFailTopic: snsTopics.executeResultFailTopic,
       snsTopic: snsTopics.snsTopic,
       queue: sqsStack.queue,
+      mergeQueue: sqsMergeStack.queue,
     });
     apis.node.addDependency(ddbComfyTables);
 

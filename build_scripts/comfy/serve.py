@@ -1,18 +1,21 @@
+import asyncio
 import datetime
 import logging
 import os
 import subprocess
 import threading
-import time
 from multiprocessing import Process
 from threading import Lock
 
+import httpx
 import requests
+import socket
 import uvicorn
 from fastapi import APIRouter, FastAPI, Request, HTTPException
 
+import time
+
 TIMEOUT_KEEP_ALIVE = 30
-COMFY_PORT = 8188
 SAGEMAKER_PORT = 8080
 LOCALHOST = '0.0.0.0'
 PHY_LOCALHOST = '127.0.0.1'
@@ -21,26 +24,82 @@ SLEEP_TIME = 30
 
 app = FastAPI()
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
+start_port = int(sagemaker_safe_port_range.split('-')[0])
+available_apps = []
+is_multi_gpu = False
+
+
+async def send_request(request_obj, comfy_app, need_async):
+    try:
+        logger.info(f"Starting on {comfy_app.port} {request_obj}")
+        comfy_app.busy = True
+        logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
+        if need_async:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        else:
+            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        comfy_app.busy = False
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code,
+                                detail=f"COMFY service returned an error: {response.text}")
+        return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+    finally:
+        comfy_app.busy = False
+
 
 async def invocations(request: Request):
-    req = await request.json()
-    logger.info(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{COMFY_PORT}/invocations")
-    response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/invocations", json=req)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code,
-                            detail=f"COMFY service returned an error: {response.text}")
-    return response.json()
+    global is_multi_gpu
+    if is_multi_gpu:
+        gpu_nums = get_gpu_count()
+        logger.info(f"Number of GPUs: {gpu_nums}")
+        req = await request.json()
+        logger.info(f"Starting multi invocation {req}")
+
+        tasks = []
+        for request_obj in req:
+            comfy_app = check_available_app(True)
+            if comfy_app is None:
+                raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+            tasks.append(send_request(request_obj, comfy_app, True))
+
+        results = await asyncio.gather(*tasks)
+        logger.info(f'Finished invocations {results}')
+        return results
+    else:
+        req = await request.json()
+        result = []
+        logger.info(f"Starting single invocation request is: {req}")
+        for request_obj in req:
+            comfy_app = check_available_app(True)
+            if comfy_app is None:
+                raise HTTPException(status_code=500, detail=f"COMFY service not available for single reqs")
+            response = await send_request(request_obj, comfy_app, False)
+            result.append(response)
+        logger.info(f"Finished invocations result: {result}")
+        return result
 
 
 def ping():
     init_already = os.environ.get('ALREADY_INIT')
     if init_already and init_already.lower() == 'false':
         raise HTTPException(status_code=500)
-    else:
-        return {'status': 'Healthy'}
+
+    comfy_app = check_available_app(False)
+    if comfy_app is None:
+        raise HTTPException(status_code=500)
+    logger.info(f"check status start url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    response = requests.get(f"http://{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    if response.status_code != 200:
+        raise HTTPException(status_code=500)
+    return {'status': 'Healthy'}
 
 
 class Api:
@@ -60,25 +119,21 @@ class Api:
 
 
 class ComfyApp:
-    def __init__(self, host=LOCALHOST, port=COMFY_PORT):
+    def __init__(self, host, port, device_id):
         self.host = host
         self.port = port
+        self.device_id = device_id
         self.process = None
+        self.busy = False
 
     def start(self):
-        # cmd = "python main.py  --listen {} --port {}".format(self.host, self.port)
-        # self.process = Process(target=os.system, args=(cmd,))
-        # self.process.start()
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
+               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
+               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
         self.process = subprocess.Popen(cmd)
         os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
-        # if self.process and self.process.is_alive():
-        #     self.process.terminate()
-        #     self.start()
-        # else:
-        #     logger.info("Comfy app process is not running.")
         logger.info("Comfy app process is going to restart")
         if self.process and self.process.poll() is None:
             os.environ['ALREADY_INIT'] = 'false'
@@ -86,31 +141,89 @@ class ComfyApp:
             self.process.wait()
         self.start()
 
+    def is_port_ready(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', self.port))
+            return result == 0
+
+
+def get_gpu_count():
+    try:
+        result = subprocess.run(['nvidia-smi', '-L'], capture_output=True, text=True, check=True)
+        gpu_count = result.stdout.count('\n')
+        return gpu_count
+    except subprocess.CalledProcessError as e:
+        logger.info("Failed to run nvidia-smi:", e)
+        return 0
+    except Exception as e:
+        logger.info("An error occurred:", e)
+        return 0
+
+
+def start_comfy_servers():
+    global is_multi_gpu
+    gpu_nums = get_gpu_count()
+    if gpu_nums > 1:
+        is_multi_gpu = True
+    else:
+        is_multi_gpu = False
+    logger.info(f"is_multi_gpu is {is_multi_gpu}")
+    for gpu_num in range(gpu_nums):
+        logger.info(f"start comfy server by device_id: {gpu_num}")
+        port = start_port + gpu_num
+        comfy_app = ComfyApp(host=LOCALHOST, port=port, device_id=gpu_num)
+        comfy_app.start()
+        available_apps.append(comfy_app)
+
+
+def get_available_app(need_check_busy: bool):
+    global available_apps
+    if available_apps is None:
+        return None
+    for item in available_apps:
+        logger.info(f"get available apps {item.device_id} {item.busy}")
+        if need_check_busy:
+            if item.is_port_ready() and not item.busy:
+                return item
+        else:
+            if item.is_port_ready():
+                return item
+    return None
+
+
+def check_available_app(need_check_busy: bool):
+    comfy_app = get_available_app(need_check_busy)
+    i = 0
+    while comfy_app is None:
+        comfy_app = get_available_app(need_check_busy)
+        if comfy_app is None:
+            time.sleep(1)
+            i += 1
+            if i >= 3:
+                logger.info(f"There is no available comfy_app for {i} attempts.")
+                break
+    if comfy_app is None:
+        logger.info(f"There is no available comfy_app! Ignoring this request")
+        return None
+    return comfy_app
+
 
 def check_sync():
     logger.info("start check_sync!")
     while True:
         try:
+            comfy_app = check_available_app(False)
+            if comfy_app is None:
+                raise HTTPException(status_code=500,
+                                    detail=f"COMFY service returned an error: no avaliable app")
             logger.info("start check_sync! checking function-------")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/sync_instance")
             logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
 
             logger.info("start check_reboot! checking function-------")
-            response2 = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
-            logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
-            time.sleep(SLEEP_TIME)
-        except Exception as e:
-            logger.info(f"check_and_reboot error:{e}")
-            time.sleep(SLEEP_TIME)
-
-
-def check_reboot():
-    logger.info("start check_reboot!")
-    while True:
-        try:
-            logger.info("start check_reboot! checking function-------")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
-            logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
+            requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/reboot")
+            logger.info(f"reboot response time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
@@ -120,20 +233,12 @@ def check_reboot():
 if __name__ == "__main__":
     queue_lock = threading.Lock()
     api = Api(app, queue_lock)
+    start_comfy_servers()
 
-    comfy_app = ComfyApp()
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
-
     check_sync_thread = threading.Thread(target=check_sync)
-    # check_reboot_thread = threading.Thread(target=check_reboot)
 
-    comfy_app.start()
     api_process.start()
     check_sync_thread.start()
-    # check_reboot_thread.start()
 
     api_process.join()
-    # check_sync_thread.join()
-    # check_reboot_thread.join()
-
-

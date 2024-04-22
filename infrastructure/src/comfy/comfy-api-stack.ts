@@ -20,6 +20,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import { MergeExecuteApi } from '../api/comfy/merge_execute';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -38,6 +39,7 @@ export interface ComfyInferenceStackProps extends StackProps {
   snsTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
   queue: sqs.Queue;
+  mergeQueue: sqs.Queue;
 }
 
 export class ComfyApiStack extends Construct {
@@ -49,6 +51,7 @@ export class ComfyApiStack extends Construct {
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
+  private readonly mergeQueue: aws_sqs.Queue;
 
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
@@ -61,6 +64,7 @@ export class ComfyApiStack extends Construct {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
+    this.mergeQueue = props.mergeQueue;
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
@@ -107,6 +111,7 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
+        mergeQueue: this.mergeQueue,
         commonLayer: this.layer,
       },
     );
@@ -130,6 +135,18 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         queue: this.queue,
+        commonLayer: this.layer,
+      },
+    );
+
+    new MergeExecuteApi(
+      scope, 'MergeExecute', <ExecuteApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.merge,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        endpointTable: this.endpointTable,
+        mergeQueue: this.mergeQueue,
         commonLayer: this.layer,
       },
     );
