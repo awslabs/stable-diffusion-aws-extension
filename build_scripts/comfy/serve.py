@@ -56,7 +56,7 @@ async def send_request(request_obj):
 
 async def invocations(request: Request):
     global is_multi_gpu
-    if is_multi_gpu:
+    if not is_multi_gpu:
         gpu_nums = get_gpu_count()
         logger.info(f"Number of GPUs: {gpu_nums}")
         req = await request.json()
@@ -157,11 +157,13 @@ def get_gpu_count():
 
 def start_comfy_servers():
     gpu_nums = get_gpu_count()
-    global is_multi_gpu
     if gpu_nums > 1:
+        global is_multi_gpu
         is_multi_gpu = True
     else:
+        global is_multi_gpu
         is_multi_gpu = False
+    logger.info(f"is_multi_gpu is {is_multi_gpu}")
     for gpu_num in range(gpu_nums):
         logger.info(f"start comfy server by device_id: {gpu_num}")
         port = start_port + gpu_num
