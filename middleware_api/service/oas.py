@@ -39,7 +39,7 @@ class Parameter:
     required: bool = False
 
     def to_dict(self):
-        return {"name": self.name, "description": self.description, "in": self.location}
+        return {"name": self.name, "description": self.description, "in": self.location, "required": self.required}
 
 
 @dataclass
@@ -178,9 +178,6 @@ summaries = {
     "GetApiOAS": APISchema(
         summary="Get OAS",
         tags=["Service"],
-        parameters=[
-            header_user_name
-        ]
     ),
     "ListUsers": APISchema(
         summary="List Users",
