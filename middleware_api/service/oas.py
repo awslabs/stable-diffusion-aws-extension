@@ -273,7 +273,7 @@ def handler(event: dict, context: LambdaContext):
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': '*',
                 'Access-Control-Allow-Methods': '*',
-                'Access-Control-Allow-v': True,
+                'Access-Control-Allow-Credentials': True,
             },
             'body': json.dumps(json_schema, cls=DecimalEncoder, indent=2)
         }
