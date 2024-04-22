@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 import boto3
@@ -26,6 +26,9 @@ class Tag:
     name: str
     description: str
 
+    def to_dict(self):
+        return {"name": self.name, "description": self.description}
+
 
 @dataclass
 class Parameter:
@@ -42,18 +45,18 @@ class APISchema:
 
 
 tags = [
-    Tag(name="Service", description="Service API"),
-    Tag(name="Roles", description="Manage Roles"),
-    Tag(name="Users", description="Manage Users"),
-    Tag(name="Endpoints", description="Manage Endpoints"),
-    Tag(name="Checkpoints", description="Manage Checkpoints"),
-    Tag(name="Inferences", description="Manage Inferences"),
-    Tag(name="Executes", description="Manage Executes"),
-    Tag(name="Datasets", description="Manage Datasets"),
-    Tag(name="Trainings", description="Manage Trainings"),
-    Tag(name="Prepare", description="Sync files to Endpoint"),
-    Tag(name="Sync", description="Sync Message from Endpoint"),
-    Tag(name="Others", description="Others API")
+    Tag(name="Service", description="Service API").to_dict(),
+    Tag(name="Roles", description="Manage Roles").to_dict(),
+    Tag(name="Users", description="Manage Users").to_dict(),
+    Tag(name="Endpoints", description="Manage Endpoints").to_dict(),
+    Tag(name="Checkpoints", description="Manage Checkpoints").to_dict(),
+    Tag(name="Inferences", description="Manage Inferences").to_dict(),
+    Tag(name="Executes", description="Manage Executes").to_dict(),
+    Tag(name="Datasets", description="Manage Datasets").to_dict(),
+    Tag(name="Trainings", description="Manage Trainings").to_dict(),
+    Tag(name="Prepare", description="Sync files to Endpoint").to_dict(),
+    Tag(name="Sync", description="Sync Message from Endpoint").to_dict(),
+    Tag(name="Others", description="Others API").to_dict()
 ]
 
 summaries = {
@@ -259,8 +262,7 @@ def handler(event: dict, context: LambdaContext):
             for method in json_schema['paths'][path]:
                 meta = supplement_schema(json_schema['paths'][path][method])
                 json_schema['paths'][path][method]['summary'] = meta.summary
-                # meta.tags to [str]
-                # json_schema['paths'][path][method]['tags'] = meta.tags
+                json_schema['paths'][path][method]['tags'] = meta.tags
                 json_schema['paths'][path][method]['parameters'] = merge_parameters(meta,
                                                                                     json_schema['paths'][path][method])
 
