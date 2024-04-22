@@ -266,12 +266,11 @@ async def execute_proxy(request):
             "output_path": f's3://{BUCKET}/comfy/{s3_out_path}',
             "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
-
+        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
+        sen_sqs_msg(message_body, prompt_id)
         logger.info(f"execute inference response is {response_body}")
 
         executing = False
-        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
-        sen_sqs_msg(message_body, prompt_id)
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
