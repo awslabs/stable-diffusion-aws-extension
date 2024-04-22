@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_PREFIX, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
 
@@ -65,7 +65,8 @@ export class CropDatasetApi {
         requestValidator: ApiValidators.bodyValidator,
         operationName: 'CropDataset',
         methodResponses: [
-          ApiModels.methodResponse(this.responseModel(), '201'),
+          ApiModels.methodResponse(this.responseModel(), '202'),
+          ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
           ApiModels.methodResponses404(),
@@ -108,7 +109,7 @@ export class CropDatasetApi {
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
-            enum: [200],
+            enum: [202],
           },
           debug: SCHEMA_DEBUG,
           message: SCHEMA_MESSAGE,
@@ -116,7 +117,6 @@ export class CropDatasetApi {
             type: JsonSchemaType.OBJECT,
             properties: {
               dataset_name: SCHEMA_DATASET_NAME,
-              prefix: SCHEMA_DATASET_PREFIX,
             },
             required: [
               'dataset_name',
@@ -144,6 +144,7 @@ export class CropDatasetApi {
       effect: Effect.ALLOW,
       actions: [
         'dynamodb:BatchGetItem',
+        'dynamodb:PutItem',
         'dynamodb:GetItem',
         'dynamodb:Scan',
         'dynamodb:Query',
@@ -170,9 +171,13 @@ export class CropDatasetApi {
       actions: [
         's3:GetObject',
         's3:ListBucket',
+        's3:PutObject',
+        's3:HeadObject',
       ],
-      resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`],
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -227,6 +232,4 @@ export class CropDatasetApi {
     });
   }
 
-
 }
-

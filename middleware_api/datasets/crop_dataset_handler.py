@@ -2,7 +2,9 @@ import json
 import logging
 import math
 import os
+from dataclasses import dataclass
 from datetime import datetime
+from typing import List
 
 import boto3
 import numpy as np
@@ -10,24 +12,29 @@ from PIL import Image
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import split_s3_path
-from inferences.inference_libs import upload_file_to_s3
+from common.util import upload_file_to_s3
 from libs.data_types import DatasetItem
 from libs.enums import DataStatus
 from libs.utils import response_error
 
 tracer = Tracer()
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
-dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
-crop_lambda_name = os.environ.get('CROP_LAMBDA_NAME')
-lambda_client = boto3.client('lambda')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
 ddb_service = DynamoDbUtilsService(logger=logger)
 s3_client = boto3.client('s3')
+
+
+@dataclass
+class DatasetCropItemEvent:
+    dataset_name: str
+    prefix: str
+    type: str
+    max_resolution: str
+    name: str
+    old_s3_location: str
+    user_roles: List[str]
 
 
 @tracer.capture_lambda_handler
@@ -37,23 +44,21 @@ def handler(event, context):
     try:
         logger.info(json.dumps(event))
 
-        dataset_name = event['dataset_name']
-        user_roles = event['user_roles']
+        event_parse = DatasetCropItemEvent(**event)
+
+        resize_image(event_parse)
 
         timestamp = datetime.now().timestamp()
         item = DatasetItem(
-            dataset_name=dataset_name,
-            sort_key=f'{timestamp}_{f.name}',
-            name=f.name,
-            type=f.type,
+            dataset_name=event_parse.dataset_name,
+            sort_key=f'{timestamp}_{event_parse.name}',
+            name=event_parse.name,
+            type=event_parse.type,
             data_status=DataStatus.Enabled,
             params={},
-            allowed_roles_or_users=user_roles
+            allowed_roles_or_users=event_parse.user_roles
         )
-
-        resize_image(event['src_img_s3_path'], event['max_resolution'])
-
-        # todo insert new dataset item
+        ddb_service.put_items(dataset_item_table, item.__dict__)
 
         return {}
 
@@ -61,20 +66,16 @@ def handler(event, context):
         return response_error(e)
 
 
-def resize_image(src_img_s3_path, max_resolution="512x512", interpolation='lanczos'):
-    # split s3 path
-    bucket_name, key_src = split_s3_path(src_img_s3_path)
-    key_dst = os.path.dirname(key_src) + '_' + max_resolution + os.path.basename(key_src)
-    # download file for src_img_s3_path
-    local_src_folder = os.path.join('/tmp', os.path.dirname(key_src))
-    local_dst_folder = os.path.join('/tmp', os.path.dirname(key_src) + '_crop')
-    os.makedirs(local_src_folder, exist_ok=True)
-    os.makedirs(local_dst_folder, exist_ok=True)
+def resize_image(event: DatasetCropItemEvent, interpolation='lanczos'):
+    if event.prefix:
+        target_key = f"dataset/{event.dataset_name}/{event.prefix}/{event.name}"
+    else:
+        target_key = f"dataset/{event.dataset_name}/{event.name}"
 
-    local_src_file_path = os.path.join(local_src_folder, os.path.basename(key_src))
-    local_dst_file_path = os.path.join(local_dst_folder, os.path.basename(key_src))
+    local_src_file_path = f'/tmp/{event.dataset_name}_{event.prefix}_{event.name}'
+    local_dst_file_path = f'/tmp/{event.dataset_name}_{event.prefix}_crop_{event.name}'
 
-    s3_client.download_file(bucket_name, key_src, local_src_file_path)
+    s3_client.download_file(bucket_name, event.old_s3_location, local_src_file_path)
 
     # Select interpolation method
     if interpolation == 'lanczos':
@@ -89,8 +90,7 @@ def resize_image(src_img_s3_path, max_resolution="512x512", interpolation='lancz
 
     # Check if the image is png, jpg or webp etc...
     if not local_src_file_path.endswith(img_exts):
-        # upload the file to the destination s3 path (.txt or .caption or etc.)
-        upload_file_to_s3(local_src_file_path, bucket_name, key_dst)
+        upload_file_to_s3(file_name=local_src_file_path, bucket=bucket_name, object_name=target_key)
     else:
         # Load image
         image = Image.open(local_src_file_path)
@@ -98,8 +98,8 @@ def resize_image(src_img_s3_path, max_resolution="512x512", interpolation='lancz
             image = image.convert("RGB")
 
         # Calculate max_pixels from max_resolution string
-        width = int(max_resolution.split("x")[0])
-        height = int(max_resolution.split("x")[1])
+        width = int(event.max_resolution.split("x")[0])
+        height = int(event.max_resolution.split("x")[1])
 
         # Calculate current number of pixels
         current_height = image.size[1]
@@ -144,4 +144,4 @@ def resize_image(src_img_s3_path, max_resolution="512x512", interpolation='lancz
         image = Image.fromarray(new_img)
         image.save(local_dst_file_path, quality=100)
 
-        upload_file_to_s3(local_dst_file_path, bucket_name, key_dst)
+        upload_file_to_s3(file_name=local_dst_file_path, bucket=bucket_name, object_name=target_key)

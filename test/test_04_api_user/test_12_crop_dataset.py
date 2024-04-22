@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import logging
+import time
 
 import requests
 
@@ -111,7 +112,7 @@ class TestCropDatasetE2E:
 
         assert config.dataset_name in [user["datasetName"] for user in datasets]
 
-    def test_4_datasets_get_current(self):
+    def test_5_datasets_crop(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username,
@@ -123,4 +124,35 @@ class TestCropDatasetE2E:
         datasets = resp.json()['data']["datasets"]
 
         for dataset in datasets:
-            logger.info(dataset)
+            dataset_name = dataset['datasetName']
+            data = {
+                "max_resolution": "512x512"
+            }
+            resp = self.api.crop_dataset(headers=headers, dataset_id=dataset_name, data=data)
+            assert resp.status_code == 202, resp.dumps()
+
+            time.sleep(5)
+            resp = self.api.list_datasets(headers=headers)
+            assert resp.status_code == 200, resp.dumps()
+
+            datasets = resp.json()['data']["datasets"]
+            assert f"{dataset_name}_512x512" in [user["datasetName"] for user in datasets]
+
+    def test_6_clear_all_datasets(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        resp = self.api.list_datasets(headers=headers)
+        assert resp.status_code == 200, resp.dumps()
+        assert 'datasets' in resp.json()['data'], resp.dumps()
+        datasets = resp.json()['data']['datasets']
+        for dataset in datasets:
+            data = {
+                "dataset_name_list": [
+                    dataset['datasetName'],
+                ],
+            }
+            resp = self.api.delete_datasets(data=data, headers=headers)
+            assert resp.status_code == 204, resp.dumps()
