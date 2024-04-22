@@ -36,6 +36,7 @@ class Parameter:
     description: str
     location: str
     schema: Optional[dict] = None
+    required: Optional[bool] = False
 
     def to_dict(self):
         return {"name": self.name, "description": self.description, "in": self.location}
@@ -48,7 +49,7 @@ class APISchema:
     parameters: Optional[List[Parameter]] = field(default_factory=list)
 
 
-header_user_name = Parameter(name="username", description="Request Username", location="header")
+header_user_name = Parameter(name="username", description="Request Username", location="header", required=True)
 query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
 
 tags = [
