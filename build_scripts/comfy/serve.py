@@ -6,6 +6,8 @@ import subprocess
 import threading
 from multiprocessing import Process
 from threading import Lock
+
+import httpx
 import requests
 import socket
 import uvicorn
@@ -40,15 +42,57 @@ global is_multi_gpu
 is_multi_gpu=False
 
 
-async def send_request(request_obj):
-    comfy_app = check_available_app(True)
+# async def send_request(request_obj):
+#     comfy_app = check_available_app(True)
+#     try:
+#         if comfy_app is None:
+#             raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+#         logger.info(f"Starting on {comfy_app.port} {request_obj}")
+#         comfy_app.busy = True
+#         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
+#         response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+#         comfy_app.busy = False
+#         if response.status_code != 200:
+#             raise HTTPException(status_code=response.status_code,
+#                                 detail=f"COMFY service returned an error: {response.text}")
+#         return response.json()
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+#     finally:
+#         comfy_app.busy = False
+#
+#
+# async def invocations(request: Request):
+#     global is_multi_gpu
+#     if is_multi_gpu:
+#         gpu_nums = get_gpu_count()
+#         logger.info(f"Number of GPUs: {gpu_nums}")
+#         req = await request.json()
+#         logger.info(f"Starting multi invocation {req}")
+#         tasks = [send_request(request_obj) for request_obj in req]
+#         results = await asyncio.gather(*tasks)
+#         logger.info(f'Finished invocations {results}')
+#         return results
+#     else:
+#         req = await request.json()
+#         result = []
+#         logger.info(f"Starting single invocation request is: {req}")
+#         for request_obj in req:
+#             response = send_request(request_obj)
+#             result.append(response)
+#         logger.info(f"Finished invocations result: {result}")
+#         return result
+
+async def send_request(request_obj, comfy_app, need_async):
     try:
-        if comfy_app is None:
-            raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
         logger.info(f"Starting on {comfy_app.port} {request_obj}")
         comfy_app.busy = True
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
-        response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        if need_async:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        else:
+            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
         comfy_app.busy = False
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
@@ -67,7 +111,14 @@ async def invocations(request: Request):
         logger.info(f"Number of GPUs: {gpu_nums}")
         req = await request.json()
         logger.info(f"Starting multi invocation {req}")
-        tasks = [send_request(request_obj) for request_obj in req]
+
+        tasks = []
+        for request_obj in req:
+            comfy_app = check_available_app(True)
+            if comfy_app is None:
+                raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+            tasks.append(send_request(request_obj, comfy_app, True))
+
         results = await asyncio.gather(*tasks)
         logger.info(f'Finished invocations {results}')
         return results
@@ -76,7 +127,10 @@ async def invocations(request: Request):
         result = []
         logger.info(f"Starting single invocation request is: {req}")
         for request_obj in req:
-            response = send_request(request_obj)
+            comfy_app = check_available_app(True)
+            if comfy_app is None:
+                raise HTTPException(status_code=500, detail=f"COMFY service not available for single reqs")
+            response = await send_request(request_obj, comfy_app, False)
             result.append(response)
         logger.info(f"Finished invocations result: {result}")
         return result
