@@ -259,7 +259,7 @@ def handler(event: dict, context: LambdaContext):
             for method in json_schema['paths'][path]:
                 meta = supplement_schema(json_schema['paths'][path][method])
                 json_schema['paths'][path][method]['summary'] = meta.summary
-                json_schema['paths'][path][method]['tags'] = meta.tags
+                json_schema['paths'][path][method]['tags'] = meta.tags.__dict__
                 json_schema['paths'][path][method]['parameters'] = merge_parameters(meta,
                                                                                     json_schema['paths'][path][method])
 
