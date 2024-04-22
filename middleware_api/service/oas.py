@@ -48,7 +48,8 @@ class APISchema:
     parameters: Optional[List[Parameter]] = field(default_factory=list)
 
 
-header_user_name = Parameter(name="username", description="username", location="header")
+header_user_name = Parameter(name="username", description="Request Username", location="header")
+query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
 
 tags = [
     Tag(name="Service", description="Service API").to_dict(),
@@ -411,16 +412,19 @@ def merge_parameters(schema: APISchema, item: dict):
     if not schema.parameters:
         return []
 
-    if 'parameters' not in item:
-        return []
+    if 'parameters' not in item or len(item['parameters']) == 0:
+        item['parameters'] = []
+        for param in schema.parameters:
+            item['parameters'].append(param.to_dict())
+        return item['parameters']
 
     for param in schema.parameters:
 
         update = False
         for original_para in item['parameters']:
             if param.name == original_para['name'] and param.location == original_para['in']:
-                original_para.update(param.to_dict())
                 update = True
+                original_para.update(param.to_dict())
 
         if update is False:
             item['parameters'].append(param.to_dict())
