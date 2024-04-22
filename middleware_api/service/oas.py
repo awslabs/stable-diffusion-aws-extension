@@ -284,7 +284,7 @@ def handler(event: dict, context: LambdaContext):
         return response_error(e)
 
 
-def merge_parameters(parameters: list, item: dict):
+def merge_parameters(parameters: List[Parameter], item: dict):
     if not parameters:
         return []
 
@@ -293,7 +293,7 @@ def merge_parameters(parameters: list, item: dict):
 
     for param in parameters:
         for original_para in item['parameters']:
-            if param['name'] == original_para['name']:
+            if param.name == original_para['name']:
                 original_para.update(param)
 
     return item['parameters']
