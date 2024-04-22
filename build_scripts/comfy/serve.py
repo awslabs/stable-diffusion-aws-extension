@@ -156,12 +156,11 @@ def get_gpu_count():
 
 
 def start_comfy_servers():
+    global is_multi_gpu
     gpu_nums = get_gpu_count()
     if gpu_nums > 1:
-        global is_multi_gpu
         is_multi_gpu = True
     else:
-        global is_multi_gpu
         is_multi_gpu = False
     logger.info(f"is_multi_gpu is {is_multi_gpu}")
     for gpu_num in range(gpu_nums):
