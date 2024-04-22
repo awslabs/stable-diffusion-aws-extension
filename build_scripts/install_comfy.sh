@@ -45,6 +45,7 @@ pip install fastapi
 pip install uvicorn
 pip install watchdog
 pip install python-dotenv
+pip install httpx
 
 if [ "$ON_DOCKER" == "true" ]; then
   pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
