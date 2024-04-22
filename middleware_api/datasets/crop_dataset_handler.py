@@ -37,6 +37,8 @@ def handler(event, context):
 
         resize_image(event['src_img_s3_path'], event['max_resolution'])
 
+        # todo insert new dataset item
+
         return {}
 
     except Exception as e:
