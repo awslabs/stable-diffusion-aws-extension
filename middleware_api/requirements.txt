@@ -10,4 +10,4 @@ tomli==2.0.1
 tomli-w==1.0.0
 aws-lambda-powertools==2.35.1
 aws-xray-sdk==2.13.0
-opencv-python==4.7.0.68
+
