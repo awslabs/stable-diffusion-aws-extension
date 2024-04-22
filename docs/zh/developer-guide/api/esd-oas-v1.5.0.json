@@ -218,7 +218,11 @@
           {
             "name": "username",
             "description": "Request Username",
-            "in": "header"
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "api",
+            }
           }
         ]
       },

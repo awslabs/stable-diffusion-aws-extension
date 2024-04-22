@@ -22,6 +22,16 @@ esd_version = os.environ.get("ESD_VERSION")
 
 
 @dataclass
+class Schema:
+    type: str
+    default: Optional[str] = None
+    description: Optional[str] = None
+
+    def to_dict(self):
+        return self.__dict__
+
+
+@dataclass
 class Tag:
     name: str
     description: str
@@ -35,11 +45,17 @@ class Parameter:
     name: str
     description: str
     location: str
-    schema: Optional[dict] = None
     required: bool = False
+    schema: Optional[Schema] = None
 
     def to_dict(self):
-        return {"name": self.name, "description": self.description, "in": self.location, "required": self.required}
+        return {
+            "name": self.name,
+            "description": self.description,
+            "in": self.location,
+            "required": self.required,
+            "schema": self.schema,
+        }
 
 
 @dataclass
@@ -49,7 +65,13 @@ class APISchema:
     parameters: Optional[List[Parameter]] = field(default_factory=list)
 
 
-header_user_name = Parameter(name="username", description="Username (default: api)", location="header", required=True)
+header_user_name = Parameter(
+    name="username",
+    description="Username (default: api)",
+    location="header",
+    required=True,
+    schema=Schema(type="string", default="api")
+)
 
 path_id = Parameter(name="id", description="ID", location="path")
 path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
