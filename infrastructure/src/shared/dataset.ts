@@ -4,6 +4,7 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { Database } from './database';
 import { CreateDatasetApi } from '../api/datasets/create-dataset';
+import { CropDatasetApi } from '../api/datasets/dataset-crop';
 import { DeleteDatasetsApi } from '../api/datasets/delete-datasets';
 import { GetDatasetApi } from '../api/datasets/get-dataset';
 import { ListDatasetsApi } from '../api/datasets/list-datasets';
@@ -64,6 +65,17 @@ export class DatasetStack {
       datasetItemsTable: props.database.datasetItemTable,
       multiUserTable: multiUserTable,
       httpMethod: 'GET',
+      router: updateDatasetApi.router,
+      s3Bucket: props.s3Bucket,
+    });
+
+    // POST /dataset/{dataset_name}/crop
+    new CropDatasetApi(scope, 'CropDataset', {
+      commonLayer: commonLayer,
+      datasetInfoTable: props.database.datasetInfoTable,
+      datasetItemsTable: props.database.datasetItemTable,
+      multiUserTable: multiUserTable,
+      httpMethod: 'POST',
       router: updateDatasetApi.router,
       s3Bucket: props.s3Bucket,
     });
