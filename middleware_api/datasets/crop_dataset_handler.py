@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import os
+from datetime import datetime
 
 import boto3
 import numpy as np
@@ -11,6 +12,8 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.util import split_s3_path
 from inferences.inference_libs import upload_file_to_s3
+from libs.data_types import DatasetItem
+from libs.enums import DataStatus
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -33,7 +36,20 @@ def handler(event, context):
 
     try:
         logger.info(json.dumps(event))
+
         dataset_name = event['dataset_name']
+        user_roles = event['user_roles']
+
+        timestamp = datetime.now().timestamp()
+        item = DatasetItem(
+            dataset_name=dataset_name,
+            sort_key=f'{timestamp}_{f.name}',
+            name=f.name,
+            type=f.type,
+            data_status=DataStatus.Enabled,
+            params={},
+            allowed_roles_or_users=user_roles
+        )
 
         resize_image(event['src_img_s3_path'], event['max_resolution'])
 

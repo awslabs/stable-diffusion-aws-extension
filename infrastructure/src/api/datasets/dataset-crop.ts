@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DATASET_NAME, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_PREFIX, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
 
@@ -116,6 +116,7 @@ export class CropDatasetApi {
             type: JsonSchemaType.OBJECT,
             properties: {
               dataset_name: SCHEMA_DATASET_NAME,
+              prefix: SCHEMA_DATASET_PREFIX,
             },
             required: [
               'dataset_name',
