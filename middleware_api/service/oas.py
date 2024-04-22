@@ -34,7 +34,7 @@ class Tag:
 class Parameter:
     name: str
     description: str
-    in_: str = None
+    in_: str
 
     def to_dict(self):
         return {"name": self.name, "description": self.description, "in": self.in_}
@@ -154,6 +154,10 @@ summaries = {
     ),
     "ListDatasets": APISchema(
         summary="List Datasets",
+        tags=["Datasets"]
+    ),
+    "CropDataset": APISchema(
+        summary="Create new Crop Dataset",
         tags=["Datasets"]
     ),
     "UpdateCheckpoint": APISchema(
@@ -299,7 +303,7 @@ def merge_parameters(schema: APISchema, item: dict):
 
     for param in schema.parameters:
         for original_para in item['parameters']:
-            if param.name == original_para['name']:
+            if param.name == original_para['name'] and param.in_ == original_para['in']:
                 original_para.update(param.to_dict())
 
     return item['parameters']
