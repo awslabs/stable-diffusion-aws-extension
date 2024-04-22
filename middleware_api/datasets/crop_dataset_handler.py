@@ -26,12 +26,14 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 ddb_service = DynamoDbUtilsService(logger=logger)
 s3_client = boto3.client('s3')
 
+
 @tracer.capture_lambda_handler
 def handler(event, context):
     _filter = {}
 
     try:
         logger.info(json.dumps(event))
+        dataset_name = event['dataset_name']
 
         resize_image(event['src_img_s3_path'], event['max_resolution'])
 

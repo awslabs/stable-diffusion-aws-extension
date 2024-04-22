@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from dataclasses import dataclass
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -25,12 +26,19 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
+@dataclass
+class DatasetCropEvent:
+    max_resolution: str
+
+
 @tracer.capture_lambda_handler
 def handler(event, context):
     _filter = {}
 
     try:
         logger.info(json.dumps(event))
+
+        event_parse = DatasetCropEvent(**json.loads(event['body']))
 
         requester_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
@@ -61,6 +69,8 @@ def handler(event, context):
             'dataset_name': dataset_name
         })
 
+        dataset_name_new = f"{dataset_name}_{event_parse.max_resolution}"
+
         resp = []
         for row in rows:
             item = DatasetItem(**ddb_service.deserialize(row))
@@ -68,21 +78,18 @@ def handler(event, context):
                 FunctionName=crop_lambda_name,
                 InvocationType='Event',
                 Payload=json.dumps({
-                    'sort_key': item.sort_key,
-                    'type': item.type,
+                    # todo will
+                    'dataset_name': dataset_name_new,
+                    'src_img_s3_path': item.sort_key,
+                    'max_resolution': event_parse.max_resolution,
                 })
             )
             logger.info(resp)
 
+        # todo insert new dataset info
+
         return ok(data={
-            'dataset_name': dataset_name,
-            'datasetName': dataset_info.dataset_name,
-            'prefix': dataset_info.prefix,
-            's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-            'status': dataset_info.dataset_status.value,
-            'timestamp': dataset_info.timestamp,
-            'data': resp,
-            **dataset_info.params
+            'dataset_name': dataset_name_new,
         }, decimal=True)
     except Exception as e:
         return response_error(e)
