@@ -283,7 +283,7 @@ summaries = {
         tags=["Datasets"],
         parameters=[
             header_user_name,
-            path_id
+            path_dataset_name
         ]
     ),
     "ListInferences": APISchema(
