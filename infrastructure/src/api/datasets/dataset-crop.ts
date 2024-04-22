@@ -6,6 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DATASET_NAME, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 
 export interface CropDatasetApiProps {
@@ -42,6 +43,8 @@ export class CropDatasetApi {
 
     const lambdaFunction = this.apiLambda();
 
+    this.cropLambda();
+
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
@@ -56,8 +59,8 @@ export class CropDatasetApi {
         requestModels: {
           'application/json': this.createRequestBodyModel(),
         },
+        requestValidator: ApiValidators.bodyValidator,
         operationName: 'CropDataset',
-
         methodResponses: [
           ApiModels.methodResponse(this.responseModel(), '201'),
           ApiModels.methodResponses401(),
@@ -176,7 +179,26 @@ export class CropDatasetApi {
       entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
-      index: 'get_dataset.py',
+      index: 'crop_dataset.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
+        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+      },
+      layers: [this.layer],
+    });
+  }
+
+  private cropLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-crop-lambda`, {
+      entry: '../middleware_api/datasets',
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'crop_dataset.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),

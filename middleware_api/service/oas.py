@@ -36,6 +36,9 @@ class Parameter:
     description: str
     in_: str = None
 
+    def to_dict(self):
+        return {"name": self.name, "description": self.description, "in": self.in_}
+
 
 @dataclass
 class APISchema:
@@ -297,7 +300,7 @@ def merge_parameters(schema: APISchema, item: dict):
     for param in schema.parameters:
         for original_para in item['parameters']:
             if param.name == original_para['name']:
-                original_para.update(param.__dict__)
+                original_para.update(param.to_dict())
 
     return item['parameters']
 
