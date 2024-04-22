@@ -178,6 +178,7 @@ def get_available_app(need_check_busy: bool):
     if available_apps is None:
         return None
     for item in available_apps:
+        logger.info(f"get available apps {item.device_id} {item.busy}")
         if need_check_busy:
             if item.is_port_ready() and not item.busy:
                 return item
