@@ -48,6 +48,8 @@ class APISchema:
     parameters: Optional[List[Parameter]] = field(default_factory=list)
 
 
+header_user_name = Parameter(name="username", description="username", location="header")
+
 tags = [
     Tag(name="Service", description="Service API").to_dict(),
     Tag(name="Roles", description="Manage Roles").to_dict(),
@@ -74,154 +76,263 @@ summaries = {
     ),
     "ListRoles": APISchema(
         summary="List Roles",
-        tags=["Roles"]
+        tags=["Roles"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetInferenceJob": APISchema(
         summary="Get Inference Job",
-        tags=["Inferences"]
+        tags=["Inferences"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateRole": APISchema(
         summary="Create Role",
-        tags=["Roles"]
+        tags=["Roles"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteRoles": APISchema(
         summary="Delete Roles",
-        tags=["Roles"]
+        tags=["Roles"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetTraining": APISchema(
         summary="Get Training",
-        tags=["Trainings"]
+        tags=["Trainings"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListCheckpoints": APISchema(
         summary="List Checkpoints",
         tags=["Checkpoints"],
         parameters=[
+            header_user_name,
             Parameter(name="username", description="Filter by username", location="query"),
         ]
     ),
     "CreateCheckpoint": APISchema(
         summary="Create Checkpoint",
-        tags=["Checkpoints"]
+        tags=["Checkpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteCheckpoints": APISchema(
         summary="Delete Checkpoints",
-        tags=["Checkpoints"]
+        tags=["Checkpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "StartInferences": APISchema(
         summary="Start Inference Job",
-        tags=["Inferences"]
+        tags=["Inferences"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListExecutes": APISchema(
         summary="List Executes",
-        tags=["Executes"]
+        tags=["Executes"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateExecute": APISchema(
         summary="Create Execute",
-        tags=["Executes"]
+        tags=["Executes"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteExecutes": APISchema(
         summary="Delete Executes",
-        tags=["Executes"]
+        tags=["Executes"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetApiOAS": APISchema(
         summary="Get OAS",
-        tags=["Service"]
+        tags=["Service"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListUsers": APISchema(
         summary="List Users",
-        tags=["Users"]
+        tags=["Users"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateUser": APISchema(
         summary="Create User",
-        tags=["Users"]
+        tags=["Users"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteUsers": APISchema(
         summary="Delete Users",
-        tags=["Users"]
+        tags=["Users"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListTrainings": APISchema(
         summary="List Trainings",
-        tags=["Trainings"]
+        tags=["Trainings"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateTraining": APISchema(
         summary="Create Training",
-        tags=["Trainings"]
+        tags=["Trainings"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteTrainings": APISchema(
         summary="Delete Trainings",
-        tags=["Trainings"]
+        tags=["Trainings"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetExecute": APISchema(
         summary="Get Execute",
-        tags=["Executes"]
+        tags=["Executes"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListDatasets": APISchema(
         summary="List Datasets",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CropDataset": APISchema(
         summary="Create new Crop Dataset",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "UpdateCheckpoint": APISchema(
         summary="Update Checkpoint",
-        tags=["Checkpoints"]
+        tags=["Checkpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateDataset": APISchema(
         summary="Create Dataset",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteDatasets": APISchema(
         summary="Delete Datasets",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetDataset": APISchema(
         summary="Get Dataset",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "UpdateDataset": APISchema(
         summary="Update Dataset",
-        tags=["Datasets"]
+        tags=["Datasets"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListInferences": APISchema(
         summary="List Inferences",
-        tags=["Inferences"]
+        tags=["Inferences"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateInferenceJob": APISchema(
         summary="Create Inference Job",
-        tags=["Inferences"]
+        tags=["Inferences"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteInferenceJobs": APISchema(
         summary="Delete Inference Jobs",
-        tags=["Inferences"]
+        tags=["Inferences"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "ListEndpoints": APISchema(
         summary="List Endpoints",
-        tags=["Endpoints"]
+        tags=["Endpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreateEndpoint": APISchema(
         summary="Create Endpoint",
-        tags=["Endpoints"]
+        tags=["Endpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "DeleteEndpoints": APISchema(
         summary="Delete Endpoints",
-        tags=["Endpoints"]
+        tags=["Endpoints"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "SyncMessage": APISchema(
         summary="Sync Message",
-        tags=["Sync"]
+        tags=["Sync"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetSyncMessage": APISchema(
         summary="Get Sync Message",
-        tags=["Sync"]
+        tags=["Sync"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "CreatePrepare": APISchema(
         summary="Create Prepare",
-        tags=["Prepare"]
+        tags=["Prepare"],
+        parameters=[
+            header_user_name
+        ]
     ),
     "GetPrepare": APISchema(
         summary="Get Prepare",
-        tags=["Prepare"]
+        tags=["Prepare"],
+        parameters=[
+            header_user_name
+        ]
     ),
 }
 
