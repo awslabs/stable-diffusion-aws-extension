@@ -36,7 +36,7 @@ class Parameter:
     description: str
     location: str
     schema: Optional[dict] = None
-    required: Optional[bool] = False
+    required: bool = False
 
     def to_dict(self):
         return {"name": self.name, "description": self.description, "in": self.location}
