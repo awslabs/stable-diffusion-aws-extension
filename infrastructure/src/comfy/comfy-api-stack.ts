@@ -20,6 +20,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import { MergeExecuteApi } from '../api/comfy/merge_execute';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -134,6 +135,18 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         queue: this.queue,
+        commonLayer: this.layer,
+      },
+    );
+
+    new MergeExecuteApi(
+      scope, 'MergeExecute', <ExecuteApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.executes,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        endpointTable: this.endpointTable,
+        mergeQueue: this.mergeQueue,
         commonLayer: this.layer,
       },
     );
