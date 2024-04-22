@@ -54,7 +54,7 @@ class Parameter:
             "description": self.description,
             "in": self.location,
             "required": self.required,
-            "schema": self.schema,
+            "schema": self.schema.to_dict() if self.schema else None,
         }
 
 
