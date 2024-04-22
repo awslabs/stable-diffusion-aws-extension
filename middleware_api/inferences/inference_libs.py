@@ -9,6 +9,7 @@ import boto3
 from PIL import Image
 from aws_lambda_powertools import Tracer
 
+from common.util import upload_file_to_s3
 from libs.utils import log_json
 
 tracer = Tracer()
@@ -40,26 +41,6 @@ def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name
     except Exception as e:
         update_inference_job_table(inference_id, 'status', 'failed')
         raise e
-
-
-@tracer.capture_method
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Add the directory to the object_name
-    if directory:
-        object_name = f"{directory}/{object_name}"
-
-    # Upload the file
-    try:
-        s3_client.upload_file(file_name, bucket, object_name)
-        log_json(f"File {file_name} uploaded to {bucket}/{object_name}")
-    except Exception as e:
-        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
-        return False
-    return True
 
 
 def decode_base64_to_image(encoding):

@@ -339,6 +339,15 @@ class Api:
             data=data
         )
 
+    def crop_dataset(self, dataset_id: str, headers=None, data=None):
+        return self.req(
+            "POST",
+            f"datasets/{dataset_id}/crop",
+            headers=headers,
+            operation_id='CropDataset',
+            data=data
+        )
+
     def create_training_job(self, headers=None, data=None):
         return self.req(
             "POST",

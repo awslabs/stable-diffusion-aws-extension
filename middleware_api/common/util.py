@@ -13,6 +13,7 @@ from PIL import Image, PngImagePlugin
 from aws_lambda_powertools import Tracer
 
 from libs.comfy_data_types import InferenceResult
+from libs.utils import log_json
 
 tracer = Tracer()
 s3 = boto3.client('s3')
@@ -20,7 +21,7 @@ s3_resource = boto3.resource('s3')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sns_client = boto3.client('sns')
-
+s3_client = boto3.client('s3')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3_bucket = s3_resource.Bucket(bucket_name)
 
@@ -168,6 +169,26 @@ def upload_json_to_s3(file_key: str, json_data: dict):
         logger.info(f"Dictionary uploaded to s3://{bucket_name}/{file_key}")
     except Exception as e:
         logger.info(f"Error uploading dictionary: {e}")
+
+
+@tracer.capture_method
+def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Add the directory to the object_name
+    if directory:
+        object_name = f"{directory}/{object_name}"
+
+    # Upload the file
+    try:
+        s3_client.upload_file(file_name, bucket, object_name)
+        log_json(f"File {file_name} uploaded to {bucket}/{object_name}")
+    except Exception as e:
+        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
+        return False
+    return True
 
 
 def split_s3_path(s3_path):

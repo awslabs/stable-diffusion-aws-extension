@@ -5,6 +5,7 @@ import { Construct } from 'constructs';
 import { ApiModels } from './models';
 import { SCHEMA_204, SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
 import { ESD_VERSION } from './version';
+import { ApiValidators } from './validator';
 
 export class RestApiGateway {
   public apiGateway: RestApi;
@@ -59,6 +60,8 @@ export class RestApiGateway {
     ApiModels.schema403 = ApiModels.createAPiModel(this.scope, api, SCHEMA_403, '403');
     ApiModels.schema404 = ApiModels.createAPiModel(this.scope, api, SCHEMA_404, '404');
     ApiModels.schema504 = ApiModels.createAPiModel(this.scope, api, SCHEMA_504, '504');
+
+    ApiValidators.createBodyValidator(this.scope, api, 'esd-api');
 
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey('sd-extension-api-key', {

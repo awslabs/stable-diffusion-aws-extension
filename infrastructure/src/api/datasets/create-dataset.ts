@@ -216,7 +216,8 @@ export class CreateDatasetApi {
           },
           prefix: {
             type: JsonSchemaType.STRING,
-            minLength: 1,
+            minLength: 0,
+            default: '',
           },
           params: {
             type: JsonSchemaType.OBJECT,
