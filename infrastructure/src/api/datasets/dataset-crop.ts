@@ -44,9 +44,9 @@ export class CropDatasetApi {
 
     this.role = this.iamRole();
 
-    const lambdaFunction = this.apiLambda();
+    const lambda: PythonFunction = this.cropLambda();
 
-    this.cropLambda();
+    const lambdaFunction = this.apiLambda(lambda);
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -157,6 +157,16 @@ export class CropDatasetApi {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        'lambda:invokeFunction',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
+      ],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         's3:GetObject',
         's3:ListBucket',
       ],
@@ -177,7 +187,7 @@ export class CropDatasetApi {
     return newRole;
   }
 
-  private apiLambda() {
+  private apiLambda(lambda: PythonFunction) {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
@@ -191,6 +201,7 @@ export class CropDatasetApi {
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        CROP_LAMBDA_NAME: lambda.functionName,
       },
       layers: [this.layer],
     });

@@ -2,12 +2,12 @@ import json
 import logging
 import os
 
+import boto3
 from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, forbidden
-from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
     response_error
@@ -17,7 +17,8 @@ dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
-
+crop_lambda_name = os.environ.get('CROP_LAMBDA_NAME')
+lambda_client = boto3.client('lambda')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -63,16 +64,15 @@ def handler(event, context):
         resp = []
         for row in rows:
             item = DatasetItem(**ddb_service.deserialize(row))
-            resp.append({
-                'key': item.sort_key,
-                'name': item.name,
-                'type': item.type,
-                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(dataset_info.prefix),
-                                                    expires=3600 * 24,
-                                                    method='get_object'),
-                'dataStatus': item.data_status.value,
-                **item.params
-            })
+            resp = lambda_client.invoke(
+                FunctionName=crop_lambda_name,
+                InvocationType='Event',
+                Payload=json.dumps({
+                    'sort_key': item.sort_key,
+                    'type': item.type,
+                })
+            )
+            logger.info(resp)
 
         return ok(data={
             'dataset_name': dataset_name,
