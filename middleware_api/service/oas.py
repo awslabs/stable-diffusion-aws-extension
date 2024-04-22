@@ -49,7 +49,7 @@ class APISchema:
     parameters: Optional[List[Parameter]] = field(default_factory=list)
 
 
-header_user_name = Parameter(name="username", description="Request Username", location="header", required=True)
+header_user_name = Parameter(name="username", description="Username (default: api)", location="header", required=True)
 
 path_id = Parameter(name="id", description="ID", location="path")
 path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
