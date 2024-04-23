@@ -168,6 +168,8 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
+          echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           source /etc/environment
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
