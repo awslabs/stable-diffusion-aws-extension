@@ -276,6 +276,7 @@ comfy_launch(){
   set_conda
 
   cd /home/ubuntu/ComfyUI || exit 1
+  rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
 

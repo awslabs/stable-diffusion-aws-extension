@@ -168,6 +168,8 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
+          echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           source /etc/environment
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -185,7 +187,7 @@ Resources:
           
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update -y
-          sudo apt install wget python3.10 python3.10-venv python3-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
+          sudo apt --fix-broken install wget python3.10 python3.10-venv python3-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
           sudo python3 -m venv venv
@@ -193,7 +195,9 @@ Resources:
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
-          sudo chmod 777 -R /ComfyUI
+          sudo git clone https://github.com/ltdrdata/ComfyUI-Manager.git /ComfyUI/custom_nodes/ComfyUI-Manager
+          sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
+          sudo chmod -R 777 /ComfyUI
           
           cat > comfy.service <<EOF
           [Unit]

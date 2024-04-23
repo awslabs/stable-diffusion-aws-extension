@@ -36,7 +36,7 @@ is_multi_gpu = False
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
-        logger.info(f"Starting on {comfy_app.port} {request_obj}")
+        logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
@@ -50,7 +50,7 @@ async def send_request(request_obj, comfy_app, need_async):
                                 detail=f"COMFY service returned an error: {response.text}")
         return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
     finally:
         comfy_app.busy = False
 
