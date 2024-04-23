@@ -379,7 +379,7 @@ def sync_instance_monitor_status(need_save: bool):
 
 @server.PromptServer.instance.routes.post("/reboot")
 async def restart(self):
-    logger.info(f"start to reboot!!!!!!!! {self}")
+    logger.debug(f"start to reboot!!!!!!!! {self}")
     global executing
     if executing is True:
         logger.info(f"other inference doing cannot reboot!!!!!!!!")
@@ -393,7 +393,7 @@ async def restart(self):
         logger.info("no need to reboot by global constant")
         return ok({"message": "no need to reboot by constant"})
 
-    logger.info("rebooting !!!!!!!!")
+    logger.debug("rebooting !!!!!!!!")
     try:
         sys.stdout.close_log()
     except Exception as e:
