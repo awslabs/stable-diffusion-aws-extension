@@ -12,6 +12,7 @@ import tomli
 import tomli_w
 from aws_lambda_powertools import Tracer
 
+from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common import const
 from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
@@ -246,6 +247,7 @@ def _create_training_job(raw_event, context):
         output_name = query_data(event.params, ['config_params', 'output_name'])
         output_name = f"{output_name}.safetensors"
 
+        check_ckpt_name_unique([output_name])
         check_train_ckpt_name_unique([output_name])
 
         save_every_n_epochs = query_data(event.params, ['config_params', 'save_every_n_epochs'])
