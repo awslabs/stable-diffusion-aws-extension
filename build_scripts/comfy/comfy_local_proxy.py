@@ -178,6 +178,7 @@ def execute_proxy(func):
             "endpoint_name": comfy_endpoint,
             "need_prepare": comfy_need_prepare,
             "need_sync": comfy_need_sync,
+            "multi_async": True
         }
 
         def send_post_request(url, params):
@@ -249,7 +250,10 @@ def execute_proxy(func):
                     while i > 0:
                         images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                         response = images_response.json()
-                        if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                        if images_response.status_code == 404:
+                            time.sleep(3)
+                            i = i - 2
+                        elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
                             logging.error("there is no response from sync executes")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
