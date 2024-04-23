@@ -165,7 +165,7 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
-        if os.environ.get('DISABLE_AWS_PROXY') == 'true':
+        if os.environ.get('DISABLE_AWS_PROXY') == 'True':
             logging.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
         logging.info("enable aws proxy, use aws")
@@ -287,7 +287,7 @@ server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 def sync_files(filepath, is_folder, is_auto):
     try:
         directory = os.path.dirname(filepath)
-        logging.info(f"Directory changed in: {directory}")
+        logging.info(f"Directory changed in: {directory} {filepath}")
         if not directory:
             logging.info("root path no need to sync files by duplicate opt")
             return None
@@ -301,7 +301,7 @@ def sync_files(filepath, is_folder, is_auto):
                 logging.info(f"no need to sync files by ignore files {filepath} ends by {ignore_item}")
                 return None
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
-                or str(filepath) == DIR2 or f"{DIR2}/" in filepath):
+                or str(filepath) == DIR2 or str(filepath) == f'./{DIR2}' or f"{DIR2}/" in filepath):
             logging.info(f" sync custom nodes files: {filepath}")
             s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
@@ -318,7 +318,7 @@ def sync_files(filepath, is_folder, is_auto):
             need_reboot = True
             prepare_type = 'nodes'
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
-              or str(filepath) == DIR3 or f"{DIR3}/" in filepath):
+              or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
             logging.info(f" sync input files: {filepath}")
             s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
 
@@ -337,7 +337,7 @@ def sync_files(filepath, is_folder, is_auto):
             need_prepare = True
             prepare_type = 'inputs'
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
-              or str(filepath) == DIR1 or f"{DIR1}/" in filepath):
+              or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
             logging.info(f" sync models files: {filepath}")
             s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
 
@@ -488,7 +488,7 @@ if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
     check_sync_thread.start()
 
 
-@server.PromptServer.instance.routes.post("/reboot")
+@server.PromptServer.instance.routes.get("/reboot")
 async def restart(self):
     logging.info(f"start to reboot {self}")
     try:
@@ -503,9 +503,9 @@ async def restart(self):
 async def sync_env(request):
     logging.info(f"start to sync_env {request}")
     try:
-        result1 = sync_files(DIR1, 'False', False)
-        result2 = sync_files(DIR2, 'True', False)
-        result3 = sync_files(DIR3, 'False', False)
+        result1 = sync_files(f'./{DIR1}', 'False', False)
+        result2 = sync_files(f'./{DIR2}', 'True', False)
+        result3 = sync_files(f'./{DIR3}', 'False', False)
         logging.info(f"sync result is :{result1} {result2} {result3}")
         return True
     except Exception as e:
@@ -519,7 +519,7 @@ async def change_env(request):
     logging.info(f"start to change_env {request}")
     json_data = await request.json()
     if 'DISABLE_AWS_PROXY' in json_data and json_data['DISABLE_AWS_PROXY'] is not None:
-        logging.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
-        os.environ['DISABLE_AWS_PROXY'] = json_data['DISABLE_AWS_PROXY']
+        logging.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')} {str(json_data['DISABLE_AWS_PROXY'])}")
+        os.environ['DISABLE_AWS_PROXY'] = str(json_data['DISABLE_AWS_PROXY'])
         logging.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
     return True
