@@ -42,11 +42,23 @@ class Schema:
 
 
 @dataclass
-class Tag:
-    name: str
+class ExternalDocs:
+    url: str
     description: str
 
     def to_dict(self):
+        return {"url": self.url, "description": self.description}
+
+
+@dataclass
+class Tag:
+    name: str
+    description: str
+    externalDocs: Optional[ExternalDocs] = None
+
+    def to_dict(self):
+        if self.externalDocs:
+            return {"name": self.name, "description": self.description, "externalDocs": self.externalDocs.to_dict()}
         return {"name": self.name, "description": self.description}
 
 
@@ -104,8 +116,20 @@ tags = [
     Tag(name="Roles", description="Manage Roles").to_dict(),
     Tag(name="Users", description="Manage Users").to_dict(),
     Tag(name="Endpoints", description="Manage Endpoints").to_dict(),
-    Tag(name="Checkpoints", description="Manage Checkpoints").to_dict(),
-    Tag(name="Inferences", description="Manage Inferences").to_dict(),
+    Tag(
+        name="Checkpoints",
+        description="Manage Checkpoints",
+        externalDocs=ExternalDocs(
+            url="https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_upload_ckpt/",
+            description="API Upload Checkpoint Process")
+    ).to_dict(),
+    Tag(
+        name="Inferences",
+        description="Manage Inferences",
+        externalDocs=ExternalDocs(
+            url="https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_inference_process/",
+            description="API Inference Process")
+    ).to_dict(),
     Tag(name="Executes", description="Manage Executes").to_dict(),
     Tag(name="Datasets", description="Manage Datasets").to_dict(),
     Tag(name="Trainings", description="Manage Trainings").to_dict(),
