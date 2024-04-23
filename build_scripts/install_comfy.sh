@@ -25,6 +25,11 @@ cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
 
+if [ "$ON_DOCKER" != "true" ]; then
+  cp stable-diffusion-aws-extension/build_scripts/comfy/restart.py ComfyUI/custom_nodes/
+  cp stable-diffusion-aws-extension/build_scripts/comfy/restart.js ComfyUI/web/extensions/core/
+fi
+
 rm -rf stable-diffusion-aws-extension
 
 echo "---------------------------------------------------------------------------------"
