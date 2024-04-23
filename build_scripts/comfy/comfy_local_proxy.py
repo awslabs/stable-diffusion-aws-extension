@@ -3,6 +3,7 @@ import concurrent.futures
 import datetime
 import os
 import signal
+import sys
 import threading
 
 import requests
@@ -35,7 +36,7 @@ logging.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME']
+            'MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -164,6 +165,10 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
+        if os.environ.get('DISABLE_AWS_PROXY') == 'true':
+            logging.info("disabled aws proxy, use local")
+            return func(*args, **kwargs)
+        logging.info("enable aws proxy, use aws")
         executor = args[0]
         server_use = executor.server
         prompt = args[1]
@@ -279,13 +284,13 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
-def sync_files(filepath, is_folder):
+def sync_files(filepath, is_folder, is_auto):
     try:
         directory = os.path.dirname(filepath)
         logging.info(f"Directory changed in: {directory}")
         if not directory:
             logging.info("root path no need to sync files by duplicate opt")
-            return
+            return None
         logging.info(f"Files changed in: {filepath}")
         timestamp = str(int(time.time() * 1000))
         need_prepare = False
@@ -294,7 +299,7 @@ def sync_files(filepath, is_folder):
         for ignore_item in no_need_sync_files:
             if filepath.endswith(ignore_item):
                 logging.info(f"no need to sync files by ignore files {filepath} ends by {ignore_item}")
-                return
+                return None
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or f"{DIR2}/" in filepath):
             logging.info(f" sync custom nodes files: {filepath}")
@@ -303,9 +308,9 @@ def sync_files(filepath, is_folder):
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
 
             # custom_node文件夹有变化 稍后再同步
-            if not is_folder_unlocked(directory):
+            if is_auto and not is_folder_unlocked(directory):
                 logging.info("sync custom_nodes files is changing ,waiting.... ")
-                return
+                return None
             logging.info("sync custom_nodes files start")
             logging.info(s5cmd_syn_node_command)
             os.system(s5cmd_syn_node_command)
@@ -318,13 +323,14 @@ def sync_files(filepath, is_folder):
             s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
 
             # 判断文件写完后再同步
-            if bool(is_folder):
-                can_sync = is_folder_unlocked(filepath)
-            else:
-                can_sync = is_file_unlocked(filepath)
-            if not can_sync:
-                logging.info("sync input files is changing ,waiting.... ")
-                return
+            if is_auto:
+                if bool(is_folder):
+                    can_sync = is_folder_unlocked(filepath)
+                else:
+                    can_sync = is_file_unlocked(filepath)
+                if not can_sync:
+                    logging.info("sync input files is changing ,waiting.... ")
+                    return None
             logging.info("sync input files start")
             logging.info(s5cmd_syn_input_command)
             os.system(s5cmd_syn_input_command)
@@ -336,14 +342,15 @@ def sync_files(filepath, is_folder):
             s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
 
             # 判断文件写完后再同步
-            if bool(is_folder):
-                can_sync = is_folder_unlocked(filepath)
-            else:
-                can_sync = is_file_unlocked(filepath)
-            # logging.info(f'is folder {directory} {is_folder} can_sync {can_sync}')
-            if not can_sync:
-                logging.info("sync input models is changing ,waiting.... ")
-                return
+            if is_auto:
+                if bool(is_folder):
+                    can_sync = is_folder_unlocked(filepath)
+                else:
+                    can_sync = is_file_unlocked(filepath)
+                # logging.info(f'is folder {directory} {is_folder} can_sync {can_sync}')
+                if not can_sync:
+                    logging.info("sync input models is changing ,waiting.... ")
+                    return None
 
             logging.info("sync models files start")
             logging.info(s5cmd_syn_model_command)
@@ -361,8 +368,11 @@ def sync_files(filepath, is_folder):
                                      f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                     capture_output=True, text=True)
             logging.info(result.stdout)
+            return result.stdout
+        return None
     except Exception as e:
         logging.info(f"sync_files error {e}")
+        return None
 
 
 def is_folder_unlocked(directory):
@@ -434,15 +444,15 @@ class MyHandlerWithCheck(FileSystemEventHandler):
 class MyHandlerWithSync(FileSystemEventHandler):
     def on_modified(self, event):
         logging.info(f"{datetime.datetime.now()} files modified ，start to sync {event}")
-        sync_files(event.src_path, event.is_directory)
+        sync_files(event.src_path, event.is_directory, True)
 
     def on_created(self, event):
         logging.info(f"{datetime.datetime.now()} files added ，start to sync {event}")
-        sync_files(event.src_path, event.is_directory)
+        sync_files(event.src_path, event.is_directory, True)
 
     def on_deleted(self, event):
         logging.info(f"{datetime.datetime.now()} files deleted ，start to sync {event}")
-        sync_files(event.src_path, event.is_directory)
+        sync_files(event.src_path, event.is_directory, True)
 
 
 stop_event = threading.Event()
@@ -470,11 +480,46 @@ def signal_handler(sig, frame):
     stop_event.set()
 
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
-check_sync_thread = threading.Thread(target=check_and_sync)
-check_sync_thread.start()
+    check_sync_thread = threading.Thread(target=check_and_sync)
+    check_sync_thread.start()
 
 
+@server.PromptServer.instance.routes.post("/reboot")
+async def restart(self):
+    logging.info(f"start to reboot {self}")
+    try:
+        sys.stdout.close_log()
+    except Exception as e:
+        logging.info(f"error reboot  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
 
+
+@server.PromptServer.instance.routes.post("/sync_env")
+async def sync_env(request):
+    logging.info(f"start to sync_env {request}")
+    try:
+        result1 = sync_files(DIR1, 'False', False)
+        result2 = sync_files(DIR2, 'True', False)
+        result3 = sync_files(DIR3, 'False', False)
+        logging.info(f"sync result is :{result1} {result2} {result3}")
+        return True
+    except Exception as e:
+        logging.info(f"error sync_env {e}")
+        pass
+    return False
+
+
+@server.PromptServer.instance.routes.post("/change_env")
+async def change_env(request):
+    logging.info(f"start to change_env {request}")
+    json_data = await request.json()
+    if 'DISABLE_AWS_PROXY' in json_data and json_data['DISABLE_AWS_PROXY'] is not None:
+        logging.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
+        os.environ['DISABLE_AWS_PROXY'] = json_data['DISABLE_AWS_PROXY']
+        logging.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
+    return True
