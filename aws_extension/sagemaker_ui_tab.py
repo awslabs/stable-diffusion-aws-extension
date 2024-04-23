@@ -1436,16 +1436,6 @@ def trainings_tab():
                             interactive=False,
                         )
 
-                        def list_ep_first(rq: gr.Request):
-                            set_page_key_empty(rq.username, 'trainings')
-                            result = _list_trainings_job(rq.username)
-                            return result, train_list_info.update(value="", visible=False), ""
-
-                        def list_ep_next(rq: gr.Request):
-                            last_key = get_page_key_next(rq.username, 'trainings')
-                            result = _list_trainings_job(rq.username, last_key)
-                            return result, train_list_info.update(value="", visible=False), ""
-
                     with gr.Row():
                         t_list_load_btn = gr.Button(value='First Page')
                         t_list_next_btn = gr.Button(value='Next Page')
@@ -1453,27 +1443,54 @@ def trainings_tab():
                     with gr.Row():
                         train_list_info = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
                         train_selected = gr.Textbox(value="", label="Selected Training item", visible=False)
+                    with gr.Row():
+                        list_logs = gr.HTML(value="", label="Training Logs", visible=False)
+                    with gr.Row():
+                        def list_ep_first(rq: gr.Request):
+                            set_page_key_empty(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username)
+                            return result, train_list_info.update(value="", visible=False), "", list_logs.update(
+                                value="", visible=False)
+
+                        def list_ep_next(rq: gr.Request):
+                            last_key = get_page_key_next(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username, last_key)
+                            return result, train_list_info.update(value="", visible=False), "", list_logs.update(
+                                value="", visible=False)
 
                         t_list_load_btn.click(fn=list_ep_first, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
+                                              outputs=[train_list, train_list_info, train_selected, list_logs])
                         t_list_next_btn.click(fn=list_ep_next, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
-
-                        def choose_training(evt: gr.SelectData, dataset):
+                                              outputs=[train_list, train_list_info, train_selected, list_logs])
+                    with gr.Row():
+                        def choose_training(evt: gr.SelectData, dataset, rq: gr.Request):
                             row_index = evt.index[0]
                             train_id = dataset.values[row_index][0]
                             if train_id:
+                                headers = {'x-api-key': utils.api_key(), "username": rq.username}
                                 message = f"You selected training is: {train_id}"
                                 visible = True
+                                resp = api.get_training_job(job_id=train_id, headers=headers).json()
+                                logs = ""
+                                if 'data' in resp and 'logs' in resp['data'] and len(resp['data']['logs']) > 0:
+                                    logs = "<div style='padding: 10px'>"
+                                    logs += "<h2>Logs</h2>"
+                                    for item in resp['data']['logs']:
+                                        filename = item['filename']
+                                        url = item['url']
+                                        logs += f"<p><a href='{url}'>{filename}</a></p>\n"
+                                    logs += f"</div>"
                             else:
                                 train_id = ""
                                 message = ""
                                 visible = False
-                            return train_list_info.update(value=message, visible=visible), train_id
+                                logs = ""
+                            return train_list_info.update(value=message, visible=visible), train_id, list_logs.update(
+                                value=logs, visible=visible)
 
                         train_list.select(fn=choose_training,
                                           inputs=[train_list],
-                                          outputs=[train_list_info, train_selected])
+                                          outputs=[train_list_info, train_selected, list_logs])
 
                         def _train_delete(train, pr: gr.Request):
                             if not train:
