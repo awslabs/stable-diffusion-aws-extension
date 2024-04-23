@@ -40,7 +40,7 @@ async def send_request(request_obj, comfy_app, need_async):
         comfy_app.busy = True
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=60) as client:
                 response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
         else:
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
@@ -100,7 +100,7 @@ def ping():
     comfy_app = check_available_app(False)
     if comfy_app is None:
         raise HTTPException(status_code=500)
-    logger.info(f"check status start url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
+    logger.debug(f"check status start url:{PHY_LOCALHOST}:{comfy_app.port}/queue")
     response = requests.get(f"http://{PHY_LOCALHOST}:{comfy_app.port}/queue")
     if response.status_code != 200:
         raise HTTPException(status_code=500)
@@ -187,7 +187,7 @@ def get_available_app(need_check_busy: bool):
     if available_apps is None:
         return None
     for item in available_apps:
-        logger.info(f"get available apps {item.device_id} {item.busy}")
+        logger.debug(f"get available apps {item.device_id} {item.busy}")
         if need_check_busy:
             if item.is_port_ready() and not item.busy:
                 return item
