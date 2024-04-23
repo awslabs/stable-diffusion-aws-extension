@@ -195,6 +195,7 @@ Resources:
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+          git clone https://github.com/ltdrdata/ComfyUI-Manager.git /ComfyUI/custom_nodes
           sudo chmod 777 -R /ComfyUI
           
           cat > comfy.service <<EOF
