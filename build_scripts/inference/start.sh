@@ -334,7 +334,7 @@ if [[ $IMAGE_URL == *"dev"* ]]; then
       exit 1
   else
       comfy_install_build
-      /trim_comfy.sh
+      /serve trim_comfy
       comfy_cache_endpoint
       comfy_launch
       exit 1
