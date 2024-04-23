@@ -265,6 +265,8 @@ def execute_proxy(func):
                         logger.debug(msg_response.json())
                         already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
                         logger.info(f"already_synced is :{already_synced}")
+                        time.sleep(1)
+                        m = m - 1
             logger.info(f"check if images are already synced {save_already}")
             if not save_already:
                 logger.info("check if images are not already synced, please wait")
