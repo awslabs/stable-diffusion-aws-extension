@@ -324,22 +324,22 @@ comfy_launch_from_public_s3(){
 
 # -------------------- startup --------------------
 
-#if [[ $IMAGE_URL == *"dev"* ]]; then
-#  download_conda
-#  if [ "$SERVICE_TYPE" == "sd" ]; then
-#      sd_install_build
-#      /serve trim_sd.sh
-#      sd_cache_endpoint
-#      sd_launch
-#      exit 1
-#  else
-#      comfy_install_build
-#      /trim_comfy.sh
-#      comfy_cache_endpoint
-#      comfy_launch
-#      exit 1
-#  fi
-#fi
+if [[ $IMAGE_URL == *"dev"* ]]; then
+  download_conda
+  if [ "$SERVICE_TYPE" == "sd" ]; then
+      sd_install_build
+      /serve trim_sd.sh
+      sd_cache_endpoint
+      sd_launch
+      exit 1
+  else
+      comfy_install_build
+      /trim_comfy.sh
+      comfy_cache_endpoint
+      comfy_launch
+      exit 1
+  fi
+fi
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
