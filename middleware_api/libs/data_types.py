@@ -66,8 +66,8 @@ class TrainJob:
     params: Optional[dict[str, Any]] = None
     allowed_roles_or_users: Optional[list[str]] = None
     # todo will remove
-    checkpoint_id: str = ''
-    sagemaker_sfn_arn: Optional[str] = ''
+    checkpoint_id: str = None
+    sagemaker_sfn_arn: Optional[str] = None
 
     def __post_init__(self):
         if type(self.job_status) == str:
