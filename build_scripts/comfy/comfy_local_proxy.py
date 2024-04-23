@@ -64,7 +64,7 @@ comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
 comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
-max_wait_time = os.environ.get('MAX_WAIT_TIME', 60)
+max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -148,6 +148,10 @@ def get_file_name(url: str):
     return file_name
 
 
+def convert_image_data(data):
+
+    return data
+
 def handle_sync_messages(server_use, msg_array):
     already_synced = False
     global sync_msg_list
@@ -158,12 +162,13 @@ def handle_sync_messages(server_use, msg_array):
             sid = item.get('sid') if 'sid' in item else None
             if data in sync_msg_list:
                 continue
-            server_use.send_sync(event, data, sid)
             sync_msg_list.append(data)
             if event == 'finish':
                 already_synced = True
-            # elif event == 'executed':
-            #     already_synced = True
+            elif event == 'executed':
+                data = convert_image_data(data)
+            server_use.send_sync(event, data, sid)
+
     return already_synced
 
 
@@ -271,7 +276,7 @@ def execute_proxy(func):
                             logger.error("there is no response from sync executes")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                            logger.info("images not already ,waiting sagemaker result .....")
+                            logger.info(f"images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             time.sleep(3)
                             i = i - 1
                         else:
