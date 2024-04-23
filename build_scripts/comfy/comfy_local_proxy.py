@@ -149,8 +149,9 @@ def get_file_name(url: str):
 
 
 def convert_image_data(data):
-
+    # TODO refix image prefix and add list to resend after finish execute save
     return data
+
 
 def handle_sync_messages(server_use, msg_array):
     already_synced = False
