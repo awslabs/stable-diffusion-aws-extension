@@ -64,7 +64,7 @@ comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
 comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
-max_wait_time = os.environ.get('MAX_WAIT_TIME', 30)
+max_wait_time = os.environ.get('MAX_WAIT_TIME', 60)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -239,21 +239,24 @@ def execute_proxy(func):
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 logger.error("there is no response from sync msg by thread ")
+                                time.sleep(1)
                             else:
                                 logger.debug(msg_response.json())
                                 already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 # logger.info(msg_response.json())
-                already_synced = True
                 if msg_response.status_code == 200:
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         logger.error("there is no response from sync msg")
+                        time.sleep(1)
                     else:
                         logger.debug(msg_response.json())
                         already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
-
+                        logger.info(f"already_synced is :{already_synced}")
+            logger.info("check if images are already synced")
             if not save_already:
+                logger.info("check if images are not already synced, please wait")
                 execute_resp = execute_future.result()
                 if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     i = max_wait_time
@@ -261,18 +264,21 @@ def execute_proxy(func):
                         images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                         response = images_response.json()
                         if images_response.status_code == 404:
+                            logger.info("no images found already ,waiting sagemaker result .....")
                             time.sleep(3)
                             i = i - 2
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
                             logger.error("there is no response from sync executes")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                            time.sleep(2)
+                            logger.info("images not already ,waiting sagemaker result .....")
+                            time.sleep(3)
                             i = i - 1
                         else:
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                             break
+            logger.info("execute finished")
     return wrapper
 
 
