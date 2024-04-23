@@ -104,7 +104,7 @@ header_user_name = Parameter(
     schema=Schema(type="string", default="api")
 )
 
-path_id = Parameter(name="id", description="ID", location="path")
+path_id = Parameter(name="id", description="ID", location="path", required=True)
 path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
 
 query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
@@ -122,14 +122,14 @@ tags = [
         description="Manage Checkpoints",
         externalDocs=ExternalDocs(
             url="https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_upload_ckpt/",
-            description="API Upload Checkpoint Process")
+            description="Upload Checkpoint Process")
     ).to_dict(),
     Tag(
         name="Inferences",
         description="Manage Inferences",
         externalDocs=ExternalDocs(
             url="https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_inference_process/",
-            description="API Inference Process")
+            description="Inference Process")
     ).to_dict(),
     Tag(name="Executes", description="Manage Executes").to_dict(),
     Tag(name="Datasets", description="Manage Datasets").to_dict(),
@@ -142,15 +142,18 @@ tags = [
 operations = {
     "RootAPI": APISchema(
         summary="Root API",
-        tags=["Service"]
+        tags=["Service"],
+        description="The Root API of ESD"
     ),
     "Ping": APISchema(
         summary="Ping API",
-        tags=["Service"]
+        tags=["Service"],
+        description="The Ping API for Health Check"
     ),
     "ListRoles": APISchema(
         summary="List Roles",
         tags=["Roles"],
+        description="List all roles",
         parameters=[
             header_user_name
         ]
@@ -158,6 +161,7 @@ operations = {
     "GetInferenceJob": APISchema(
         summary="Get Inference Job",
         tags=["Inferences"],
+        description="Get Inference Job",
         parameters=[
             header_user_name,
             path_id
@@ -166,6 +170,7 @@ operations = {
     "CreateRole": APISchema(
         summary="Create Role",
         tags=["Roles"],
+        description="Create a new role",
         parameters=[
             header_user_name
         ]
@@ -173,6 +178,7 @@ operations = {
     "DeleteRoles": APISchema(
         summary="Delete Roles",
         tags=["Roles"],
+        description="Delete specify Roles",
         parameters=[
             header_user_name
         ]
@@ -180,6 +186,7 @@ operations = {
     "GetTraining": APISchema(
         summary="Get Training",
         tags=["Trainings"],
+        description="Get Training List",
         parameters=[
             header_user_name,
             path_id
@@ -188,6 +195,7 @@ operations = {
     "ListCheckpoints": APISchema(
         summary="List Checkpoints",
         tags=["Checkpoints"],
+        description="List Checkpoints with Parameters",
         parameters=[
             header_user_name,
             query_page,
@@ -198,6 +206,7 @@ operations = {
     "CreateCheckpoint": APISchema(
         summary="Create Checkpoint",
         tags=["Checkpoints"],
+        description="Create a new Checkpoint",
         parameters=[
             header_user_name
         ]
@@ -205,6 +214,7 @@ operations = {
     "DeleteCheckpoints": APISchema(
         summary="Delete Checkpoints",
         tags=["Checkpoints"],
+        description="Delete specify Checkpoints",
         parameters=[
             header_user_name
         ]
@@ -212,6 +222,7 @@ operations = {
     "StartInferences": APISchema(
         summary="Start Inference Job",
         tags=["Inferences"],
+        description="Start specify Inference Job by ID",
         parameters=[
             header_user_name,
             path_id
@@ -220,6 +231,7 @@ operations = {
     "ListExecutes": APISchema(
         summary="List Executes",
         tags=["Executes"],
+        description="List Executes with Parameters",
         parameters=[
             header_user_name,
             query_limit,
@@ -229,6 +241,7 @@ operations = {
     "CreateExecute": APISchema(
         summary="Create Execute",
         tags=["Executes"],
+        description="Create a new Execute for Comfy",
         parameters=[
             header_user_name
         ]
@@ -236,17 +249,20 @@ operations = {
     "DeleteExecutes": APISchema(
         summary="Delete Executes",
         tags=["Executes"],
+        description="Delete specify Executes",
         parameters=[
             header_user_name
         ]
     ),
     "GetApiOAS": APISchema(
         summary="Get OAS",
+        description="Get OAS json schema",
         tags=["Service"],
     ),
     "ListUsers": APISchema(
         summary="List Users",
         tags=["Users"],
+        description="List all users",
         parameters=[
             header_user_name
         ]
@@ -254,6 +270,7 @@ operations = {
     "CreateUser": APISchema(
         summary="Create User",
         tags=["Users"],
+        description="Create a new user",
         parameters=[
             header_user_name
         ]
@@ -261,6 +278,7 @@ operations = {
     "DeleteUsers": APISchema(
         summary="Delete Users",
         tags=["Users"],
+        description="Delete specify Users",
         parameters=[
             header_user_name
         ]
@@ -268,6 +286,7 @@ operations = {
     "ListTrainings": APISchema(
         summary="List Trainings",
         tags=["Trainings"],
+        description="List Trainings with Parameters",
         parameters=[
             header_user_name,
             query_limit,
@@ -277,6 +296,7 @@ operations = {
     "CreateTraining": APISchema(
         summary="Create Training",
         tags=["Trainings"],
+        description="Create a new Training Job",
         parameters=[
             header_user_name
         ]
@@ -284,6 +304,7 @@ operations = {
     "DeleteTrainings": APISchema(
         summary="Delete Trainings",
         tags=["Trainings"],
+        description="Delete specify Trainings",
         parameters=[
             header_user_name
         ]
@@ -291,6 +312,7 @@ operations = {
     "GetExecute": APISchema(
         summary="Get Execute",
         tags=["Executes"],
+        description="Get Execute by ID",
         parameters=[
             header_user_name,
             path_id
@@ -299,6 +321,7 @@ operations = {
     "ListDatasets": APISchema(
         summary="List Datasets",
         tags=["Datasets"],
+        description="List Datasets with Parameters",
         parameters=[
             header_user_name,
             query_limit,
@@ -308,6 +331,7 @@ operations = {
     "CropDataset": APISchema(
         summary="Create new Crop Dataset",
         tags=["Datasets"],
+        description="Create new Crop Dataset",
         parameters=[
             header_user_name,
             path_dataset_name
@@ -316,6 +340,7 @@ operations = {
     "GetDataset": APISchema(
         summary="Get Dataset",
         tags=["Datasets"],
+        description="Get Dataset by ID",
         parameters=[
             header_user_name,
             path_dataset_name
@@ -324,6 +349,7 @@ operations = {
     "UpdateCheckpoint": APISchema(
         summary="Update Checkpoint",
         tags=["Checkpoints"],
+        description="Update Checkpoint by ID",
         parameters=[
             header_user_name,
             path_dataset_name
@@ -332,6 +358,7 @@ operations = {
     "CreateDataset": APISchema(
         summary="Create Dataset",
         tags=["Datasets"],
+        description="Create a new Dataset",
         parameters=[
             header_user_name
         ]
@@ -339,6 +366,7 @@ operations = {
     "DeleteDatasets": APISchema(
         summary="Delete Datasets",
         tags=["Datasets"],
+        description="Delete specify Datasets",
         parameters=[
             header_user_name
         ]
@@ -346,6 +374,7 @@ operations = {
     "UpdateDataset": APISchema(
         summary="Update Dataset",
         tags=["Datasets"],
+        description="Update Dataset by ID",
         parameters=[
             header_user_name,
             path_dataset_name
@@ -354,6 +383,7 @@ operations = {
     "ListInferences": APISchema(
         summary="List Inferences",
         tags=["Inferences"],
+        description="List Inferences with Parameters",
         parameters=[
             header_user_name,
             query_limit,
@@ -364,6 +394,7 @@ operations = {
     "CreateInferenceJob": APISchema(
         summary="Create Inference Job",
         tags=["Inferences"],
+        description="Create a new Inference Job",
         parameters=[
             header_user_name
         ]
@@ -371,6 +402,7 @@ operations = {
     "DeleteInferenceJobs": APISchema(
         summary="Delete Inference Jobs",
         tags=["Inferences"],
+        description="Delete specify Inference Jobs",
         parameters=[
             header_user_name
         ]
@@ -378,6 +410,7 @@ operations = {
     "ListEndpoints": APISchema(
         summary="List Endpoints",
         tags=["Endpoints"],
+        description="List Endpoints with Parameters",
         parameters=[
             header_user_name,
             query_limit,
@@ -387,6 +420,7 @@ operations = {
     "CreateEndpoint": APISchema(
         summary="Create Endpoint",
         tags=["Endpoints"],
+        description="Create a new Endpoint",
         parameters=[
             header_user_name
         ]
@@ -394,6 +428,7 @@ operations = {
     "DeleteEndpoints": APISchema(
         summary="Delete Endpoints",
         tags=["Endpoints"],
+        description="Delete specify Endpoints",
         parameters=[
             header_user_name
         ]
@@ -401,12 +436,14 @@ operations = {
     "SyncMessage": APISchema(
         summary="Sync Message",
         tags=["Sync"],
+        description="Sync Message to Endpoint",
         parameters=[
             header_user_name
         ]
     ),
     "GetSyncMessage": APISchema(
         summary="Get Sync Message",
+        description="Get Sync Message from Endpoint",
         tags=["Sync"],
         parameters=[
             header_user_name
@@ -415,6 +452,7 @@ operations = {
     "CreatePrepare": APISchema(
         summary="Create Prepare",
         tags=["Prepare"],
+        description="Create a new Prepare",
         parameters=[
             header_user_name
         ]
@@ -422,6 +460,7 @@ operations = {
     "GetPrepare": APISchema(
         summary="Get Prepare",
         tags=["Prepare"],
+        description="Get Prepare by ID",
         parameters=[
             header_user_name
         ]
@@ -442,9 +481,9 @@ def handler(event: dict, context: LambdaContext):
             stageName='prod',
             exportType='oas30',
             accepts='application/json',
-            parameters={
-                'extensions': 'apigateway'
-            }
+            # parameters={
+            #     'extensions': 'apigateway'
+            # }
         )
 
         oas = response['body'].read()
@@ -469,30 +508,27 @@ def handler(event: dict, context: LambdaContext):
             }
         ]
 
-        json_schema['info']['contact'] = [
-            {
-                "email": "elonniu@amazon.com",
-            }
-        ]
+        json_schema['info']['contact'] = {
+            "email": "elonniu@amazon.com",
+        }
 
-        json_schema['info']['license'] = [
-            {
-                "name": "Apache 2.0",
-                "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
-            }
-        ]
+        json_schema['info']['license'] = {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+        }
 
         json_schema['info']['description'] = (
-            "This is a ESD Server based on the OpenAPI 3.0 specification."
-            "Some useful links: "
-            "- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)"
-            "- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)")
+            "This is a ESD Server based on the OpenAPI 3.0 specification. \n"
+            "Some useful links: \n"
+            "\n- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)"
+            "\n- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)")
 
         json_schema['tags'] = tags
 
         for path in json_schema['paths']:
             for method in json_schema['paths'][path]:
                 meta = supplement_schema(json_schema['paths'][path][method])
+                json_schema['paths'][path][method]['description'] = meta.description
                 json_schema['paths'][path][method]['summary'] = meta.summary
                 json_schema['paths'][path][method]['tags'] = meta.tags
                 json_schema['paths'][path][method]['parameters'] = merge_parameters(meta,
@@ -561,6 +597,7 @@ def replace_null(data):
                 }
             else:
                 data[i] = replace_null(item)
+
     return data
 
 

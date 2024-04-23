@@ -84,10 +84,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-RootApilambdaA93AFF7C-jOsoi8ztLtQH/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-RootApilambdaA93AFF7C-fxJBCXs9axdW/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Root API (RootAPI)",
         "tags": [
@@ -120,7 +120,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -134,7 +133,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -205,10 +205,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusio-ApiDoclambda652963C2-dyZLDZyDoaEo/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusio-ApiDoclambda652963C2-X3nc93WJZSAP/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get OAS (GetApiOAS)",
         "tags": [
@@ -241,7 +241,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -255,7 +254,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -271,27 +271,33 @@
           {
             "name": "username",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Filter by username",
             "required": false
           },
           {
             "name": "per_page",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "page",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Page Index",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -377,10 +383,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListCheckPointslambda52E-CUKymXGnHWaq/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListCheckPointslambda52E-2DCc65JXCbeU/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Checkpoints (ListCheckpoints)",
         "tags": [
@@ -508,12 +514,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateCheckPointlambdaF7-7UzmAxkKBAcT/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateCheckPointlambdaF7-tBEB0veQYzDH/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Checkpoint (CreateCheckpoint)",
         "tags": [
@@ -522,7 +528,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -637,12 +643,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteCheckpointslambdaE-2coJTkrxhKRQ/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteCheckpointslambdaE-zHfCIYexPb2w/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Checkpoints (DeleteCheckpoints)",
         "tags": [
@@ -651,7 +657,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -687,7 +693,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -701,7 +706,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -718,12 +724,14 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -852,12 +860,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateCheckPointlambdaB0-5bdxYQKZgrkF/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateCheckPointlambdaB0-695Pj1yn6Uq3/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Update Checkpoint (UpdateCheckpoint)",
         "tags": [
@@ -890,7 +898,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -904,7 +911,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -938,7 +946,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -952,7 +959,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -968,20 +976,24 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Exclusive Start Key",
             "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1050,10 +1062,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListDatasetslambda67F227-Ldl4NLyoWuAO/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListDatasetslambda67F227-Warfs45A3uDc/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Datasets (ListDatasets)",
         "tags": [
@@ -1164,12 +1176,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateDatasetlambdaE4C5E-TAVNCx22US4i/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateDatasetlambdaE4C5E-9ZIp16lLDdag/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Dataset (CreateDataset)",
         "tags": [
@@ -1178,7 +1190,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1293,12 +1305,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteDatasetslambda4ED0-ms7LipmnD2cV/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteDatasetslambda4ED0-JckzkyLEYbHl/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Datasets (DeleteDatasets)",
         "tags": [
@@ -1307,7 +1319,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1343,7 +1355,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -1357,7 +1368,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -1374,12 +1386,14 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1465,10 +1479,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetDatasetlambda5273A45E-YphmqyY7gGxe/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetDatasetlambda5273A45E-ct2O74gWbMMg/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Dataset (GetDataset)",
         "tags": [
@@ -1482,12 +1496,14 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1582,12 +1598,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateDatasetlambda285EA-ls4VVjW0GFGK/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateDatasetlambda285EA-xJzDY4rHRLfm/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Update Dataset (UpdateDataset)",
         "tags": [
@@ -1620,7 +1636,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -1634,7 +1649,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -1650,12 +1666,14 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Dataset Name"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1767,12 +1785,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CropDatasetlambda3D2CD9C-yDSJtFwuKsRs/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CropDatasetlambda3D2CD9C-JJCTtZ13H2B0/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create new Crop Dataset (CropDataset)",
         "tags": [
@@ -1805,7 +1823,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -1819,7 +1836,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -1834,20 +1852,24 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Exclusive Start Key",
             "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -1933,10 +1955,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListEndpointslambdaF82AC-thH3eTqsVt34/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListEndpointslambdaF82AC-JqZIaGPk9MtM/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Endpoints (ListEndpoints)",
         "tags": [
@@ -2047,12 +2069,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateEndpointlambda9B92-i1aL8g3BNhRZ/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateEndpointlambda9B92-TKZLrBnsGgUC/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Endpoint (CreateEndpoint)",
         "tags": [
@@ -2061,7 +2083,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2159,12 +2181,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteEndpointslambdaF54-k2kWaagf7EHn/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteEndpointslambdaF54-VO703isBXdGO/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Endpoints (DeleteEndpoints)",
         "tags": [
@@ -2173,7 +2195,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2209,7 +2231,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -2223,7 +2244,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -2239,20 +2261,24 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Exclusive Start Key",
             "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2338,10 +2364,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-QueryExecutelambda02DC05-xRSjUdytSCKL/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-QueryExecutelambda02DC05-RI6i6hZzE02z/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Executes (ListExecutes)",
         "tags": [
@@ -2436,10 +2462,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-Executelambda723A5B87-zFS6TwPOY1Vl/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-Executelambda723A5B87-vWfpP7h9jiLV/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Execute (CreateExecute)",
         "tags": [
@@ -2448,7 +2474,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2547,10 +2573,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteExecutesApilambda9-qDHXwiFFdHwv/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteExecutesApilambda9-OrkZ80Pm1mEL/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Executes (DeleteExecutes)",
         "tags": [
@@ -2559,7 +2585,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2595,7 +2621,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -2609,7 +2634,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -2626,12 +2652,14 @@
             "name": "id",
             "in": "path",
             "required": false,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2734,10 +2762,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetExecutelambda150CA75A-OopCFOnr3Elz/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetExecutelambda150CA75A-4mQmYyRzvolg/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Execute (GetExecute)",
         "tags": [
@@ -2770,7 +2798,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -2784,7 +2811,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -2799,27 +2827,33 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Exclusive Start Key",
             "required": false
           },
           {
             "name": "type",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Inference task type: txt2img, img2img",
             "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -2905,10 +2939,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListInferenceJobslambda5-BDsmpSnhZLD1/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListInferenceJobslambda5-zCg7bO1gLGgY/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Inferences (ListInferences)",
         "tags": [
@@ -3053,12 +3087,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateInferenceJoblambda-mlPy8HB9EB0o/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateInferenceJoblambda-JydInwtJFUjO/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Inference Job (CreateInferenceJob)",
         "tags": [
@@ -3067,7 +3101,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -3165,12 +3199,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteInferenceJobslambd-68Rg6Nl9kQvJ/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteInferenceJobslambd-yQecoMLFDc4h/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Inference Jobs (DeleteInferenceJobs)",
         "tags": [
@@ -3179,7 +3213,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -3215,7 +3249,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3229,7 +3262,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3246,12 +3280,14 @@
             "name": "id",
             "in": "path",
             "required": false,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -3337,10 +3373,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetInferenceJoblambda4B9-tbUYbYyVlMAw/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetInferenceJoblambda4B9-qgPl2kEHE6lB/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Inference Job (GetInferenceJob)",
         "tags": [
@@ -3373,7 +3409,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3387,7 +3422,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3403,12 +3439,14 @@
             "name": "id",
             "in": "path",
             "required": false,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -3528,10 +3566,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-StartInferenceJoblambda2-0OCl169cOwgG/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-StartInferenceJoblambda2-t5noRDgf2UKD/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Start Inference Job (StartInferences)",
         "tags": [
@@ -3564,7 +3602,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3578,7 +3615,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3658,10 +3696,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-MergeExecutelambda6DF527-RGWZEWHU47BF/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-MergeExecutelambda6DF527-gIrnx1VAN0WI/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "MergeExecute",
         "tags": [
@@ -3694,7 +3732,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3708,7 +3745,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3743,7 +3781,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3757,7 +3794,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3792,7 +3830,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3806,7 +3843,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -3894,10 +3932,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusion--Pinglambda324263A8-FQeoKh0xxTEO/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusion--Pinglambda324263A8-EPQI2eJmlKRh/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Ping API (Ping)",
         "tags": [
@@ -3930,7 +3968,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -3944,7 +3981,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4025,10 +4063,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-PreparelambdaFDD8F005-9ssbcLrE2zlM/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-PreparelambdaFDD8F005-oqeCtmr6qek0/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Prepare (CreatePrepare)",
         "tags": [
@@ -4037,7 +4075,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4073,7 +4111,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4087,7 +4124,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4110,7 +4148,7 @@
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4179,10 +4217,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetPreparelambda08CC9414-F5TV1qTZSVbq/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetPreparelambda08CC9414-tlYbaMgQmQaD/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Prepare (GetPrepare)",
         "tags": [
@@ -4215,7 +4253,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4229,7 +4266,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4316,10 +4354,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListRoleslambda07097DF5-qMjAJBKeGKkh/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListRoleslambda07097DF5-zMGzcwZujJjd/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Roles (ListRoles)",
         "tags": [
@@ -4328,7 +4366,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4443,12 +4481,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateRolelambda12D93D44-dfh2bbnJ08OT/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateRolelambda12D93D44-GGv0CpBMrxwD/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Role (CreateRole)",
         "tags": [
@@ -4457,7 +4495,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4572,12 +4610,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteRoleslambdaCE7CB86-ODJJTrhJd3sp/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteRoleslambdaCE7CB86-QfaknVnD4ZdJ/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Roles (DeleteRoles)",
         "tags": [
@@ -4586,7 +4624,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4622,7 +4660,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4636,7 +4673,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4717,10 +4755,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-SyncMsglambda50AF709E-DaqyBhe8khjD/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-SyncMsglambda50AF709E-lHdTs4w5kdJl/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Sync Message (SyncMessage)",
         "tags": [
@@ -4729,7 +4767,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4765,7 +4803,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4779,7 +4816,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4802,7 +4840,7 @@
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -4871,10 +4909,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetSyncMsglambda9AC8490E-I768VWkxdChB/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetSyncMsglambda9AC8490E-7BEd57FZza4U/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Sync Message (GetSyncMessage)",
         "tags": [
@@ -4907,7 +4945,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4921,7 +4958,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4955,7 +4993,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -4969,7 +5006,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -4985,20 +5023,24 @@
           {
             "name": "exclusive_start_key",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Exclusive Start Key",
             "required": false
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "Limit Per Page",
             "required": false
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5084,10 +5126,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListTrainingJobslambda62-ZlRm2i4eE9n0/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListTrainingJobslambda62-ygvFcPDdGnjv/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Trainings (ListTrainings)",
         "tags": [
@@ -5198,12 +5240,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateTrainingJoblambda0-G2E93i7wZhKG/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateTrainingJoblambda0-ojOg50ewMTws/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create Training (CreateTraining)",
         "tags": [
@@ -5212,7 +5254,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5327,12 +5369,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteTrainingJobslambda-gnEQRtKi3BIh/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteTrainingJobslambda-VrgO8rTubSVK/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Trainings (DeleteTrainings)",
         "tags": [
@@ -5341,7 +5383,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5377,7 +5419,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -5391,7 +5432,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -5408,12 +5450,14 @@
             "name": "id",
             "in": "path",
             "required": false,
-            "schema": null,
+            "schema": {
+              "type": "string"
+            },
             "description": "ID"
           },
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5499,10 +5543,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetTrainingJoblambdaEF70-PPMq5Qi3wESw/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetTrainingJoblambdaEF70-1tMjEEcCE3Fo/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Get Training (GetTraining)",
         "tags": [
@@ -5535,7 +5579,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -5549,7 +5592,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -5653,10 +5697,10 @@
           }
         ],
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListUserslambda4DDAE5BC-nyn6r61sm25H/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListUserslambda4DDAE5BC-1vPKVQXmjtar/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "List Users (ListUsers)",
         "tags": [
@@ -5665,7 +5709,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5780,12 +5824,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateUserlambda000FE6B1-FuCgQ7q3fWmE/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateUserlambda000FE6B1-YbYLGoxNs6pl/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Create User (CreateUser)",
         "tags": [
@@ -5794,7 +5838,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5909,12 +5953,12 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-j4ky0bbhwswd",
+        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
         "x-amazon-apigateway-integration": {
-          "type": "aws_proxy",
           "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteUserslambda86471CA-ys53vAqLIdlV/invocations",
-          "passthroughBehavior": "when_no_match"
+          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteUserslambda86471CA-EHwFvnYcVJTj/invocations",
+          "passthroughBehavior": "when_no_match",
+          "type": "aws_proxy"
         },
         "summary": "Delete Users (DeleteUsers)",
         "tags": [
@@ -5923,7 +5967,7 @@
         "parameters": [
           {
             "name": "username",
-            "description": "Username (default: api)",
+            "description": "Username",
             "in": "header",
             "required": true,
             "schema": {
@@ -5959,7 +6003,6 @@
           }
         },
         "x-amazon-apigateway-integration": {
-          "type": "mock",
           "responses": {
             "default": {
               "statusCode": "204",
@@ -5973,7 +6016,8 @@
           "requestTemplates": {
             "application/json": "{ statusCode: 200 }"
           },
-          "passthroughBehavior": "when_no_match"
+          "passthroughBehavior": "when_no_match",
+          "type": "mock"
         },
         "summary": "",
         "tags": [
@@ -10139,29 +10183,29 @@
     }
   },
   "x-amazon-apigateway-gateway-responses": {
-    "BAD_REQUEST_BODY": {
-      "responseTemplates": {
-        "application/json": "{\"statusCode\":400,\"message\":\"$context.error.validationErrorString\",\"requestId\":\"$context.extendedRequestId\"}"
-      }
-    },
     "BAD_REQUEST_PARAMETERS": {
       "responseTemplates": {
         "application/json": "{\"statusCode\":400,\"message\":\"$context.error.validationErrorString\",\"requestId\":\"$context.extendedRequestId\"}"
       }
     },
-    "DEFAULT_5XX": {
+    "BAD_REQUEST_BODY": {
       "responseTemplates": {
-        "application/json": "{\"message\":\"$context.error.message\",\"requestId\":\"$context.extendedRequestId\"}"
+        "application/json": "{\"statusCode\":400,\"message\":\"$context.error.validationErrorString\",\"requestId\":\"$context.extendedRequestId\"}"
       }
     },
     "DEFAULT_4XX": {
       "responseTemplates": {
         "application/json": "{\"message\":\"$context.error.message\",\"requestId\":\"$context.extendedRequestId\"}"
       }
+    },
+    "DEFAULT_5XX": {
+      "responseTemplates": {
+        "application/json": "{\"message\":\"$context.error.message\",\"requestId\":\"$context.extendedRequestId\"}"
+      }
     }
   },
   "x-amazon-apigateway-request-validators": {
-    "esdapivalidatorb43244ef-j4ky0bbhwswd": {
+    "esdapivalidatorb43244ef-yp2uixockjil": {
       "validateRequestParameters": false,
       "validateRequestBody": true
     }
