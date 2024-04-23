@@ -228,7 +228,7 @@ def check_sync():
 
             global available_apps
             for item in available_apps:
-                logger.debug("start check_reboot! checking function-------")
+                logger.info(f"start check_reboot! {item.port}")
                 requests.post(f"http://{PHY_LOCALHOST}:{item.port}/reboot")
                 logger.debug(f"reboot response time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
