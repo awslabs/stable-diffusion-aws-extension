@@ -248,21 +248,27 @@ def execute_proxy(func):
                             else:
                                 logger.debug(msg_response.json())
                                 already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
+            m = 5
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 # logger.info(msg_response.json())
                 if msg_response.status_code == 200:
-                    if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                    if m <= 0:
+                        logger.error("there is no response from sync msg by timeout")
+                        already_synced = True
+                    elif 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         logger.error("there is no response from sync msg")
                         time.sleep(1)
+                        m = m - 1
                     else:
                         logger.debug(msg_response.json())
                         already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
                         logger.info(f"already_synced is :{already_synced}")
-            logger.info("check if images are already synced")
+            logger.info(f"check if images are already synced {save_already}")
             if not save_already:
                 logger.info("check if images are not already synced, please wait")
                 execute_resp = execute_future.result()
+                logger.debug(f"execute result :{execute_resp}")
                 if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     i = max_wait_time
                     while i > 0:
