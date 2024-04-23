@@ -20,7 +20,8 @@ SAGEMAKER_PORT = 8080
 LOCALHOST = '0.0.0.0'
 PHY_LOCALHOST = '127.0.0.1'
 
-SLEEP_TIME = 30
+SLEEP_TIME = 60
+TIME_OUT_TIME = 600
 
 app = FastAPI()
 
@@ -40,7 +41,7 @@ async def send_request(request_obj, comfy_app, need_async):
         comfy_app.busy = True
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
-            async with httpx.AsyncClient(timeout=600) as client:
+            async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
                 response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
         else:
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
@@ -228,9 +229,12 @@ def check_sync():
 
             global available_apps
             for item in available_apps:
-                logger.info(f"start check_reboot! {item.port}")
-                requests.post(f"http://{PHY_LOCALHOST}:{item.port}/reboot")
-                logger.debug(f"reboot response time : {datetime.datetime.now()}")
+                if item and item.port and not item.busy:
+                    logger.info(f"start check_reboot! {item.port}")
+                    requests.post(f"http://{PHY_LOCALHOST}:{item.port}/reboot")
+                    logger.debug(f"reboot response time : {datetime.datetime.now()}")
+                else:
+                    logger.info(f"not start check_reboot! {item}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
