@@ -101,4 +101,4 @@ def delete_endpoint_item(ep: Endpoint):
         keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
     )
 
-    # bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()
+    bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()

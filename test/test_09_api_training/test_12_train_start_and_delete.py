@@ -58,13 +58,9 @@ class TestTrainStartDeleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": "model_name_temp",
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": config.train_model_name,
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }
@@ -109,13 +105,9 @@ class TestTrainStartDeleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": "v1-5-pruned-emaonly",
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": config.train_wd14_model_name,
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }

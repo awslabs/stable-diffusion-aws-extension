@@ -21,6 +21,8 @@ class SimpleSagemakerInfer(InferManager):
             with open(f'api_{"txt2img" if is_txt2img else "img2img"}_param.json', 'w') as f:
                 f.write(sd_api_param_json)
 
+        print(sd_api_param_json)
+
         # create an inference and upload to s3
         # Start creating model on cloud.
         url = get_variable_from_json('api_gateway_url')

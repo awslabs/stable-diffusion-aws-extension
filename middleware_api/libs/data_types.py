@@ -57,17 +57,17 @@ class TrainJob:
     id: str
     timestamp: float
     model_id: str
-    checkpoint_id: str
     train_type: str
     job_status: TrainJobStatus
     input_s3_location: str
     sagemaker_train_name: Optional[str] = ''
-    sagemaker_sfn_arn: Optional[str] = ''
+    ckpt_type: Optional[str] = ''
+    base_key: Optional[str] = ''
     params: Optional[dict[str, Any]] = None
     allowed_roles_or_users: Optional[list[str]] = None
-
-    # { 'model': 'model.tar', 'data1': 'data1.tar' }
-    # base s3: s3://bucket/Stable-diffusion/123-123-0123/
+    # todo will remove
+    checkpoint_id: str = ''
+    sagemaker_sfn_arn: Optional[str] = ''
 
     def __post_init__(self):
         if type(self.job_status) == str:
