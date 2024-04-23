@@ -2,8 +2,15 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
-    "description": "Extension for Stable Diffusion on AWS API - dev",
-    "version": "dev"
+    "description": "This is a ESD Server based on the OpenAPI 3.0 specification. \nSome useful links: \n\n- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)\n- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)",
+    "version": "dev",
+    "contact": {
+      "email": "elonniu@amazon.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
   },
   "servers": [
     {
@@ -83,12 +90,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-RootApilambdaA93AFF7C-fxJBCXs9axdW/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "The Root API of ESD",
         "summary": "Root API (RootAPI)",
         "tags": [
           "Service"
@@ -119,23 +121,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -204,12 +190,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusio-ApiDoclambda652963C2-X3nc93WJZSAP/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get OAS json schema",
         "summary": "Get OAS (GetApiOAS)",
         "tags": [
           "Service"
@@ -240,23 +221,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -302,8 +267,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -382,12 +346,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListCheckPointslambda52E-2DCc65JXCbeU/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Checkpoints with Parameters",
         "summary": "List Checkpoints (ListCheckpoints)",
         "tags": [
           "Checkpoints"
@@ -514,13 +473,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateCheckPointlambdaF7-tBEB0veQYzDH/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Checkpoint",
         "summary": "Create Checkpoint (CreateCheckpoint)",
         "tags": [
           "Checkpoints"
@@ -533,8 +486,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -643,13 +595,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteCheckpointslambdaE-zHfCIYexPb2w/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Checkpoints",
         "summary": "Delete Checkpoints (DeleteCheckpoints)",
         "tags": [
           "Checkpoints"
@@ -662,8 +608,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -692,23 +637,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -736,8 +665,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -860,13 +788,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateCheckPointlambdaB0-695Pj1yn6Uq3/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Update Checkpoint by ID",
         "summary": "Update Checkpoint (UpdateCheckpoint)",
         "tags": [
           "Checkpoints"
@@ -897,23 +819,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -945,23 +851,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -998,8 +888,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -1061,12 +950,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListDatasetslambda67F227-Warfs45A3uDc/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Datasets with Parameters",
         "summary": "List Datasets (ListDatasets)",
         "tags": [
           "Datasets"
@@ -1176,13 +1060,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateDatasetlambdaE4C5E-9ZIp16lLDdag/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Dataset",
         "summary": "Create Dataset (CreateDataset)",
         "tags": [
           "Datasets"
@@ -1195,8 +1073,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -1305,13 +1182,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteDatasetslambda4ED0-JckzkyLEYbHl/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Datasets",
         "summary": "Delete Datasets (DeleteDatasets)",
         "tags": [
           "Datasets"
@@ -1324,8 +1195,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -1354,23 +1224,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -1398,8 +1252,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -1478,12 +1331,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetDatasetlambda5273A45E-ct2O74gWbMMg/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Dataset by ID",
         "summary": "Get Dataset (GetDataset)",
         "tags": [
           "Datasets"
@@ -1508,8 +1356,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -1598,13 +1445,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-UpdateDatasetlambda285EA-xJzDY4rHRLfm/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Update Dataset by ID",
         "summary": "Update Dataset (UpdateDataset)",
         "tags": [
           "Datasets"
@@ -1635,23 +1476,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -1678,8 +1503,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -1785,13 +1609,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CropDatasetlambda3D2CD9C-JJCTtZ13H2B0/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create new Crop Dataset",
         "summary": "Create new Crop Dataset (CropDataset)",
         "tags": [
           "Datasets"
@@ -1822,23 +1640,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -1874,8 +1676,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -1954,12 +1755,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListEndpointslambdaF82AC-JqZIaGPk9MtM/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Endpoints with Parameters",
         "summary": "List Endpoints (ListEndpoints)",
         "tags": [
           "Endpoints"
@@ -2069,13 +1865,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateEndpointlambda9B92-TKZLrBnsGgUC/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Endpoint",
         "summary": "Create Endpoint (CreateEndpoint)",
         "tags": [
           "Endpoints"
@@ -2088,8 +1878,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -2181,13 +1970,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteEndpointslambdaF54-VO703isBXdGO/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Endpoints",
         "summary": "Delete Endpoints (DeleteEndpoints)",
         "tags": [
           "Endpoints"
@@ -2200,8 +1983,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -2230,23 +2012,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -2283,8 +2049,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -2363,12 +2128,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-QueryExecutelambda02DC05-RI6i6hZzE02z/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Executes with Parameters",
         "summary": "List Executes (ListExecutes)",
         "tags": [
           "Executes"
@@ -2461,12 +2221,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-Executelambda723A5B87-vWfpP7h9jiLV/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Execute for Comfy",
         "summary": "Create Execute (CreateExecute)",
         "tags": [
           "Executes"
@@ -2479,8 +2234,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -2572,12 +2326,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteExecutesApilambda9-OrkZ80Pm1mEL/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Executes",
         "summary": "Delete Executes (DeleteExecutes)",
         "tags": [
           "Executes"
@@ -2590,8 +2339,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -2620,23 +2368,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -2651,7 +2383,7 @@
           {
             "name": "id",
             "in": "path",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             },
@@ -2664,8 +2396,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -2761,12 +2492,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetExecutelambda150CA75A-4mQmYyRzvolg/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Execute by ID",
         "summary": "Get Execute (GetExecute)",
         "tags": [
           "Executes"
@@ -2797,23 +2523,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -2858,8 +2568,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -2938,12 +2647,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListInferenceJobslambda5-zCg7bO1gLGgY/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Inferences with Parameters",
         "summary": "List Inferences (ListInferences)",
         "tags": [
           "Inferences"
@@ -3087,13 +2791,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateInferenceJoblambda-JydInwtJFUjO/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Inference Job",
         "summary": "Create Inference Job (CreateInferenceJob)",
         "tags": [
           "Inferences"
@@ -3106,8 +2804,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -3199,13 +2896,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteInferenceJobslambd-yQecoMLFDc4h/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Inference Jobs",
         "summary": "Delete Inference Jobs (DeleteInferenceJobs)",
         "tags": [
           "Inferences"
@@ -3218,8 +2909,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -3248,23 +2938,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3279,7 +2953,7 @@
           {
             "name": "id",
             "in": "path",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             },
@@ -3292,8 +2966,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -3372,12 +3045,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetInferenceJoblambda4B9-qgPl2kEHE6lB/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Inference Job",
         "summary": "Get Inference Job (GetInferenceJob)",
         "tags": [
           "Inferences"
@@ -3408,23 +3076,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3438,7 +3090,7 @@
           {
             "name": "id",
             "in": "path",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             },
@@ -3451,8 +3103,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -3565,12 +3216,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-StartInferenceJoblambda2-t5noRDgf2UKD/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Start specify Inference Job by ID",
         "summary": "Start Inference Job (StartInferences)",
         "tags": [
           "Inferences"
@@ -3601,23 +3247,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3695,12 +3325,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-MergeExecutelambda6DF527-gIrnx1VAN0WI/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "",
         "summary": "MergeExecute",
         "tags": [
           "Others"
@@ -3731,23 +3356,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3780,23 +3389,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3829,23 +3422,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -3931,12 +3508,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusion--Pinglambda324263A8-EPQI2eJmlKRh/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "The Ping API for Health Check",
         "summary": "Ping API (Ping)",
         "tags": [
           "Service"
@@ -3967,23 +3539,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4062,12 +3618,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-PreparelambdaFDD8F005-oqeCtmr6qek0/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Prepare",
         "summary": "Create Prepare (CreatePrepare)",
         "tags": [
           "Prepare"
@@ -4080,8 +3631,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -4110,23 +3660,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4153,8 +3687,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -4216,12 +3749,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetPreparelambda08CC9414-tlYbaMgQmQaD/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Prepare by ID",
         "summary": "Get Prepare (GetPrepare)",
         "tags": [
           "Prepare"
@@ -4252,23 +3780,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4353,12 +3865,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListRoleslambda07097DF5-zMGzcwZujJjd/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List all roles",
         "summary": "List Roles (ListRoles)",
         "tags": [
           "Roles"
@@ -4371,8 +3878,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -4481,13 +3987,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateRolelambda12D93D44-GGv0CpBMrxwD/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new role",
         "summary": "Create Role (CreateRole)",
         "tags": [
           "Roles"
@@ -4500,8 +4000,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -4610,13 +4109,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteRoleslambdaCE7CB86-QfaknVnD4ZdJ/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Roles",
         "summary": "Delete Roles (DeleteRoles)",
         "tags": [
           "Roles"
@@ -4629,8 +4122,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -4659,23 +4151,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4754,12 +4230,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffusi-SyncMsglambda50AF709E-lHdTs4w5kdJl/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Sync Message to Endpoint",
         "summary": "Sync Message (SyncMessage)",
         "tags": [
           "Sync"
@@ -4772,8 +4243,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -4802,23 +4272,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4845,8 +4299,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -4908,12 +4361,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetSyncMsglambda9AC8490E-7BEd57FZza4U/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Sync Message from Endpoint",
         "summary": "Get Sync Message (GetSyncMessage)",
         "tags": [
           "Sync"
@@ -4944,23 +4392,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -4992,23 +4424,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -5045,8 +4461,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -5125,12 +4540,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-ListTrainingJobslambda62-ygvFcPDdGnjv/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List Trainings with Parameters",
         "summary": "List Trainings (ListTrainings)",
         "tags": [
           "Trainings"
@@ -5240,13 +4650,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateTrainingJoblambda0-ojOg50ewMTws/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new Training Job",
         "summary": "Create Training (CreateTraining)",
         "tags": [
           "Trainings"
@@ -5259,8 +4663,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -5369,13 +4772,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteTrainingJobslambda-VrgO8rTubSVK/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Trainings",
         "summary": "Delete Trainings (DeleteTrainings)",
         "tags": [
           "Trainings"
@@ -5388,8 +4785,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -5418,23 +4814,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -5449,7 +4829,7 @@
           {
             "name": "id",
             "in": "path",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             },
@@ -5462,8 +4842,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ],
@@ -5542,12 +4921,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-GetTrainingJoblambdaEF70-1tMjEEcCE3Fo/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Get Training List",
         "summary": "Get Training (GetTraining)",
         "tags": [
           "Trainings"
@@ -5578,23 +4952,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -5696,12 +5054,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diffu-ListUserslambda4DDAE5BC-1vPKVQXmjtar/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "List all users",
         "summary": "List Users (ListUsers)",
         "tags": [
           "Users"
@@ -5714,8 +5067,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -5824,13 +5176,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-CreateUserlambda000FE6B1-YbYLGoxNs6pl/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Create a new user",
         "summary": "Create User (CreateUser)",
         "tags": [
           "Users"
@@ -5843,8 +5189,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -5953,13 +5298,7 @@
             "api_key": []
           }
         ],
-        "x-amazon-apigateway-request-validator": "esdapivalidatorb43244ef-yp2uixockjil",
-        "x-amazon-apigateway-integration": {
-          "httpMethod": "POST",
-          "uri": "arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-northeast-1:448353841126:function:Extension-for-Stable-Diff-DeleteUserslambda86471CA-EHwFvnYcVJTj/invocations",
-          "passthroughBehavior": "when_no_match",
-          "type": "aws_proxy"
-        },
+        "description": "Delete specify Users",
         "summary": "Delete Users (DeleteUsers)",
         "tags": [
           "Users"
@@ -5972,8 +5311,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "default": "api",
-              "description": null
+              "default": "api"
             }
           }
         ]
@@ -6002,23 +5340,7 @@
             "content": {}
           }
         },
-        "x-amazon-apigateway-integration": {
-          "responses": {
-            "default": {
-              "statusCode": "204",
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
-                "method.response.header.Access-Control-Allow-Headers": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          },
-          "requestTemplates": {
-            "application/json": "{ statusCode: 200 }"
-          },
-          "passthroughBehavior": "when_no_match",
-          "type": "mock"
-        },
+        "description": "",
         "summary": "",
         "tags": [
           "Others"
@@ -6640,7 +5962,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6737,7 +6059,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6996,7 +6318,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -7284,7 +6606,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -7832,7 +7154,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -8717,7 +8039,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -9563,7 +8885,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": "null",
+                    "type": null,
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -10182,34 +9504,6 @@
       }
     }
   },
-  "x-amazon-apigateway-gateway-responses": {
-    "BAD_REQUEST_PARAMETERS": {
-      "responseTemplates": {
-        "application/json": "{\"statusCode\":400,\"message\":\"$context.error.validationErrorString\",\"requestId\":\"$context.extendedRequestId\"}"
-      }
-    },
-    "BAD_REQUEST_BODY": {
-      "responseTemplates": {
-        "application/json": "{\"statusCode\":400,\"message\":\"$context.error.validationErrorString\",\"requestId\":\"$context.extendedRequestId\"}"
-      }
-    },
-    "DEFAULT_4XX": {
-      "responseTemplates": {
-        "application/json": "{\"message\":\"$context.error.message\",\"requestId\":\"$context.extendedRequestId\"}"
-      }
-    },
-    "DEFAULT_5XX": {
-      "responseTemplates": {
-        "application/json": "{\"message\":\"$context.error.message\",\"requestId\":\"$context.extendedRequestId\"}"
-      }
-    }
-  },
-  "x-amazon-apigateway-request-validators": {
-    "esdapivalidatorb43244ef-yp2uixockjil": {
-      "validateRequestParameters": false,
-      "validateRequestBody": true
-    }
-  },
   "tags": [
     {
       "name": "Service",
@@ -10229,11 +9523,19 @@
     },
     {
       "name": "Checkpoints",
-      "description": "Manage Checkpoints"
+      "description": "Manage Checkpoints",
+      "externalDocs": {
+        "url": "https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_upload_ckpt/",
+        "description": "Upload Checkpoint Process"
+      }
     },
     {
       "name": "Inferences",
-      "description": "Manage Inferences"
+      "description": "Manage Inferences",
+      "externalDocs": {
+        "url": "https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api_inference_process/",
+        "description": "Inference Process"
+      }
     },
     {
       "name": "Executes",
