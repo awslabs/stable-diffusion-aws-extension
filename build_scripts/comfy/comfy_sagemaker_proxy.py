@@ -267,7 +267,8 @@ async def execute_proxy(request):
             "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
         message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
-        sen_sqs_msg(message_body, prompt_id)
+        message_id = sen_sqs_msg(message_body, prompt_id)
+        logger.info(f"finish message sent {message_id} {message_body}")
         logger.info(f"execute inference response is {response_body}")
 
         executing = False
