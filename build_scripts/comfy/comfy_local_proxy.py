@@ -25,7 +25,7 @@ import hashlib
 
 global sync_msg_list
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -289,6 +289,40 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
+def sync_default_files():
+    try:
+        timestamp = str(int(time.time() * 1000))
+        need_prepare = True
+        prepare_type = 'default'
+        need_reboot = True
+        logger.info(f" sync custom nodes files")
+        s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
+        os.system(s5cmd_syn_node_command)
+        logger.info(f" sync input files")
+        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+        logger.info(f"sync input files start {s5cmd_syn_input_command}")
+        os.system(s5cmd_syn_input_command)
+        logger.info(f" sync models files")
+        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+        logger.info(f"sync models files start {s5cmd_syn_model_command}")
+        os.system(s5cmd_syn_model_command)
+        logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
+        url = api_url + "prepare"
+        logger.info(f"URL:{url}")
+        data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": timestamp,
+                "prepare_type": prepare_type}
+        logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
+        result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
+                                 f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
+                                capture_output=True, text=True)
+        logger.info(result.stdout)
+        return result.stdout
+    except Exception as e:
+        logger.info(f"sync_files error {e}")
+        return None
+
+
 def sync_files(filepath, is_folder, is_auto):
     try:
         directory = os.path.dirname(filepath)
@@ -508,10 +542,8 @@ async def restart(self):
 async def sync_env(request):
     logger.info(f"start to sync_env {request}")
     try:
-        result1 = sync_files(f'./{DIR1}', 'False', False)
-        result2 = sync_files(f'./{DIR2}', 'True', False)
-        result3 = sync_files(f'./{DIR3}', 'False', False)
-        logger.info(f"sync result is :{result1} {result2} {result3}")
+        result = sync_default_files()
+        logger.info(f"sync result is :{result}")
         return True
     except Exception as e:
         logger.info(f"error sync_env {e}")
