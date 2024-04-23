@@ -93,6 +93,7 @@ class APISchema:
     summary: str
     tags: List[str]
     parameters: Optional[List[Parameter]] = field(default_factory=list)
+    description: str = ""
 
 
 header_user_name = Parameter(
@@ -138,7 +139,7 @@ tags = [
     Tag(name="Others", description="Others API").to_dict()
 ]
 
-summaries = {
+operations = {
     "RootAPI": APISchema(
         summary="Root API",
         tags=["Service"]
@@ -565,8 +566,8 @@ def replace_null(data):
 
 def supplement_schema(method: any):
     if 'operationId' in method:
-        if method['operationId'] in summaries:
-            item: APISchema = summaries[method['operationId']]
+        if method['operationId'] in operations:
+            item: APISchema = operations[method['operationId']]
             if item.parameters:
                 parameters = item.parameters
             else:
@@ -575,6 +576,7 @@ def supplement_schema(method: any):
             return APISchema(
                 summary=item.summary + f" ({method['operationId']})",
                 tags=item.tags,
+                description=item.description,
                 parameters=parameters
             )
 
