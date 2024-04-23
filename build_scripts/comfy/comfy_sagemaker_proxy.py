@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
 
 ROOT_PATH = '/home/ubuntu/ComfyUI'
+sqs_client = boto3.client('sqs', region_name=REGION)
 
 
 @dataclass
@@ -62,7 +63,6 @@ def error(body: dict):
 
 
 def sen_sqs_msg(message_body, prompt_id_key):
-    sqs_client = boto3.client('sqs', region_name=REGION)
     response = sqs_client.send_message(
         QueueUrl=QUEUE_URL,
         MessageBody=json.dumps(message_body),
