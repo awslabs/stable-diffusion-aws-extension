@@ -7,7 +7,15 @@ import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-la
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_MESSAGE,
+  SCHEMA_TRAIN_CONFIG_PARAMS,
+  SCHEMA_TRAIN_CREATED,
+  SCHEMA_TRAIN_ID,
+  SCHEMA_TRAIN_STATUS,
+  SCHEMA_TRAINING_TYPE
+} from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
 export interface CreateTrainingJobApiProps {
@@ -97,30 +105,7 @@ export class CreateTrainingJobApi {
                     properties: {
                       config_params: {
                         type: JsonSchemaType.OBJECT,
-                        properties: {
-                          saving_arguments: {
-                            type: JsonSchemaType.OBJECT,
-                            properties: {
-                              output_name: {
-                                type: JsonSchemaType.STRING,
-                              },
-                              save_every_n_epochs: {
-                                type: JsonSchemaType.STRING,
-                              },
-                            },
-                            required: ['output_name', 'save_every_n_epochs'],
-                          },
-                          training_arguments: {
-                            type: JsonSchemaType.OBJECT,
-                            properties: {
-                              max_train_epochs: {
-                                type: JsonSchemaType.STRING,
-                              },
-                            },
-                            required: ['max_train_epochs'],
-                          },
-                        },
-                        required: ['saving_arguments', 'training_arguments'],
+                        additionalProperties: true,
                       },
                       training_params: {
                         type: JsonSchemaType.OBJECT,
@@ -338,40 +323,7 @@ export class CreateTrainingJobApi {
                   'fm_type',
                 ],
               },
-              config_params: {
-                type: JsonSchemaType.OBJECT,
-                properties: {
-                  saving_arguments: {
-                    type: JsonSchemaType.OBJECT,
-                    description: 'Saving arguments',
-                    properties: {
-                      output_name: {
-                        type: JsonSchemaType.STRING,
-                        description: 'Output name',
-                      },
-                      save_every_n_epochs: {
-                        type: JsonSchemaType.INTEGER,
-                        description: 'Save every n epochs',
-                      },
-                    },
-                    required: ['output_name', 'save_every_n_epochs'],
-                  },
-                  training_arguments: {
-                    type: JsonSchemaType.OBJECT,
-                    description: 'Training arguments',
-                    properties: {
-                      max_train_epochs: {
-                        type: JsonSchemaType.INTEGER,
-                      },
-                    },
-                    required: ['max_train_epochs'],
-                  },
-                },
-                required: [
-                  'saving_arguments',
-                  'training_arguments',
-                ],
-              },
+              config_params: SCHEMA_TRAIN_CONFIG_PARAMS,
             },
             required: [
               'training_params',

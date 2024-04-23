@@ -1,14 +1,16 @@
+import datetime
 import json
 import logging
 import os
+import uuid
 
 import boto3
 from aws_lambda_powertools import Tracer
 
+from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from common.util import publish_msg
-from libs.common_tools import split_s3_path
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -18,7 +20,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 train_table = os.environ.get('TRAINING_JOB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
-
+bucket_name = os.environ.get("S3_BUCKET_NAME")
 sagemaker = boto3.client('sagemaker')
 s3 = boto3.client('s3')
 
@@ -82,53 +84,24 @@ def check_status(training_job: TrainJob):
         except Exception as e:
             logger.error(e, exc_info=True)
 
-        # todo: update checkpoints
-        raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
-            'id': training_job.checkpoint_id
-        })
-        if raw_checkpoint is None or len(raw_checkpoint) == 0:
-            # todo: or create new one
-            return 'failed because no checkpoint, not normal'
-
-        checkpoint = CheckPoint(**raw_checkpoint)
-        checkpoint.checkpoint_status = CheckPointStatus.Active
-
-        bucket, key = split_s3_path(checkpoint.s3_location)
+        prefix = f"Stable-diffusion/checkpoint/custom/{training_job.id}"
         s3_resp = s3.list_objects(
-            Bucket=bucket,
-            Prefix=key,
+            Bucket=bucket_name,
+            Prefix=prefix,
         )
-        checkpoint.checkpoint_names = []
+
         if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
             for obj in s3_resp['Contents']:
-                checkpoint_name = obj['Key'].replace(f'{key}/', "")
-                checkpoint.checkpoint_names.append(checkpoint_name)
+                checkpoint_name = obj['Key'].replace(f'{prefix}/', "")
+                logger.info(f'checkpoint_name: {checkpoint_name}')
+                insert_ckpt(checkpoint_name, training_job)
         else:
-            checkpoint.checkpoint_status = CheckPointStatus.Initial
             ddb_service.update_item(
                 table=train_table,
                 key={'id': training_job.id},
                 field_name='job_status',
                 value=TrainJobStatus.Fail
             )
-
-        ddb_service.update_item(
-            table=checkpoint_table,
-            key={
-                'id': checkpoint.id
-            },
-            field_name='checkpoint_status',
-            value=checkpoint.checkpoint_status.value
-        )
-
-        ddb_service.update_item(
-            table=checkpoint_table,
-            key={
-                'id': checkpoint.id
-            },
-            field_name='checkpoint_names',
-            value=checkpoint.checkpoint_names
-        )
 
         training_job.params['resp'] = {
             'raw_resp': resp
@@ -142,6 +115,26 @@ def check_status(training_job: TrainJob):
     )
 
     return
+
+
+def insert_ckpt(output_name, job: TrainJob):
+    raw_ckpts = ddb_service.scan(checkpoint_table)
+    for r in raw_ckpts:
+        ckpt = CheckPoint(**(ddb_service.deserialize(r)))
+        if output_name in ckpt.checkpoint_names:
+            return
+
+    checkpoint = CheckPoint(
+        id=str(uuid.uuid4()),
+        checkpoint_type=const.CheckPointType.LORA,
+        checkpoint_names=[output_name],
+        s3_location=f"s3://{bucket_name}/Stable-diffusion/checkpoint/custom/{job.id}",
+        checkpoint_status=CheckPointStatus.Active,
+        timestamp=datetime.datetime.now().timestamp(),
+        allowed_roles_or_users=job.allowed_roles_or_users,
+    )
+
+    ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
 
 
 def notify_user(train_job: TrainJob):

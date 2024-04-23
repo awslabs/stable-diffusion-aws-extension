@@ -47,11 +47,14 @@ def handler(event, ctx):
 
             logger.info(f'checkpoint: {checkpoint}')
 
-            prefix = checkpoint['Item']['s3_location'].replace(f"s3://{s3_bucket_name}/", "")
-            logger.info(f'delete prefix: {prefix}')
+            checkpoint_names = checkpoint['Item']['checkpoint_names']
+            s3_location = checkpoint['Item']['s3_location']
+            object_prefix = s3_location.replace(f"s3://{s3_bucket_name}/", "")
 
-            response = bucket.objects.filter(Prefix=prefix).delete()
-            logger.info(f'delete response: {response}')
+            for checkpoint_name in checkpoint_names:
+                object_key = f'{object_prefix}/{checkpoint_name}'
+                logger.info(f'object_key: {object_key}')
+                bucket.Object(object_key).delete()
 
             checkpoints_table.delete_item(Key={'id': checkpoint_id})
 

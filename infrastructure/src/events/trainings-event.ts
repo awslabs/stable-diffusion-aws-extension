@@ -48,6 +48,7 @@ export class SagemakerTrainingEvents {
       actions: [
         'dynamodb:UpdateItem',
         'dynamodb:Scan',
+        'dynamodb:PutItem',
         'dynamodb:GetItem',
       ],
       resources: [
