@@ -162,8 +162,8 @@ def handle_sync_messages(server_use, msg_array):
             sync_msg_list.append(data)
             if event == 'finish':
                 already_synced = True
-            elif event == 'executed':
-                already_synced = True
+            # elif event == 'executed':
+            #     already_synced = True
     return already_synced
 
 
