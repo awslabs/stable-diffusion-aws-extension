@@ -25,12 +25,12 @@ reload_timeout = (command_latency + 1) * 1000
 
 
 def run_reboot():
-    subprocess.run(["sleep", command_latency])
+    subprocess.run(["sleep", f"{command_latency}"])
     subprocess.run(["sudo", "reboot"])
 
 
 def run_restart():
-    subprocess.run(["sleep", command_latency])
+    subprocess.run(["sleep", f"{command_latency}"])
     subprocess.run(["sudo", "systemctl", "restart", "comfy.service"])
 
 
