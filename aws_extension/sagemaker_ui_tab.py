@@ -1408,7 +1408,7 @@ def trainings_tab():
             default_config = {
                 "output_name": "model_name",
                 "save_every_n_epochs": 1,
-                "max_train_epochs": 10,
+                "max_train_epochs": 5,
             }
             config_params = gr.TextArea(value=json.dumps(default_config, indent=4),
                                         label="config_params",
