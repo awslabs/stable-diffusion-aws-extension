@@ -226,9 +226,11 @@ def check_sync():
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/sync_instance")
             logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
 
-            logger.info("start check_reboot! checking function-------")
-            requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/reboot")
-            logger.info(f"reboot response time : {datetime.datetime.now()}")
+            global available_apps
+            for item in available_apps:
+                logger.info("start check_reboot! checking function-------")
+                requests.post(f"http://{PHY_LOCALHOST}:{item.port}/reboot")
+                logger.debug(f"reboot response time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
