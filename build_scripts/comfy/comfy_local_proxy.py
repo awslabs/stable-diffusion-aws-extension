@@ -544,11 +544,11 @@ async def sync_env(request):
     try:
         result = sync_default_files()
         logger.info(f"sync result is :{result}")
-        return True
+        return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
     except Exception as e:
         logger.info(f"error sync_env {e}")
         pass
-    return False
+    return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
 
 
 @server.PromptServer.instance.routes.post("/change_env")
@@ -559,4 +559,4 @@ async def change_env(request):
         logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')} {str(json_data['DISABLE_AWS_PROXY'])}")
         os.environ['DISABLE_AWS_PROXY'] = str(json_data['DISABLE_AWS_PROXY'])
         logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
-    return True
+    return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
