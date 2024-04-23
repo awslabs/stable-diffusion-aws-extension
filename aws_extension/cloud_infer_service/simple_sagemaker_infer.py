@@ -1,4 +1,6 @@
+import json
 import logging
+import re
 
 import requests
 
@@ -13,9 +15,23 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 class SimpleSagemakerInfer(InferManager):
 
+    def parse_lora(self, json_string: str, models):
+
+        prompt = json.loads(json_string)['prompt']
+        matches = re.findall(r"<lora:([^:>]+)", prompt)
+        lora_list = []
+        for match in matches:
+            lora_list.append(f"{match}.safetensors")
+
+        models['Lora'] = lora_list
+
+        return models
+
     def run(self, userid, models, sd_param, is_txt2img, endpoint_type):
         # finished construct api payload
         sd_api_param_json = _parse_api_param_to_json(api_param=sd_param)
+        models = self.parse_lora(sd_api_param_json, models)
+
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             # debug only, may delete later
             with open(f'api_{"txt2img" if is_txt2img else "img2img"}_param.json', 'w') as f:

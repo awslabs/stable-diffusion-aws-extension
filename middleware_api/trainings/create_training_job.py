@@ -18,13 +18,11 @@ from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import (
-    not_found, created,
+    created,
 )
 from common.util import query_data
 from libs.common_tools import DecimalEncoder
 from libs.data_types import (
-    CheckPoint,
-    CheckPointStatus,
     TrainJob,
     TrainJobStatus,
 )
@@ -104,6 +102,7 @@ def _trigger_sagemaker_training_job(
 
     data = {
         "id": train_job.id,
+        "training_id": train_job.id,
         "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
         "params": train_job.params,
         "s3-input-path": train_job.input_s3_location,
@@ -162,35 +161,18 @@ def _trigger_sagemaker_training_job(
     )
 
 
-def _start_training_job(train_job_id: str):
-    raw_train_job = ddb_service.get_item(
-        table=train_table, key_values={"id": train_job_id}
-    )
-    if raw_train_job is None or len(raw_train_job) == 0:
-        return not_found(message=f"no such train job with id({train_job_id})")
+def _start_training_job(job: TrainJob):
+    s3_location = f"s3://{bucket_name}/Stable-diffusion/checkpoint/custom/{job.id}"
 
-    train_job = TrainJob(**raw_train_job)
-    train_job_name = train_job.model_id
-
-    raw_checkpoint = ddb_service.get_item(
-        table=checkpoint_table, key_values={"id": train_job.checkpoint_id}
-    )
-    if raw_checkpoint is None:
-        return not_found(
-            message=f"checkpoint with id {train_job.checkpoint_id} is not found"
-        )
-
-    checkpoint = CheckPoint(**raw_checkpoint)
-
-    _trigger_sagemaker_training_job(train_job, checkpoint.s3_location, train_job_name)
+    _trigger_sagemaker_training_job(job, s3_location, job.model_id)
 
     return {
-        "id": train_job.id,
-        "status": train_job.job_status.Starting.value,
-        "created": str(train_job.timestamp),
-        "params": train_job.params,
-        "input_location": train_job.input_s3_location,
-        "output_location": checkpoint.s3_location
+        "id": job.id,
+        "status": job.job_status.Starting.value,
+        "created": str(job.timestamp),
+        "params": job.params,
+        "input_location": job.input_s3_location,
+        "output_location": s3_location
     }
 
 
@@ -223,6 +205,24 @@ def get_dataset_location(dataset_name):
     return f"s3://{bucket_name}/dataset/{dataset_name}"
 
 
+def check_train_ckpt_name_unique(names: [str]):
+    if len(names) == 0:
+        return
+
+    trains = ddb_service.scan(table=train_table)
+    exists_names = []
+    for train in trains:
+        output_name = train['params']['M']['config_params']['M']['output_name']['S']
+        exists_names.append(f"{output_name}.safetensors")
+
+    logger.info(json.dumps(exists_names))
+
+    for name in names:
+        if name.strip() in exists_names:
+            raise Exception(f'{name} already exists, '
+                            f'please use another or rename/delete exists')
+
+
 def _create_training_job(raw_event, context):
     """Create a training job
 
@@ -244,16 +244,17 @@ def _create_training_job(raw_event, context):
         model_name = query_data(event.params, ['training_params', 'model'])
         dataset_name = query_data(event.params, ['training_params', 'dataset'])
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
-        output_name = query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+        output_name = query_data(event.params, ['config_params', 'output_name'])
         output_name = f"{output_name}.safetensors"
 
         check_ckpt_name_unique([output_name])
+        check_train_ckpt_name_unique([output_name])
 
-        save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
-        event.params["config_params"]["saving_arguments"]["save_every_n_epochs"] = int(save_every_n_epochs)
+        save_every_n_epochs = query_data(event.params, ['config_params', 'save_every_n_epochs'])
+        event.params["config_params"]["save_every_n_epochs"] = int(save_every_n_epochs)
 
-        max_train_epochs = query_data(event.params, ['config_params', 'training_arguments', 'max_train_epochs'])
-        event.params["config_params"]["training_arguments"]["max_train_epochs"] = int(max_train_epochs)
+        max_train_epochs = query_data(event.params, ['config_params', 'max_train_epochs'])
+        event.params["config_params"]["max_train_epochs"] = int(max_train_epochs)
 
         event.params["training_params"]["s3_model_path"] = get_model_location(model_name)
         del event.params['training_params']['model']
@@ -277,7 +278,9 @@ def _create_training_job(raw_event, context):
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
         if "config_params" in event.params:
-            updated_parameters = event.params["config_params"]
+            updated_parameters = {
+                'training': event.params["config_params"]
+            }
             _update_toml_file_in_s3(
                 bucket_name, toml_template_path, toml_dest_path, updated_parameters
             )
@@ -289,9 +292,7 @@ def _create_training_job(raw_event, context):
                 Key=toml_dest_path,
             )
 
-        event.params["training_params"][
-            "s3_toml_path"
-        ] = f"s3://{bucket_name}/{toml_dest_path}"
+        event.params["training_params"]["s3_toml_path"] = f"s3://{bucket_name}/{toml_dest_path}"
     else:
         raise BadRequestException(
             f"Invalid lora train type: {_lora_train_type}, the valid value is {LoraTrainType.KOHYA.value}."
@@ -307,16 +308,6 @@ def _create_training_job(raw_event, context):
         if network_module.lower() != const.NetworkModule.LORA:
             ckpt_type = const.CheckPointType.SD
 
-    checkpoint = CheckPoint(
-        id=request_id,
-        checkpoint_type=ckpt_type,
-        checkpoint_names=[output_name],
-        s3_location=f"s3://{bucket_name}/{base_key}/output",
-        checkpoint_status=CheckPointStatus.Initial,
-        timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=user_roles,
-    )
-    ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
     train_input_s3_location = f"s3://{bucket_name}/{input_location}"
 
     train_job = TrainJob(
@@ -326,13 +317,14 @@ def _create_training_job(raw_event, context):
         params=event.params,
         train_type=const.TRAIN_TYPE,
         input_s3_location=train_input_s3_location,
-        checkpoint_id=checkpoint.id,
+        ckpt_type=ckpt_type,
+        base_key=base_key,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[username],
+        allowed_roles_or_users=user_roles,
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
-    return train_job.id
+    return train_job
 
 
 @tracer.capture_lambda_handler
@@ -341,8 +333,8 @@ def handler(raw_event, context):
     try:
         logger.info(json.dumps(raw_event))
 
-        job_id = _create_training_job(raw_event, context)
-        job_info = _start_training_job(job_id)
+        job = _create_training_job(raw_event, context)
+        job_info = _start_training_job(job)
 
         return created(data=job_info, decimal=True)
     except Exception as e:

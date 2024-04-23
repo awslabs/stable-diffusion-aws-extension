@@ -311,19 +311,16 @@ export const SCHEMA_TRAIN_CONFIG_PARAMS: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Training Configuration Parameters',
   properties: {
-    saving_arguments: {
-      type: JsonSchemaType.OBJECT,
-      description: 'Saving Arguments',
-    },
-    training_arguments: {
-      type: JsonSchemaType.OBJECT,
-      description: 'Training Arguments',
+    output_name: {
+      type: JsonSchemaType.STRING,
+      description: 'Output Model Name',
+      minLength: 1,
     },
   },
   required: [
-    'saving_arguments',
-    'training_arguments',
+    'output_name',
   ],
+  additionalProperties: true,
 };
 
 export const SCHEMA_TRAIN_PARAMS: JsonSchema = {
