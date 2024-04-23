@@ -94,8 +94,9 @@ def resize_image(event: DatasetCropItemEvent, interpolation='lanczos'):
     else:
         # Load image
         image = Image.open(local_src_file_path)
-        if not image.mode == "RGB":
-            image = image.convert("RGB")
+        # save the original image mode, such as RGBA -> RGBA
+        # if not image.mode == "RGB":
+        #     image = image.convert("RGB")
 
         # Calculate max_pixels from max_resolution string
         width = int(event.max_resolution.split("x")[0])
@@ -121,7 +122,8 @@ def resize_image(event: DatasetCropItemEvent, interpolation='lanczos'):
                 image = image.resize((width, height), interpolation_type)
 
         resized_img = np.array(image)
-        new_img = np.zeros((height, width, 3), dtype=np.uint8)
+        channel_val = resized_img.shape[2]
+        new_img = np.zeros((height, width, channel_val), dtype=np.uint8)
 
         # Center crop the image to the calculated dimensions
         new_y = 0
@@ -142,6 +144,6 @@ def resize_image(event: DatasetCropItemEvent, interpolation='lanczos'):
 
         # Save resized image in dst_img_folder
         image = Image.fromarray(new_img)
-        image.save(local_dst_file_path, quality=100)
+        image.save(local_dst_file_path, quality=95)
 
         upload_file_to_s3(file_name=local_dst_file_path, bucket=bucket_name, object_name=target_key)
