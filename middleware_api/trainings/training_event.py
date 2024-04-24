@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-from common.util import publish_msg, generate_presigned_url_for_key
+from common.util import publish_msg
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -139,7 +139,7 @@ def get_logs(job_id: str):
             filename = obj['Key'].replace(prefix, '')
             logs.append({
                 'filename': filename,
-                'url': generate_presigned_url_for_key(obj['Key'])
+                'url': ''
             })
 
     return logs
