@@ -8,6 +8,7 @@ from aws_lambda_powertools import Tracer
 from common.const import PERMISSION_TRAIN_ALL
 from common.response import ok, not_found
 from libs.utils import response_error, permissions_check
+from trainings.training_event import get_logs_presign
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -33,8 +34,6 @@ def handler(event, ctx):
 
         item = job['Item']
 
-        logger.info(item)
-
         data = {
             'id': item['id'],
             'job_status': item['job_status'],
@@ -43,7 +42,7 @@ def handler(event, ctx):
             'timestamp': str(item['timestamp']),
             'train_type': item['train_type'],
             'sagemaker_train_name': item['sagemaker_train_name'],
-            'logs': item['logs'],
+            'logs': get_logs_presign(job_id, item['logs']),
             # todo will remove
             'checkpoint_id': '',
         }

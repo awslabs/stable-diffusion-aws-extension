@@ -148,6 +148,7 @@ def get_logs_presign(job_id, logs):
             'filename': filename,
             'url': generate_presigned_url_for_key(f"kohya/train/{job_id}/logs/{filename}")
         })
+
     return presign_logs
 
 
