@@ -308,6 +308,10 @@ export class ExecuteApi {
             minItems: 1,
             additionalProperties: true,
           },
+          multi_async: {
+            type: JsonSchemaType.BOOLEAN,
+            minLength: 1,
+          },
         },
         required: [
           'prompt_id',
