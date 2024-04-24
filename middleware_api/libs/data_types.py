@@ -68,6 +68,7 @@ class TrainJob:
     # todo will remove
     checkpoint_id: str = None
     sagemaker_sfn_arn: Optional[str] = None
+    logs: Optional[List[str]] = None
 
     def __post_init__(self):
         if type(self.job_status) == str:
