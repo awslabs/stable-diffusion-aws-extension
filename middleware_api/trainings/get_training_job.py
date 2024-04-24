@@ -7,7 +7,6 @@ from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.response import ok, not_found
-from common.util import generate_presigned_url_for_key
 from libs.utils import response_error, permissions_check
 
 tracer = Tracer()
@@ -34,21 +33,6 @@ def handler(event, ctx):
 
         item = job['Item']
 
-        prefix = f"kohya/train/{job_id}/logs/"
-        s3_resp = s3.list_objects(
-            Bucket=bucket_name,
-            Prefix=prefix,
-        )
-
-        logs = []
-        if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
-            for obj in s3_resp['Contents']:
-                filename = obj['Key'].replace(prefix, '')
-                logs.append({
-                    'filename': filename,
-                    'url': generate_presigned_url_for_key(obj['Key'])
-                })
-
         data = {
             'id': item['id'],
             'job_status': item['job_status'],
@@ -57,7 +41,7 @@ def handler(event, ctx):
             'timestamp': str(item['timestamp']),
             'train_type': item['train_type'],
             'sagemaker_train_name': item['sagemaker_train_name'],
-            'logs': logs,
+            'logs': item['logs'],
             # todo will remove
             'checkpoint_id': '',
         }
