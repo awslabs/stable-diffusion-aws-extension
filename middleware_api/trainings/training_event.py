@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-from common.util import publish_msg
+from common.util import publish_msg, generate_presigned_url_for_key
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -95,6 +95,15 @@ def check_status(training_job: TrainJob):
                 checkpoint_name = obj['Key'].replace(f'{prefix}/', "")
                 logger.info(f'checkpoint_name: {checkpoint_name}')
                 insert_ckpt(checkpoint_name, training_job)
+
+                logs = get_logs(training_job.id)
+                ddb_service.update_item(
+                    table=train_table,
+                    key={'id': training_job.id},
+                    field_name='logs',
+                    value=logs
+                )
+
         else:
             ddb_service.update_item(
                 table=train_table,
@@ -115,6 +124,32 @@ def check_status(training_job: TrainJob):
     )
 
     return
+
+
+def get_logs(job_id: str):
+    prefix = f"kohya/train/{job_id}/logs/"
+    s3_resp = s3.list_objects(
+        Bucket=bucket_name,
+        Prefix=prefix,
+    )
+
+    logs = []
+    if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
+        for obj in s3_resp['Contents']:
+            logs.append(obj['Key'].replace(prefix, ''))
+
+    return logs
+
+
+def get_logs_presign(job_id, logs):
+    presign_logs = []
+    for filename in logs:
+        presign_logs.append({
+            'filename': filename,
+            'url': generate_presigned_url_for_key(f"kohya/train/{job_id}/logs/{filename}")
+        })
+
+    return presign_logs
 
 
 def insert_ckpt(output_name, job: TrainJob):
