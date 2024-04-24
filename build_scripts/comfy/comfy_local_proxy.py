@@ -332,7 +332,7 @@ def sync_default_files():
         prepare_type = 'default'
         need_reboot = True
         logger.info(f" sync custom nodes files")
-        s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
         logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
         os.system(s5cmd_syn_node_command)
         logger.info(f" sync input files")
@@ -378,7 +378,7 @@ def sync_files(filepath, is_folder, is_auto):
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or str(filepath) == f'./{DIR2}' or f"{DIR2}/" in filepath):
             logger.info(f" sync custom nodes files: {filepath}")
-            s5cmd_syn_node_command = f's5cmd --log=error sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
 
