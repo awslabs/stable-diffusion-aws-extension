@@ -193,6 +193,7 @@ def get_available_app(need_check_busy: bool):
         logger.debug(f"get available apps {item.device_id} {item.busy}")
         if need_check_busy:
             if item.is_port_ready() and not item.busy:
+                item.busy = True
                 return item
         else:
             if item.is_port_ready():
