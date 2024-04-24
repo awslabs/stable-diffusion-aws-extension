@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-from common.util import publish_msg
+from common.util import publish_msg, generate_presigned_url_for_key
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -139,6 +139,16 @@ def get_logs(job_id: str):
             logs.append(obj['Key'].replace(prefix, ''))
 
     return logs
+
+
+def gene_presign_logs(job_id, logs):
+    presign_logs = []
+    for filename in logs:
+        presign_logs.append({
+            'filename': filename,
+            'url': generate_presigned_url_for_key(f"kohya/train/{job_id}/logs/{filename}")
+        })
+    return presign_logs
 
 
 def insert_ckpt(output_name, job: TrainJob):
