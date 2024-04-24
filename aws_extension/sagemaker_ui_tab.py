@@ -1334,6 +1334,45 @@ def dataset_tab():
                     inputs=[cloud_dataset_name],
                     outputs=[]
                 )
+                resolution = gr.Textbox(value="",
+                                        visible=True,
+                                        label="Max Resolution",
+                                        placeholder="512x512",
+                                        info="Crop dataset to max resolution, like: 512x512")
+                crop_dataset_button = ToolButton(value="✂️")
+
+                def crop_dataset(dt_name, max_res, pr: gr.Request):
+
+                    if not dt_name:
+                        gr.Warning("Please select dataset")
+                        return resolution.update(value=max_res)
+
+                    if not max_res:
+                        gr.Warning("Please input max resolution")
+                        return resolution.update(value='')
+
+                    max_res = max_res.strip()
+
+                    headers = {
+                        'x-api-key': utils.api_key(),
+                        'username': pr.username,
+                    }
+                    data = {
+                        "max_resolution": max_res
+                    }
+                    resp = api.crop_dataset(dataset_name=dt_name, data=data, headers=headers)
+
+                    if resp.status_code == 202:
+                        gr.Info("Crop job created, please wait for a while")
+                    else:
+                        gr.Warning(f"Failed to crop dataset: {resp.json()['message']}")
+                        return resolution.update(value=max_res)
+
+                    return resolution.update(value="")
+
+                crop_dataset_button.click(fn=crop_dataset,
+                                          inputs=[cloud_dataset_name, resolution],
+                                          outputs=[resolution])
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text')
             with gr.Row():

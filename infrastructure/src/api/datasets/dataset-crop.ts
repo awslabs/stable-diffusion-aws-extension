@@ -87,6 +87,7 @@ export class CropDatasetApi {
           max_resolution: {
             type: JsonSchemaType.STRING,
             description: 'Max resolution of the image, like: 512x512',
+            pattern: '^[1-9]\\d*x[1-9]\\d*$',
           },
         },
         required: [
