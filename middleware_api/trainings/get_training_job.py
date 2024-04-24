@@ -34,6 +34,11 @@ def handler(event, ctx):
 
         item = job['Item']
 
+        if 'logs' not in item:
+            logs = []
+        else:
+            logs = item['logs']
+
         data = {
             'id': item['id'],
             'job_status': item['job_status'],
@@ -42,7 +47,7 @@ def handler(event, ctx):
             'timestamp': str(item['timestamp']),
             'train_type': item['train_type'],
             'sagemaker_train_name': item['sagemaker_train_name'],
-            'logs': get_logs_presign(job_id, item['logs']),
+            'logs': get_logs_presign(job_id, logs),
             # todo will remove
             'checkpoint_id': '',
         }

@@ -142,6 +142,9 @@ def get_logs(job_id: str):
 
 
 def get_logs_presign(job_id, logs):
+    if len(logs) == 0:
+        return []
+
     presign_logs = []
     for filename in logs:
         presign_logs.append({
