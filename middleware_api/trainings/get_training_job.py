@@ -33,6 +33,8 @@ def handler(event, ctx):
 
         item = job['Item']
 
+        logger.info(item)
+
         data = {
             'id': item['id'],
             'job_status': item['job_status'],
