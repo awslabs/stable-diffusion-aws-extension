@@ -65,6 +65,7 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
+msg_max_wait_time = os.environ.get('MAX_WAIT_TIME', 60)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -249,7 +250,7 @@ def execute_proxy(func):
                             else:
                                 logger.debug(msg_response.json())
                                 already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
-            m = 5
+            m = msg_max_wait_time
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 # logger.info(msg_response.json())
