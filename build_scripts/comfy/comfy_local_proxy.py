@@ -252,7 +252,7 @@ def execute_proxy(func):
                                     logger.debug(images_response.json())
                                     save_already = True
                                     break
-                        logger.info(execute_resp.json())
+                        logger.debug(execute_resp.json())
                     elif future == msg_future:
                         msg_response = future.result()
                         logger.info(msg_response.json())
