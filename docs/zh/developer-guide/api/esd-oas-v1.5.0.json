@@ -1,9 +1,10 @@
+
 {
   "openapi": "3.0.1",
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
     "description": "This is a ESD Server based on the OpenAPI 3.0 specification. \nSome useful links: \n\n- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)\n- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)",
-    "version": "dev",
+    "version": "v1.5.0",
     "contact": {
       "email": "elonniu@amazon.com"
     },
@@ -5874,20 +5875,17 @@
                   },
                   "config_params": {
                     "required": [
-                      "saving_arguments",
-                      "training_arguments"
+                      "output_name"
                     ],
                     "type": "object",
                     "properties": {
-                      "training_arguments": {
-                        "type": "object",
-                        "description": "Training Arguments"
-                      },
-                      "saving_arguments": {
-                        "type": "object",
-                        "description": "Saving Arguments"
+                      "output_name": {
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "Output Model Name"
                       }
                     },
+                    "additionalProperties": true,
                     "description": "Training Configuration Parameters"
                   }
                 },
@@ -5962,7 +5960,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6059,7 +6057,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6318,7 +6316,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6380,20 +6378,17 @@
                         },
                         "config_params": {
                           "required": [
-                            "saving_arguments",
-                            "training_arguments"
+                            "output_name"
                           ],
                           "type": "object",
                           "properties": {
-                            "training_arguments": {
-                              "type": "object",
-                              "description": "Training Arguments"
-                            },
-                            "saving_arguments": {
-                              "type": "object",
-                              "description": "Saving Arguments"
+                            "output_name": {
+                              "minLength": 1,
+                              "type": "string",
+                              "description": "Output Model Name"
                             }
                           },
+                          "additionalProperties": true,
                           "description": "Training Configuration Parameters"
                         }
                       },
@@ -6606,7 +6601,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -6794,42 +6789,18 @@
               },
               "config_params": {
                 "required": [
-                  "saving_arguments",
-                  "training_arguments"
+                  "output_name"
                 ],
                 "type": "object",
                 "properties": {
-                  "training_arguments": {
-                    "required": [
-                      "max_train_epochs"
-                    ],
-                    "type": "object",
-                    "properties": {
-                      "max_train_epochs": {
-                        "type": "integer"
-                      }
-                    },
-                    "description": "Training arguments"
-                  },
-                  "saving_arguments": {
-                    "required": [
-                      "output_name",
-                      "save_every_n_epochs"
-                    ],
-                    "type": "object",
-                    "properties": {
-                      "output_name": {
-                        "type": "string",
-                        "description": "Output name"
-                      },
-                      "save_every_n_epochs": {
-                        "type": "integer",
-                        "description": "Save every n epochs"
-                      }
-                    },
-                    "description": "Saving arguments"
+                  "output_name": {
+                    "minLength": 1,
+                    "type": "string",
+                    "description": "Output Model Name"
                   }
-                }
+                },
+                "additionalProperties": true,
+                "description": "Training Configuration Parameters"
               }
             }
           }
@@ -7154,7 +7125,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -7340,8 +7311,7 @@
           },
           "prefix": {
             "minLength": 0,
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           "dataset_name": {
             "maxLength": 20,
@@ -7517,39 +7487,8 @@
                         "description": "Training Type"
                       },
                       "config_params": {
-                        "required": [
-                          "saving_arguments",
-                          "training_arguments"
-                        ],
                         "type": "object",
-                        "properties": {
-                          "training_arguments": {
-                            "required": [
-                              "max_train_epochs"
-                            ],
-                            "type": "object",
-                            "properties": {
-                              "max_train_epochs": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "saving_arguments": {
-                            "required": [
-                              "output_name",
-                              "save_every_n_epochs"
-                            ],
-                            "type": "object",
-                            "properties": {
-                              "output_name": {
-                                "type": "string"
-                              },
-                              "save_every_n_epochs": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        }
+                        "additionalProperties": true
                       }
                     }
                   },
@@ -8039,7 +7978,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {
@@ -8885,7 +8824,7 @@
               "last_evaluated_key": {
                 "oneOf": [
                   {
-                    "type": null,
+                    "type": "null",
                     "description": "Last Key for Pagination"
                   },
                   {

@@ -58,7 +58,7 @@ class TestTrainStartDeleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "output_name": config.train_model_name,
+                    "output_name": 'new_train_model_name',
                     "save_every_n_epochs": 1,
                     "max_train_epochs": 1
                 }
@@ -113,4 +113,4 @@ class TestTrainStartDeleteE2E:
         }
 
         resp = self.api.create_training_job(headers=headers, data=payload)
-        assert "v1-5-pruned-emaonly" in resp.json()["message"], resp.dumps()
+        assert config.train_wd14_model_name in resp.json()["message"], resp.dumps()
