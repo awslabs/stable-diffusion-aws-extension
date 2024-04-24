@@ -136,10 +136,7 @@ def get_logs(job_id: str):
     logs = []
     if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
         for obj in s3_resp['Contents']:
-            logs.append({
-                'filename': obj['Key'].replace(prefix, ''),
-                'Key': obj['Key']
-            })
+            logs.append(obj['Key'].replace(prefix, ''))
 
     return logs
 
