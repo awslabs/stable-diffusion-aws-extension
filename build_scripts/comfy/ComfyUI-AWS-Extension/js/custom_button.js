@@ -23,8 +23,18 @@ export async function syncEnv() {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(target)
             });
+            const result = await response.json();
+            console.log(result)
+            if (response.ok) {
+                // 如果请求成功，显示成功消息
+                alert('Sync completed successfully!');
+            } else {
+                // 如果请求失败，显示错误消息
+                alert('Sync failed. Please try again later.');
+            }
         } catch (exception) {
-
+            console.error('Error occurred during sync:', exception);
+            alert('An error occurred during sync. Please try again later.');
         }
         return true;
     }
