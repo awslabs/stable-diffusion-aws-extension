@@ -36,8 +36,9 @@ class TestWebUiClientCheck:
             stack_status = stack.get('StackStatus')
             assert stack_status in ['CREATE_COMPLETE', 'ROLLBACK_COMPLETE'], print(stack)
             outputs = stack.get('Outputs')
-            for output in outputs:
-                if stack_status == 'CREATE_COMPLETE':
-                    url = output.get('OutputValue')
-                    resp = requests.get(url)
-                    assert resp.status_code == 200, print(resp.text)
+            if outputs:
+                for output in outputs:
+                    if stack_status == 'CREATE_COMPLETE':
+                        url = output.get('OutputValue')
+                        resp = requests.get(url)
+                        assert resp.status_code == 200, print(resp.text)
