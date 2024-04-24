@@ -23,7 +23,7 @@ import logging
 import fcntl
 import hashlib
 
-global sync_msg_list
+sync_msg_list = []
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -207,23 +207,25 @@ def execute_proxy(func):
 
         def send_post_request(url, params):
             logger.debug(f"sending post request {url} , params {params}")
-            response = requests.post(url, json=params, headers=headers)
-            return response
+            get_response = requests.post(url, json=params, headers=headers)
+            return get_response
 
         def send_get_request(url):
-            response = requests.get(url, headers=headers)
-            return response
+            get_response = requests.get(url, headers=headers)
+            return get_response
+
         logger.debug(f"payload is: {payload}")
 
-        already_synced = False
-        save_already = False
         with concurrent.futures.ThreadPoolExecutor() as executor:
             execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
-            while comfy_need_sync and not execute_future.done():
+
+            save_already = False
+            if comfy_need_sync:
                 msg_future = executor.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
-                                                  return_when=concurrent.futures.FIRST_COMPLETED)
+                                                  return_when=concurrent.futures.ALL_COMPLETED)
+                already_synced = False
                 global sync_msg_list
                 sync_msg_list = []
                 for future in done:
@@ -234,8 +236,12 @@ def execute_proxy(func):
                             while i > 0:
                                 images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                                 response = images_response.json()
-                                if 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                    logger.error("there is no response from execute result !!!!!!!!")
+                                if images_response.status_code == 404:
+                                    logger.info("no images found already ,waiting sagemaker thread result .....")
+                                    time.sleep(3)
+                                    i = i - 2
+                                elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                                    logger.error("there is no response from execute thread result !!!!!!!!")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     time.sleep(2)
@@ -243,10 +249,9 @@ def execute_proxy(func):
                                 else:
                                     save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                                     save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-                                    logger.info(images_response.json())
+                                    logger.debug(images_response.json())
                                     save_already = True
                                     break
-                            break
                         logger.info(execute_resp.json())
                     elif future == msg_future:
                         msg_response = future.result()
@@ -258,25 +263,27 @@ def execute_proxy(func):
                             else:
                                 logger.debug(msg_response.json())
                                 already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
-            m = msg_max_wait_time
-            while comfy_need_sync and not already_synced:
-                msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
-                # logger.info(msg_response.json())
-                if msg_response.status_code == 200:
-                    if m <= 0:
-                        logger.error("there is no response from sync msg by timeout")
-                        already_synced = True
-                    elif 'data' not in msg_response.json() or not msg_response.json().get("data"):
-                        logger.error("there is no response from sync msg")
-                        time.sleep(1)
-                        m = m - 1
-                    else:
-                        logger.debug(msg_response.json())
-                        already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
-                        logger.info(f"already_synced is :{already_synced}")
-                        time.sleep(1)
-                        m = m - 1
-            logger.info(f"check if images are already synced {save_already}")
+
+                m = msg_max_wait_time
+                while not already_synced:
+                    msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
+                    # logger.info(msg_response.json())
+                    if msg_response.status_code == 200:
+                        if m <= 0:
+                            logger.error("there is no response from sync msg by timeout")
+                            already_synced = True
+                        elif 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                            logger.error("there is no response from sync msg")
+                            time.sleep(1)
+                            m = m - 1
+                        else:
+                            logger.debug(msg_response.json())
+                            already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
+                            logger.info(f"already_synced is :{already_synced}")
+                            time.sleep(1)
+                            m = m - 1
+                logger.info(f"check if images are already synced {save_already}")
+
             if not save_already:
                 logger.info("check if images are not already synced, please wait")
                 execute_resp = execute_future.result()
@@ -300,15 +307,6 @@ def execute_proxy(func):
                         else:
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-                            items_to_remove = []
-                            global need_resend_msg_result
-                            if need_resend_msg_result and len(need_resend_msg_result) > 0:
-                                for msg in need_resend_msg_result:
-                                    if not already_synced:
-                                        send_service_msg(server_use, msg)
-                                    items_to_remove.append(msg)
-                            for item_rm in items_to_remove:
-                                need_resend_msg_result.remove(item_rm)
                             break
             logger.info("execute finished")
     return wrapper
