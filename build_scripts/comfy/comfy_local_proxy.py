@@ -300,6 +300,15 @@ def execute_proxy(func):
                         else:
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                            items_to_remove = []
+                            global need_resend_msg_result
+                            if need_resend_msg_result and len(need_resend_msg_result) > 0:
+                                for msg in need_resend_msg_result:
+                                    if not already_synced:
+                                        send_service_msg(server_use, msg)
+                                    items_to_remove.append(msg)
+                            for item_rm in items_to_remove:
+                                need_resend_msg_result.remove(item_rm)
                             break
             logger.info("execute finished")
     return wrapper
