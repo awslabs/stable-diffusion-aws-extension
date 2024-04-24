@@ -65,9 +65,11 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
-msg_max_wait_time = os.environ.get('MAX_WAIT_TIME', 60)
+msg_max_wait_time = os.environ.get('MAX_WAIT_TIME', 30)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
+
+need_resend_msg_result = []
 
 
 if not api_url:
@@ -138,6 +140,9 @@ def save_files(prefix, execute, key, target_dir, need_prefix):
             if need_prefix:
                 with open(f"./{target_dir}/{prefix}_{loca_file}", 'wb') as f:
                     f.write(response.content)
+                # current override exist
+                with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+                    f.write(response.content)
             else:
                 with open(f"./{target_dir}/{loca_file}", 'wb') as f:
                     f.write(response.content)
@@ -149,26 +154,29 @@ def get_file_name(url: str):
     return file_name
 
 
-def convert_image_data(data):
-    # TODO refix image prefix and add list to resend after finish execute save
-    return data
+def send_service_msg(server_use, msg):
+    event = msg.get('event')
+    data = msg.get('data')
+    sid = msg.get('sid') if 'sid' in msg else None
+    server_use.send_sync(event, data, sid)
 
 
 def handle_sync_messages(server_use, msg_array):
     already_synced = False
     global sync_msg_list
     for msg in msg_array:
-        for item in msg:
-            event = item.get('event')
-            data = item.get('data')
-            sid = item.get('sid') if 'sid' in item else None
+        for item_msg in msg:
+            event = item_msg.get('event')
+            data = item_msg.get('data')
+            sid = item_msg.get('sid') if 'sid' in item_msg else None
             if data in sync_msg_list:
                 continue
             sync_msg_list.append(data)
             if event == 'finish':
                 already_synced = True
             elif event == 'executed':
-                data = convert_image_data(data)
+                global need_resend_msg_result
+                need_resend_msg_result.append(msg)
             server_use.send_sync(event, data, sid)
 
     return already_synced
@@ -292,6 +300,15 @@ def execute_proxy(func):
                         else:
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                            items_to_remove = []
+                            global need_resend_msg_result
+                            if need_resend_msg_result and len(need_resend_msg_result) > 0:
+                                for msg in need_resend_msg_result:
+                                    if not already_synced:
+                                        send_service_msg(server_use, msg)
+                                    items_to_remove.append(msg)
+                            for item_rm in items_to_remove:
+                                need_resend_msg_result.remove(item_rm)
                             break
             logger.info("execute finished")
     return wrapper
