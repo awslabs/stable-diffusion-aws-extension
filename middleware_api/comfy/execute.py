@@ -134,6 +134,19 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     if event.multi_async and ep.endpoint_type == 'Async':
         save_item = inference_job.__dict__
         sen_sqs_msg({"event": payload, "save_item": save_item, "inference_id": inference_id}, endpoint_name)
+
+        # just for test multi gpu
+        # payload1 = payload
+        # payload1['prompt_id'] = payload['prompt_id']+"1"
+        # save_item1 = save_item
+        # save_item1['prompt_id'] = payload['prompt_id']+"1"
+        # sen_sqs_msg({"event": payload1, "save_item": save_item1, "inference_id": inference_id+"1"}, endpoint_name)
+        # payload2 = payload
+        # payload2['prompt_id'] = payload['prompt_id'] + "1"
+        # save_item2 = save_item
+        # save_item2['prompt_id'] = payload['prompt_id'] + "1"
+        # sen_sqs_msg({"event": payload2, "save_item": save_item2, "inference_id": inference_id+"2"}, endpoint_name)
+
         return created(data=response_schema(inference_job), decimal=True)
 
     elif ep.endpoint_type == 'Async':

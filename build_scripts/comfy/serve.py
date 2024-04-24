@@ -39,6 +39,8 @@ async def send_request(request_obj, comfy_app, need_async):
     try:
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
+        request_obj['port'] = comfy_app.port
+        request_obj['out_path'] = comfy_app.device_id
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
             async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
