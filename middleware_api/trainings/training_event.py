@@ -141,7 +141,7 @@ def get_logs(job_id: str):
     return logs
 
 
-def gene_presign_logs(job_id, logs):
+def get_logs_presign(job_id, logs):
     presign_logs = []
     for filename in logs:
         presign_logs.append({
