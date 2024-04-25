@@ -89,6 +89,15 @@ def handler(raw_event, ctx):
             resp = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key), key)
             # TODO status check and save
             logger.info(f"batch async inference response: {resp}")
+            # resp1 = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key) + "111", key)
+            # logger.info(f"batch async inference multi 11111 test response: {resp1}")
+            # resp2 = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key) + "222", key)
+            # logger.info(f"batch async inference multi 22222 test response: {resp2}")
+            # resp3 = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key) + "333", key)
+            # logger.info(f"batch async inference multi 3333 test response: {resp3}")
+            # resp4 = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key) + "444", key)
+            # logger.info(f"batch async inference multi 4444 test response: {resp4}")
+
 
         # batch_put_items(execute_table, convert_float_to_decimal(batch_save_items))
         logger.info("receive execute reqs end...")
