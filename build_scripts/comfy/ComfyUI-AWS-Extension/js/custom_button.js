@@ -124,6 +124,7 @@ function handleButtonClick() {
 function handleCheckboxChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
+    changeOnAWS(event.target.value);
 }
 
 function handleRadioChange(event) {
@@ -135,30 +136,30 @@ function handleRadioChange(event) {
 const customButton = {
     name: 'CustomButton',
     async setup(app) {
-        const radioOption1 = createRadioOption('AWS', 'options', false, handleRadioChange, true);
-        app.ui.menuContainer.appendChild(radioOption1);
-
-        const radioOption2 = createRadioOption('Local', 'options', true, handleRadioChange);
-        app.ui.menuContainer.appendChild(radioOption2);
+        // const radioOption1 = createRadioOption('AWS', 'options', false, handleRadioChange, true);
+        // app.ui.menuContainer.appendChild(radioOption1);
+        //
+        // const radioOption2 = createRadioOption('Local', 'options', true, handleRadioChange);
+        // app.ui.menuContainer.appendChild(radioOption2);
 
         // Create a container for radio buttons
-        const radioContainer = document.createElement('div');
-        radioContainer.style.display = 'inline-flex';
-        radioContainer.appendChild(radioOption1);
-        radioContainer.appendChild(radioOption2);
-        app.ui.menuContainer.appendChild(radioContainer);
+        // const radioContainer = document.createElement('div');
+        // radioContainer.style.display = 'inline-flex';
+        // radioContainer.appendChild(radioOption1);
+        // radioContainer.appendChild(radioOption2);
+        // app.ui.menuContainer.appendChild(radioContainer);
 
-        // const checkboxOption1 = createCheckboxOption('AWS', 'options', true, handleCheckboxChange);
+        const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', false, handleCheckboxChange);
         // const checkboxOption2 = createCheckboxOption('Local', 'options', false, handleCheckboxChange);
-        // const checkboxContainer = document.createElement('div');
-        // checkboxContainer.style.display = 'flex';
-        // checkboxContainer.appendChild(checkboxOption1);
-        // checkboxContainer.appendChild(checkboxOption2);
-        // app.ui.menuContainer.appendChild(checkboxContainer);
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.style.display = 'flex';
+        checkboxContainer.appendChild(checkboxOption1);
+        checkboxContainer.appendChild(checkboxOption2);
+        app.ui.menuContainer.appendChild(checkboxContainer);
 
         const restartButton = createButton('Restart', rebootAPI);
         app.ui.menuContainer.appendChild(restartButton);
-        const syncButton = createButton('SyncEnv', syncEnv);
+        const syncButton = createButton('Synchronize', syncEnv);
         app.ui.menuContainer.appendChild(syncButton);
     },
 };

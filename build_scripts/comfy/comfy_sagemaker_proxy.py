@@ -106,7 +106,7 @@ async def prepare_comfy_env(sync_item: dict):
             logger.info("sync_script")
             # sync_script.startswith('s5cmd') 不允许
             try:
-                if sync_script and (sync_script.startswith("pip install") or sync_script.startswith("apt-get")
+                if sync_script and (sync_script.startswith("python -m pip") or sync_script.startswith("pip install") or sync_script.startswith("apt-get")
                                     or sync_script.startswith("os.environ")):
                     os.system(sync_script)
             except Exception as e:
