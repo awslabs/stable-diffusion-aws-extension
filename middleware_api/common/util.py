@@ -8,6 +8,7 @@ from io import BytesIO
 from typing import Dict
 
 import boto3
+import datetime
 import numpy
 from PIL import Image, PngImagePlugin
 from aws_lambda_powertools import Tracer
@@ -24,6 +25,33 @@ sns_client = boto3.client('sns')
 s3_client = boto3.client('s3')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3_bucket = s3_resource.Bucket(bucket_name)
+
+
+cloudwatch = boto3.client('cloudwatch')
+
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+
+
+def record_ep_metrics(ep_name: str):
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': 'EndpointInferenceCount',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': ep_name
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1.0,
+                'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
 
 
 def get_multi_query_params(event, param_name: str, default=None):
