@@ -250,6 +250,7 @@ export class CreateEndpointApi {
         this.multiUserTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
+        `arn:${Aws.PARTITION}:dynamodb:${Aws.REGION}:${Aws.ACCOUNT_ID}:table/ComfyExecuteTable`,
       ],
     });
 

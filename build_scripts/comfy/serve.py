@@ -37,6 +37,7 @@ is_multi_gpu = False
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
+        logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
         request_obj['port'] = comfy_app.port
