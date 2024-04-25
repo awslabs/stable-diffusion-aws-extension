@@ -32,6 +32,9 @@ Parameters:
     Description: EC2 Instance Type of the Comfy to deploy
     Type: String
     AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
       - g5.2xlarge
       - g5.4xlarge
       - g5.8xlarge
