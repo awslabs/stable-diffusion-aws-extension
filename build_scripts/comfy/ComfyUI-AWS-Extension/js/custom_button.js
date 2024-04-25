@@ -44,7 +44,8 @@ export async function syncEnv() {
 
 export async function changeOnAWS(disableAWS) {
     var target
-    if(disableAWS === "true") {
+    console.log(disableAWS)
+    if(disableAWS === true) {
         if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
             try {
                 target = {'DISABLE_AWS_PROXY': true}
@@ -124,7 +125,7 @@ function handleButtonClick() {
 function handleCheckboxChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.value);
+    changeOnAWS(event.target.checked);
 }
 
 function handleRadioChange(event) {
