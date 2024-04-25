@@ -5,7 +5,8 @@ import os
 import traceback
 import time
 import copy
-
+import datetime
+import boto3
 from fastapi import FastAPI
 
 from modules import sd_models
@@ -28,6 +29,33 @@ def dummy_function(*args, **kwargs):
 
 logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
+cloudwatch = boto3.client('cloudwatch')
+
+
+def record_metric():
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': 'InstanceInferenceCount',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': os.getenv('ENDPOINT_NAME')
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': os.getenv('ENDPOINT_INSTANCE_ID')
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1.0,
+                'Unit': 'Seconds'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
 
 
 def merge_model_on_cloud(req):
@@ -180,6 +208,8 @@ def sagemaker_api(_, app: FastAPI):
 
         logger.info(f'-------invocation on port {req.port}------')
         logger.info(json.dumps(req.__dict__, default=str))
+
+        record_metric()
 
         with condition:
             try:

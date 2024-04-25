@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 import os
 import subprocess
@@ -173,7 +172,7 @@ def record_metric(comfy_app: ComfyApp):
         Namespace='ESD',
         MetricData=[
             {
-                'MetricName': 'GPUUtilization',
+                'MetricName': 'GPUInferenceCount',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
