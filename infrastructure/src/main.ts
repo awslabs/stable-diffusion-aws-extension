@@ -314,6 +314,10 @@ export class Middleware extends Stack {
         }
       }
 
+      if (model && requestValidator) {
+        model.node.addDependency(requestValidator);
+      }
+
     });
 
     // Add stackName tag to all resources
