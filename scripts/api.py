@@ -51,7 +51,7 @@ def record_metric():
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
                 'Value': 1.0,
-                'Unit': 'Seconds'
+                'Unit': 'Count'
             },
         ]
     )

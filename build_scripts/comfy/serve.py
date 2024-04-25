@@ -189,7 +189,7 @@ def record_metric(comfy_app: ComfyApp):
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
                 'Value': 1.0,
-                'Unit': 'Seconds'
+                'Unit': 'Count'
             },
         ]
     )
