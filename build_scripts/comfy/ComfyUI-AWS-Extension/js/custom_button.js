@@ -45,8 +45,8 @@ export async function syncEnv() {
 export async function changeOnAWS(disableAWS) {
     var target
     console.log(disableAWS)
-    if(disableAWS === true) {
-        if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
+    if(disableAWS === false) {
+        if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
             try {
                 target = {'DISABLE_AWS_PROXY': true}
                 const response = await api.fetchApi("/change_env", {
@@ -60,7 +60,7 @@ export async function changeOnAWS(disableAWS) {
         }
     }
     else {
-        if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
+        if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
           try {
             target = {'DISABLE_AWS_PROXY': false}
             const response = await api.fetchApi("/change_env", {
