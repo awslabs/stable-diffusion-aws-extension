@@ -197,7 +197,7 @@ Resources:
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           sudo git clone https://github.com/ltdrdata/ComfyUI-Manager.git /ComfyUI/custom_nodes/ComfyUI-Manager
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
-          sudo git clone https://github.com/Gourieff/comfyui-reactor-node.git
+          sudo git clone https://github.com/Gourieff/comfyui-reactor-node.git  /ComfyUI/custom_nodes/comfyui-reactor-node
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
           sudo chmod -R 777 /ComfyUI
           
