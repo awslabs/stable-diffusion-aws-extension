@@ -34,5 +34,5 @@
  5. "Generate on cloud" ボタンをクリックすると、以下のような結果が得られます。
 ![Setting-tiledvae](../images/tiledvae_result.png)
 
- Tiled Difusion は、リージョンごとに異なるプロンプトを設定して超解像度の画像を生成できます。
+ Tiled Diffusion は、リージョンごとに異なるプロンプトを設定して超解像度の画像を生成できます。
 詳しい使い方は[プラグインのドキュメント](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111/tree/main)を参照してください。
