@@ -14,8 +14,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 msg_table_name = os.environ.get('MSG_TABLE')
 ddb = boto3.client('dynamodb')
-sqs_url = os.environ.get('SQS_URL')
-sqs = boto3.client('sqs')
 
 
 def save_message_to_dynamodb(prompt_id, message):
@@ -52,36 +50,6 @@ def save_message_to_dynamodb(prompt_id, message):
             logger.info(f"New record created for prompt_id: {prompt_id}")
     except Exception as e:
         logger.error(f"Error saving message to DynamoDB: {e}")
-
-
-def process_sqs_messages_and_write_to_ddb(prompt_id):
-    try:
-        response = sqs.receive_message(
-            QueueUrl=sqs_url,
-            MaxNumberOfMessages=10,
-            VisibilityTimeout=30,
-            WaitTimeSeconds=20
-        )
-        messages = response.get('Messages', [])
-        msg_save = {}
-        for message in messages:
-            logger.info("Received message from sqs: {}".format(message))
-            if 'body' not in message:
-                logger.error("ignore empty body msg")
-                continue
-            msg = json.loads(message['body'])
-            if 'prompt_id' in msg and msg['prompt_id']:
-                if msg['prompt_id'] in msg_save.keys():
-                    msg_save[msg['prompt_id']].extend(msg)
-                else:
-                    msg_save[msg['prompt_id']] = [msg]
-            else:
-                logger.error(f'prompt_id not in msg :{prompt_id} {msg}')
-            logger.info(f"Message processed and written to DynamoDB: {prompt_id}")
-        for item in msg_save.keys():
-            save_message_to_dynamodb(item, msg_save[item])
-    except Exception as e:
-        logger.error(f"Error processing SQS messages and writing to DynamoDB: {e}")
 
 
 def read_messages_from_dynamodb(prompt_id):

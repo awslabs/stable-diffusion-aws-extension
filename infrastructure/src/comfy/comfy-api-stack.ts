@@ -89,7 +89,6 @@ export class ComfyApiStack extends Construct {
       s3Bucket: props.s3Bucket,
       configTable: this.configTable,
       msgTable: this.msgTable,
-      queue: this.queue,
       commonLayer: this.layer,
     });
 
