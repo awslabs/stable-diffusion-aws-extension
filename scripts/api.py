@@ -32,6 +32,9 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 cloudwatch = boto3.client('cloudwatch')
 
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+
 
 def record_metric():
     response = cloudwatch.put_metric_data(
@@ -42,11 +45,11 @@ def record_metric():
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
-                        'Value': os.getenv('ENDPOINT_NAME')
+                        'Value': endpoint_name
                     },
                     {
                         'Name': 'Instance',
-                        'Value': os.getenv('ENDPOINT_INSTANCE_ID')
+                        'Value': endpoint_instance_id
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),

@@ -36,6 +36,9 @@ available_apps = []
 is_multi_gpu = False
 cloudwatch = boto3.client('cloudwatch')
 
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
@@ -172,15 +175,38 @@ def record_metric(comfy_app: ComfyApp):
         Namespace='ESD',
         MetricData=[
             {
+                'MetricName': 'InstanceInferenceCount',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': endpoint_instance_id
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1.0,
+                'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
                 'MetricName': 'GPUInferenceCount',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
-                        'Value': os.getenv('ENDPOINT_NAME')
+                        'Value': endpoint_name
                     },
                     {
                         'Name': 'Instance',
-                        'Value': os.getenv('ENDPOINT_INSTANCE_ID')
+                        'Value': endpoint_instance_id
                     },
                     {
                         'Name': 'GPU',
