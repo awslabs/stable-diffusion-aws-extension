@@ -207,7 +207,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/ComfyUI
-          ExecStart=/venv/bin/python3 main.py --listen
+          ExecStart=sudo /venv/bin/python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
