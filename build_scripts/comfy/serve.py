@@ -37,6 +37,7 @@ is_multi_gpu = False
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
+        logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
         request_obj['port'] = comfy_app.port
@@ -51,7 +52,7 @@ async def send_request(request_obj, comfy_app, need_async):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        return response.json()
+        return wrap_response(response, comfy_app)
     except Exception as e:
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
@@ -154,6 +155,13 @@ class ComfyApp:
             sock.settimeout(1)
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
+
+
+def wrap_response(response, comfy_app: ComfyApp):
+    data = response.json()
+    data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
+    data['device_id'] = comfy_app.device_id
+    return data
 
 
 def get_gpu_count():
