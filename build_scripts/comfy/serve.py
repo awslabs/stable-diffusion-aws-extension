@@ -175,7 +175,7 @@ def record_metric(comfy_app: ComfyApp):
         Namespace='ESD',
         MetricData=[
             {
-                'MetricName': 'InstanceInferenceCount',
+                'MetricName': 'InferenceCount',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
@@ -187,7 +187,7 @@ def record_metric(comfy_app: ComfyApp):
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1.0,
+                'Value': 1,
                 'Unit': 'Count'
             },
         ]
@@ -198,7 +198,7 @@ def record_metric(comfy_app: ComfyApp):
         Namespace='ESD',
         MetricData=[
             {
-                'MetricName': 'GPUInferenceCount',
+                'MetricName': 'InferenceCount',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
@@ -214,7 +214,7 @@ def record_metric(comfy_app: ComfyApp):
                     }
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1.0,
+                'Value': 1,
                 'Unit': 'Count'
             },
         ]

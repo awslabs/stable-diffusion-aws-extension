@@ -38,7 +38,7 @@ def record_ep_metrics(ep_name: str):
         Namespace='ESD',
         MetricData=[
             {
-                'MetricName': 'EndpointInferenceCount',
+                'MetricName': 'InferenceCount',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
@@ -46,7 +46,7 @@ def record_ep_metrics(ep_name: str):
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1.0,
+                'Value': 1,
                 'Unit': 'Count'
             },
         ]
