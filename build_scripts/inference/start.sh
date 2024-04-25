@@ -30,8 +30,7 @@ export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-exten
 # Use verified cache version file for production: v1.5.0-fe21616
 export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
 
-random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
-export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
+export ENDPOINT_INSTANCE_ID=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
   # Enable dev mode
