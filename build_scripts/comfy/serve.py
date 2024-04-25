@@ -37,8 +37,10 @@ available_apps = []
 is_multi_gpu = False
 cloudwatch = boto3.client('cloudwatch')
 
+
 async def send_request(request_obj, comfy_app, need_async):
     try:
+        record_metric(comfy_app)
         logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
