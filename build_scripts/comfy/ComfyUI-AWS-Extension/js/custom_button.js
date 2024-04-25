@@ -154,7 +154,7 @@ const customButton = {
         const checkboxContainer = document.createElement('div');
         checkboxContainer.style.display = 'flex';
         checkboxContainer.appendChild(checkboxOption1);
-        checkboxContainer.appendChild(checkboxOption2);
+        // checkboxContainer.appendChild(checkboxOption2);
         app.ui.menuContainer.appendChild(checkboxContainer);
 
         const restartButton = createButton('Restart', rebootAPI);
