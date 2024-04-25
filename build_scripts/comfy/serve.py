@@ -6,7 +6,9 @@ import subprocess
 import threading
 from multiprocessing import Process
 from threading import Lock
+import datetime
 
+import boto3
 import httpx
 import requests
 import socket
@@ -33,7 +35,7 @@ sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
 start_port = int(sagemaker_safe_port_range.split('-')[0])
 available_apps = []
 is_multi_gpu = False
-
+cloudwatch = boto3.client('cloudwatch')
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
@@ -162,6 +164,35 @@ def wrap_response(response, comfy_app: ComfyApp):
     data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
     data['device_id'] = comfy_app.device_id
     return data
+
+
+def record_metric(comfy_app: ComfyApp):
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': 'GPUUtilization',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': os.getenv('ENDPOINT_NAME')
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': os.getenv('ENDPOINT_INSTANCE_ID')
+                    },
+                    {
+                        'Name': 'GPU',
+                        'Value': comfy_app.device_id
+                    }
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1.0,
+                'Unit': 'Seconds'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
 
 
 def get_gpu_count():
