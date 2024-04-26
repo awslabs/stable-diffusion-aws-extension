@@ -5,7 +5,7 @@ import time
 
 import config as config
 from utils.api import Api
-from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, update_oas
+from utils.helper import get_endpoint_status, delete_sagemaker_endpoint
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 class TestCleanEndpoint:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

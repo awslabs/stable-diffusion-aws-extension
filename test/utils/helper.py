@@ -7,6 +7,9 @@ import os
 import subprocess
 import sys
 import tarfile
+import time
+import uuid
+from datetime import datetime, timedelta
 
 import requests
 
@@ -186,17 +189,6 @@ def parse_constant(c: str) -> float:
     return float(c)
 
 
-def update_oas(api_instance: Api):
-    headers = {'x-api-key': config.api_key}
-    resp = api_instance.doc(headers)
-    assert resp.status_code == 200, resp.dumps()
-
-    api_instance.schema = resp.json()
-
-    with open('oas.json', 'w') as f:
-        f.write(json.dumps(resp.json(), indent=4))
-
-
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         # if passed in an object is instance of Decimal
@@ -206,3 +198,70 @@ class DecimalEncoder(json.JSONEncoder):
 
         # ️ otherwise use the default behavior
         return json.JSONEncoder.default(self, obj)
+
+
+def comfy_execute_create(n, api, endpoint_name):
+    with open('./data/api_params/comfy_workflow.json', 'r') as f:
+        headers = {
+            "x-api-key": config.api_key,
+        }
+        prompt_id = str(uuid.uuid4())
+        workflow = json.load(f)
+        workflow['prompt_id'] = prompt_id
+        workflow['endpoint_name'] = endpoint_name
+
+        resp = api.create_execute(headers=headers, data=workflow)
+        assert resp.status_code in [200, 201], resp.dumps()
+        assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
+
+        timeout = datetime.now() + timedelta(minutes=5)
+
+        while datetime.now() < timeout:
+            time.sleep(6)
+            resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+            assert resp.status_code == 200, resp.dumps()
+
+            assert 'status' in resp.json()['data'], resp.dumps()
+            status = resp.json()["data"]["status"]
+
+            logger.info(f"{n}{endpoint_name} {prompt_id} is {status}")
+
+            if status == 'success':
+                break
+            if status == InferenceStatus.FAILED.value:
+                logger.error(resp.json())
+                raise Exception(f"{n}{endpoint_name} {prompt_id} failed.")
+        else:
+            raise Exception(f"{n}{endpoint_name} {prompt_id} timed out after 5 minutes.")
+
+
+def get_endpoint_comfy_async(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('comfy-async-'):
+            return endpoint['endpoint_name']
+    raise Exception("comfy-async-* endpoint not found")
+
+
+def get_endpoint_comfy_real_time(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('comfy-real-time-'):
+            return endpoint['endpoint_name']
+    raise Exception("comfy-real-time-* endpoint not found")
+
+
+def get_endpoint_sd_async(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('sd-async-'):
+            return endpoint['endpoint_name']
+    raise Exception("sd-async-* endpoint not found")
+
+
+def get_endpoint_sd_real_time(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('sd-real-time-'):
+            return endpoint['endpoint_name']
+    raise Exception("sd-real-time-* endpoint not found")

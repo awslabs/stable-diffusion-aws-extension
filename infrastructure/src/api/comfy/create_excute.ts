@@ -26,7 +26,7 @@ export interface ExecuteApiProps {
   commonLayer: aws_lambda.LayerVersion;
 }
 
-export class ExecuteApi {
+export class CreateExecuteApi {
   private readonly baseId: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -57,6 +57,8 @@ export class ExecuteApi {
       },
     );
 
+    const model = this.responseModel();
+
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       requestModels: {
@@ -64,10 +66,12 @@ export class ExecuteApi {
       },
       operationName: 'CreateExecute',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponse(model, '201'),
+        ApiModels.methodResponse(model, '200'),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
       ],
     });
   }
@@ -85,6 +89,7 @@ export class ExecuteApi {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [
+              200,
               201,
             ],
           },

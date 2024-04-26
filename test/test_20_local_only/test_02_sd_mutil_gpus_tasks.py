@@ -1,13 +1,14 @@
 from __future__ import print_function
 
 import logging
+import threading
 
 import pytest
 
 import config as config
 from utils.api import Api
 from utils.enums import InferenceType
-from utils.helper import update_oas, upload_with_put
+from utils.helper import upload_with_put
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -17,14 +18,22 @@ headers = {
     "username": config.username
 }
 
-inference_id = ''
+
+def task_to_run(inference_id):
+    t_name = threading.current_thread().name
+    logger.info(f"Task is running on {t_name}, {inference_id}")
+
+    api = Api(config)
+
+    api.start_inference_job(job_id=inference_id, headers=headers)
+    logger.info(f"start_inference_job: {inference_id}")
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestMutilGPUsSingleTask:
+class TestMutilTaskGPUs:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -42,7 +51,25 @@ class TestMutilGPUsSingleTask:
         }
         self.api.delete_inferences(data=data, headers=headers)
 
-    def test_2_create_job(self):
+    def test_1_gpus_start_real_time_tps(self):
+        ids = []
+        for i in range(20):
+            id = self.tps_real_time_create()
+            logger.info(f"inference created: {id}")
+            ids.append(id)
+
+        threads = []
+        for id in ids:
+            thread = threading.Thread(target=task_to_run, args=(id,))
+            threads.append(thread)
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+    def tps_real_time_create(self):
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
@@ -57,13 +84,6 @@ class TestMutilGPUsSingleTask:
 
         inference_data = resp.json()['data']["inference"]
 
-        upload_with_put(inference_data["api_params_s3_upload_url"],
-                        "./data/api_params/txt2img_api_param_batch_size.json")
-        global inference_id
-        inference_id = inference_data['id']
+        upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param.json")
 
-    def test_3_gpus_start_real_time_tps(self):
-        global inference_id
-
-        self.api.start_inference_job(job_id=inference_id, headers=headers)
-        logger.info(f"infer_id: {inference_id}")
+        return inference_data['id']

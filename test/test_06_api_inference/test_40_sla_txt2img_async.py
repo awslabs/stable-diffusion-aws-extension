@@ -13,7 +13,7 @@ import requests
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
-from utils.helper import get_inference_job_status, update_oas
+from utils.helper import get_inference_job_status
 
 logger = logging.getLogger(__name__)
 sla_batch_size = int(os.environ.get("SLA_BATCH_SIZE", 5))
@@ -24,7 +24,7 @@ class TestSLaTxt2ImgAsync:
 
     def setup_class(self):
         self.api = Api(config=config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

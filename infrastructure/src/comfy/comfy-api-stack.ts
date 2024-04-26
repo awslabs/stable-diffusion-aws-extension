@@ -11,16 +11,16 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { CreateExecuteApi, ExecuteApiProps } from '../api/comfy/create_excute';
 import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
-import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
+import { MergeExecuteApi } from '../api/comfy/merge_execute';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-import { MergeExecuteApi } from '../api/comfy/merge_execute';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -103,7 +103,7 @@ export class ComfyApiStack extends Construct {
     });
 
     // POST /executes
-    new ExecuteApi(
+    new CreateExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,

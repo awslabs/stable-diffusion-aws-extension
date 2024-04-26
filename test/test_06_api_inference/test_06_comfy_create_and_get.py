@@ -3,7 +3,6 @@ import logging
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +13,13 @@ class TestTxt2ImgReCreateAndGetComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
         pass
 
-    def test_1_comfy_txt2img_async_create(self):
+    def test_0_comfy_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
         }
