@@ -202,6 +202,8 @@ Resources:
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
           sudo git clone https://github.com/Gourieff/comfyui-reactor-node.git  /ComfyUI/custom_nodes/comfyui-reactor-node
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
+          sudo git clone https://github.com/twri/sdxl_prompt_styler.git  /ComfyUI/custom_nodes/sdxl_prompt_styler
+          sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/sdxl_prompt_styler/requirements.txt
           sudo chmod -R 777 /ComfyUI
           
           cat > comfy.service <<EOF

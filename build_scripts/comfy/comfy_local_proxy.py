@@ -68,6 +68,8 @@ bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
 msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 30)
 
+disable_aws_proxy = os.environ.get('DISABLE_AWS_PROXY', "True")
+
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
 need_resend_msg_result = []
@@ -185,7 +187,7 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
-        if os.environ.get('DISABLE_AWS_PROXY') == 'True':
+        if disable_aws_proxy == 'True':
             logger.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
         logger.info("enable aws proxy, use aws")
