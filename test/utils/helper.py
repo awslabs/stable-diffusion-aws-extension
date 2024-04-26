@@ -7,6 +7,9 @@ import os
 import subprocess
 import sys
 import tarfile
+import time
+import uuid
+from datetime import datetime, timedelta
 
 import requests
 
@@ -206,3 +209,41 @@ class DecimalEncoder(json.JSONEncoder):
 
         # ️ otherwise use the default behavior
         return json.JSONEncoder.default(self, obj)
+
+
+def comfy_execute_create(n, api, endpoint_name):
+    headers = {
+        "x-api-key": config.api_key,
+    }
+
+    prompt_id = str(uuid.uuid4())
+
+    with open('./data/api_params/comfy_workflow.json', 'r') as f:
+        workflow = json.load(f)
+        workflow['prompt_id'] = prompt_id
+        workflow['endpoint_name'] = endpoint_name
+
+        resp = api.create_execute(headers=headers, data=json.loads(workflow))
+        assert resp.status_code == 201, resp.dumps()
+
+        inference_data = resp.json()['data']
+        logger.info(f"{n} prompt_id is {prompt_id}")
+
+        assert resp.json()["statusCode"] == 201
+
+        prompt_id = inference_data["prompt_id"]
+
+        timeout = datetime.now() + timedelta(minutes=5)
+
+        while datetime.now() < timeout:
+            resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+            status = resp.json()["data"]["status"]
+            logger.info(f"execute {prompt_id} is {status}")
+            if status == 'success':
+                break
+            if status == InferenceStatus.FAILED.value:
+                logger.error(inference_data)
+                raise Exception(f"execute {prompt_id} failed.")
+            time.sleep(7)
+        else:
+            raise Exception(f"execute {prompt_id} timed out after 5 minutes.")
