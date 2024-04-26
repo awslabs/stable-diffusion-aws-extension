@@ -5,7 +5,7 @@ import uuid
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas, comfy_execute_create, wget_file, get_endpoint_comfy_real_time
+from utils.helper import comfy_execute_create, wget_file, get_endpoint_comfy_real_time
 
 logger = logging.getLogger(__name__)
 prepare_id = str(uuid.uuid4())
@@ -15,7 +15,7 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
         self.ep_name = get_endpoint_comfy_real_time(self.api)
 
     @classmethod

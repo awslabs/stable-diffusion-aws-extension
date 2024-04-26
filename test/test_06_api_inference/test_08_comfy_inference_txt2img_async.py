@@ -5,7 +5,7 @@ import uuid
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas, comfy_execute_create, get_endpoint_comfy_async
+from utils.helper import comfy_execute_create, get_endpoint_comfy_async
 from utils.helper import wget_file
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
         self.ep_name = get_endpoint_comfy_async(self.api)
 
     @classmethod

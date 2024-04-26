@@ -10,7 +10,7 @@ import pytest
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas, wget_file, comfy_execute_create
+from utils.helper import wget_file, comfy_execute_create, get_endpoint_comfy_async
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,8 +27,8 @@ id = str(uuid.uuid4())
 class TestComfyMutilTaskGPUs:
     def setup_class(self):
         self.api = Api(config)
-        self.endpoint_name = 'comfy-async-mutil-gpus'
-        update_oas(self.api)
+        self.api.feat_oas_schema()
+        self.endpoint_name = get_endpoint_comfy_async(self.api)
 
     @classmethod
     def teardown_class(self):

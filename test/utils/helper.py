@@ -189,17 +189,6 @@ def parse_constant(c: str) -> float:
     return float(c)
 
 
-def update_oas(api_instance: Api):
-    headers = {'x-api-key': config.api_key}
-    resp = api_instance.doc(headers)
-    assert resp.status_code == 200, resp.dumps()
-
-    api_instance.schema = resp.json()
-
-    with open('oas.json', 'w') as f:
-        f.write(json.dumps(resp.json(), indent=4))
-
-
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         # if passed in an object is instance of Decimal

@@ -5,7 +5,7 @@ from time import sleep
 
 import config as config
 from utils.api import Api
-from utils.helper import delete_sagemaker_endpoint, get_endpoint_status, update_oas
+from utils.helper import delete_sagemaker_endpoint, get_endpoint_status
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class TestEndpointCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
