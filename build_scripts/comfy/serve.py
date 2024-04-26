@@ -210,7 +210,7 @@ def record_metric(comfy_app: ComfyApp):
                     },
                     {
                         'Name': 'InstanceGPU',
-                        'Value': str(comfy_app.device_id)
+                        'Value': f"GPU{comfy_app.device_id}"
                     }
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
