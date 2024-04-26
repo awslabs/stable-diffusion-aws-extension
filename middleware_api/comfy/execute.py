@@ -17,7 +17,7 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
-from common.util import s3_scan_files, generate_presigned_url_for_keys
+from common.util import s3_scan_files, generate_presigned_url_for_keys, record_ep_metrics
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus
 from libs.utils import get_endpoint_by_name, response_error
@@ -99,6 +99,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService or Updating.")
 
     logger.info(f"endpoint: {ep}")
+
+    record_ep_metrics(ep.endpoint_name)
 
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))

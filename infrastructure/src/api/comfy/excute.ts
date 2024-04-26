@@ -228,6 +228,8 @@ export class ExecuteApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'cloudwatch:PutMetricAlarm',
+        'cloudwatch:PutMetricData',
       ],
       resources: ['*'],
     }));

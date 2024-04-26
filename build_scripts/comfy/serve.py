@@ -1,12 +1,13 @@
 import asyncio
-import datetime
 import logging
 import os
 import subprocess
 import threading
 from multiprocessing import Process
 from threading import Lock
+import datetime
 
+import boto3
 import httpx
 import requests
 import socket
@@ -33,10 +34,16 @@ sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
 start_port = int(sagemaker_safe_port_range.split('-')[0])
 available_apps = []
 is_multi_gpu = False
+cloudwatch = boto3.client('cloudwatch')
+
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
 
 
 async def send_request(request_obj, comfy_app, need_async):
     try:
+        record_metric(comfy_app)
+        logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
         request_obj['port'] = comfy_app.port
@@ -51,7 +58,7 @@ async def send_request(request_obj, comfy_app, need_async):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        return response.json()
+        return wrap_response(response, comfy_app)
     except Exception as e:
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
@@ -154,6 +161,65 @@ class ComfyApp:
             sock.settimeout(1)
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
+
+
+def wrap_response(response, comfy_app: ComfyApp):
+    data = response.json()
+    data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
+    data['device_id'] = comfy_app.device_id
+    return data
+
+
+def record_metric(comfy_app: ComfyApp):
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': 'InferenceCount',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': endpoint_instance_id
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': 'InferenceCount',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': endpoint_instance_id
+                    },
+                    {
+                        'Name': 'GPU',
+                        'Value': comfy_app.device_id
+                    }
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
 
 
 def get_gpu_count():
