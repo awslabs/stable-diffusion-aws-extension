@@ -57,6 +57,8 @@ export class CreateExecuteApi {
       },
     );
 
+    const model = this.responseModel();
+
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       requestModels: {
@@ -64,7 +66,8 @@ export class CreateExecuteApi {
       },
       operationName: 'CreateExecute',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponse(model, '201'),
+        ApiModels.methodResponse(model, '200'),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
@@ -86,6 +89,7 @@ export class CreateExecuteApi {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [
+              200,
               201,
             ],
           },

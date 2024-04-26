@@ -162,7 +162,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     logger.info(f"real time inference response: ")
     logger.info(resp)
-    resp = InferenceResult(**resp)
+
+    resp = InferenceResult(**resp[0])
     resp = s3_scan_files(resp)
 
     inference_job.status = resp.status

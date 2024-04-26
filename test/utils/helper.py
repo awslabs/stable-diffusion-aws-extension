@@ -211,7 +211,7 @@ def comfy_execute_create(n, api, endpoint_name):
         workflow['endpoint_name'] = endpoint_name
 
         resp = api.create_execute(headers=headers, data=workflow)
-        assert resp.status_code == 201, resp.dumps()
+        assert resp.status_code in [200, 201], resp.dumps()
         assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
 
         timeout = datetime.now() + timedelta(minutes=5)
