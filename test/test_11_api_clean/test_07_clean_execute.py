@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class TestCleanInferences:
+class TestCleanExecute:
     def setup_class(self):
         self.api = Api(config)
         update_oas(self.api)
@@ -28,20 +28,20 @@ class TestCleanInferences:
 
         while True:
 
-            resp = self.api.list_inferences(headers=headers)
-            inferences = resp.json()['data']['inferences']
-            if len(inferences) == 0:
+            resp = self.api.list_executes(headers=headers)
+            executes = resp.json()['data']['executes']
+            if len(executes) == 0:
                 break
 
-            for inference in inferences:
-                inference_id = inference['InferenceJobId']
+            for execute in executes:
+                prompt_id = execute['prompt_id']
                 data = {
-                    "inference_id_list": [
-                        inference_id
+                    "execute_id_list": [
+                        prompt_id
                     ],
                 }
-                resp = self.api.delete_inferences(headers=headers, data=data)
-                logger.info(f"delete inference {inference_id}")
+                resp = self.api.delete_executes(headers=headers, data=data)
+                logger.info(f"delete execute {prompt_id}")
                 if resp.status_code == 400:
                     logger.info(resp.json()['message'])
                     time.sleep(5)

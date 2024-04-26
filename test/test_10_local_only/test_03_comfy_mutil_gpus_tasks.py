@@ -3,7 +3,6 @@ from __future__ import print_function
 import json
 import logging
 import os
-import threading
 import time
 import uuid
 from datetime import datetime, timedelta
@@ -26,7 +25,7 @@ headers = {
 id = str(uuid.uuid4())
 
 
-def tps_async_create(api, endpoint_name):
+def tps_async_create(n, api, endpoint_name):
     headers = {
         "x-api-key": config.api_key,
     }
@@ -35,6 +34,8 @@ def tps_async_create(api, endpoint_name):
         file_content = data.read()
         file_content = json.loads(file_content)
         print(file_content)
+
+    prompt_id = str(uuid.uuid4())
 
     payload = json.dumps({
         "need_sync": True,
@@ -183,7 +184,7 @@ def tps_async_create(api, endpoint_name):
                 "class_type": "SaveImage"
             }
         },
-        "prompt_id": str(uuid.uuid4()),
+        "prompt_id": prompt_id,
         "endpoint_name": endpoint_name
     })
 
@@ -191,9 +192,11 @@ def tps_async_create(api, endpoint_name):
     assert resp.status_code == 201, resp.dumps()
 
     inference_data = resp.json()['data']
+    logger.info(f"{n} prompt_id is {prompt_id}")
 
     assert resp.json()["statusCode"] == 201
-    print(json.dumps(resp.json()['debug'], indent=2))
+
+    return
 
     prompt_id = inference_data["prompt_id"]
 
@@ -217,7 +220,7 @@ def tps_async_create(api, endpoint_name):
 class TestComfyMutilTaskGPUs:
     def setup_class(self):
         self.api = Api(config)
-        self.endpoint_name = 'comfy-async-0426025639'
+        self.endpoint_name = 'comfy-async-mutil-gpus'
         update_oas(self.api)
 
     @classmethod
@@ -260,13 +263,5 @@ class TestComfyMutilTaskGPUs:
         self.api.delete_inferences(data=data, headers=headers)
 
     def test_14_comfy_gpus_start_async_tps(self):
-        threads = []
-        for i in range(20):
-            thread = threading.Thread(target=tps_async_create, args=(self.api, self.endpoint_name))
-            threads.append(thread)
-
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
+        for n in range(4000):
+            tps_async_create(n, self.api, self.endpoint_name)
