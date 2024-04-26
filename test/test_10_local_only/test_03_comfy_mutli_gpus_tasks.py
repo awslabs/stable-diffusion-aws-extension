@@ -1,15 +1,19 @@
 from __future__ import print_function
 
+import json
 import logging
 import os
 import threading
+import time
+import uuid
+from datetime import datetime, timedelta
 
 import pytest
 
 import config as config
 from utils.api import Api
-from utils.enums import InferenceType
-from utils.helper import update_oas, upload_with_put, wget_file
+from utils.enums import InferenceStatus
+from utils.helper import update_oas, wget_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,15 +23,195 @@ headers = {
     "username": config.username
 }
 
+prompt_id = "222222-22222-2222"
 
-def task_to_run(inference_id):
-    t_name = threading.current_thread().name
-    logger.info(f"Task is running on {t_name}, {inference_id}")
 
-    api = Api(config)
+def tps_async_create(api):
+    headers = {
+        "x-api-key": config.api_key,
+    }
 
-    api.start_inference_job(job_id=inference_id, headers=headers)
-    logger.info(f"start_inference_job: {inference_id}")
+    with open("./data/api_params/comfy_workflow.json", 'rb') as data:
+        file_content = data.read()
+        file_content = json.loads(file_content)
+        print(file_content)
+
+    return
+    payload = json.dumps({
+        "need_sync": True,
+        "prompt": {
+            "4": {
+                "inputs": {
+                    "ckpt_name": "sdXL_v10VAEFix.safetensors"
+                },
+                "class_type": "CheckpointLoaderSimple"
+            },
+            "5": {
+                "inputs": {
+                    "width": 1024,
+                    "height": 1024,
+                    "batch_size": 1
+                },
+                "class_type": "EmptyLatentImage"
+            },
+            "6": {
+                "inputs": {
+                    "text": "evening sunset scenery blue sky nature, glass bottle with a galaxy in it",
+                    "clip": [
+                        "4",
+                        1
+                    ]
+                },
+                "class_type": "CLIPTextEncode"
+            },
+            "7": {
+                "inputs": {
+                    "text": "text, watermark",
+                    "clip": [
+                        "4",
+                        1
+                    ]
+                },
+                "class_type": "CLIPTextEncode"
+            },
+            "10": {
+                "inputs": {
+                    "add_noise": "enable",
+                    "noise_seed": 721897303308196,
+                    "steps": 25,
+                    "cfg": 8,
+                    "sampler_name": "euler",
+                    "scheduler": "normal",
+                    "start_at_step": 0,
+                    "end_at_step": 20,
+                    "return_with_leftover_noise": "enable",
+                    "model": [
+                        "4",
+                        0
+                    ],
+                    "positive": [
+                        "6",
+                        0
+                    ],
+                    "negative": [
+                        "7",
+                        0
+                    ],
+                    "latent_image": [
+                        "5",
+                        0
+                    ]
+                },
+                "class_type": "KSamplerAdvanced"
+            },
+            "11": {
+                "inputs": {
+                    "add_noise": "disable",
+                    "noise_seed": 0,
+                    "steps": 25,
+                    "cfg": 8,
+                    "sampler_name": "euler",
+                    "scheduler": "normal",
+                    "start_at_step": 20,
+                    "end_at_step": 10000,
+                    "return_with_leftover_noise": "disable",
+                    "model": [
+                        "12",
+                        0
+                    ],
+                    "positive": [
+                        "15",
+                        0
+                    ],
+                    "negative": [
+                        "16",
+                        0
+                    ],
+                    "latent_image": [
+                        "10",
+                        0
+                    ]
+                },
+                "class_type": "KSamplerAdvanced"
+            },
+            "12": {
+                "inputs": {
+                    "ckpt_name": "sdXL_v10VAEFix.safetensors"
+                },
+                "class_type": "CheckpointLoaderSimple"
+            },
+            "15": {
+                "inputs": {
+                    "text": "evening sunset scenery blue sky nature, glass bottle with a galaxy in it",
+                    "clip": [
+                        "12",
+                        1
+                    ]
+                },
+                "class_type": "CLIPTextEncode"
+            },
+            "16": {
+                "inputs": {
+                    "text": "text, watermark",
+                    "clip": [
+                        "12",
+                        1
+                    ]
+                },
+                "class_type": "CLIPTextEncode"
+            },
+            "17": {
+                "inputs": {
+                    "samples": [
+                        "11",
+                        0
+                    ],
+                    "vae": [
+                        "12",
+                        2
+                    ]
+                },
+                "class_type": "VAEDecode"
+            },
+            "19": {
+                "inputs": {
+                    "filename_prefix": "ComfyUI",
+                    "images": [
+                        "17",
+                        0
+                    ]
+                },
+                "class_type": "SaveImage"
+            }
+        },
+        "prompt_id": str(uuid.uuid4()),
+        "endpoint_name": config.comfy_async_ep_name
+    })
+
+    resp = api.create_execute(headers=headers, data=json.loads(payload))
+    assert resp.status_code == 201, resp.dumps()
+
+    inference_data = resp.json()['data']
+
+    assert resp.json()["statusCode"] == 201
+    print(json.dumps(resp.json()['debug'], indent=2))
+
+    prompt_id = inference_data["prompt_id"]
+
+    timeout = datetime.now() + timedelta(minutes=5)
+
+    while datetime.now() < timeout:
+        resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+        status = resp.json()["data"]["status"]
+        logger.info(f"execute {prompt_id} is {status}")
+        if status == 'success':
+            break
+        if status == InferenceStatus.FAILED.value:
+            logger.error(inference_data)
+            raise Exception(f"execute {prompt_id} failed.")
+        time.sleep(7)
+    else:
+        raise Exception(f"execute {prompt_id} timed out after 5 minutes.")
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
@@ -94,15 +278,9 @@ class TestComfyMutilTaskGPUs:
         self.api.delete_inferences(data=data, headers=headers)
 
     def test_14_comfy_gpus_start_async_tps(self):
-        ids = []
-        for i in range(20):
-            id = self.tps_async_create()
-            logger.info(f"inference created: {id}")
-            ids.append(id)
-
         threads = []
-        for id in ids:
-            thread = threading.Thread(target=task_to_run, args=(id,))
+        for i in range(1):
+            thread = threading.Thread(target=tps_async_create, args=(self.api,))
             threads.append(thread)
 
         for thread in threads:
@@ -110,22 +288,3 @@ class TestComfyMutilTaskGPUs:
 
         for thread in threads:
             thread.join()
-
-    def tps_async_create(self):
-        data = {
-            "inference_type": "Async",
-            "task_type": InferenceType.TXT2IMG.value,
-            "models": {
-                "Stable-diffusion": [config.default_model_id],
-                "embeddings": []
-            },
-        }
-
-        resp = self.api.create_inference(headers=headers, data=data)
-        assert resp.status_code == 201, resp.dumps()
-
-        inference_data = resp.json()['data']["inference"]
-
-        upload_with_put(inference_data["api_params_s3_upload_url"], "./data/api_params/txt2img_api_param.json")
-
-        return inference_data['id']
