@@ -33,7 +33,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
-endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 
 def record_metric():
