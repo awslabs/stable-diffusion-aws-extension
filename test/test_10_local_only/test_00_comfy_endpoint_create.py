@@ -59,7 +59,7 @@ class TestComfyEndpointCreateE2E:
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.12xlarge',
             "initial_instance_count": 1,
-            "autoscaling_enabled": True,
+            "autoscaling_enabled": False,
             "assign_to_roles": [config.role_comfy_async],
             "creator": config.username
         }

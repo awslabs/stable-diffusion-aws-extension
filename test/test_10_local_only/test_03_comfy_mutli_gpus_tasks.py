@@ -23,10 +23,8 @@ headers = {
     "username": config.username
 }
 
-prompt_id = "222222-22222-2222"
 
-
-def tps_async_create(api):
+def tps_async_create(api, endpoint_name):
     headers = {
         "x-api-key": config.api_key,
     }
@@ -36,7 +34,6 @@ def tps_async_create(api):
         file_content = json.loads(file_content)
         print(file_content)
 
-    return
     payload = json.dumps({
         "need_sync": True,
         "prompt": {
@@ -185,7 +182,7 @@ def tps_async_create(api):
             }
         },
         "prompt_id": str(uuid.uuid4()),
-        "endpoint_name": config.comfy_async_ep_name
+        "endpoint_name": endpoint_name
     })
 
     resp = api.create_execute(headers=headers, data=json.loads(payload))
@@ -218,29 +215,12 @@ def tps_async_create(api):
 class TestComfyMutilTaskGPUs:
     def setup_class(self):
         self.api = Api(config)
-        self.endpoint_name = self.get_ep()
+        self.endpoint_name = 'comfy-async-0426011502'
         update_oas(self.api)
 
     @classmethod
     def teardown_class(self):
         pass
-
-    def get_ep(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
-        params = {
-            "username": config.username
-        }
-
-        resp = self.api.list_endpoints(headers=headers, params=params)
-        assert resp.status_code == 200, resp.dumps()
-
-        endpoints = resp.json()['data']["endpoints"]
-        assert len(endpoints) >= 0
-        return endpoints[0]['endpoint_name']
 
     def test_10_download_file(self):
         local_path = f"./data/comfy/checkpoints/v1-5-pruned-emaonly.ckpt"
@@ -280,7 +260,7 @@ class TestComfyMutilTaskGPUs:
     def test_14_comfy_gpus_start_async_tps(self):
         threads = []
         for i in range(1):
-            thread = threading.Thread(target=tps_async_create, args=(self.api,))
+            thread = threading.Thread(target=tps_async_create, args=(self.api, self.endpoint_name))
             threads.append(thread)
 
         for thread in threads:
