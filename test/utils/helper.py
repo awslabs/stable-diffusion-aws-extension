@@ -216,34 +216,63 @@ def comfy_execute_create(n, api, endpoint_name):
         "x-api-key": config.api_key,
     }
 
-    prompt_id = str(uuid.uuid4())
-
     with open('./data/api_params/comfy_workflow.json', 'r') as f:
+        prompt_id = str(uuid.uuid4())
         workflow = json.load(f)
         workflow['prompt_id'] = prompt_id
         workflow['endpoint_name'] = endpoint_name
 
-        resp = api.create_execute(headers=headers, data=json.loads(workflow))
+        resp = api.create_execute(headers=headers, data=workflow)
         assert resp.status_code == 201, resp.dumps()
-
-        inference_data = resp.json()['data']
-        logger.info(f"{n} prompt_id is {prompt_id}")
-
-        assert resp.json()["statusCode"] == 201
-
-        prompt_id = inference_data["prompt_id"]
+        assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
 
         timeout = datetime.now() + timedelta(minutes=5)
 
         while datetime.now() < timeout:
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+            assert resp.status_code == 200, resp.dumps()
+
+            assert 'status' in resp.json()['data'], resp.dumps()
             status = resp.json()["data"]["status"]
+
             logger.info(f"execute {prompt_id} is {status}")
             if status == 'success':
                 break
             if status == InferenceStatus.FAILED.value:
-                logger.error(inference_data)
+                logger.error(resp.json())
                 raise Exception(f"execute {prompt_id} failed.")
-            time.sleep(7)
+            time.sleep(3)
         else:
             raise Exception(f"execute {prompt_id} timed out after 5 minutes.")
+
+
+def get_endpoint_comfy_async(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('comfy-async-'):
+            return endpoint['endpoint_name']
+    raise Exception("comfy-async-* endpoint not found")
+
+
+def get_endpoint_comfy_real_time(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('comfy-real-time-'):
+            return endpoint['endpoint_name']
+    raise Exception("comfy-real-time-* endpoint not found")
+
+
+def get_endpoint_sd_async(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('sd-async-'):
+            return endpoint['endpoint_name']
+    raise Exception("sd-async-* endpoint not found")
+
+
+def get_endpoint_sd_real_time(api):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith('sd-real-time-'):
+            return endpoint['endpoint_name']
+    raise Exception("sd-real-time-* endpoint not found")

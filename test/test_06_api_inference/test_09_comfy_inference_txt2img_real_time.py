@@ -1,12 +1,14 @@
 import logging
 import os
 import time
+import uuid
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas, comfy_execute_create, wget_file
+from utils.helper import update_oas, comfy_execute_create, wget_file, get_endpoint_comfy_real_time
 
 logger = logging.getLogger(__name__)
+prepare_id = str(uuid.uuid4())
 
 
 class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
@@ -14,6 +16,7 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
     def setup_class(self):
         self.api = Api(config)
         update_oas(self.api)
+        self.ep_name = get_endpoint_comfy_real_time(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -28,7 +31,7 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
 
     def test_1_sync_files_to_comfy_endpoint(self):
         local = "'./data/comfy/*'"
-        target = f"'s3://{config.bucket}/comfy/{config.comfy_real_time_ep_name}/{id}/models/'"
+        target = f"'s3://{config.bucket}/comfy/{self.ep_name}/{prepare_id}/models/'"
         logger.info(f"Syncing {local} to {target}")
         os.system(f"rm -rf ./s5cmd")
         os.system(f"wget -q ./ https://raw.githubusercontent.com/elonniu/s5cmd/main/s5cmd")
@@ -40,9 +43,9 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
             "x-api-key": config.api_key,
             "username": config.username
         }
-        data = {"endpoint_name": f"{config.comfy_real_time_ep_name}",
+        data = {"endpoint_name": f"{self.ep_name}",
                 "need_reboot": True,
-                "prepare_id": id,
+                "prepare_id": prepare_id,
                 "prepare_type": "models"}
         resp = self.api.prepare(data=data, headers=headers)
         assert resp.status_code == 200, resp.dumps()
@@ -51,4 +54,4 @@ class TestTxt2ImgInferenceRealtimeAfterComfyE2E:
         time.sleep(30)
 
     def test_1_comfy_txt2img_real_time_create(self):
-        comfy_execute_create(1, self.api, config.comfy_real_time_ep_name)
+        comfy_execute_create(1, self.api, self.ep_name)

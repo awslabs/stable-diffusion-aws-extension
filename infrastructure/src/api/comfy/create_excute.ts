@@ -26,7 +26,7 @@ export interface ExecuteApiProps {
   commonLayer: aws_lambda.LayerVersion;
 }
 
-export class ExecuteApi {
+export class CreateExecuteApi {
   private readonly baseId: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -68,6 +68,7 @@ export class ExecuteApi {
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
       ],
     });
   }

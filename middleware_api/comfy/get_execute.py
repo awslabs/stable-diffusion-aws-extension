@@ -25,11 +25,10 @@ def handler(event, ctx):
         prompt_id = event['pathParameters']['id']
 
         item = ddb_service.get_item(table=execute_table, key_values={"prompt_id": prompt_id})
+        logger.info(item)
 
         if not item:
             return not_found(f"execute not found for prompt_id: {prompt_id}")
-
-        logger.debug(f"item is {item}")
 
         job = ComfyExecuteTable(**generate_presigned_url_for_job(item))
         if not job.output_files:
