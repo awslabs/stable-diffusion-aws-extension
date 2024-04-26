@@ -133,8 +133,6 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     # s5cmd_command = f'{ROOT_PATH}/tools/s5cmd sync "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
     s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
     try:
-        # TODO 注意添加去重逻辑
-        # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         logger.info(s5cmd_command)
         os.system(s5cmd_command)
         logger.info(f'Files copied from "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" to "{local_path}/"')
@@ -142,8 +140,12 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
                     tar_filepath = os.path.join(local_path, filename)
+                    extract_path = os.path.splitext(tar_filepath)[0]
+                    os.makedirs(extract_path, exist_ok=True)
+
+                    tar_filepath = os.path.join(local_path, filename)
                     with tarfile.open(tar_filepath, "r:gz") as tar:
-                        tar.extractall(path=local_path)
+                        tar.extractall(path=extract_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
         return True
