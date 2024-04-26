@@ -4,6 +4,7 @@ import datetime
 import os
 import signal
 import sys
+import tarfile
 import threading
 
 import requests
@@ -325,6 +326,22 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
+def compress_and_upload(folder_path, timestamp):
+    # 遍历文件夹
+    for root, dirs, files in os.walk(folder_path):
+        for directory in dirs:
+            dir_path = os.path.join(root, directory)
+            tar_filename = f"{directory}.tar.gz"
+            tar_filepath = os.path.join(root, tar_filename)
+            with tarfile.open(tar_filepath, "w:gz") as tar:
+                tar.add(dir_path, arcname=os.path.basename(dir_path))
+            s5cmd_syn_node_command = f's5cmd --log=error cp tar_filepath "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            logger.info(s5cmd_syn_node_command)
+            os.system(s5cmd_syn_node_command)
+            logger.info(f"rm tar_filepath{tar_filepath}")
+            os.remove(tar_filepath)
+
+
 def sync_default_files():
     try:
         timestamp = str(int(time.time() * 1000))
@@ -567,9 +584,20 @@ if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
 async def restart(self):
     logger.info(f"start to reboot {self}")
     try:
-        sys.stdout.close_log()
+        subprocess.run(["sudo", "reboot"])
     except Exception as e:
         logger.info(f"error reboot  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+@server.PromptServer.instance.routes.get("/restart")
+async def restart(self):
+    logger.info(f"start to restart {self}")
+    try:
+        sys.stdout.close_log()
+    except Exception as e:
+        logger.info(f"error restart  {e}")
         pass
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 

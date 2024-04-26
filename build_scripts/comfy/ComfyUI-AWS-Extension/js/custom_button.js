@@ -2,6 +2,18 @@ import {app} from '../../scripts/app.js'
 import {api} from '../../scripts/api.js';
 
 
+export function restartAPI() {
+    if (confirm("Are you sure you'd like to restart the ComfyUI?")) {
+        try {
+            api.fetchApi("/restart");
+        } catch (exception) {
+
+        }
+        return true;
+    }
+    return false;
+}
+
 export function rebootAPI() {
     if (confirm("Are you sure you'd like to reboot the server?")) {
         try {
@@ -158,8 +170,10 @@ const customButton = {
         // checkboxContainer.appendChild(checkboxOption2);
         app.ui.menuContainer.appendChild(checkboxContainer);
 
-        const restartButton = createButton('Restart', rebootAPI);
+        const restartButton = createButton('Restart', restartAPI);
         app.ui.menuContainer.appendChild(restartButton);
+        const rebootButton = createButton('Reboot', rebootAPI);
+        app.ui.menuContainer.appendChild(rebootButton);
         const syncButton = createButton('Synchronize', syncEnv);
         app.ui.menuContainer.appendChild(syncButton);
     },
