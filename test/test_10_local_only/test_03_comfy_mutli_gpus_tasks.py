@@ -23,6 +23,8 @@ headers = {
     "username": config.username
 }
 
+id = str(uuid.uuid4())
+
 
 def tps_async_create(api, endpoint_name):
     headers = {
@@ -215,7 +217,7 @@ def tps_async_create(api, endpoint_name):
 class TestComfyMutilTaskGPUs:
     def setup_class(self):
         self.api = Api(config)
-        self.endpoint_name = 'comfy-async-0426011502'
+        self.endpoint_name = 'comfy-async-0426025639'
         update_oas(self.api)
 
     @classmethod
@@ -259,7 +261,7 @@ class TestComfyMutilTaskGPUs:
 
     def test_14_comfy_gpus_start_async_tps(self):
         threads = []
-        for i in range(1):
+        for i in range(20):
             thread = threading.Thread(target=tps_async_create, args=(self.api, self.endpoint_name))
             threads.append(thread)
 
