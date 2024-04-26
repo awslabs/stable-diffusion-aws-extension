@@ -2,6 +2,18 @@ import {app} from '../../scripts/app.js'
 import {api} from '../../scripts/api.js';
 
 
+export function restartAPI() {
+    if (confirm("Are you sure you'd like to restart the ComfyUI?")) {
+        try {
+            api.fetchApi("/restart");
+        } catch (exception) {
+
+        }
+        return true;
+    }
+    return false;
+}
+
 export function rebootAPI() {
     if (confirm("Are you sure you'd like to reboot the server?")) {
         try {
@@ -44,8 +56,9 @@ export async function syncEnv() {
 
 export async function changeOnAWS(disableAWS) {
     var target
-    if(disableAWS === "true") {
-        if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
+    console.log(disableAWS)
+    if(disableAWS === false) {
+        if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
             try {
                 target = {'DISABLE_AWS_PROXY': true}
                 const response = await api.fetchApi("/change_env", {
@@ -59,7 +72,7 @@ export async function changeOnAWS(disableAWS) {
         }
     }
     else {
-        if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
+        if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
           try {
             target = {'DISABLE_AWS_PROXY': false}
             const response = await api.fetchApi("/change_env", {
@@ -124,7 +137,7 @@ function handleButtonClick() {
 function handleCheckboxChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.value);
+    changeOnAWS(event.target.checked);
 }
 
 function handleRadioChange(event) {
@@ -154,11 +167,13 @@ const customButton = {
         const checkboxContainer = document.createElement('div');
         checkboxContainer.style.display = 'flex';
         checkboxContainer.appendChild(checkboxOption1);
-        checkboxContainer.appendChild(checkboxOption2);
+        // checkboxContainer.appendChild(checkboxOption2);
         app.ui.menuContainer.appendChild(checkboxContainer);
 
-        const restartButton = createButton('Restart', rebootAPI);
+        const restartButton = createButton('Restart ComfyUI', restartAPI);
         app.ui.menuContainer.appendChild(restartButton);
+        const rebootButton = createButton('Reboot EC2', rebootAPI);
+        app.ui.menuContainer.appendChild(rebootButton);
         const syncButton = createButton('Synchronize', syncEnv);
         app.ui.menuContainer.appendChild(syncButton);
     },

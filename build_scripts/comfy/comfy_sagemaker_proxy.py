@@ -228,6 +228,7 @@ async def execute_proxy(request):
                     number = -number
             server_instance.number += 1
         valid = execution.validate_prompt(json_data['prompt'])
+        logger.info(f"Validating prompt result is {valid}")
         if not valid[0]:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
