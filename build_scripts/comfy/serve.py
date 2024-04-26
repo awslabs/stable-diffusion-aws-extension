@@ -209,7 +209,7 @@ def record_metric(comfy_app: ComfyApp):
                         'Value': endpoint_instance_id
                     },
                     {
-                        'Name': 'GPU',
+                        'Name': 'InstanceGPU',
                         'Value': str(comfy_app.device_id)
                     }
                 ],
