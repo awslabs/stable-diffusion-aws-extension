@@ -170,9 +170,9 @@ const customButton = {
         // checkboxContainer.appendChild(checkboxOption2);
         app.ui.menuContainer.appendChild(checkboxContainer);
 
-        const restartButton = createButton('Restart', restartAPI);
+        const restartButton = createButton('Restart ComfyUI', restartAPI);
         app.ui.menuContainer.appendChild(restartButton);
-        const rebootButton = createButton('Reboot', rebootAPI);
+        const rebootButton = createButton('Reboot EC2', rebootAPI);
         app.ui.menuContainer.appendChild(rebootButton);
         const syncButton = createButton('Synchronize', syncEnv);
         app.ui.menuContainer.appendChild(syncButton);
