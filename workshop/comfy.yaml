@@ -196,14 +196,14 @@ Resources:
           sudo python3 -m venv venv
           source venv/bin/activate
           
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
+          sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           sudo git clone https://github.com/ltdrdata/ComfyUI-Manager.git /ComfyUI/custom_nodes/ComfyUI-Manager
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
           sudo git clone https://github.com/Gourieff/comfyui-reactor-node.git  /ComfyUI/custom_nodes/comfyui-reactor-node
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
           sudo git clone https://github.com/twri/sdxl_prompt_styler.git  /ComfyUI/custom_nodes/sdxl_prompt_styler
-          sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/sdxl_prompt_styler/requirements.txt
+          sudo git clone https://github.com/AIGODLIKE/AIGODLIKE-ComfyUI-Translation.git  /ComfyUI/custom_nodes/AIGODLIKE-ComfyUI-Translation
           sudo chmod -R 777 /ComfyUI
           
           cat > comfy.service <<EOF
