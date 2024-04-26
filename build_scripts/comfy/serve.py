@@ -37,7 +37,7 @@ is_multi_gpu = False
 cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
-endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 
 async def send_request(request_obj, comfy_app, need_async):
@@ -209,8 +209,8 @@ def record_metric(comfy_app: ComfyApp):
                         'Value': endpoint_instance_id
                     },
                     {
-                        'Name': 'GPU',
-                        'Value': comfy_app.device_id
+                        'Name': 'InstanceGPU',
+                        'Value': str(comfy_app.device_id)
                     }
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
