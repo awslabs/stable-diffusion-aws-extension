@@ -4,6 +4,7 @@ import datetime
 import os
 import signal
 import sys
+import tarfile
 import threading
 
 import requests
@@ -40,7 +41,7 @@ logger.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
+            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -65,7 +66,7 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
-msg_max_wait_time = os.environ.get('MAX_WAIT_TIME', 30)
+msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 30)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -287,28 +288,35 @@ def execute_proxy(func):
             if not save_already:
                 logger.info("check if images are not already synced, please wait")
                 execute_resp = execute_future.result()
-                logger.debug(f"execute result :{execute_resp}")
+                logger.debug(f"execute result :{execute_resp.json()}")
                 if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     i = max_wait_time
                     while i > 0:
                         images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                         response = images_response.json()
+                        logger.debug(response)
                         if images_response.status_code == 404:
-                            logger.info("no images found already ,waiting sagemaker result .....")
-                            time.sleep(3)
+                            logger.info(f"{i} no images found already ,waiting sagemaker result .....")
                             i = i - 2
+                            time.sleep(3)
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.error("there is no response from sync executes")
+                            logger.info(f"{i} there is no response from sync executes")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                            logger.info(f"images not already ,waiting sagemaker result .....{response['data']['status'] }")
-                            time.sleep(3)
+                            logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
-                        else:
+                            time.sleep(3)
+                        elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                             break
+                        else:
+                            logger.info(
+                                f"{i} images not already other,waiting sagemaker result .....{response}")
+                            i = i - 1
+                            time.sleep(3)
             logger.info("execute finished")
+        executor.shutdown()
     return wrapper
 
 
@@ -325,6 +333,36 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
+def compress_and_upload(folder_path, timestamp):
+    for subdir in next(os.walk(folder_path))[1]:
+        subdir_path = os.path.join(folder_path, subdir)
+        tar_filename = f"{subdir}.tar.gz"
+        logger.info(f"Compressing the {tar_filename}")
+
+        # 创建 tar 压缩文件
+        with tarfile.open(tar_filename, "w:gz") as tar:
+            tar.add(subdir_path, arcname=os.path.basename(subdir_path))
+        s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        logger.info(s5cmd_syn_node_command)
+        os.system(s5cmd_syn_node_command)
+        logger.info(f"rm {tar_filename}")
+        os.remove(tar_filename)
+
+    # for root, dirs, files in os.walk(folder_path):
+    #     for directory in dirs:
+    #         dir_path = os.path.join(root, directory)
+    #         logger.info(f"Compressing the {dir_path}")
+    #         tar_filename = f"{directory}.tar.gz"
+    #         tar_filepath = os.path.join(root, tar_filename)
+    #         with tarfile.open(tar_filepath, "w:gz") as tar:
+    #             tar.add(dir_path, arcname=os.path.basename(dir_path))
+    #         s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filepath} "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+    #         logger.info(s5cmd_syn_node_command)
+    #         os.system(s5cmd_syn_node_command)
+    #         logger.info(f"rm {tar_filepath}")
+    #         os.remove(tar_filepath)
+
+
 def sync_default_files():
     try:
         timestamp = str(int(time.time() * 1000))
@@ -332,9 +370,10 @@ def sync_default_files():
         prepare_type = 'default'
         need_reboot = True
         logger.info(f" sync custom nodes files")
-        s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
-        logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
-        os.system(s5cmd_syn_node_command)
+        # s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
+        # os.system(s5cmd_syn_node_command)
+        compress_and_upload(f"{DIR2}", timestamp)
         logger.info(f" sync input files")
         s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
         logger.info(f"sync input files start {s5cmd_syn_input_command}")
@@ -567,9 +606,20 @@ if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
 async def restart(self):
     logger.info(f"start to reboot {self}")
     try:
-        sys.stdout.close_log()
+        subprocess.run(["sudo", "reboot"])
     except Exception as e:
         logger.info(f"error reboot  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+@server.PromptServer.instance.routes.get("/restart")
+async def restart(self):
+    logger.info(f"start to restart {self}")
+    try:
+        sys.stdout.close_log()
+    except Exception as e:
+        logger.info(f"error restart  {e}")
         pass
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 
