@@ -31,7 +31,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         )
 
     def test_1_sync_files_to_comfy_endpoint(self):
-        local = "'./data/comfy/*'"
+        local = "'./data/comfy/models/*'"
         target = f"'s3://{config.bucket}/comfy/{self.ep_name}/{prepare_id}/models/'"
         logger.info(f"Syncing {local} to {target}")
         os.system(f"rm -rf ./s5cmd")
@@ -51,8 +51,8 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         resp = self.api.prepare(data=data, headers=headers)
         assert resp.status_code == 200, resp.dumps()
         logger.info(resp.json())
-        logger.info(f"wait 30s for endpoint sync files...")
-        time.sleep(30)
+        logger.info(f"prepare {prepare_id} wait 60s for endpoint sync files...")
+        time.sleep(60)
 
     def test_1_comfy_txt2img_async_create(self):
         comfy_execute_create(1, self.api, self.ep_name)

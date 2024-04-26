@@ -201,11 +201,10 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def comfy_execute_create(n, api, endpoint_name):
-    headers = {
-        "x-api-key": config.api_key,
-    }
-
     with open('./data/api_params/comfy_workflow.json', 'r') as f:
+        headers = {
+            "x-api-key": config.api_key,
+        }
         prompt_id = str(uuid.uuid4())
         workflow = json.load(f)
         workflow['prompt_id'] = prompt_id
@@ -218,21 +217,22 @@ def comfy_execute_create(n, api, endpoint_name):
         timeout = datetime.now() + timedelta(minutes=5)
 
         while datetime.now() < timeout:
+            time.sleep(6)
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
             assert resp.status_code == 200, resp.dumps()
 
             assert 'status' in resp.json()['data'], resp.dumps()
             status = resp.json()["data"]["status"]
 
-            logger.info(f"execute {prompt_id} is {status}")
+            logger.info(f"{n}{endpoint_name} {prompt_id} is {status}")
+
             if status == 'success':
                 break
             if status == InferenceStatus.FAILED.value:
                 logger.error(resp.json())
-                raise Exception(f"execute {prompt_id} failed.")
-            time.sleep(3)
+                raise Exception(f"{n}{endpoint_name} {prompt_id} failed.")
         else:
-            raise Exception(f"execute {prompt_id} timed out after 5 minutes.")
+            raise Exception(f"{n}{endpoint_name} {prompt_id} timed out after 5 minutes.")
 
 
 def get_endpoint_comfy_async(api):

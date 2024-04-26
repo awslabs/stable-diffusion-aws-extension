@@ -158,7 +158,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=response_schema(inference_job), decimal=True)
 
-    resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+    resp = real_time_inference([payload], inference_id, ep.endpoint_name)
 
     logger.info(f"real time inference response: ")
     logger.info(resp)
