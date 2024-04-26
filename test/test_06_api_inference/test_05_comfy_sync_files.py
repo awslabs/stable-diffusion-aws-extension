@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import logging
 import os
+import time
 import uuid
 
 import config as config
@@ -25,7 +26,7 @@ class TestComfySyncFiles:
         pass
 
     def test_0_download_file(self):
-        local_path = f"./data/comfy/checkpoints/v1-5-pruned-emaonly.ckpt"
+        local_path = f"./data/comfy/models/checkpoints/v1-5-pruned-emaonly.ckpt"
         wget_file(
             local_path,
             'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt'
@@ -41,8 +42,16 @@ class TestComfySyncFiles:
         os.system(f"./s5cmd sync {local} {target}")
 
     def test_2_sync_files(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
         data = {"endpoint_name": f"{endpoint_name}",
                 "need_reboot": True,
                 "prepare_id": id,
                 "prepare_type": "models"}
-        self.api.prepare(data=data)
+        resp = self.api.prepare(data=data, headers=headers)
+        assert resp.status_code == 200, resp.dumps()
+        logger.info(resp.json())
+        logger.info(f"wait 30s for endpoint sync files...")
+        time.sleep(30)

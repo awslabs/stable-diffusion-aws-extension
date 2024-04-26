@@ -31,11 +31,6 @@ def tps_async_create(n, api, endpoint_name):
         "x-api-key": config.api_key,
     }
 
-    # with open("./data/api_params/comfy_workflow.json", 'rb') as data:
-    #     file_content = data.read()
-    #     file_content = json.loads(file_content)
-    #     print(file_content)
-
     prompt_id = str(uuid.uuid4())
 
     payload = json.dumps({'number': '1', 'prompt': {'3': {
