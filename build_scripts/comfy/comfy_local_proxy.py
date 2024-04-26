@@ -41,7 +41,7 @@ logger.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
+            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -66,7 +66,7 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
-msg_max_wait_time = os.environ.get('MAX_WAIT_TIME', 30)
+msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 30)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -288,28 +288,35 @@ def execute_proxy(func):
             if not save_already:
                 logger.info("check if images are not already synced, please wait")
                 execute_resp = execute_future.result()
-                logger.debug(f"execute result :{execute_resp}")
+                logger.debug(f"execute result :{execute_resp.json()}")
                 if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                     i = max_wait_time
                     while i > 0:
                         images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                         response = images_response.json()
+                        logger.debug(response)
                         if images_response.status_code == 404:
-                            logger.info("no images found already ,waiting sagemaker result .....")
-                            time.sleep(3)
+                            logger.info(f"{i} no images found already ,waiting sagemaker result .....")
                             i = i - 2
+                            time.sleep(3)
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.error("there is no response from sync executes")
+                            logger.info(f"{i} there is no response from sync executes")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                            logger.info(f"images not already ,waiting sagemaker result .....{response['data']['status'] }")
-                            time.sleep(3)
+                            logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
-                        else:
+                            time.sleep(3)
+                        elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                             break
+                        else:
+                            logger.info(
+                                f"{i} images not already other,waiting sagemaker result .....{response}")
+                            i = i - 1
+                            time.sleep(3)
             logger.info("execute finished")
+        executor.shutdown()
     return wrapper
 
 
