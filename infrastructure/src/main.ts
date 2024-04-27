@@ -292,18 +292,10 @@ export class Middleware extends Stack {
     this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
 
     // make order for api
-    let requestValidator: aws_apigateway.RequestValidator;
     let model: aws_apigateway.Model;
+    let gatewayResponse: aws_apigateway.GatewayResponse;
+    let gatewayResource: aws_apigateway.Resource;
     this.node.children.forEach(child => {
-
-      if (child instanceof aws_apigateway.RequestValidator) {
-        if (!requestValidator) {
-          requestValidator = child;
-        } else {
-          child.node.addDependency(requestValidator);
-          requestValidator = child;
-        }
-      }
 
       if (child instanceof aws_apigateway.Model) {
         if (!model) {
@@ -314,8 +306,22 @@ export class Middleware extends Stack {
         }
       }
 
-      if (model && requestValidator) {
-        model.node.addDependency(requestValidator);
+      if (child instanceof aws_apigateway.GatewayResponse) {
+        if (!gatewayResponse) {
+          gatewayResponse = child;
+        } else {
+          child.node.addDependency(gatewayResponse);
+          gatewayResponse = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.Resource) {
+        if (!gatewayResource) {
+          gatewayResource = child;
+        } else {
+          child.node.addDependency(gatewayResource);
+          gatewayResource = child;
+        }
       }
 
     });
