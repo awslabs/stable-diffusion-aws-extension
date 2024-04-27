@@ -19,7 +19,7 @@ class TestCleanInferences:
     def teardown_class(self):
         pass
 
-    def test_1_clean_all_executes(self):
+    def test_1_clean_all_inferences(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
