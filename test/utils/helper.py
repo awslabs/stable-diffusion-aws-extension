@@ -217,7 +217,7 @@ def comfy_execute_create(n, api, endpoint_name):
         timeout = datetime.now() + timedelta(minutes=5)
 
         while datetime.now() < timeout:
-            time.sleep(6)
+            time.sleep(15)
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
             assert resp.status_code == 200, resp.dumps()
 
