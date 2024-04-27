@@ -4,8 +4,10 @@ import uuid
 
 import config as config
 from utils.api import Api
+from utils.helper import get_endpoint_comfy_async
 
 logger = logging.getLogger(__name__)
+prompt_id = str(uuid.uuid4())
 
 
 class TestTxt2ImgReQueryAndDeleteComfyE2E:
@@ -13,6 +15,7 @@ class TestTxt2ImgReQueryAndDeleteComfyE2E:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
+        self.ep_name = get_endpoint_comfy_async(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -24,164 +27,17 @@ class TestTxt2ImgReQueryAndDeleteComfyE2E:
             self.comfy_txt2img_async_create()
 
     def comfy_txt2img_async_create(self):
-        headers = {
-            "x-api-key": config.api_key,
-        }
+        with open('./data/api_params/comfy_workflow.json', 'r') as f:
+            headers = {
+                "x-api-key": config.api_key,
+            }
+            workflow = json.load(f)
+            workflow['prompt_id'] = prompt_id
+            workflow['endpoint_name'] = self.ep_name
 
-        payload = json.dumps({
-            "need_sync": True,
-            "prompt": {
-                "4": {
-                    "inputs": {
-                        "ckpt_name": "sdXL_v10VAEFix.safetensors"
-                    },
-                    "class_type": "CheckpointLoaderSimple"
-                },
-                "5": {
-                    "inputs": {
-                        "width": 1024,
-                        "height": 1024,
-                        "batch_size": 1
-                    },
-                    "class_type": "EmptyLatentImage"
-                },
-                "6": {
-                    "inputs": {
-                        "text": "evening sunset scenery blue sky nature, glass bottle with a galaxy in it",
-                        "clip": [
-                            "4",
-                            1
-                        ]
-                    },
-                    "class_type": "CLIPTextEncode"
-                },
-                "7": {
-                    "inputs": {
-                        "text": "text, watermark",
-                        "clip": [
-                            "4",
-                            1
-                        ]
-                    },
-                    "class_type": "CLIPTextEncode"
-                },
-                "10": {
-                    "inputs": {
-                        "add_noise": "enable",
-                        "noise_seed": 721897303308196,
-                        "steps": 25,
-                        "cfg": 8,
-                        "sampler_name": "euler",
-                        "scheduler": "normal",
-                        "start_at_step": 0,
-                        "end_at_step": 20,
-                        "return_with_leftover_noise": "enable",
-                        "model": [
-                            "4",
-                            0
-                        ],
-                        "positive": [
-                            "6",
-                            0
-                        ],
-                        "negative": [
-                            "7",
-                            0
-                        ],
-                        "latent_image": [
-                            "5",
-                            0
-                        ]
-                    },
-                    "class_type": "KSamplerAdvanced"
-                },
-                "11": {
-                    "inputs": {
-                        "add_noise": "disable",
-                        "noise_seed": 0,
-                        "steps": 25,
-                        "cfg": 8,
-                        "sampler_name": "euler",
-                        "scheduler": "normal",
-                        "start_at_step": 20,
-                        "end_at_step": 10000,
-                        "return_with_leftover_noise": "disable",
-                        "model": [
-                            "12",
-                            0
-                        ],
-                        "positive": [
-                            "15",
-                            0
-                        ],
-                        "negative": [
-                            "16",
-                            0
-                        ],
-                        "latent_image": [
-                            "10",
-                            0
-                        ]
-                    },
-                    "class_type": "KSamplerAdvanced"
-                },
-                "12": {
-                    "inputs": {
-                        "ckpt_name": "sdXL_v10VAEFix.safetensors"
-                    },
-                    "class_type": "CheckpointLoaderSimple"
-                },
-                "15": {
-                    "inputs": {
-                        "text": "evening sunset scenery blue sky nature, glass bottle with a galaxy in it",
-                        "clip": [
-                            "12",
-                            1
-                        ]
-                    },
-                    "class_type": "CLIPTextEncode"
-                },
-                "16": {
-                    "inputs": {
-                        "text": "text, watermark",
-                        "clip": [
-                            "12",
-                            1
-                        ]
-                    },
-                    "class_type": "CLIPTextEncode"
-                },
-                "17": {
-                    "inputs": {
-                        "samples": [
-                            "11",
-                            0
-                        ],
-                        "vae": [
-                            "12",
-                            2
-                        ]
-                    },
-                    "class_type": "VAEDecode"
-                },
-                "19": {
-                    "inputs": {
-                        "filename_prefix": "ComfyUI",
-                        "images": [
-                            "17",
-                            0
-                        ]
-                    },
-                    "class_type": "SaveImage"
-                }
-            },
-            "prompt_id": str(uuid.uuid4()),
-            "endpoint_name": config.comfy_async_ep_name
-        })
-
-        resp = self.api.create_execute(headers=headers, data=json.loads(payload))
-        assert resp.json()["statusCode"] == 201
-        logger.info(f"execute created: {resp.json()['data']['prompt_id']}")
+            resp = self.api.create_execute(headers=headers, data=workflow)
+            assert resp.status_code in [200, 201], resp.dumps()
+            assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
 
     def test_2_comfy_txt2img_list(self):
         last_evaluated_key = None
