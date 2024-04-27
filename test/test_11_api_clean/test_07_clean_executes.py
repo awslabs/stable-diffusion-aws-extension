@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class TestCleanExecute:
+class TestCleanExecutes:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
