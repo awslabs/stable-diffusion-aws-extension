@@ -34,6 +34,7 @@ class TestTxt2ImgReQueryAndDeleteComfyE2E:
             workflow = json.load(f)
             workflow['prompt_id'] = prompt_id
             workflow['endpoint_name'] = self.ep_name
+            workflow['multi_async'] = False
 
             resp = self.api.create_execute(headers=headers, data=workflow)
             assert resp.status_code in [200, 201], resp.dumps()

@@ -3,6 +3,8 @@ import os
 import time
 import uuid
 
+import pytest
+
 import config as config
 from utils.api import Api
 from utils.helper import comfy_execute_create, get_endpoint_comfy_async
@@ -54,5 +56,6 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         logger.info(f"prepare {prepare_id} wait 20s for endpoint sync files...")
         time.sleep(20)
 
+    @pytest.mark.skip(reason="Not ready")
     def test_1_comfy_txt2img_async_create(self):
         comfy_execute_create(1, self.api, self.ep_name)

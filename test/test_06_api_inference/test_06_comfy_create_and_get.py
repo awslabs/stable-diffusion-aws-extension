@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 import uuid
 
 import config as config
@@ -31,6 +30,7 @@ class TestTxt2ImgReCreateAndGetComfyE2E:
             workflow = json.load(f)
             workflow['prompt_id'] = prompt_id
             workflow['endpoint_name'] = self.ep_name
+            workflow['multi_async'] = False
 
             resp = self.api.create_execute(headers=headers, data=workflow)
             assert resp.status_code in [200, 201], resp.dumps()
@@ -40,5 +40,4 @@ class TestTxt2ImgReCreateAndGetComfyE2E:
         headers = {
             "x-api-key": config.api_key,
         }
-        time.sleep(15)
         self.api.get_execute_job(headers=headers, prompt_id=prompt_id)
