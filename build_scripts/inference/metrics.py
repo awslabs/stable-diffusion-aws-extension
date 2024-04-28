@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     if decompress_seconds is not None:
         decompress_seconds = int(decompress_seconds)
-        record_seconds('DecompressSeconds', decompress_seconds)
+        record_seconds('DecompressFileSeconds', decompress_seconds)
 
     if instance_init_seconds is not None:
         instance_init_seconds = int(instance_init_seconds)

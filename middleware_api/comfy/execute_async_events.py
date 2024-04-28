@@ -64,8 +64,8 @@ def handler(event, context):
         update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
         # todo log time
-        inference_table.get_item(Key={"prompt_id": result.prompt_id})
-        logger.info(inference_table)
+        resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
+        logger.info(resp)
 
     return {}
 
