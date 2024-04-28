@@ -111,5 +111,4 @@ class TestComfyMutilTaskGPUs:
 
 def create_batch_executes(n, api, endpoint_name):
     for i in range(n):
-        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=False)
-        time.sleep(5)
+        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=True)

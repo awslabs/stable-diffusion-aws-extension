@@ -30,7 +30,7 @@ export CACHE_PUBLIC_SD="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-exten
 # Use verified cache version file for production: v1.5.0-fe21616
 export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
 
-export ENDPOINT_INSTANCE_ID=$(date +"%m-%d-%H-%M-%S")
+export ENDPOINT_INSTANCE_ID=$(date +"%m%d%H%M%S")
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
   # Enable dev mode

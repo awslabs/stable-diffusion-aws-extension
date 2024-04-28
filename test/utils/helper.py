@@ -214,28 +214,30 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
         assert resp.status_code in [200, 201], resp.dumps()
         assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
 
-        logger.info(f"{n} {endpoint_name} {prompt_id} created")
-
         if not wait_succeed:
             return
 
         timeout = datetime.now() + timedelta(minutes=5)
 
         while datetime.now() < timeout:
-            time.sleep(15)
+            time.sleep(1)
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+            if resp.status_code == 400:
+                logger.info(f"{n} {endpoint_name} {prompt_id} is not found")
+                continue
+
             assert resp.status_code == 200, resp.dumps()
 
             assert 'status' in resp.json()['data'], resp.dumps()
             status = resp.json()["data"]["status"]
 
-            logger.info(f"{n}{endpoint_name} {prompt_id} is {status}")
+            logger.info(f"{n} {endpoint_name} {prompt_id} is {status}")
 
             if status == 'success':
                 break
             if status == InferenceStatus.FAILED.value:
                 logger.error(resp.json())
-                raise Exception(f"{n}{endpoint_name} {prompt_id} failed.")
+                raise Exception(f"{n} {endpoint_name} {prompt_id} failed.")
         else:
             raise Exception(f"{n}{endpoint_name} {prompt_id} timed out after 5 minutes.")
 
