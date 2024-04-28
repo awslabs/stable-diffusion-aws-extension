@@ -109,8 +109,8 @@ class ComfyApp:
             result = sock.connect_ex(('127.0.0.1', self.port))
             return result == 0
 
-    def load_request(self, request_obj):
-        if 'prompt_id' in request_obj:
+    def set_prompt(self, request_obj=None):
+        if request_obj and 'prompt_id' in request_obj:
             prompt_id = request_obj['prompt_id']
             self.name = f"{endpoint_instance_id}-gpu{self.device_id}-{prompt_id}"
         else:
@@ -119,7 +119,7 @@ class ComfyApp:
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
-        comfy_app.load_request(request_obj)
+        comfy_app.set_prompt(request_obj)
         record_metric(comfy_app)
         logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
@@ -136,11 +136,14 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
+        comfy_app.set_prompt()
         return wrap_response(response, comfy_app)
     except Exception as e:
+        comfy_app.set_prompt()
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
     finally:
+        comfy_app.set_prompt()
         comfy_app.busy = False
 
 
