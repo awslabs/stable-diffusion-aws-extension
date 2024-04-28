@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 import uuid
 
 import config as config
@@ -59,30 +60,37 @@ class TestTxt2ImgReQueryAndDeleteComfyE2E:
                                       params={"exclusive_start_key": exclusive_start_key, "limit": 20})
         return resp
 
-    def test_4_comfy_txt2img_clean(self):
-        last_evaluated_key = None
+    def test_4_clean_all_executes(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
         while True:
-            resp = self.executes_list(exclusive_start_key=last_evaluated_key)
+            resp = self.api.list_executes(headers=headers, params={"limit": 20})
             executes = resp.json()['data']['executes']
-            last_evaluated_key = resp.json()['data']['last_evaluated_key']
-
-            for execute in executes:
-                prompt_id = execute['prompt_id']
-                headers = {
-                    "x-api-key": config.api_key,
-                    "username": config.username
-                }
-                data = {
-                    "execute_id_list": [prompt_id]
-                }
-                resp = self.api.delete_executes(headers=headers, data=data)
-                assert resp.status_code == 204, resp.dumps()
-                logger.info(f"deleted prompt_id: {prompt_id}")
-
-            if not last_evaluated_key:
+            if len(executes) == 0:
                 break
+
+            execute_id_list = []
+            i = 0
+            for execute in executes:
+                i = i + 1
+                prompt_id = execute['prompt_id']
+                execute_id_list.append(prompt_id)
+                logger.info(f"delete execute {i} {prompt_id}")
+
+            data = {
+                "execute_id_list": execute_id_list,
+            }
+            resp = self.api.delete_executes(headers=headers, data=data)
+            if resp.status_code == 400:
+                logger.info(resp.json()['message'])
+                time.sleep(5)
+                continue
 
     def test_5_comfy_txt2img_check_clean(self):
         resp = self.executes_list()
+        assert 'data' in resp.json(), resp.dumps()
         executes = resp.json()['data']['executes']
         assert len(executes) == 0, resp.dumps()
