@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import config as config
 from utils.api import Api
-from utils.helper import endpoints_wait_for_in_service
+from utils.helper import endpoints_wait_for_in_service, get_endpoint_comfy_async
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ class TestEndpointReCheckForComfyE2E:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
+        self.ep_name = get_endpoint_comfy_async(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -36,14 +37,14 @@ class TestEndpointReCheckForComfyE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert config.comfy_async_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert self.ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
         timeout = datetime.now() + timedelta(minutes=40)
 
         while datetime.now() < timeout:
-            result = endpoints_wait_for_in_service(self.api, config.comfy_async_ep_name)
+            result = endpoints_wait_for_in_service(self.api, self.ep_name)
             if result:
                 break
-            time.sleep(25)
+            time.sleep(5)
         else:
             raise Exception("Create Endpoint timed out after 40 minutes.")

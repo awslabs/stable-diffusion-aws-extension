@@ -7,11 +7,9 @@ from datetime import timedelta
 
 import config as config
 from utils.api import Api
-from utils.helper import endpoints_wait_for_in_service
+from utils.helper import endpoints_wait_for_in_service, get_endpoint_sd_real_time
 
 logger = logging.getLogger(__name__)
-
-endpoint_name = f"sd-real-time-{config.endpoint_name}"
 
 
 class TestEndpointRealTimeCheckE2E:
@@ -19,6 +17,7 @@ class TestEndpointRealTimeCheckE2E:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
+        self.ep_name = get_endpoint_sd_real_time(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -40,14 +39,14 @@ class TestEndpointRealTimeCheckE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert self.ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
         timeout = datetime.now() + timedelta(minutes=40)
 
         while datetime.now() < timeout:
-            result = endpoints_wait_for_in_service(self.api, endpoint_name)
+            result = endpoints_wait_for_in_service(self.api, self.ep_name)
             if result:
                 break
-            time.sleep(50)
+            time.sleep(5)
         else:
             raise Exception("Create Endpoint timed out after 40 minutes.")
