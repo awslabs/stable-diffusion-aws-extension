@@ -177,6 +177,8 @@ class ComfyApp:
             os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
             self.process.wait()
+            self.stdout_thread.join()
+            self.stderr_thread.join()
         self.start()
 
     def is_port_ready(self):
