@@ -10,9 +10,16 @@ logger.setLevel(logging.INFO)
 
 cloudwatch = boto3.client('cloudwatch')
 
+service_type = os.getenv('SERVICE_TYPE')
 download_file_seconds = os.getenv('DOWNLOAD_FILE_SECONDS')
 decompress_seconds = os.getenv('DECOMPRESS_SECONDS')
 instance_init_seconds = os.getenv('INSTANCE_INIT_SECONDS')
+
+if service_type == 'sd':
+    service_type = 'Stable-Diffusion'
+
+if service_type == 'comfy':
+    service_type = 'Comfy'
 
 
 def record_seconds(metric_name, seconds):
@@ -24,7 +31,7 @@ def record_seconds(metric_name, seconds):
                 'Dimensions': [
                     {
                         'Name': 'Service',
-                        'Value': 'Comfy'
+                        'Value': service_type
                     },
 
                 ],
