@@ -191,7 +191,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     else:
         record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
 
-    record_latency_metrics(start_time=inference_job.start_time, metric_name='Inference', service='comfy')
+    record_latency_metrics(start_time=inference_job.start_time, metric_name='InferenceLatency', service='comfy')
 
     return ok(data=response_schema(inference_job), decimal=True)
 

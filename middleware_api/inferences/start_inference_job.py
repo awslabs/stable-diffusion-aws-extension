@@ -106,7 +106,7 @@ def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_
     parse_sagemaker_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
 
     record_count_metrics(metric_name='InferenceSucceed')
-    record_latency_metrics(start_time=job.startTime, metric_name='Inference')
+    record_latency_metrics(start_time=job.startTime, metric_name='InferenceLatency')
 
     return get_infer_data(job.InferenceJobId)
 
