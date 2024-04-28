@@ -142,7 +142,7 @@ class ComfyApp:
         self.process = None
         self.busy = False
         self.cwd = '/home/ubuntu/ComfyUI'
-        self.name = f"gpu{device_id}"
+        self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
 
