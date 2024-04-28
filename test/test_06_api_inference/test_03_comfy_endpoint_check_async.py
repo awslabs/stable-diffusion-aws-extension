@@ -45,6 +45,6 @@ class TestEndpointReCheckForComfyE2E:
             result = endpoints_wait_for_in_service(self.api, self.ep_name)
             if result:
                 break
-            time.sleep(15)
+            time.sleep(5)
         else:
             raise Exception("Create Endpoint timed out after 40 minutes.")

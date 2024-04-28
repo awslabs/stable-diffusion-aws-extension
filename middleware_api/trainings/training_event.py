@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-from common.util import publish_msg, generate_presigned_url_for_key
+from common.util import publish_msg, generate_presigned_url_for_key, record_seconds_metrics
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -46,6 +46,10 @@ def handler(event, ctx):
     logger.info(training_job)
 
     check_status(training_job)
+
+    timestamp = datetime.datetime.fromtimestamp(training_job.timestamp).isoformat()
+
+    record_seconds_metrics(start_time=timestamp, metric_name='Training', service='Stable-diffusion')
 
     return ok()
 
