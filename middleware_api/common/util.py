@@ -74,10 +74,33 @@ def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusi
     logger.info(f"record_metric response: {response}")
 
 
+def record_seconds_metrics(start_time, metric_name='Inference', service='Stable-Diffusion'):
+    start_time = datetime.datetime.fromisoformat(start_time)
+    latency = (datetime.datetime.now() - start_time).seconds
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Service',
+                        'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': latency,
+                'Unit': 'Seconds'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
+
+
 def record_latency_metrics(start_time, metric_name='Inference', service='Stable-Diffusion'):
     start_time = datetime.datetime.fromisoformat(start_time)
-    end_time = datetime.datetime.now()
-    latency = (end_time - start_time).microseconds
+    latency = (datetime.datetime.now() - start_time).microseconds
 
     response = cloudwatch.put_metric_data(
         Namespace='ESD',

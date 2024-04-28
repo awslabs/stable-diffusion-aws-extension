@@ -7,7 +7,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import record_latency_metrics
+from common.util import record_seconds_metrics
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import get_endpoint_by_name
@@ -44,7 +44,14 @@ def handler(event, context):
             current_time = str(datetime.now())
             update_endpoint_field(endpoint, 'endTime', current_time)
 
-            record_latency_metrics(start_time=endpoint.startTime, metric_name='InService', service='Endpoint')
+            if endpoint.service_type == 'sd':
+                service_type = 'Stable-Diffusion'
+            else:
+                service_type = 'Comfy'
+
+            record_seconds_metrics(start_time=endpoint.startTime,
+                                   metric_name='EndpointReadySeconds',
+                                   service=service_type)
 
             # if it is the first time in service
             if not endpoint.endTime:
