@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import subprocess
+import sys
 import threading
 from multiprocessing import Process
 from threading import Lock
@@ -140,13 +141,35 @@ class ComfyApp:
         self.device_id = device_id
         self.process = None
         self.busy = False
+        self.cwd = '/home/ubuntu/ComfyUI'
+        self.name = f"gpu{device_id}"
+        self.stdout_thread = None
+        self.stderr_thread = None
+
+    def _handle_output(self, pipe, _):
+        with pipe:
+            for line in iter(pipe.readline, ''):
+                if line.strip():
+                    sys.stdout.write(f"{self.name}: {line}")
 
     def start(self):
         cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
                f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
                f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
-        self.process = subprocess.Popen(cmd)
+        self.process = subprocess.Popen(
+            cmd,
+            cwd=self.cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
         os.environ['ALREADY_INIT'] = 'true'
+
+        self.stdout_thread = threading.Thread(target=self._handle_output, args=(self.process.stdout, "STDOUT"))
+        self.stderr_thread = threading.Thread(target=self._handle_output, args=(self.process.stderr, "STDERR"))
+
+        self.stdout_thread.start()
+        self.stderr_thread.start()
 
     def restart(self):
         logger.info("Comfy app process is going to restart")
@@ -154,6 +177,8 @@ class ComfyApp:
             os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
             self.process.wait()
+            self.stdout_thread.join()
+            self.stderr_thread.join()
         self.start()
 
     def is_port_ready(self):
