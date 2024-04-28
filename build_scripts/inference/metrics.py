@@ -12,6 +12,7 @@ cloudwatch = boto3.client('cloudwatch')
 
 download_file_seconds = os.getenv('DOWNLOAD_FILE_SECONDS')
 decompress_seconds = os.getenv('DECOMPRESS_SECONDS')
+instance_init_seconds = os.getenv('INSTANCE_INIT_SECONDS')
 
 
 def record_seconds(metric_name, seconds):
@@ -44,3 +45,7 @@ if __name__ == "__main__":
     if decompress_seconds is not None:
         decompress_seconds = int(decompress_seconds)
         record_seconds('DecompressSeconds', decompress_seconds)
+
+    if instance_init_seconds is not None:
+        instance_init_seconds = int(instance_init_seconds)
+        record_seconds('InstanceInitSeconds', instance_init_seconds)
