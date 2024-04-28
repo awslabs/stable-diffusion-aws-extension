@@ -7,7 +7,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import s3_scan_files, load_json_from_s3, record_count_metrics
+from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, record_latency_metrics
 from libs.comfy_data_types import InferenceResult
 
 tracer = Tracer()
@@ -63,9 +63,8 @@ def handler(event, context):
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
         update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
-        # todo log time
         resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
-        logger.info(resp)
+        record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency', service='Comfy')
 
     return {}
 

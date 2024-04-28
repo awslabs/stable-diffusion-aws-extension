@@ -223,7 +223,7 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
         while datetime.now() < timeout:
             time.sleep(1)
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
-            if resp.status_code == 400:
+            if resp.status_code == 404:
                 init_status = "not found"
                 logger.info(f"{n} {endpoint_name} {prompt_id} is {init_status}")
                 continue

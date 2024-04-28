@@ -222,6 +222,15 @@ export class ComfyApiStack extends Construct {
       ],
     });
 
+    const cwStatement = new iam.PolicyStatement({
+        actions: [
+            'cloudwatch:PutMetricData',
+        ],
+        resources: [
+            '*'
+        ],
+    });
+
     const snsStatement = new iam.PolicyStatement({
       actions: [
         'sns:Publish',
@@ -257,6 +266,7 @@ export class ComfyApiStack extends Construct {
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
+    handler.addToRolePolicy(cwStatement);
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
