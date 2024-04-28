@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,7 +18,8 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
-from common.util import s3_scan_files, generate_presigned_url_for_keys, record_ep_metrics
+from common.util import s3_scan_files, generate_presigned_url_for_keys, record_ep_metrics, record_latency_metrics, \
+    record_count_metrics
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus
 from libs.utils import get_endpoint_by_name, response_error
@@ -102,6 +104,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     record_ep_metrics(ep.endpoint_name)
 
+    start_time = time.perf_counter()
+
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
 
@@ -181,6 +185,13 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
                                                                      inference_job.output_files)
         inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
                                                                    inference_job.temp_files)
+
+    if resp.statuss != 'Completed':
+        record_count_metrics(metric_name='InferenceFailed', service='Comfy')
+    else:
+        record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
+
+    record_latency_metrics(start_time=inference_job.start_time, metric_name='Inference', service='comfy')
 
     return ok(data=response_schema(inference_job), decimal=True)
 
