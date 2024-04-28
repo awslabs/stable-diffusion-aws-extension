@@ -1,4 +1,5 @@
 import base64
+import datetime
 import enum
 import json
 import logging
@@ -8,7 +9,6 @@ from io import BytesIO
 from typing import Dict
 
 import boto3
-import datetime
 import numpy
 from PIL import Image, PngImagePlugin
 from aws_lambda_powertools import Tracer
@@ -25,7 +25,6 @@ sns_client = boto3.client('sns')
 s3_client = boto3.client('s3')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3_bucket = s3_resource.Bucket(bucket_name)
-
 
 cloudwatch = boto3.client('cloudwatch')
 
@@ -48,6 +47,52 @@ def record_ep_metrics(ep_name: str):
                 'Timestamp': datetime.datetime.utcnow(),
                 'Value': 1,
                 'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
+
+
+def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusion'):
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Service',
+                        'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+        ]
+    )
+    logger.info(f"record_metric response: {response}")
+
+
+def record_latency_metrics(start_time, metric_name='Inference', service='Stable-Diffusion'):
+    start_time = datetime.datetime.fromisoformat(start_time)
+    end_time = datetime.datetime.now()
+    latency = (end_time - start_time).microseconds
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=[
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Service',
+                        'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': latency,
+                'Unit': 'Microseconds'
             },
         ]
     )
