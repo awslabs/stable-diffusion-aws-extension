@@ -200,7 +200,7 @@ class DecimalEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def comfy_execute_create(n, api, endpoint_name):
+def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
     with open('./data/api_params/comfy_workflow.json', 'r') as f:
         headers = {
             "x-api-key": config.api_key,
@@ -213,6 +213,11 @@ def comfy_execute_create(n, api, endpoint_name):
         resp = api.create_execute(headers=headers, data=workflow)
         assert resp.status_code in [200, 201], resp.dumps()
         assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
+
+        logger.info(f"{n} {endpoint_name} {prompt_id} created")
+
+        if not wait_succeed:
+            return
 
         timeout = datetime.now() + timedelta(minutes=5)
 

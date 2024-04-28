@@ -94,8 +94,8 @@ class TestComfyMutilTaskGPUs:
 
     def test_14_comfy_gpus_start_async_tps(self):
         threads = []
-        gpus = 1
-        batch = 1
+        gpus = 4
+        batch = 10000
         for i in range(gpus):
             thread = threading.Thread(target=create_batch_executes, args=(batch, self.api, self.endpoint_name))
             threads.append(thread)
@@ -109,4 +109,5 @@ class TestComfyMutilTaskGPUs:
 
 def create_batch_executes(n, api, endpoint_name):
     for i in range(n):
-        comfy_execute_create(i, api, endpoint_name)
+        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=False)
+        time.sleep(1)
