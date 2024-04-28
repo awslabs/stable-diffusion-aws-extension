@@ -219,11 +219,13 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
 
         timeout = datetime.now() + timedelta(minutes=5)
 
+        init_status = ''
         while datetime.now() < timeout:
             time.sleep(1)
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
             if resp.status_code == 400:
-                logger.info(f"{n} {endpoint_name} {prompt_id} is not found")
+                init_status = "not found"
+                logger.info(f"{n} {endpoint_name} {prompt_id} is {init_status}")
                 continue
 
             assert resp.status_code == 200, resp.dumps()
@@ -231,7 +233,9 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
             assert 'status' in resp.json()['data'], resp.dumps()
             status = resp.json()["data"]["status"]
 
-            logger.info(f"{n} {endpoint_name} {prompt_id} is {status}")
+            if init_status != status:
+                logger.info(f"Thread {n} {endpoint_name} {prompt_id} is {status}")
+                init_status = status
 
             if status == 'success':
                 break
@@ -243,32 +247,55 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
 
 
 def get_endpoint_comfy_async(api):
-    endpoints = list_endpoints(api)
-    for endpoint in endpoints:
-        if endpoint['endpoint_name'].startswith('comfy-async-'):
-            return endpoint['endpoint_name']
-    raise Exception("comfy-async-* endpoint not found")
+    return get_endpoint_by_prefix(api, "comfy-async-")
 
 
 def get_endpoint_comfy_real_time(api):
-    endpoints = list_endpoints(api)
-    for endpoint in endpoints:
-        if endpoint['endpoint_name'].startswith('comfy-real-time-'):
-            return endpoint['endpoint_name']
-    raise Exception("comfy-real-time-* endpoint not found")
+    return get_endpoint_by_prefix(api, "comfy-real-time-")
 
 
 def get_endpoint_sd_async(api):
-    endpoints = list_endpoints(api)
-    for endpoint in endpoints:
-        if endpoint['endpoint_name'].startswith('sd-async-'):
-            return endpoint['endpoint_name']
-    raise Exception("sd-async-* endpoint not found")
+    return get_endpoint_by_prefix(api, "sd-async-")
 
 
 def get_endpoint_sd_real_time(api):
+    return get_endpoint_by_prefix(api, "sd-real-time-")
+
+
+def get_endpoint_by_prefix(api, prefix: str):
     endpoints = list_endpoints(api)
     for endpoint in endpoints:
-        if endpoint['endpoint_name'].startswith('sd-real-time-'):
+        if endpoint['endpoint_name'].startswith(prefix):
             return endpoint['endpoint_name']
-    raise Exception("sd-real-time-* endpoint not found")
+    raise Exception(f"{prefix}* endpoint not found")
+
+
+def endpoints_wait_for_in_service(api, endpoint_name: str = None):
+    headers = {
+        "x-api-key": config.api_key,
+        "username": config.username
+    }
+
+    params = {
+        "username": config.username
+    }
+
+    resp = api.list_endpoints(headers=headers, params=params)
+    assert resp.status_code == 200, resp.dumps()
+
+    for endpoint in resp.json()['data']["endpoints"]:
+        if endpoint_name is not None and endpoint["endpoint_name"] != endpoint_name:
+            continue
+
+        endpoint_name = endpoint["endpoint_name"]
+
+        if endpoint["endpoint_status"] == "Failed":
+            raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
+
+        if endpoint["endpoint_status"] != "InService":
+            logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
+            return False
+        else:
+            return True
+
+    return False
