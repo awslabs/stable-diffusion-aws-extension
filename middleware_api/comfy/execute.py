@@ -103,8 +103,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     logger.info(f"endpoint: {ep}")
 
     record_ep_metrics(ep.endpoint_name)
-
-    start_time = time.perf_counter()
+    record_count_metrics(metric_name='InferenceTotal', service='Comfy')
 
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
