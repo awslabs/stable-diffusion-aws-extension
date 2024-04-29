@@ -148,6 +148,8 @@ sd_launch_from_private_s3(){
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
 
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu/stable-diffusion-webui | awk '{print $1}' | grep -oE '[0-9]+')
+
     start_at=$(date +%s)
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
@@ -293,6 +295,8 @@ comfy_launch_from_private_s3(){
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu/ComfyUI | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
