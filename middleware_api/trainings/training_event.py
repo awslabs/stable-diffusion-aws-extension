@@ -81,7 +81,7 @@ def check_status(training_job: TrainJob):
 
         float_timestamp = float(training_job.timestamp)
         timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
-        record_seconds_metrics(start_time=timestamp, metric_name='Training', service='Stable-diffusion')
+        record_seconds_metrics(start_time=timestamp, metric_name='TrainingLatency', service='Stable-diffusion')
 
         try:
             notify_user(training_job)
