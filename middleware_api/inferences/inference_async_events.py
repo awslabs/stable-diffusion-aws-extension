@@ -41,7 +41,6 @@ def handler(event, context):
         print(f"Not complete invocation!")
         send_message_to_sns(message, SNS_TOPIC)
         record_count_metrics(metric_name='InferenceFailed')
-        record_latency_metrics(start_time=job.get('startTime'), metric_name='InferenceLatency')
         return message
 
     endpoint_name = message["requestParameters"]["endpointName"]
