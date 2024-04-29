@@ -65,7 +65,7 @@ def handler(event, context):
     # Get the task type
     task_type = job.get('taskType', 'txt2img')
 
+    parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)
+
     record_count_metrics(metric_name='InferenceSucceed')
     record_latency_metrics(start_time=job.get('startTime'), metric_name='InferenceLatency')
-
-    parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)

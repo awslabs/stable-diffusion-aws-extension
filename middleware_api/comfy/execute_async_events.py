@@ -55,11 +55,6 @@ def handler(event, context):
 
         if message["invocationStatus"] != "Completed":
             result.status = "failed"
-            record_count_metrics(metric_name='InferenceFailed', service='Comfy')
-        else:
-            record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
-            record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency',
-                                   service='Comfy')
 
         logger.info(result)
 
@@ -69,6 +64,13 @@ def handler(event, context):
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
         update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
+
+        if message["invocationStatus"] != "Completed":
+            record_count_metrics(metric_name='InferenceFailed', service='Comfy')
+        else:
+            record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
+            record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency',
+                                   service='Comfy')
 
     return {}
 
