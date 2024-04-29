@@ -232,7 +232,7 @@ sd_launch_from_public_s3(){
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
     /serve trim_sd
-    sd_cache_endpoint
+    sd_cache_endpoint &
     sd_launch
 }
 
@@ -318,7 +318,7 @@ comfy_launch_from_public_s3(){
     echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
     /serve trim_comfy
-    comfy_cache_endpoint
+    comfy_cache_endpoint &
     comfy_launch
 }
 

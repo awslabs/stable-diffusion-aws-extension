@@ -46,6 +46,11 @@ def handler(event, context):
     for item in results:
         result = InferenceResult(**item)
 
+        resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
+        if 'Item' not in resp:
+            logger.error(f"Cannot find inference job with prompt_id: {result.prompt_id}")
+            continue
+
         result = s3_scan_files(result)
 
         if message["invocationStatus"] != "Completed":
@@ -63,7 +68,6 @@ def handler(event, context):
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
         update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
-        resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
         record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency', service='Comfy')
 
     return {}
