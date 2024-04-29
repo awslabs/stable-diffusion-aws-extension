@@ -25,6 +25,31 @@ class TestTxt2ImgInferenceAsyncCn3E2E:
     def teardown_class(cls):
         pass
 
+    def test_0_update_api_roles(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "username": "api",
+            "password": "admin",
+            "creator": "api",
+            "roles": [
+                'IT Operator',
+                'byoc',
+                config.role_sd_real_time,
+                config.role_sd_async,
+                config.role_comfy_async,
+                config.role_comfy_real_time,
+            ],
+        }
+
+        resp = self.api.create_user(headers=headers, data=data)
+
+        assert resp.status_code == 201, resp.dumps()
+        assert resp.json()["statusCode"] == 201
+
     def test_1_txt2img_async_create(self):
         headers = {
             "x-api-key": config.api_key,
