@@ -106,8 +106,8 @@ sd_cache_endpoint() {
   s5cmd run "$upload_files"
 
   end_at=$(date +%s)
-  cost=$((end_at-start_at))
-  echo "sync endpoint files: $cost seconds"
+  export UPLOAD_ENDPOINT_CACHE_SECONDS=$((end_at-start_at))
+  echo "sync endpoint files: $UPLOAD_ENDPOINT_CACHE_SECONDS seconds"
 }
 
 sd_install_build(){
@@ -133,8 +133,7 @@ sd_launch(){
 
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
-
-  python /metrics.py
+  python /metrics.py &
 
   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 
@@ -267,7 +266,8 @@ comfy_cache_endpoint() {
   s5cmd run "$upload_files"
 
   end_at=$(date +%s)
-  cost=$((end_at-start_at))
+  export UPLOAD_ENDPOINT_CACHE_SECONDS=$((end_at-start_at))
+  echo "sync endpoint files: $UPLOAD_ENDPOINT_CACHE_SECONDS seconds"
 }
 
 comfy_launch(){
@@ -280,7 +280,7 @@ comfy_launch(){
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
-  python /metrics.py
+  python /metrics.py &
   python serve.py
 }
 

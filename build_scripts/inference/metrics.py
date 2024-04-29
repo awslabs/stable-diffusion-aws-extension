@@ -14,6 +14,7 @@ service_type = os.getenv('SERVICE_TYPE')
 download_file_seconds = os.getenv('DOWNLOAD_FILE_SECONDS')
 decompress_seconds = os.getenv('DECOMPRESS_SECONDS')
 instance_init_seconds = os.getenv('INSTANCE_INIT_SECONDS')
+upload_endpoint_cache_seconds = os.getenv('UPLOAD_ENDPOINT_CACHE_SECONDS')
 
 if service_type == 'sd':
     service_type = 'Stable-Diffusion'
@@ -56,3 +57,7 @@ if __name__ == "__main__":
     if instance_init_seconds is not None:
         instance_init_seconds = int(instance_init_seconds)
         record_seconds('InstanceInitSeconds', instance_init_seconds)
+
+    if upload_endpoint_cache_seconds is not None:
+        upload_endpoint_cache_seconds = int(upload_endpoint_cache_seconds)
+        record_seconds('UploadEndpointCacheSeconds', upload_endpoint_cache_seconds)

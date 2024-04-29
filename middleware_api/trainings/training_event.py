@@ -47,7 +47,8 @@ def handler(event, ctx):
 
     check_status(training_job)
 
-    timestamp = datetime.datetime.fromtimestamp(training_job.timestamp).isoformat()
+    float_timestamp = float(training_job.timestamp)
+    timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
 
     record_seconds_metrics(start_time=timestamp, metric_name='Training', service='Stable-diffusion')
 
