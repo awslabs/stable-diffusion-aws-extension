@@ -19,8 +19,7 @@ download_file_size = os.getenv('DOWNLOAD_FILE_SIZE')
 
 if service_type == 'sd':
     service_type = 'Stable-Diffusion'
-
-if service_type == 'comfy':
+else:
     service_type = 'Comfy'
 
 
