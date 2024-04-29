@@ -47,11 +47,6 @@ def handler(event, ctx):
 
     check_status(training_job)
 
-    float_timestamp = float(training_job.timestamp)
-    timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
-
-    record_seconds_metrics(start_time=timestamp, metric_name='Training', service='Stable-diffusion')
-
     return ok()
 
 
@@ -83,6 +78,10 @@ def check_status(training_job: TrainJob):
             }
 
     if training_job_status == 'Completed':
+
+        float_timestamp = float(training_job.timestamp)
+        timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
+        record_seconds_metrics(start_time=timestamp, metric_name='Training', service='Stable-diffusion')
 
         try:
             notify_user(training_job)
