@@ -32,6 +32,7 @@ def handler(event, context):
     logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
+    current_time = str(datetime.now())
 
     try:
         endpoint = get_endpoint_by_name(endpoint_name)
@@ -40,8 +41,10 @@ def handler(event, context):
 
         update_endpoint_field(endpoint, 'endpoint_status', business_status)
 
+        if business_status == EndpointStatus.UPDATING.value:
+            update_endpoint_field(endpoint, 'startTime', current_time)
+
         if business_status == EndpointStatus.IN_SERVICE.value:
-            current_time = str(datetime.now())
             update_endpoint_field(endpoint, 'endTime', current_time)
 
             if endpoint.service_type == 'sd':
