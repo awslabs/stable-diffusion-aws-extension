@@ -118,7 +118,8 @@ class ComfyApp:
         if request_obj and 'prompt_id' in request_obj:
             global prompt_id
             prompt_id[self.device_id] = request_obj['prompt_id']
-            logger.info(f"set_prompt {prompt_id[self.device_id]}")
+            logger.info(f"set_prompt {prompt_id[self.device_id]} on device {self.device_id}")
+            logger.info(f"prompt_id is {prompt_id}")
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
