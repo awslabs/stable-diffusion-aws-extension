@@ -3,11 +3,12 @@ import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
 
 export class LogSub extends Construct {
     public readonly lambda: NodejsFunction;
 
-    constructor(scope: Construct, id: string) {
+    constructor(scope: Construct, id: string, table: Table) {
         super(scope, id);
 
         const role = this.iamRole()
@@ -23,6 +24,9 @@ export class LogSub extends Construct {
             timeout: Duration.seconds(900),
             role: role,
             memorySize: 3070,
+            environment: {
+                TABLE_NAME: table.tableName,
+            }
         });
 
         this.lambda.addPermission('AllowCloudWatchLogsToInvoke', {
@@ -59,6 +63,7 @@ export class LogSub extends Construct {
                 'logs:CreateLogGroup',
                 'logs:CreateLogStream',
                 'logs:PutLogEvents',
+                'dynamodb:PutItem',
             ],
             resources: ['*'],
         }));
