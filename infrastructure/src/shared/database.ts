@@ -11,6 +11,7 @@ export class Database {
   public sDInferenceJobTable: Table;
   public sDEndpointDeploymentJobTable: Table;
   public multiUserTable: Table;
+  public esdLogSubTable: Table;
 
   constructor(scope: Construct, baseId: string) {
 
@@ -27,6 +28,8 @@ export class Database {
     this.sDEndpointDeploymentJobTable = this.table(scope, baseId, 'SDEndpointDeploymentJobTable');
 
     this.multiUserTable = this.table(scope, baseId, 'MultiUserTable');
+
+    this.esdLogSubTable = this.table(scope, baseId, 'EsdLogSubTable');
 
   }
 

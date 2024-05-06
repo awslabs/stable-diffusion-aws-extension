@@ -1,46 +1,5 @@
 import * as zlib from "zlib";
-import * as AWS from 'aws-sdk';
-
-const s3 = new AWS.S3();
-
-const bucketName = process.env.S3_BUCKET_NAME || "";
-
-async function appendToS3Object(key: string, text: string): Promise<void> {
-    try {
-        // Check if the object exists
-        const getObjectParams = {
-            Bucket: bucketName,
-            Key: key
-        };
-        const getObjectResult = await s3.getObject(getObjectParams).promise();
-
-        // If object exists, append text to existing content
-        let existingText = getObjectResult.Body.toString();
-        existingText += text;
-
-        // Update the object with the appended text
-        const putObjectParams = {
-            Bucket: bucketName,
-            Key: key,
-            Body: existingText
-        };
-        await s3.putObject(putObjectParams).promise();
-    } catch (error) {
-        // If getObject throws an error, the object doesn't exist, so create it
-        if (error.code === 'NoSuchKey') {
-            const putObjectParams = {
-                Bucket: bucketName,
-                Key: key,
-                Body: text
-            };
-            await s3.putObject(putObjectParams).promise();
-        } else {
-            throw error;
-        }
-    }
-}
-
-
+import {DynamoDB} from "aws-sdk";
 
 interface Event {
     awslogs: {
@@ -78,23 +37,67 @@ export async function handler(event: Event, context: Object) {
         message
       };
 
-      lists.push(Item);
+      lists.push({
+        PutRequest: {
+          Item
+        }
+      });
+
     }
 
-    console.log(lists);
-    let message = ``;
-    lists.forEach((item) => {
-        message += `${item.message}\n`;
-    } );
+    await putItems(lists);
 
-    const endpointName = logGroup.split('/').pop();
 
-    appendToS3Object(`logs/${endpointName}.log`, message)
-        .then(() => console.log('Text appended to S3 object successfully'))
-        .catch(error => console.error('Error appending text to S3 object:', error));
 
   }
 
   return {}
+}
+
+export async function putItems(list: Array<Object>) {
+
+  const batch = 25;
+
+  let items = [];
+
+  for (let i in list) {
+    items.push(list[i]);
+    if (items.length === batch) {
+      await put(items);
+      items = [];
+    }
+  }
+
+  await put(items);
+}
+
+export async function put(items: Array<Object>) {
+  const table = 'EsdLogSubTable';
+  if (items.length === 0) {
+    return;
+  }
+
+  console.log(JSON.stringify({table, items}, null, "  "));
+
+  const params = {
+    RequestItems: {
+      [table]: items
+    },
+  };
+
+  const dynamoDb = new DynamoDB.DocumentClient();
+
+  const res = dynamoDb.batchWrite(params, function (err, data) {
+    if (err) {
+      console.log({table, error: err});
+      return err;
+    }
+
+    console.log({table, succeed: data});
+    return data;
+  });
+
+  console.log(await res.promise());
+
 }
 
