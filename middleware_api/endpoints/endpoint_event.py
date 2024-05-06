@@ -106,7 +106,7 @@ def create_log_subscription(endpoint_name: str):
         response = logs.put_subscription_filter(
             logGroupName=log_group_name,
             filterName=f"EsdSubscriptionFilter-{endpoint_name}",
-            filterPattern=f"%-gpu-%",
+            filterPattern=f"%-gpus-%",
             destinationArn=log_sub_fn,
         )
         logger.info(f"Create log subscription response: {response}")
