@@ -220,18 +220,33 @@ def execute_proxy(func):
         def check_if_sync_is_already(url):
             get_response = send_get_request(url)
             prepare_response = get_response.json()
-            if prepare_response.status_code == 200 and 'data' in prepare_response and prepare_response['data'] and prepare_response['data']['prepareSuccess']:
+            if (prepare_response.status_code == 200 and 'data' in prepare_response and prepare_response['data']
+                    and prepare_response['data']['prepareSuccess']):
                 logger.info(f"sync available")
                 return True
             else:
                 logger.info(f"no sync available for {url} response {prepare_response}")
                 return False
 
-        logger.debug(f"payload is: {payload}")
+        def send_error_msg(executor, prompt_id, msg):
+            mes = {
+                "prompt_id": prompt_id,
+                "node_id": "",
+                "node_type": "on cloud",
+                "executed": [],
+                "exception_message": msg,
+                "exception_type": "",
+                "traceback": [],
+                "current_inputs": "",
+                "current_outputs": "",
+            }
+            executor.add_message("execution_error", mes, broadcast=True)
 
+        logger.debug(f"payload is: {payload}")
         is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
         if not is_synced:
             logger.debug(f"is_synced is {is_synced} stop cloud prompt")
+            send_error_msg(executor, prompt_id, "Your local environment has not been synchronized to the cloud already. Please click the 'sync' button to synchronize and wait for a moments then try again.")
             return
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -324,16 +339,25 @@ def execute_proxy(func):
                             i = i - 1
                             time.sleep(3)
                         elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
-                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                            save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
-                            break
+                            if ('temp_files' in images_response.json()['data'] and len(images_response.json()['data']['temp_files']) > 0) or (('output_files' in images_response.json()['data'] and len(images_response.json()['data']['output_files']) > 0)):
+                                save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                                save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                break
+                            else:
+                                send_error_msg(executor, prompt_id,
+                                               "There may be some errors when executing the prompt on the cloud. Please check the SageMaker logs.")
+                                break
                         else:
-                            logger.info(
-                                f"{i} images not already other,waiting sagemaker result .....{response}")
-                            i = i - 1
-                            time.sleep(3)
+                            # logger.info(
+                            #     f"{i} images not already other,waiting sagemaker result .....{response}")
+                            # i = i - 1
+                            # time.sleep(3)
+                            send_error_msg(executor, prompt_id,
+                                           "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
+                            break
             logger.info("execute finished")
         executor.shutdown()
+
     return wrapper
 
 
