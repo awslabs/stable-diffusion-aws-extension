@@ -187,10 +187,10 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
-        if disable_aws_proxy == 'True':
+        if disable_aws_proxy is None or disable_aws_proxy == 'True':
             logger.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
-        logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
+        logger.info(f"enable aws proxy, use aws {comfy_endpoint} {disable_aws_proxy}")
         executor = args[0]
         server_use = executor.server
         prompt = args[1]

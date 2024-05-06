@@ -60,7 +60,7 @@ export async function changeOnAWS(disableAWS) {
     if(disableAWS === false) {
         if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
             try {
-                target = {'DISABLE_AWS_PROXY': true}
+                target = {'DISABLE_AWS_PROXY': "True"}
                 const response = await api.fetchApi("/change_env", {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -74,7 +74,7 @@ export async function changeOnAWS(disableAWS) {
     else {
         if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
           try {
-            target = {'DISABLE_AWS_PROXY': false}
+            target = {'DISABLE_AWS_PROXY': "False"}
             const response = await api.fetchApi("/change_env", {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
