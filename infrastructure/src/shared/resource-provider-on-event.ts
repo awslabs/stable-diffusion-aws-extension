@@ -8,7 +8,11 @@ import {
   UpdateTableCommand,
 } from '@aws-sdk/client-dynamodb';
 import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
-import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
+import {
+  AttributeDefinition,
+  KeySchemaElement,
+  ScalarAttributeType
+} from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import { CreateRoleCommand, IAMClient, PutRolePolicyCommand } from '@aws-sdk/client-iam';
 import {
   CancelKeyDeletionCommand,
@@ -76,6 +80,7 @@ async function createAndCheckResources() {
 
   await createGlobalSecondaryIndex('SDInferenceJobTable', 'taskType', 'createTime');
   await createGlobalSecondaryIndex('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
+  await createGlobalSecondaryIndex('EsdLogSubTable', 'message_type', 'timestamp', 'N');
 }
 
 async function waitTableReady(tableName: string) {
@@ -383,7 +388,7 @@ async function putItem(tableName: string, item: any) {
   }
 }
 
-async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: string) {
+async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: string, skt: ScalarAttributeType = 'S') {
 
   await waitTableReady(tableName);
 
@@ -396,7 +401,7 @@ async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: str
       },
       {
         AttributeName: sk,
-        AttributeType: 'S',
+        AttributeType: skt,
       },
     ],
     GlobalSecondaryIndexUpdates: [

@@ -106,3 +106,6 @@ role_sd_real_time = "sd_real_time"
 
 role_comfy_async = "comfy_async"
 role_comfy_real_time = "comfy_real_time"
+
+custom_docker_image_uri = os.getenv("CUSTOM_DOCKER_IMAGE_URI", None)
+logger.info(f"config.custom_docker_image_uri: {custom_docker_image_uri}")

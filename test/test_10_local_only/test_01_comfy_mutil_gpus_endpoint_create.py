@@ -5,9 +5,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-import pytest
-
 import config as config
+import pytest
 from utils.api import Api
 from utils.helper import endpoints_wait_for_in_service
 
@@ -66,6 +65,9 @@ class TestComfyEndpointCreateE2E:
             "assign_to_roles": [config.role_comfy_async],
             "creator": config.username
         }
+
+        if config.custom_docker_image_uri:
+            data["custom_docker_image_uri"] = config.custom_docker_image_uri
 
         resp = self.api.create_endpoint(headers=headers, data=data)
         assert 'data' in resp.json(), resp.dumps()
