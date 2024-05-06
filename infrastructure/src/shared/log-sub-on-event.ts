@@ -33,6 +33,11 @@ export async function handler(event: Event, context: Object) {
       let message_type = '';
       if (message) {
           message_type = message.split(': ')[0];
+          if (message_type.split('-prompt-').length > 1) {
+            message_type = message_type.split('-prompt-')[1];
+          } else {
+            message_type = logGroup.split('/').pop() || "";
+          }
       }
 
       const Item = {
