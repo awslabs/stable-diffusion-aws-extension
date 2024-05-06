@@ -110,7 +110,7 @@ export class Middleware extends Stack {
 
     const ddbTables = new Database(this, 'sd-ddb');
 
-    const logSub = new LogSub(this, 'LogSubProvider', ddbTables.logSubTable);
+    const logSub = new LogSub(this, 'LogSubProvider');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 

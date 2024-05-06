@@ -67,12 +67,16 @@ class ComfyApp:
         self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
+        self.prompt_id = None
 
     def _handle_output(self, pipe, _):
         with pipe:
             for line in iter(pipe.readline, ''):
                 if line.strip():
-                    sys.stdout.write(f"{self.name}: {line}")
+                    if self.prompt_id:
+                        sys.stdout.write(f"{self.name}-{self.prompt_id}: {line}")
+                    else:
+                        sys.stdout.write(f"{self.name}: {line}")
 
     def start(self):
         cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
@@ -111,17 +115,15 @@ class ComfyApp:
 
     def set_prompt(self, request_obj=None):
         if request_obj and 'prompt_id' in request_obj:
-            prompt_id = request_obj['prompt_id']
-            self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{self.device_id}-{prompt_id}"
+            self.prompt_id = request_obj['prompt_id']
         else:
-            self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{self.device_id}"
+            self.prompt_id = ""
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
         comfy_app.set_prompt(request_obj)
         record_metric(comfy_app)
-        logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
         request_obj['port'] = comfy_app.port
