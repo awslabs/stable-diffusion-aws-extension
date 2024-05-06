@@ -140,14 +140,11 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        comfy_app.set_prompt()
         return wrap_response(response, comfy_app)
     except Exception as e:
-        comfy_app.set_prompt()
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
     finally:
-        comfy_app.set_prompt()
         comfy_app.busy = False
 
 
