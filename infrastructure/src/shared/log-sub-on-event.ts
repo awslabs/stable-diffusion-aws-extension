@@ -1,9 +1,5 @@
 import * as zlib from "zlib";
 
-const {
-  LOG_SUB_FUNCTION_NAME
-} = process.env;
-
 export async function handler(event: Object, context: Object, callback: CallableFunction) {
 
   // if it's from CloudWatch Subscription filters
@@ -20,9 +16,7 @@ export async function handler(event: Object, context: Object, callback: Callable
       console.log(logGroup);
       console.log(logStream);
       console.log(logEvent);
-      console.log(LOG_SUB_FUNCTION_NAME);
     }
-
 
   }
 

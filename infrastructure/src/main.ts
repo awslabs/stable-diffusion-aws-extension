@@ -241,6 +241,7 @@ export class Middleware extends Stack {
       instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
       commonLayer: commonLayers.commonLayer,
       queue: sqsStack.queue,
+      logSubFn: logSub.lambda,
     },
     );
 
@@ -288,7 +289,6 @@ export class Middleware extends Stack {
     this.addEnvToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
     this.addEnvToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
     this.addEnvToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
-    this.addEnvToAllLambdas('LOG_SUB_FUNCTION_NAME', logSub.lambda.functionName);
     this.addEnvToAllLambdas('ACCOUNT_ID', accountId.toString());
     this.addEnvToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
     this.addEnvToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');

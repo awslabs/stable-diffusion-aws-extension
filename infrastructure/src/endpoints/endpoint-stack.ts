@@ -11,6 +11,7 @@ import { CreateEndpointApi } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi } from '../api/endpoints/list-endpoints';
 import { SagemakerEndpointEvents } from '../events/endpoints-event';
+import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -32,6 +33,7 @@ export interface EndpointStackProps extends StackProps {
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   queue: aws_sqs.Queue;
+  logSubFn: NodejsFunction;
 }
 
 export class EndpointStack {
@@ -66,6 +68,7 @@ export class EndpointStack {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        logSubFn: props.logSubFn,
       },
     );
 
