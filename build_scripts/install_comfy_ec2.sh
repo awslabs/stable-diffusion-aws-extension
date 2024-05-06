@@ -34,8 +34,8 @@ echo "build comfy..."
 cd ComfyUI || exit 1
 
 if [ "$ON_DOCKER" == "true" ]; then
-  python3 -m venv venv
-  source venv/bin/activate
+  python3 -m venv /venv
+  source /venv/bin/activate
 fi
 
 /venv/bin/python3 -m pip install --upgrade pip
