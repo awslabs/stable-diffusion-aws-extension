@@ -24,6 +24,7 @@
     "projen": "npx projen"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.272.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
@@ -37,6 +38,7 @@
     "jest-junit": "^16.0.0",
     "npm-check-updates": "^16.14.20",
     "projen": "^0.81.4",
+    "proxy-agent": "^5.0.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
@@ -48,8 +50,10 @@
     "@aws-sdk/client-kms": "^3.564.0",
     "@aws-sdk/client-s3": "^3.564.0",
     "@aws-sdk/client-sns": "^3.564.0",
+    "@types/aws-lambda": "^8.10.110",
     "aws-cdk": "^2.139.0",
     "aws-cdk-lib": "^2.139.0",
+    "aws-sdk": "^2.1613.0",
     "cdk-bootstrapless-synthesizer": "^2.3.2",
     "constructs": "^10.3.0"
   },
