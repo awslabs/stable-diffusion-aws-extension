@@ -259,6 +259,16 @@ async function createTables() {
         type: AttributeType.NUMBER,
       },
     },
+    EsdLogSubTable: {
+      partitionKey: {
+        name: 'id',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'timestamp',
+        type: AttributeType.NUMBER,
+      },
+    },
   };
 
   for (let tableName in tables) {
