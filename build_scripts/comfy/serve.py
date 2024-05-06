@@ -74,7 +74,7 @@ class ComfyApp:
             for line in iter(pipe.readline, ''):
                 if line.strip():
                     if self.prompt_id:
-                        sys.stdout.write(f"{self.name}-{self.prompt_id}: {line}")
+                        sys.stdout.write(f"{self.name}-execute-{self.prompt_id}: {line}")
                     else:
                         sys.stdout.write(f"{self.name}: {line}")
 
@@ -114,6 +114,7 @@ class ComfyApp:
             return result == 0
 
     def set_prompt(self, request_obj=None):
+        logger.info(f"set_prompt {request_obj}")
         if request_obj and 'prompt_id' in request_obj:
             self.prompt_id = request_obj['prompt_id']
         else:
