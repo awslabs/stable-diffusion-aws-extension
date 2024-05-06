@@ -11,7 +11,7 @@ import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
 from utils.helper import upload_with_put, get_inference_job_status, \
-    delete_inference_jobs, update_oas
+    delete_inference_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class TestXyzVaeE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -33,6 +33,31 @@ class TestXyzVaeE2E:
         global inference_data
         if 'id' in inference_data:
             delete_inference_jobs([inference_data['id']])
+
+    def test_0_update_api_roles(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "username": "api",
+            "password": "admin",
+            "creator": "api",
+            "roles": [
+                'IT Operator',
+                'byoc',
+                config.role_sd_real_time,
+                config.role_sd_async,
+                config.role_comfy_async,
+                config.role_comfy_real_time,
+            ],
+        }
+
+        resp = self.api.create_user(headers=headers, data=data)
+
+        assert resp.status_code == 201, resp.dumps()
+        assert resp.json()["statusCode"] == 201
 
     @pytest.mark.skip(reason="not ready")
     def test_1_xyz_vae_txt2img_job_create(self):

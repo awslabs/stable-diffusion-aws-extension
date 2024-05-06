@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import traceback
-import time
 import copy
 import datetime
 import boto3

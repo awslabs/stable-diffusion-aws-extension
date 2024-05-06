@@ -5,7 +5,6 @@ from time import sleep
 import config as config
 from utils.api import Api
 from utils.enums import InferenceType
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +16,36 @@ class TestInferenceOneApiLcmXlAsyncE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
         pass
+
+    def test_0_update_api_roles(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "username": "api",
+            "password": "admin",
+            "creator": "api",
+            "roles": [
+                'IT Operator',
+                'byoc',
+                config.role_sd_real_time,
+                config.role_sd_async,
+                config.role_comfy_async,
+                config.role_comfy_real_time,
+            ],
+        }
+
+        resp = self.api.create_user(headers=headers, data=data)
+
+        assert resp.status_code == 201, resp.dumps()
+        assert resp.json()["statusCode"] == 201
 
     def test_1_one_api_lcm_xl_async(self):
         headers = {

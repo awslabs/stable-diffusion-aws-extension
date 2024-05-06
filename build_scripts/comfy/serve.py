@@ -1,20 +1,20 @@
 import asyncio
+import datetime
 import logging
 import os
+import socket
 import subprocess
+import sys
 import threading
+import time
 from multiprocessing import Process
 from threading import Lock
-import datetime
 
 import boto3
 import httpx
 import requests
-import socket
 import uvicorn
 from fastapi import APIRouter, FastAPI, Request, HTTPException
-
-import time
 
 TIMEOUT_KEEP_ALIVE = 30
 SAGEMAKER_PORT = 8080
@@ -40,8 +40,86 @@ endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 
-async def send_request(request_obj, comfy_app, need_async):
+class Api:
+    def add_api_route(self, path: str, endpoint, **kwargs):
+        return self.app.add_api_route(path, endpoint, **kwargs)
+
+    def __init__(self, app: FastAPI, queue_lock: Lock):
+        self.router = APIRouter()
+        self.app = app
+        self.queue_lock = queue_lock
+        self.add_api_route("/invocations", invocations, methods=["POST"])
+        self.add_api_route("/ping", ping, methods=["GET"], response_model={})
+
+    def launch(self, server_name, port):
+        self.app.include_router(self.router)
+        uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+
+
+class ComfyApp:
+    def __init__(self, host, port, device_id):
+        self.host = host
+        self.port = port
+        self.device_id = device_id
+        self.process = None
+        self.busy = False
+        self.cwd = '/home/ubuntu/ComfyUI'
+        self.name = f"{endpoint_instance_id}-gpu{device_id}"
+        self.stdout_thread = None
+        self.stderr_thread = None
+
+    def _handle_output(self, pipe, _):
+        with pipe:
+            for line in iter(pipe.readline, ''):
+                if line.strip():
+                    sys.stdout.write(f"{self.name}: {line}")
+
+    def start(self):
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
+               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
+               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
+        self.process = subprocess.Popen(
+            cmd,
+            cwd=self.cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        os.environ['ALREADY_INIT'] = 'true'
+
+        self.stdout_thread = threading.Thread(target=self._handle_output, args=(self.process.stdout, "STDOUT"))
+        self.stderr_thread = threading.Thread(target=self._handle_output, args=(self.process.stderr, "STDERR"))
+
+        self.stdout_thread.start()
+        self.stderr_thread.start()
+
+    def restart(self):
+        logger.info("Comfy app process is going to restart")
+        if self.process and self.process.poll() is None:
+            os.environ['ALREADY_INIT'] = 'false'
+            self.process.terminate()
+            self.process.wait()
+            self.stdout_thread.join()
+            self.stderr_thread.join()
+        self.start()
+
+    def is_port_ready(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', self.port))
+            return result == 0
+
+    def set_prompt(self, request_obj=None):
+        if request_obj and 'prompt_id' in request_obj:
+            prompt_id = request_obj['prompt_id']
+            self.name = f"{endpoint_instance_id}-gpu{self.device_id}-{prompt_id}"
+        else:
+            self.name = f"{endpoint_instance_id}-gpu{self.device_id}"
+
+
+async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
+        comfy_app.set_prompt(request_obj)
         record_metric(comfy_app)
         logger.info(request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
@@ -58,11 +136,14 @@ async def send_request(request_obj, comfy_app, need_async):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
+        comfy_app.set_prompt()
         return wrap_response(response, comfy_app)
     except Exception as e:
+        comfy_app.set_prompt()
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
     finally:
+        comfy_app.set_prompt()
         comfy_app.busy = False
 
 
@@ -115,52 +196,6 @@ def ping():
     if response.status_code != 200:
         raise HTTPException(status_code=500)
     return {'status': 'Healthy'}
-
-
-class Api:
-    def add_api_route(self, path: str, endpoint, **kwargs):
-        return self.app.add_api_route(path, endpoint, **kwargs)
-
-    def __init__(self, app: FastAPI, queue_lock: Lock):
-        self.router = APIRouter()
-        self.app = app
-        self.queue_lock = queue_lock
-        self.add_api_route("/invocations", invocations, methods=["POST"])
-        self.add_api_route("/ping", ping, methods=["GET"], response_model={})
-
-    def launch(self, server_name, port):
-        self.app.include_router(self.router)
-        uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
-
-
-class ComfyApp:
-    def __init__(self, host, port, device_id):
-        self.host = host
-        self.port = port
-        self.device_id = device_id
-        self.process = None
-        self.busy = False
-
-    def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
-               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
-               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
-        self.process = subprocess.Popen(cmd)
-        os.environ['ALREADY_INIT'] = 'true'
-
-    def restart(self):
-        logger.info("Comfy app process is going to restart")
-        if self.process and self.process.poll() is None:
-            os.environ['ALREADY_INIT'] = 'false'
-            self.process.terminate()
-            self.process.wait()
-        self.start()
-
-    def is_port_ready(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(1)
-            result = sock.connect_ex(('127.0.0.1', self.port))
-            return result == 0
 
 
 def wrap_response(response, comfy_app: ComfyApp):

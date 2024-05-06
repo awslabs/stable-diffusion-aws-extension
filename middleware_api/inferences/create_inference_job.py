@@ -12,7 +12,7 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
-from common.util import generate_presign_url, record_ep_metrics
+from common.util import generate_presign_url, record_ep_metrics, record_count_metrics
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, Endpoint
 from libs.enums import EndpointStatus
@@ -76,6 +76,7 @@ def handler(raw_event: dict, context: LambdaContext):
                                           username)
 
         record_ep_metrics(ep.endpoint_name)
+        record_count_metrics(metric_name='InferenceTotal')
 
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'

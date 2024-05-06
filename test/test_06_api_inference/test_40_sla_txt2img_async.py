@@ -13,7 +13,7 @@ import requests
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
-from utils.helper import get_inference_job_status, update_oas
+from utils.helper import get_inference_job_status
 
 logger = logging.getLogger(__name__)
 sla_batch_size = int(os.environ.get("SLA_BATCH_SIZE", 5))
@@ -24,11 +24,36 @@ class TestSLaTxt2ImgAsync:
 
     def setup_class(self):
         self.api = Api(config=config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
         pass
+
+    def test_0_update_api_roles(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "username": "api",
+            "password": "admin",
+            "creator": "api",
+            "roles": [
+                'IT Operator',
+                'byoc',
+                config.role_sd_real_time,
+                config.role_sd_async,
+                config.role_comfy_async,
+                config.role_comfy_real_time,
+            ],
+        }
+
+        resp = self.api.create_user(headers=headers, data=data)
+
+        assert resp.status_code == 201, resp.dumps()
+        assert resp.json()["statusCode"] == 201
 
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_1_sla_txt2img(self):

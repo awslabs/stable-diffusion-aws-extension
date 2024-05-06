@@ -83,6 +83,7 @@ export async function changeOnAWS(disableAWS) {
           } catch (exception) {
 
           }
+          syncEnv()
           return true;
         }
     }

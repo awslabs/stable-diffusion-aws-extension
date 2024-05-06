@@ -7,18 +7,17 @@ from datetime import timedelta
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
+from utils.helper import endpoints_wait_for_in_service, get_endpoint_sd_async
 
 logger = logging.getLogger(__name__)
-
-endpoint_name = f"sd-async-{config.endpoint_name}"
 
 
 class TestEndpointCheckE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
+        self.ep_name = get_endpoint_sd_async(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -40,39 +39,14 @@ class TestEndpointCheckE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert endpoint_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert self.ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
         timeout = datetime.now() + timedelta(minutes=40)
 
         while datetime.now() < timeout:
-            result = self.endpoints_wait_for_in_service()
+            result = endpoints_wait_for_in_service(self.api, self.ep_name)
             if result:
                 break
             time.sleep(15)
         else:
             raise Exception("Create Endpoint timed out after 40 minutes.")
-
-    def endpoints_wait_for_in_service(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
-        params = {
-            "username": config.username
-        }
-
-        resp = self.api.list_endpoints(headers=headers, params=params)
-        assert resp.status_code == 200, resp.dumps()
-
-        for endpoint in resp.json()['data']["endpoints"]:
-            if endpoint["endpoint_name"] == endpoint_name:
-                if endpoint["endpoint_status"] == "Failed":
-                    raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
-                if endpoint["endpoint_status"] != "InService":
-                    logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
-                    return False
-                else:
-                    return True
-
-        return False

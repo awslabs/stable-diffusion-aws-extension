@@ -32,19 +32,18 @@ class InferenceResult:
     output_files: Optional[List[str]] = None
     temp_path: Optional[str] = None
     temp_files: Optional[List[str]] = None
+    endpoint_instance_id: Optional[str] = None
+    device_id: Optional[int] = None
 
 
 @dataclass
 class ComfyExecuteTable:
     prompt_id: str
-    endpoint_name: str
-    inference_type: str
-    need_sync: bool
     status: str
     # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
     prompt_params: dict[str, Any]
-    prompt_path: Optional[str]
-    create_time: str
+    create_time: Optional[str] = None
+    prompt_path: Optional[str] = None
     instance_id: Optional[str] = None
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None
@@ -55,6 +54,10 @@ class ComfyExecuteTable:
     temp_files: Optional[List[str]] = ''
     multi_async: Optional[bool] = False
     batch_id: Optional[str] = None
+    endpoint_name: Optional[str] = None
+    inference_type: Optional[str] = None
+    need_sync: Optional[bool] = None
+    prompt_params: Optional[dict[str, Any]] = None
 
 
 @dataclass

@@ -3,8 +3,7 @@ import logging
 import boto3
 
 import config as config
-from utils.api import Api, get_schema_by_id_and_code
-from utils.helper import update_oas
+from utils.api import Api
 
 logger = logging.getLogger(__name__)
 client = boto3.client('apigateway')
@@ -15,7 +14,7 @@ class TestApiDocExportApi:
     @classmethod
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -34,4 +33,4 @@ class TestApiDocExportApi:
     def test_3_get_schema_by_id(self):
         operation_id = 'GetInferenceJob'
         code = 404
-        get_schema_by_id_and_code(self.api, operation_id, code)
+        self.api.get_schema_by_id_and_code(operation_id, code)

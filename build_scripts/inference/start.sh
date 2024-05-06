@@ -106,8 +106,8 @@ sd_cache_endpoint() {
   s5cmd run "$upload_files"
 
   end_at=$(date +%s)
-  cost=$((end_at-start_at))
-  echo "sync endpoint files: $cost seconds"
+  export UPLOAD_ENDPOINT_CACHE_SECONDS=$((end_at-start_at))
+  echo "sync endpoint files: $UPLOAD_ENDPOINT_CACHE_SECONDS seconds"
 }
 
 sd_install_build(){
@@ -133,6 +133,7 @@ sd_launch(){
 
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
+  python /metrics.py &
 
   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 
@@ -144,15 +145,17 @@ sd_launch_from_private_s3(){
     start_at=$(date +%s)
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "download file: $cost seconds"
+    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "decompress file: $cost seconds"
+    export DECOMPRESS_SECONDS=$((end_at-start_at))
+    echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
@@ -168,15 +171,17 @@ sd_launch_from_public_s3(){
     start_at=$(date +%s)
     s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "download file: $cost seconds"
+    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
     tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
     rm -rf "$SERVICE_TYPE.tar"
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "decompress file: $cost seconds"
+    export DECOMPRESS_SECONDS=$((end_at-start_at))
+    echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
@@ -231,7 +236,7 @@ sd_launch_from_public_s3(){
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
     /serve trim_sd
-    sd_cache_endpoint
+    sd_cache_endpoint &
     sd_launch
 }
 
@@ -265,7 +270,8 @@ comfy_cache_endpoint() {
   s5cmd run "$upload_files"
 
   end_at=$(date +%s)
-  cost=$((end_at-start_at))
+  export UPLOAD_ENDPOINT_CACHE_SECONDS=$((end_at-start_at))
+  echo "sync endpoint files: $UPLOAD_ENDPOINT_CACHE_SECONDS seconds"
 }
 
 comfy_launch(){
@@ -278,9 +284,8 @@ comfy_launch(){
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
-
-   python serve.py
-#  python /controller.py
+  python /metrics.py &
+  python serve.py
 }
 
 comfy_launch_from_private_s3(){
@@ -288,15 +293,17 @@ comfy_launch_from_private_s3(){
     start_at=$(date +%s)
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "download file: $cost seconds"
+    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
     tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "decompress file: $cost seconds"
+    export DECOMPRESS_SECONDS=$((end_at-start_at))
+    echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
     comfy_launch
 }
@@ -306,18 +313,20 @@ comfy_launch_from_public_s3(){
     start_at=$(date +%s)
     s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "download file: $cost seconds"
+    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
     tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
     rm -rf "$SERVICE_TYPE.tar"
     end_at=$(date +%s)
-    cost=$((end_at-start_at))
-    echo "decompress file: $cost seconds"
+    export DECOMPRESS_SECONDS=$((end_at-start_at))
+    echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
     /serve trim_comfy
-    comfy_cache_endpoint
+    comfy_cache_endpoint &
     comfy_launch
 }
 

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
+from utils.helper import endpoints_wait_for_in_service, get_endpoint_comfy_real_time
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,8 @@ class TestEndpointRealTimeReCheckForComfyE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
+        self.ep_name = get_endpoint_comfy_real_time(self.api)
 
     @classmethod
     def teardown_class(self):
@@ -36,40 +37,14 @@ class TestEndpointRealTimeReCheckForComfyE2E:
         endpoints = resp.json()['data']["endpoints"]
         assert len(endpoints) >= 0
 
-        assert config.comfy_real_time_ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
+        assert self.ep_name in [endpoint["endpoint_name"] for endpoint in endpoints]
 
         timeout = datetime.now() + timedelta(minutes=40)
 
         while datetime.now() < timeout:
-            result = self.endpoints_wait_for_in_service()
+            result = endpoints_wait_for_in_service(self.api, self.ep_name)
             if result:
                 break
-            time.sleep(25)
+            time.sleep(5)
         else:
             raise Exception("Create Endpoint timed out after 40 minutes.")
-
-    def endpoints_wait_for_in_service(self):
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
-
-        params = {
-            "username": config.username
-        }
-
-        resp = self.api.list_endpoints(headers=headers, params=params)
-        assert resp.status_code == 200, resp.dumps()
-
-        for endpoint in resp.json()['data']["endpoints"]:
-            if endpoint["endpoint_name"] == config.comfy_real_time_ep_name:
-                if endpoint["endpoint_status"] == "InService":
-                    return True
-
-                if endpoint["endpoint_status"] == "Failed":
-                    raise Exception(f"Endpoint {config.comfy_async_ep_name} is failed")
-
-                logger.info(f"{config.comfy_async_ep_name} is {endpoint['endpoint_status']}")
-                return False
-
-        return False

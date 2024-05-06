@@ -13,6 +13,7 @@ from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import accepted
+from common.util import record_latency_metrics, record_count_metrics
 from get_inference_job import get_infer_data
 from inference_libs import parse_sagemaker_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationRequest
@@ -98,10 +99,14 @@ def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_
                                                 )
 
     if 'error' in sagemaker_out:
+        record_count_metrics(metric_name='InferenceFailed')
         update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
         raise Exception(str(sagemaker_out))
 
     parse_sagemaker_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
+
+    record_count_metrics(metric_name='InferenceSucceed')
+    record_latency_metrics(start_time=job.startTime, metric_name='InferenceLatency')
 
     return get_infer_data(job.InferenceJobId)
 

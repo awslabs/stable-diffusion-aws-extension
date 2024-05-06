@@ -2,11 +2,9 @@ from __future__ import print_function
 
 import logging
 import time
-from time import sleep
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ class TestEndpointReCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

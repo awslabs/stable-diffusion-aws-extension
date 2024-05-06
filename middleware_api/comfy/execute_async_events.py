@@ -7,7 +7,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import s3_scan_files, load_json_from_s3
+from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, record_latency_metrics
 from libs.comfy_data_types import InferenceResult
 
 tracer = Tracer()
@@ -46,6 +46,11 @@ def handler(event, context):
     for item in results:
         result = InferenceResult(**item)
 
+        resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
+        if 'Item' not in resp:
+            logger.error(f"Cannot find inference job with prompt_id: {result.prompt_id}")
+            continue
+
         result = s3_scan_files(result)
 
         if message["invocationStatus"] != "Completed":
@@ -59,6 +64,13 @@ def handler(event, context):
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
         update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
         update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
+
+        if message["invocationStatus"] != "Completed":
+            record_count_metrics(metric_name='InferenceFailed', service='Comfy')
+        else:
+            record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
+            record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency',
+                                   service='Comfy')
 
     return {}
 

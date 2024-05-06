@@ -7,7 +7,6 @@ import requests
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 dataset = {}
@@ -16,7 +15,7 @@ dataset = {}
 class TestCropDatasetE2E:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

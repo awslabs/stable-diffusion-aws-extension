@@ -7,6 +7,9 @@ import os
 import subprocess
 import sys
 import tarfile
+import time
+import uuid
+from datetime import datetime, timedelta
 
 import requests
 
@@ -186,17 +189,6 @@ def parse_constant(c: str) -> float:
     return float(c)
 
 
-def update_oas(api_instance: Api):
-    headers = {'x-api-key': config.api_key}
-    resp = api_instance.doc(headers)
-    assert resp.status_code == 200, resp.dumps()
-
-    api_instance.schema = resp.json()
-
-    with open('oas.json', 'w') as f:
-        f.write(json.dumps(resp.json(), indent=4))
-
-
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         # if passed in an object is instance of Decimal
@@ -206,3 +198,104 @@ class DecimalEncoder(json.JSONEncoder):
 
         # ️ otherwise use the default behavior
         return json.JSONEncoder.default(self, obj)
+
+
+def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
+    with open('./data/api_params/comfy_workflow.json', 'r') as f:
+        headers = {
+            "x-api-key": config.api_key,
+        }
+        prompt_id = str(uuid.uuid4())
+        workflow = json.load(f)
+        workflow['prompt_id'] = prompt_id
+        workflow['endpoint_name'] = endpoint_name
+
+        resp = api.create_execute(headers=headers, data=workflow)
+        assert resp.status_code in [200, 201], resp.dumps()
+        assert resp.json()['data']['prompt_id'] == prompt_id, resp.dumps()
+
+        if not wait_succeed:
+            return
+
+        timeout = datetime.now() + timedelta(minutes=5)
+
+        init_status = ''
+        while datetime.now() < timeout:
+            time.sleep(1)
+            resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
+            if resp.status_code == 404:
+                init_status = "not found"
+                logger.info(f"{n} {endpoint_name} {prompt_id} is {init_status}")
+                continue
+
+            assert resp.status_code == 200, resp.dumps()
+
+            assert 'status' in resp.json()['data'], resp.dumps()
+            status = resp.json()["data"]["status"]
+
+            if init_status != status:
+                logger.info(f"Thread {n} {endpoint_name} {prompt_id} is {status}")
+                init_status = status
+
+            if status == 'success':
+                break
+            if status == InferenceStatus.FAILED.value:
+                logger.error(resp.json())
+                raise Exception(f"{n} {endpoint_name} {prompt_id} failed.")
+        else:
+            raise Exception(f"{n}{endpoint_name} {prompt_id} timed out after 5 minutes.")
+
+
+def get_endpoint_comfy_async(api):
+    return get_endpoint_by_prefix(api, "comfy-async-")
+
+
+def get_endpoint_comfy_real_time(api):
+    return get_endpoint_by_prefix(api, "comfy-real-time-")
+
+
+def get_endpoint_sd_async(api):
+    return get_endpoint_by_prefix(api, "sd-async-")
+
+
+def get_endpoint_sd_real_time(api):
+    return get_endpoint_by_prefix(api, "sd-real-time-")
+
+
+def get_endpoint_by_prefix(api, prefix: str):
+    endpoints = list_endpoints(api)
+    for endpoint in endpoints:
+        if endpoint['endpoint_name'].startswith(prefix):
+            return endpoint['endpoint_name']
+    raise Exception(f"{prefix}* endpoint not found")
+
+
+def endpoints_wait_for_in_service(api, endpoint_name: str = None):
+    headers = {
+        "x-api-key": config.api_key,
+        "username": config.username
+    }
+
+    params = {
+        "username": config.username
+    }
+
+    resp = api.list_endpoints(headers=headers, params=params)
+    assert resp.status_code == 200, resp.dumps()
+
+    for endpoint in resp.json()['data']["endpoints"]:
+        if endpoint_name is not None and endpoint["endpoint_name"] != endpoint_name:
+            continue
+
+        endpoint_name = endpoint["endpoint_name"]
+
+        if endpoint["endpoint_status"] == "Failed":
+            raise Exception(f"{endpoint_name} is {endpoint['endpoint_status']}")
+
+        if endpoint["endpoint_status"] != "InService":
+            logger.info(f"{endpoint_name} is {endpoint['endpoint_status']}")
+            return False
+        else:
+            return True
+
+    return False

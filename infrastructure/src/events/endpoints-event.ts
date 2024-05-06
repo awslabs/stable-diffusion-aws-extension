@@ -63,6 +63,7 @@ export class SagemakerEndpointEvents {
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
         'cloudwatch:PutMetricAlarm',
+        'cloudwatch:PutMetricData',
         'cloudwatch:UpdateMetricAlarm',
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',

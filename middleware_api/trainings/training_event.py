@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-from common.util import publish_msg, generate_presigned_url_for_key
+from common.util import publish_msg, generate_presigned_url_for_key, record_seconds_metrics
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
 tracer = Tracer()
@@ -78,6 +78,10 @@ def check_status(training_job: TrainJob):
             }
 
     if training_job_status == 'Completed':
+
+        float_timestamp = float(training_job.timestamp)
+        timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
+        record_seconds_metrics(start_time=timestamp, metric_name='TrainingLatency', service='Stable-diffusion')
 
         try:
             notify_user(training_job)

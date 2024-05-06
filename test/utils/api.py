@@ -38,15 +38,15 @@ class Api:
 
         dump_string = ""
         if headers:
-            dump_string += f"\nRequest headers: {get_json(headers)}"
+            dump_string += f"\nRequest headers: {self.get_json(headers)}"
         if data:
-            dump_string += f"\nRequest data: {get_json(data)}"
+            dump_string += f"\nRequest data: {self.get_json(data)}"
         if params:
-            dump_string += f"\nRequest params: {get_json(params)}"
+            dump_string += f"\nRequest params: {self.get_json(params)}"
         if resp.status_code:
             dump_string += f"\nResponse status_code: {resp.status_code}"
         if resp.text:
-            dump_string += f"\nResponse body: {get_json(resp.text)}"
+            dump_string += f"\nResponse body: {self.get_json(resp.text)}"
 
         resp.dumps = lambda: logger.info(
             f"\n----------------------------"
@@ -56,7 +56,7 @@ class Api:
         )
 
         if operation_id:
-            validate_response(self, resp, operation_id)
+            self.validate_response(resp, operation_id)
 
         return resp
 
@@ -375,60 +375,70 @@ class Api:
             params=params
         )
 
+    def validate_response(self, resp: requests.Response, operation_id: str):
+        if resp.status_code != 204:
+            with open(f"response.json", "w") as s:
+                s.write(json.dumps(resp.json(), indent=4))
 
-def get_schema_by_id_and_code(api: Api, operation_id: str, code: int):
-    code = str(code)
+        validate_schema = self.get_schema_by_id_and_code(operation_id, resp.status_code)
 
-    responses = None
-    for path, methods in api.schema['paths'].items():
-        for method, op in methods.items():
-            if op.get('operationId') == operation_id:
-                responses = op['responses']
-                break
+        if resp.status_code == 204:
+            return
 
-    if responses is None:
-        raise Exception(f'{operation_id} not found')
+        try:
+            validate(instance=resp.json(), schema=validate_schema)
+        except Exception as e:
+            print(f"\n**********************************************")
+            with open(f"schema.json", "w") as s:
+                s.write(json.dumps(validate_schema, indent=4))
+            print(f"\n**********************************************")
+            print(operation_id)
+            print(f"\n**********************************************")
+            raise e
 
-    if f"{code}" not in responses:
-        raise Exception(f'{code} not found in responses of {operation_id}')
+    def get_schema_by_id_and_code(self, operation_id: str, code: int):
+        if not self.schema:
+            raise Exception('api.schema is empty')
 
-    ref = responses[f"{code}"]['content']['application/json']['schema']['$ref']
-    model_name = ref.split('/')[-1]
-    json_schema = api.schema['components']['schemas'][model_name]
+        code = str(code)
 
-    return json_schema
+        responses = None
+        for path, methods in self.schema['paths'].items():
+            for method, op in methods.items():
+                if op.get('operationId') == operation_id:
+                    responses = op['responses']
+                    break
 
+        if responses is None:
+            raise Exception(f'{operation_id} not found')
 
-def validate_response(api: Api, resp: requests.Response, operation_id: str):
-    if resp.status_code != 204:
-        with open(f"response.json", "w") as s:
-            s.write(json.dumps(resp.json(), indent=4))
+        if f"{code}" not in responses:
+            raise Exception(f'{code} not found in responses of {operation_id}')
 
-    validate_schema = get_schema_by_id_and_code(api, operation_id, resp.status_code)
+        ref = responses[f"{code}"]['content']['application/json']['schema']['$ref']
+        model_name = ref.split('/')[-1]
+        json_schema = self.schema['components']['schemas'][model_name]
 
-    if resp.status_code == 204:
-        return
+        return json_schema
 
-    try:
-        validate(instance=resp.json(), schema=validate_schema)
-    except Exception as e:
-        print(f"\n**********************************************")
-        with open(f"schema.json", "w") as s:
-            s.write(json.dumps(validate_schema, indent=4))
-        print(f"\n**********************************************")
-        print(operation_id)
-        print(f"\n**********************************************")
-        raise e
+    def feat_oas_schema(self):
+        headers = {'x-api-key': self.config.api_key}
+        resp = self.doc(headers)
+        assert resp.status_code == 200, resp.dumps()
 
+        self.schema = resp.json()
 
-def get_json(data):
-    try:
-        # if data is string
-        if isinstance(data, str):
-            return json.dumps(json.loads(data), indent=4)
-        # if data is object
-        if isinstance(data, dict):
-            json.dumps(dict(data), indent=4)
-        return str(data)
-    except TypeError:
-        return str(data)
+        with open('oas.json', 'w') as f:
+            f.write(json.dumps(resp.json(), indent=4))
+
+    def get_json(self, data):
+        try:
+            # if data is string
+            if isinstance(data, str):
+                return json.dumps(json.loads(data), indent=4)
+            # if data is object
+            if isinstance(data, dict):
+                json.dumps(dict(data), indent=4)
+            return str(data)
+        except TypeError:
+            return str(data)

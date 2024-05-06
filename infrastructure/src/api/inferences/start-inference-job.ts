@@ -168,6 +168,7 @@ export class StartInferenceJobApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'cloudwatch:PutMetricData',
         'kms:Decrypt',
       ],
       resources: ['*'],
