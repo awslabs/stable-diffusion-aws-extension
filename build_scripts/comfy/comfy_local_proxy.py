@@ -217,7 +217,22 @@ def execute_proxy(func):
             get_response = requests.get(url, headers=headers)
             return get_response
 
+        def check_if_sync_is_already(url):
+            get_response = send_get_request(url)
+            prepare_response = get_response.json()
+            if prepare_response.status_code == 200 and 'data' in prepare_response and prepare_response['data'] and prepare_response['data']['prepareSuccess']:
+                logger.info(f"sync available")
+                return True
+            else:
+                logger.info(f"no sync available for {url} response {prepare_response}")
+                return False
+
         logger.debug(f"payload is: {payload}")
+
+        is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
+        if not is_synced:
+            logger.debug(f"is_synced is {is_synced} stop cloud prompt")
+            return
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
