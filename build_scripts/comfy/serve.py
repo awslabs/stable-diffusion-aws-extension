@@ -38,6 +38,7 @@ cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
+prompt_id = {}
 
 
 class Api:
@@ -67,14 +68,14 @@ class ComfyApp:
         self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
-        self.prompt_id = None
 
     def _handle_output(self, pipe, _):
         with pipe:
             for line in iter(pipe.readline, ''):
                 if line.strip():
-                    if self.prompt_id:
-                        sys.stdout.write(f"{self.name}-execute-{self.prompt_id}: {line}")
+                    global prompt_id
+                    if self.device_id in prompt_id:
+                        sys.stdout.write(f"{self.name}-execute-{prompt_id[self.device_id]}: {line}")
                     else:
                         sys.stdout.write(f"{self.name}: {line}")
 
@@ -115,40 +116,35 @@ class ComfyApp:
 
     def set_prompt(self, request_obj=None):
         if request_obj and 'prompt_id' in request_obj:
-            self.prompt_id = request_obj['prompt_id']
-            logger.info(f"set_prompt {self.prompt_id}")
-        else:
-            self.prompt_id = ""
-            logger.info(f"set_prompt clear")
-
-    async def request(self, request_obj, need_async: bool):
-        try:
-            self.set_prompt(request_obj)
-            record_metric(self)
-            logger.info(f"Starting on {self.port} {need_async} {request_obj}")
-            self.busy = True
-            request_obj['port'] = self.port
-            request_obj['out_path'] = self.device_id
-            logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{self.port}/execute_proxy")
-            if need_async:
-                async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
-                    response = await client.post(f"http://{PHY_LOCALHOST}:{self.port}/execute_proxy", json=request_obj)
-            else:
-                response = requests.post(f"http://{PHY_LOCALHOST}:{self.port}/execute_proxy", json=request_obj)
-            self.busy = False
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code,
-                                    detail=f"COMFY service returned an error: {response.text}")
-            return wrap_response(response, self)
-        except Exception as e:
-            logger.error(f"send_request error {e}")
-            raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
-        finally:
-            self.busy = False
+            global prompt_id
+            prompt_id[self.device_id] = request_obj['prompt_id']
+            logger.info(f"set_prompt {prompt_id[self.device_id]}")
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
-    await comfy_app.request(request_obj, need_async)
+    try:
+        comfy_app.set_prompt(request_obj)
+        record_metric(comfy_app)
+        logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
+        comfy_app.busy = True
+        request_obj['port'] = comfy_app.port
+        request_obj['out_path'] = comfy_app.device_id
+        logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
+        if need_async:
+            async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
+                response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        else:
+            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        comfy_app.busy = False
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code,
+                                detail=f"COMFY service returned an error: {response.text}")
+        return wrap_response(response, comfy_app)
+    except Exception as e:
+        logger.error(f"send_request error {e}")
+        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
+    finally:
+        comfy_app.busy = False
 
 
 async def invocations(request: Request):
