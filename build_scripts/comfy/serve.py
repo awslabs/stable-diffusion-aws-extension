@@ -114,11 +114,12 @@ class ComfyApp:
             return result == 0
 
     def set_prompt(self, request_obj=None):
-        logger.info(f"set_prompt {request_obj}")
         if request_obj and 'prompt_id' in request_obj:
             self.prompt_id = request_obj['prompt_id']
+            logger.info(f"set_prompt {self.prompt_id}")
         else:
             self.prompt_id = ""
+            logger.info(f"set_prompt clear")
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
