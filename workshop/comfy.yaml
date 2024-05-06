@@ -213,6 +213,7 @@ Resources:
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
           sudo git clone https://github.com/Gourieff/comfyui-reactor-node.git  /ComfyUI/custom_nodes/comfyui-reactor-node
           sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
+          sudo /venv/bin/python3 -s -m pip install onnxruntime
           sudo git clone https://github.com/twri/sdxl_prompt_styler.git  /ComfyUI/custom_nodes/sdxl_prompt_styler
           sudo git clone https://github.com/AIGODLIKE/AIGODLIKE-ComfyUI-Translation.git  /ComfyUI/custom_nodes/AIGODLIKE-ComfyUI-Translation
           sudo chmod -R 777 /ComfyUI
