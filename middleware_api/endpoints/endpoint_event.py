@@ -12,8 +12,12 @@ from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import get_endpoint_by_name
 
+logs = boto3.client('logs')
+lambda_client = boto3.client('lambda')
+
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
+log_sub_fn = os.environ.get('LOG_SUB_FN')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -47,6 +51,8 @@ def handler(event, context):
         if business_status == EndpointStatus.IN_SERVICE.value:
             update_endpoint_field(endpoint, 'endTime', current_time)
 
+            create_log_subscription(endpoint_name)
+
             if endpoint.service_type == 'sd':
                 service_type = 'Stable-Diffusion'
             else:
@@ -71,6 +77,10 @@ def handler(event, context):
             delete_ep_model_config(endpoint_name)
             ddb_service.delete_item(sagemaker_endpoint_table,
                                     keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
+            response = logs.delete_log_group(
+                logGroupName=f"/aws/sagemaker/Endpoints/{endpoint_name}"
+            )
+            logger.info(f"Delete log group response: {response}")
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(endpoint, 'error', event['FailureReason'])
@@ -80,6 +90,28 @@ def handler(event, context):
         logger.error(e, exc_info=True)
 
     return {'statusCode': 200}
+
+
+def create_log_subscription(endpoint_name: str):
+    try:
+        log_group_name = f"/aws/sagemaker/Endpoints/{endpoint_name}"
+        # get log subscription filters, if exits then return
+        response = logs.describe_subscription_filters(
+            logGroupName=log_group_name
+        )
+        if response.get('subscriptionFilters'):
+            logger.info(f"Log subscription filter already exists for: {endpoint_name}")
+            return
+
+        response = logs.put_subscription_filter(
+            logGroupName=log_group_name,
+            filterName=f"EsdSubscriptionFilter-{endpoint_name}",
+            filterPattern=f"%{endpoint_name}-%",
+            destinationArn=log_sub_fn,
+        )
+        logger.info(f"Create log subscription response: {response}")
+    except Exception as e:
+        logger.error(e, exc_info=True)
 
 
 def delete_ep_model_config(endpoint_name: str):

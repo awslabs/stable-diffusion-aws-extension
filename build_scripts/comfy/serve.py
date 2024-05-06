@@ -64,7 +64,7 @@ class ComfyApp:
         self.process = None
         self.busy = False
         self.cwd = '/home/ubuntu/ComfyUI'
-        self.name = f"{endpoint_instance_id}-gpu{device_id}"
+        self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
 
@@ -112,9 +112,9 @@ class ComfyApp:
     def set_prompt(self, request_obj=None):
         if request_obj and 'prompt_id' in request_obj:
             prompt_id = request_obj['prompt_id']
-            self.name = f"{endpoint_instance_id}-gpu{self.device_id}-{prompt_id}"
+            self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{self.device_id}-{prompt_id}"
         else:
-            self.name = f"{endpoint_instance_id}-gpu{self.device_id}"
+            self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{self.device_id}"
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
