@@ -38,6 +38,7 @@ cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
+prompt_id = {}
 
 
 class Api:
@@ -67,14 +68,14 @@ class ComfyApp:
         self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
-        self.prompt_id = None
 
     def _handle_output(self, pipe, _):
         with pipe:
             for line in iter(pipe.readline, ''):
                 if line.strip():
-                    if self.prompt_id:
-                        sys.stdout.write(f"{self.name}-execute-{self.prompt_id}: {line}")
+                    global prompt_id
+                    if self.device_id in prompt_id:
+                        sys.stdout.write(f"{self.name}-execute-{prompt_id[self.device_id]}: {line}")
                     else:
                         sys.stdout.write(f"{self.name}: {line}")
 
@@ -115,11 +116,9 @@ class ComfyApp:
 
     def set_prompt(self, request_obj=None):
         if request_obj and 'prompt_id' in request_obj:
-            self.prompt_id = request_obj['prompt_id']
-            logger.info(f"set_prompt {self.prompt_id}")
-        else:
-            self.prompt_id = ""
-            logger.info(f"set_prompt clear")
+            global prompt_id
+            prompt_id[self.device_id] = request_obj['prompt_id']
+            logger.info(f"set_prompt {prompt_id[self.device_id]}")
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
