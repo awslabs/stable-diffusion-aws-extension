@@ -118,12 +118,12 @@ class ComfyApp:
         if request_obj and 'prompt_id' in request_obj:
             global prompt_id
             prompt_id[self.device_id] = request_obj['prompt_id']
-            logger.info(f"set_prompt {prompt_id[self.device_id]}")
+            logger.info(f"set_prompt {prompt_id[self.device_id]} on device {self.device_id}")
+            logger.info(f"prompt_id is {prompt_id}")
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
-        comfy_app.set_prompt(request_obj)
         record_metric(comfy_app)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
         comfy_app.busy = True
@@ -161,6 +161,7 @@ async def invocations(request: Request):
                 comfy_app = check_available_app(True)
                 if comfy_app is None:
                     raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+                comfy_app.set_prompt(request_obj)
                 tasks.append(send_request(request_obj, comfy_app, True))
             logger.info("all tasks completed send, waiting result")
             results = await asyncio.gather(*tasks)
@@ -174,6 +175,7 @@ async def invocations(request: Request):
                 comfy_app = check_available_app(True)
                 if comfy_app is None:
                     raise HTTPException(status_code=500, detail=f"COMFY service not available for single reqs")
+                comfy_app.set_prompt(request_obj)
                 response = await send_request(request_obj, comfy_app, False)
                 result.append(response)
             logger.info(f"Finished invocations result: {result}")

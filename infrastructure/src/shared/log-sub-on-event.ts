@@ -29,11 +29,18 @@ export async function handler(event: Event, context: Object) {
 
       let {id, timestamp, message} = logEvents[i];
 
+      // @ts-ignore
+      let message_type = '';
+      if (message) {
+          message_type = message.split(': ')[0];
+      }
+
       const Item = {
         id,
         logGroup,
         logStream,
         timestamp,
+        message_type,
         message
       };
 
