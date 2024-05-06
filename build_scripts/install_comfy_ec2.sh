@@ -38,19 +38,19 @@ if [ "$ON_DOCKER" == "true" ]; then
   source venv/bin/activate
 fi
 
-venv/bin/pyhon3 -m pip install --upgrade pip
-venv/bin/pyhon3 -m pip install -r requirements.txt
-venv/bin/pyhon3 -m pip install boto3
-venv/bin/pyhon3 -m pip install aws_xray_sdk
-venv/bin/pyhon3 -m pip install fastapi
-venv/bin/pyhon3 -m pip install uvicorn
-venv/bin/pyhon3 -m pip install watchdog
-venv/bin/pyhon3 -m pip install python-dotenv
-venv/bin/pyhon3 -m pip install httpx
+/venv/bin/python3 -m pip install --upgrade pip
+/venv/bin/python3 -m pip install -r requirements.txt
+/venv/bin/python3 -m pip install boto3
+/venv/bin/python3 -m pip install aws_xray_sdk
+/venv/bin/python3 -m pip install fastapi
+/venv/bin/python3 -m pip install uvicorn
+/venv/bin/python3 -m pip install watchdog
+/venv/bin/python3 -m pip install python-dotenv
+/venv/bin/python3 -m pip install httpx
 
 if [ "$ON_DOCKER" == "true" ]; then
-  venv/bin/pyhon3 -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
-  venv/bin/pyhon3 -m pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
-  venv/bin/pyhon3 -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
-  venv/bin/pyhon3 -m pip install open-clip-torch==2.20.0
+  /venv/bin/python3 -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
+  /venv/bin/python3 -m pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
+  /venv/bin/python3 -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
+  /venv/bin/python3 -m pip install open-clip-torch==2.20.0
 fi
