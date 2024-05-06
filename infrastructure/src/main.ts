@@ -213,6 +213,7 @@ export class Middleware extends Stack {
       s3Bucket: s3Bucket,
       configTable: ddbComfyTables.configTable,
       executeTable: ddbComfyTables.executeTable,
+      esdLogSubTable: ddbComfyTables.esdLogSubTable,
       syncTable: ddbComfyTables.syncTable,
       msgTable: ddbComfyTables.msgTable,
       multiUserTable: ddbTables.multiUserTable,
