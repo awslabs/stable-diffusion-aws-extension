@@ -220,7 +220,7 @@ def execute_proxy(func):
         def check_if_sync_is_already(url):
             get_response = send_get_request(url)
             prepare_response = get_response.json()
-            if (prepare_response.status_code == 200 and 'data' in prepare_response and prepare_response['data']
+            if (prepare_response['status_code'] == 200 and 'data' in prepare_response and prepare_response['data']
                     and prepare_response['data']['prepareSuccess']):
                 logger.info(f"sync available")
                 return True
