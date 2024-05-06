@@ -318,6 +318,15 @@ operations = {
             path_id
         ]
     ),
+    "GetExecuteLogs": APISchema(
+        summary="Get Execute Logs",
+        tags=["Executes"],
+        description="Get Execute Logs by ID",
+        parameters=[
+            header_user_name,
+            path_id
+        ]
+    ),
     "ListDatasets": APISchema(
         summary="List Datasets",
         tags=["Datasets"],

@@ -8,6 +8,7 @@ export class ComfyDatabase extends Construct {
   public syncTable: Table;
   public msgTable: Table;
   public instanceMonitorTable: Table;
+  public esdLogSubTable: Table;
 
   constructor(scope: Construct, baseId: string) {
     super(scope, baseId);
@@ -22,6 +23,8 @@ export class ComfyDatabase extends Construct {
     this.instanceMonitorTable = this.table(scope, baseId, 'ComfyInstanceMonitorTable');
 
     this.msgTable = this.table(scope, baseId, 'ComfyMessageTable');
+
+    this.esdLogSubTable = this.table(scope, baseId, 'EsdLogSubTable');
 
   }
 

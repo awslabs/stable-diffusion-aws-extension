@@ -13,7 +13,7 @@ tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-execute_table = os.environ.get('EXECUTE_TABLE')
+log_sub_table = os.environ.get('LOG_SUB_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -24,7 +24,7 @@ def handler(event, ctx):
         logger.info(f"Received ctx: {ctx}")
         prompt_id = event['pathParameters']['id']
 
-        item = ddb_service.get_item(table=execute_table, key_values={"prompt_id": prompt_id})
+        item = ddb_service.get_item(table=log_sub_table, key_values={"prompt_id": prompt_id})
         logger.info(item)
 
         if not item:

@@ -21,6 +21,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import {GetExecuteLogsApi, GetExecuteLogsProps} from "../api/comfy/get_execute_logs";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -31,6 +32,7 @@ export interface ComfyInferenceStackProps extends StackProps {
   msgTable:aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
+  esdLogSubTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   ecrRepositoryName: string;
@@ -48,6 +50,7 @@ export class ComfyApiStack extends Construct {
   private readonly executeTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
+  private readonly esdLogSubTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
@@ -61,6 +64,7 @@ export class ComfyApiStack extends Construct {
     this.executeTable = props.executeTable;
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
+    this.esdLogSubTable = props.esdLogSubTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
@@ -171,11 +175,21 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'GET',
         router: executeGetRouter,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
       },
     );
+
+      // GET /executes/{id}/logs
+      new GetExecuteLogsApi(
+          scope, 'GetExecuteLogs', <GetExecuteLogsProps>{
+              httpMethod: 'GET',
+              router: executeGetRouter,
+              s3Bucket: props.s3Bucket,
+              esdLogSubTable: this.esdLogSubTable,
+              commonLayer: this.layer,
+          },
+      );
 
     // GET /execute/{id}
     new GetPrepareApi(
