@@ -42,23 +42,10 @@ export class LogSub extends Construct {
         newRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                's3:ListBucket',
-                's3:GetObject',
-                's3:PutObject',
-                's3:HeadObject',
-                's3:DeleteObject',
-            ],
-            resources: [
-                `arn:${Aws.PARTITION}:s3:::*`,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
                 'logs:CreateLogGroup',
                 'logs:CreateLogStream',
                 'logs:PutLogEvents',
+                'dynamodb:BatchWriteItem',
             ],
             resources: ['*'],
         }));
