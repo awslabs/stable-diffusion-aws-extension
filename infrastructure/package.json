@@ -45,8 +45,8 @@
   },
   "dependencies": {
     "@aws-cdk/aws-lambda-python-alpha": "2.132.0-alpha.0",
-    "@aws-sdk/client-dynamodb": "^3.564.0",
-    "@aws-sdk/client-iam": "^3.564.0",
+    "@aws-sdk/client-dynamodb": "^3.569.0",
+    "@aws-sdk/client-iam": "^3.569.0",
     "@aws-sdk/client-kms": "^3.564.0",
     "@aws-sdk/client-s3": "^3.564.0",
     "@aws-sdk/client-sns": "^3.564.0",

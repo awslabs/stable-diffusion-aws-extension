@@ -1,15 +1,16 @@
-import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
+import { Aws, Duration } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class LogSub extends Construct {
+    public readonly lambda: NodejsFunction;
 
     constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        new NodejsFunction(scope, 'LogSubHandler', {
+        this.lambda = new NodejsFunction(scope, 'LogSubHandler', {
             runtime: Runtime.NODEJS_18_X,
             handler: 'handler',
             entry: 'src/shared/log-sub-on-event.ts',
@@ -20,7 +21,6 @@ export class LogSub extends Construct {
             timeout: Duration.seconds(900),
             role: this.iamRole(),
             memorySize: 3070,
-            tracing: aws_lambda.Tracing.ACTIVE,
         });
 
     }
