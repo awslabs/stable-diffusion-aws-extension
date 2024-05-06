@@ -296,6 +296,14 @@ class Api:
             headers=headers
         )
 
+    def get_execute_job_logs(self, prompt_id: str, headers=None):
+        return self.req(
+            "GET",
+            f"executes/{prompt_id}/logs",
+            operation_id='GetExecuteLogs',
+            headers=headers
+        )
+
     def get_inference_job(self, job_id: str, headers=None):
         return self.req(
             "GET",
