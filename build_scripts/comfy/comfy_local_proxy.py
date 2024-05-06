@@ -190,7 +190,7 @@ def execute_proxy(func):
         if disable_aws_proxy == 'True':
             logger.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
-        logger.info("enable aws proxy, use aws")
+        logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
         executor = args[0]
         server_use = executor.server
         prompt = args[1]
@@ -220,7 +220,7 @@ def execute_proxy(func):
         def check_if_sync_is_already(url):
             get_response = send_get_request(url)
             prepare_response = get_response.json()
-            if (prepare_response['status_code'] == 200 and 'data' in prepare_response and prepare_response['data']
+            if (prepare_response['statusCode'] == 200 and 'data' in prepare_response and prepare_response['data']
                     and prepare_response['data']['prepareSuccess']):
                 logger.info(f"sync available")
                 return True
@@ -277,11 +277,19 @@ def execute_proxy(func):
                                     logger.error("there is no response from execute thread result !!!!!!!!")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
+                                    logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
                                     time.sleep(2)
                                     i = i - 1
                                 else:
-                                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                                    save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                    if ('temp_files' in images_response.json()['data'] and len(
+                                            images_response.json()['data']['temp_files']) > 0) or ((
+                                            'output_files' in images_response.json()['data'] and len(
+                                            images_response.json()['data']['output_files']) > 0)):
+                                        save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                                        save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                    else:
+                                        send_error_msg(executor, prompt_id,
+                                                       "There may be some errors when executing the prompt on the cloud. Please check the SageMaker logs.")
                                     logger.debug(images_response.json())
                                     save_already = True
                                     break

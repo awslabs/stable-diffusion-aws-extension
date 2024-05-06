@@ -277,7 +277,7 @@ async def execute_proxy(request):
         executing = False
         return ok(response_body)
     except Exception as e:
-        logger.info("exception occurred", e)
+        logger.info(f"exception occurred {e}")
         resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                 "message": f"exception occurred {e}"}
         executing = False
