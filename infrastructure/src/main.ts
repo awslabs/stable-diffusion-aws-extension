@@ -102,8 +102,6 @@ export class Middleware extends Stack {
       },
     );
 
-    const logSub = new LogSub(this, 'LogSubProvider');
-
     const s3Bucket = <Bucket>Bucket.fromBucketName(
       this,
       'aigc-bucket',
@@ -111,6 +109,8 @@ export class Middleware extends Stack {
     );
 
     const ddbTables = new Database(this, 'sd-ddb');
+
+    const logSub = new LogSub(this, 'LogSubProvider');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
