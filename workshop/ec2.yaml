@@ -60,6 +60,7 @@ Mappings:
 Resources:
   WebUiVPC:
     Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
@@ -67,6 +68,7 @@ Resources:
 
   WebUiSubnet:
     Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref WebUiVPC
       CidrBlock: 10.0.1.0/24
@@ -74,6 +76,7 @@ Resources:
 
   WebUiInstanceRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -88,6 +91,7 @@ Resources:
 
   WebUiInstanceProfile:
     Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Delete
     Properties:
       Path: "/"
       Roles:
@@ -95,6 +99,7 @@ Resources:
 
   WebUiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref WebUiVPC
       GroupName: !Sub ${AWS::StackName}-sg
@@ -115,20 +120,24 @@ Resources:
 
   WebUiInternetGateway:
     Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
 
   WebUiVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref WebUiVPC
       InternetGatewayId: !Ref WebUiInternetGateway
 
   WebUiRouteTable:
     Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref WebUiVPC
 
   WebUiRoute:
     Type: AWS::EC2::Route
+    DeletionPolicy: Delete
     Properties:
       RouteTableId: !Ref WebUiRouteTable
       DestinationCidrBlock: 0.0.0.0/0
@@ -136,12 +145,14 @@ Resources:
 
   WebUiSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
     Properties:
       SubnetId: !Ref WebUiSubnet
       RouteTableId: !Ref WebUiRouteTable
 
   WebUiEC2Instance:
     Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref WebUiInstanceProfile
@@ -227,8 +238,10 @@ Resources:
 
   WebUiEIP:
     Type: AWS::EC2::EIP
+    DeletionPolicy: Delete
   WebUiEIPAssociation:
     Type: AWS::EC2::EIPAssociation
+    DeletionPolicy: Delete
     Properties:
       AllocationId: !GetAtt WebUiEIP.AllocationId
       InstanceId: !Ref WebUiEC2Instance

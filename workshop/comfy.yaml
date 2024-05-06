@@ -11,19 +11,19 @@ Parameters:
   ApiGatewayUrl:
     Description: API URL
     Type: String
-    MinLength: 1
+    MinLength: "1"
   ApiGatewayUrlToken:
     Description: API Key
     Type: String
-    MinLength: 1
+    MinLength: "1"
   BucketName:
     Description: Bucket Name
     Type: String
-    MinLength: 1
+    MinLength: "1"
   EndpointName:
     Description: Endpoint Name
     Type: String
-    MinLength: 1
+    MinLength: "1"
   keyPairName:
     Description: Name of the key pair to use for the EC2 instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -54,6 +54,7 @@ Mappings:
 Resources:
   ComfyVPC:
     Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
@@ -61,6 +62,7 @@ Resources:
 
   ComfySubnet:
     Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       CidrBlock: 10.0.1.0/24
@@ -68,6 +70,7 @@ Resources:
 
   ComfyInstanceRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -88,13 +91,15 @@ Resources:
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Delete
     Properties:
       Path: "/"
       Roles:
-        - Ref: ComfyInstanceRole
+        - !Ref ComfyInstanceRole
 
   ComfySecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       GroupName: !Sub ${AWS::StackName}-sg
@@ -115,20 +120,24 @@ Resources:
 
   ComfyInternetGateway:
     Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
 
   ComfyVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       InternetGatewayId: !Ref ComfyInternetGateway
 
   ComfyRouteTable:
     Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
 
   ComfyRoute:
     Type: AWS::EC2::Route
+    DeletionPolicy: Delete
     Properties:
       RouteTableId: !Ref ComfyRouteTable
       DestinationCidrBlock: 0.0.0.0/0
@@ -136,12 +145,14 @@ Resources:
 
   ComfySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
     Properties:
       SubnetId: !Ref ComfySubnet
       RouteTableId: !Ref ComfyRouteTable
 
   ComfyEC2Instance:
     Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -262,8 +273,10 @@ Resources:
 
   ComfyEIP:
     Type: AWS::EC2::EIP
+    DeletionPolicy: Delete
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
+    DeletionPolicy: Delete
     Properties:
       AllocationId: !GetAtt ComfyEIP.AllocationId
       InstanceId: !Ref ComfyEC2Instance
