@@ -80,7 +80,6 @@ async function createAndCheckResources() {
 
   await createGlobalSecondaryIndex('SDInferenceJobTable', 'taskType', 'createTime');
   await createGlobalSecondaryIndex('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
-  await createGlobalSecondaryIndex('EsdLogSubTable', 'message_type', 'timestamp', 'N');
 }
 
 async function waitTableReady(tableName: string) {
@@ -261,16 +260,6 @@ async function createTables() {
       },
       sortKey: {
         name: 'request_time',
-        type: AttributeType.NUMBER,
-      },
-    },
-    EsdLogSubTable: {
-      partitionKey: {
-        name: 'id',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'timestamp',
         type: AttributeType.NUMBER,
       },
     },
