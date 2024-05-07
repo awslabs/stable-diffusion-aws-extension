@@ -5,8 +5,9 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-import config as config
 import pytest
+
+import config as config
 from utils.api import Api
 from utils.helper import endpoints_wait_for_in_service
 
