@@ -273,14 +273,19 @@ def execute_proxy(func):
                                     logger.info("no images found already ,waiting sagemaker thread result .....")
                                     time.sleep(3)
                                     i = i - 2
-                                elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                    logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
-                                    # send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
+                                elif response['data']['status'] == 'failed':
+                                    logger.error(f"there is no response on sagemaker from execute thread result !!!!!!!! ")
+                                    # send_error_msg(executor, prompt_id,
+                                    #                f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. error info: {response['data']['message']}")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
                                     time.sleep(2)
                                     i = i - 1
+                                elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                                    logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
+                                    # send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
+                                    break
                                 else:
                                     if ('temp_files' in images_response.json()['data'] and len(
                                             images_response.json()['data']['temp_files']) > 0) or ((
@@ -340,14 +345,20 @@ def execute_proxy(func):
                             logger.info(f"{i} no images found already ,waiting sagemaker result .....")
                             i = i - 2
                             time.sleep(3)
-                        elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.info(f"{i} there is no response from sync executes {response}")
-                            send_error_msg(executor, prompt_id,f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
+                        elif response['data']['status'] == 'failed':
+                            logger.error(
+                                f"there is no response on sagemaker from execute result !!!!!!!! ")
+                            send_error_msg(executor, prompt_id,
+                                           f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
                             time.sleep(3)
+                        elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                            logger.info(f"{i} there is no response from sync executes {response}")
+                            send_error_msg(executor, prompt_id,f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
+                            break
                         elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
                             if ('temp_files' in images_response.json()['data'] and len(images_response.json()['data']['temp_files']) > 0) or (('output_files' in images_response.json()['data'] and len(images_response.json()['data']['output_files']) > 0)):
                                 save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
