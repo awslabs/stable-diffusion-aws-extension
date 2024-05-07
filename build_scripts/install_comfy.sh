@@ -59,10 +59,9 @@ if [ "$ON_DOCKER" == "true" ]; then
   pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   pip install open-clip-torch==2.20.0
 
-  pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
-  pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
-
-  pip install -r /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
+  pip install -r custom_nodes/ComfyUI-Manager/requirements.txt
+  pip install -r custom_nodes/comfyui-reactor-node/requirements.txt
+  pip install -r custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
 else
   #  ec2
   /venv/bin/python3 -m pip install --upgrade pip
@@ -81,8 +80,7 @@ else
   /venv/bin/python3 -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   /venv/bin/python3 -m pip install open-clip-torch==2.20.0
 
-  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
-  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
-
-  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
+  /venv/bin/python3 -s -m pip install -r custom_nodes/ComfyUI-Manager/requirements.txt
+  /venv/bin/python3 -s -m pip install -r custom_nodes/comfyui-reactor-node/requirements.txt
+  /venv/bin/python3 -s -m pip install -r custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
 fi
