@@ -296,7 +296,7 @@ def execute_proxy(func):
                         logger.debug(execute_resp.json())
                     elif future == msg_future:
                         msg_response = future.result()
-                        logger.info(msg_response.json())
+                        logger.info(f"get syc msg: {msg_response.json()}")
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 logger.error("there is no response from sync msg by thread ")
