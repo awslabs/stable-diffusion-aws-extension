@@ -37,8 +37,9 @@ export async function syncEnv() {
             });
             const result = await response.json();
             if (response.ok) {
+
                 // 如果请求成功，显示成功消息
-                alert('Sync completed successfully!');
+                alert('Sync local to s3 completed ! Please wait for a moment then execute your prompt！');
             } else {
                 // 如果请求失败，显示错误消息
                 alert('Sync failed. Please try again later.');

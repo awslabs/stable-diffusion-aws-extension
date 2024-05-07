@@ -288,6 +288,8 @@ def execute_proxy(func):
                                     logger.error(f"there is no response on sagemaker from execute thread result !!!!!!!! ")
                                     # send_error_msg(executor, prompt_id,
                                     #                f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. error info: {response['data']['message']}")
+                                    # no need to send msg anymore
+                                    already_synced = True
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
