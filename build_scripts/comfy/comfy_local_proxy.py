@@ -274,7 +274,7 @@ def execute_proxy(func):
                                     time.sleep(3)
                                     i = i - 2
                                 elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                    logger.error("there is no response from execute thread result !!!!!!!!")
+                                    logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
                                     send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
@@ -341,7 +341,7 @@ def execute_proxy(func):
                             i = i - 2
                             time.sleep(3)
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.info(f"{i} there is no response from sync executes")
+                            logger.info(f"{i} there is no response from sync executes {response}")
                             send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on the cloud. No images or videos generated.")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
