@@ -6,13 +6,11 @@ import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 
 export interface SagemakerEndpointEventsProps {
   endpointDeploymentTable: Table;
   multiUserTable: Table;
   commonLayer: LayerVersion;
-  logSubFn: NodejsFunction;
 }
 
 export class SagemakerEndpointEvents {
@@ -21,7 +19,6 @@ export class SagemakerEndpointEvents {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly logSubFn: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: SagemakerEndpointEventsProps) {
     this.scope = scope;
@@ -29,7 +26,6 @@ export class SagemakerEndpointEvents {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
-    this.logSubFn = props.logSubFn;
 
     this.createEndpointEventBridge();
   }
@@ -105,9 +101,6 @@ export class SagemakerEndpointEvents {
       memorySize: 3070,
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
-      environment: {
-        LOG_SUB_FN: this.logSubFn.functionArn,
-      }
     });
 
     const rule = new Rule(this.scope, `${this.baseId}-rule`, {

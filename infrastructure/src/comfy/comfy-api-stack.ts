@@ -21,6 +21,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import {GetExecuteLogsApi, GetExecuteLogsProps} from "../api/comfy/get_execute_logs";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -171,11 +172,21 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'GET',
         router: executeGetRouter,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
       },
     );
+
+      // GET /executes/{id}/logs
+      new GetExecuteLogsApi(
+          scope, 'GetExecuteLogs', <GetExecuteLogsProps>{
+              httpMethod: 'GET',
+              router: executeGetRouter,
+              s3Bucket: props.s3Bucket,
+              executeTable: this.executeTable,
+              commonLayer: this.layer,
+          },
+      );
 
     // GET /execute/{id}
     new GetPrepareApi(

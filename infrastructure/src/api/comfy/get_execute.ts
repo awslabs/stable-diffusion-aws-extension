@@ -20,7 +20,6 @@ export interface GetExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
 }
@@ -34,7 +33,6 @@ export class GetExecuteApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: s3.Bucket;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: GetExecuteApiProps) {
@@ -43,7 +41,6 @@ export class GetExecuteApi {
     this.baseId = id;
     this.router = props.router;
     this.s3Bucket = props.s3Bucket;
-    this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
 
@@ -152,7 +149,6 @@ export class GetExecuteApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
       },
       layers: [this.layer],
     });
@@ -172,7 +168,6 @@ export class GetExecuteApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         this.executeTable.tableArn,
       ],
     }));

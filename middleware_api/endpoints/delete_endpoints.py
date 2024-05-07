@@ -8,6 +8,7 @@ from aws_lambda_powertools import Tracer
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import NotFoundException
 from common.response import no_content
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus
@@ -49,7 +50,9 @@ def handler(raw_event, ctx):
                 ep = get_endpoint_by_name(endpoint_name)
                 delete_endpoint(ep)
             except Exception as e:
-                logger.error(e, exc_info=True)
+                if isinstance(e, NotFoundException):
+                    continue
+                raise e
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:

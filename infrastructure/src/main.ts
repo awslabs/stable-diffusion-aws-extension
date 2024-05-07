@@ -25,7 +25,6 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
-import { LogSub } from './shared/log-sub';
 
 const app = new App();
 
@@ -109,8 +108,6 @@ export class Middleware extends Stack {
     );
 
     const ddbTables = new Database(this, 'sd-ddb');
-
-    const logSub = new LogSub(this, 'LogSubProvider');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
@@ -241,7 +238,6 @@ export class Middleware extends Stack {
       instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
       commonLayer: commonLayers.commonLayer,
       queue: sqsStack.queue,
-      logSubFn: logSub.lambda,
     },
     );
 

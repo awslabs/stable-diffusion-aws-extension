@@ -38,7 +38,6 @@ cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
-prompt_id = {}
 
 
 class Api:
@@ -65,7 +64,7 @@ class ComfyApp:
         self.process = None
         self.busy = False
         self.cwd = '/home/ubuntu/ComfyUI'
-        self.name = f"{endpoint_name}-{endpoint_instance_id}-gpu{device_id}"
+        self.name = f"{endpoint_instance_id}-gpus-{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
 
@@ -73,9 +72,14 @@ class ComfyApp:
         with pipe:
             for line in iter(pipe.readline, ''):
                 if line.strip():
-                    global prompt_id
-                    if self.device_id in prompt_id:
-                        sys.stdout.write(f"{self.name}-execute-{prompt_id[self.device_id]}: {line}")
+                    file = f"/tmp/gpu{self.device_id}"
+                    if os.path.exists(file):
+                        with open(file, "r") as file:
+                            cur_prompt_id = file.read().strip()
+                            if cur_prompt_id:
+                                sys.stdout.write(f"{self.name}-prompt-{cur_prompt_id}: {line}")
+                            else:
+                                sys.stdout.write(f"{self.name}: {line}")
                     else:
                         sys.stdout.write(f"{self.name}: {line}")
 
@@ -116,17 +120,23 @@ class ComfyApp:
 
     def set_prompt(self, request_obj=None):
         if request_obj and 'prompt_id' in request_obj:
-            global prompt_id
-            prompt_id[self.device_id] = request_obj['prompt_id']
-            logger.info(f"set_prompt {prompt_id[self.device_id]} on device {self.device_id}")
-            logger.info(f"prompt_id is {prompt_id}")
+            prompt_id = request_obj['prompt_id']
+        else:
+            prompt_id = ""
+
+        logger.info(f"set_prompt '{prompt_id}' on device {self.device_id}")
+        with open(f"/tmp/gpu{self.device_id}", "w") as f:
+            f.write(str(prompt_id))
 
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
         record_metric(comfy_app)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
+
         comfy_app.busy = True
+        comfy_app.set_prompt(request_obj)
+
         request_obj['port'] = comfy_app.port
         request_obj['out_path'] = comfy_app.device_id
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
@@ -135,7 +145,10 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
                 response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
         else:
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+
         comfy_app.busy = False
+        comfy_app.set_prompt()
+
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
@@ -145,6 +158,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
     finally:
         comfy_app.busy = False
+        comfy_app.set_prompt()
 
 
 async def invocations(request: Request):
@@ -161,7 +175,6 @@ async def invocations(request: Request):
                 comfy_app = check_available_app(True)
                 if comfy_app is None:
                     raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
-                comfy_app.set_prompt(request_obj)
                 tasks.append(send_request(request_obj, comfy_app, True))
             logger.info("all tasks completed send, waiting result")
             results = await asyncio.gather(*tasks)
@@ -175,7 +188,6 @@ async def invocations(request: Request):
                 comfy_app = check_available_app(True)
                 if comfy_app is None:
                     raise HTTPException(status_code=500, detail=f"COMFY service not available for single reqs")
-                comfy_app.set_prompt(request_obj)
                 response = await send_request(request_obj, comfy_app, False)
                 result.append(response)
             logger.info(f"Finished invocations result: {result}")

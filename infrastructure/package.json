@@ -26,7 +26,7 @@
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.569.0",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.12.8",
+    "@types/node": "^20.12.10",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "esbuild": "^0.20.2",
@@ -37,7 +37,7 @@
     "jest": "^29.7.0",
     "jest-junit": "^16.0.0",
     "npm-check-updates": "^16.14.20",
-    "projen": "^0.81.5",
+    "projen": "^0.81.7",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
@@ -49,12 +49,15 @@
     "@aws-sdk/client-kms": "^3.569.0",
     "@aws-sdk/client-s3": "^3.569.0",
     "@aws-sdk/client-sns": "^3.569.0",
+    "@eslint/js": "^9.2.0",
     "@types/aws-lambda": "^8.10.137",
     "aws-cdk": "^2.140.0",
     "aws-cdk-lib": "^2.140.0",
-    "aws-sdk": "^2.1613.0",
+    "aws-sdk": "^2.1614.0",
     "cdk-bootstrapless-synthesizer": "^2.3.2",
-    "constructs": "^10.3.0"
+    "constructs": "^10.3.0",
+    "globals": "^15.1.0",
+    "typescript-eslint": "^7.8.0"
   },
   "license": "Apache-2.0",
   "version": "0.0.0",
