@@ -33,6 +33,13 @@ echo "build comfy..."
 
 cd ComfyUI || exit 1
 
+git clone https://github.com/ltdrdata/ComfyUI-Manager.git custom_nodes/ComfyUI-Manager
+git clone https://github.com/Gourieff/comfyui-reactor-node.git custom_nodes/comfyui-reactor-node
+git clone https://github.com/twri/sdxl_prompt_styler.git  custom_nodes/sdxl_prompt_styler
+git clone https://github.com/AIGODLIKE/AIGODLIKE-ComfyUI-Translation.git custom_nodes/AIGODLIKE-ComfyUI-Translation
+git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git custom_nodes/ComfyUI-VideoHelperSuite
+git clone https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git custom_nodes/ComfyUI-AnimateDiff-Evolved
+
 if [ "$ON_DOCKER" == "true" ]; then
   python3 -m venv venv
   source venv/bin/activate
@@ -45,11 +52,17 @@ if [ "$ON_DOCKER" == "true" ]; then
   pip install watchdog
   pip install python-dotenv
   pip install httpx
+  pip install onnxruntime
 
   pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
   pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
   pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   pip install open-clip-torch==2.20.0
+
+  pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
+  pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
+
+  pip install -r /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
 else
   #  ec2
   /venv/bin/python3 -m pip install --upgrade pip
@@ -61,8 +74,15 @@ else
   /venv/bin/python3 -m pip install watchdog
   /venv/bin/python3 -m pip install python-dotenv
   /venv/bin/python3 -m pip install httpx
+  /venv/bin/python3 -s -m pip install onnxruntime
+
   /venv/bin/python3 -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
   /venv/bin/python3 -m pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
   /venv/bin/python3 -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   /venv/bin/python3 -m pip install open-clip-torch==2.20.0
+
+  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-Manager/requirements.txt
+  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/comfyui-reactor-node/requirements.txt
+
+  /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
 fi
