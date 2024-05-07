@@ -43,7 +43,7 @@ logger.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', DISABLE_AWS_PROXY, 'DISABLE_AUTO_SYNC']
+            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', 'THREAD_MAX_WAIT_TIME', DISABLE_AWS_PROXY, 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -67,8 +67,9 @@ comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
 comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
-max_wait_time = os.environ.get('MAX_WAIT_TIME', 300)
-msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 300)
+thread_max_wait_time = os.environ.get('THREAD_MAX_WAIT_TIME', 300)
+max_wait_time = os.environ.get('MAX_WAIT_TIME', 86400)
+msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 86400)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -262,10 +263,20 @@ def execute_proxy(func):
                 global sync_msg_list
                 sync_msg_list = []
                 for future in done:
-                    if future == execute_future:
+                    if future == msg_future:
+                        msg_response = future.result()
+                        logger.info(f"get syc msg: {msg_response.json()}")
+                        if msg_response.status_code == 200:
+                            if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                                logger.error("there is no response from sync msg by thread ")
+                                time.sleep(1)
+                            else:
+                                logger.debug(msg_response.json())
+                                already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
+                    elif future == execute_future:
                         execute_resp = future.result()
                         if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
-                            i = max_wait_time
+                            i = thread_max_wait_time
                             while i > 0:
                                 images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                                 response = images_response.json()
@@ -300,16 +311,6 @@ def execute_proxy(func):
                                     save_already = True
                                     break
                         logger.debug(execute_resp.json())
-                    elif future == msg_future:
-                        msg_response = future.result()
-                        logger.info(f"get syc msg: {msg_response.json()}")
-                        if msg_response.status_code == 200:
-                            if 'data' not in msg_response.json() or not msg_response.json().get("data"):
-                                logger.error("there is no response from sync msg by thread ")
-                                time.sleep(1)
-                            else:
-                                logger.debug(msg_response.json())
-                                already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
 
                 m = msg_max_wait_time
                 while not already_synced:
