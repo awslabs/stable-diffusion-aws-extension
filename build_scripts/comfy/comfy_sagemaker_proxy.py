@@ -141,14 +141,13 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
                     tar_filepath = os.path.join(local_path, filename)
-                    extract_path = os.path.splitext(os.path.splitext(tar_filepath)[0])[0]
-                    os.makedirs(extract_path, exist_ok=True)
-                    logger.info(f'Extracting extract_path is {extract_path}')
+                    # extract_path = os.path.splitext(os.path.splitext(tar_filepath)[0])[0]
+                    # os.makedirs(extract_path, exist_ok=True)
+                    # logger.info(f'Extracting extract_path is {extract_path}')
 
-                    tar_filepath = os.path.join(local_path, filename)
                     with tarfile.open(tar_filepath, "r:gz") as tar:
                         for member in tar.getmembers():
-                            tar.extract(member, path=extract_path)
+                            tar.extract(member, path=local_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
         return True
