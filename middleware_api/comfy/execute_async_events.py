@@ -45,6 +45,7 @@ def handler(event, context):
 
     for item in results:
         result = InferenceResult(**item)
+        logger.info(result)
 
         resp = inference_table.get_item(Key={"prompt_id": result.prompt_id})
         if 'Item' not in resp:

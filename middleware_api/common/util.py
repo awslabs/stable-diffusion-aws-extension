@@ -299,15 +299,15 @@ def s3_scan_files(job: InferenceResult):
     if not job.output_path and not job.temp_path:
         job.status = "failed"
 
-    if not job.status == 'fail':
+    if job.status == 'fail':
         job.status = "failed"
 
-    if job.output_files:
+    if job.output_path:
         job.output_files = s3_scan_files_in_patch(job.output_path)
     else:
         job.output_files = []
 
-    if job.temp_files:
+    if job.temp_path:
         job.temp_files = s3_scan_files_in_patch(job.temp_path)
     else:
         job.temp_files = []
