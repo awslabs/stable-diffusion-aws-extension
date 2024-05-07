@@ -344,8 +344,6 @@ def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
     if not prefix or not keys:
         return []
 
-    prefix = prefix.replace(f"s3://{bucket_name}/", '')
-
     new_list = []
 
     prefix = prefix.replace(f"s3://{bucket_name}/", '')
