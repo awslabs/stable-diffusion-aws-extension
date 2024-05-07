@@ -216,6 +216,11 @@ Resources:
           sudo /venv/bin/python3 -s -m pip install onnxruntime
           sudo git clone https://github.com/twri/sdxl_prompt_styler.git  /ComfyUI/custom_nodes/sdxl_prompt_styler
           sudo git clone https://github.com/AIGODLIKE/AIGODLIKE-ComfyUI-Translation.git  /ComfyUI/custom_nodes/AIGODLIKE-ComfyUI-Translation
+          sudo git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite
+          sudo /venv/bin/python3 -s -m pip install -r /ComfyUI/custom_nodes/ComfyUI-VideoHelperSuite/requirements.txt
+          sudo git clone https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git /ComfyUI/custom_nodes/ComfyUI-AnimateDiff-Evolved
+          sudo wget -O /ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors  https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors 
+          sudo wget -O /ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
           sudo chmod -R 777 /ComfyUI
           
           cat > comfy.service <<EOF
