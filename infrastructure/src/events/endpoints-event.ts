@@ -68,6 +68,9 @@ export class SagemakerEndpointEvents {
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',
         'iam:CreateServiceLinkedRole',
+        's3:Get*',
+        's3:List*',
+        's3:DeleteObject',
       ],
       resources: ['*'],
     }));
