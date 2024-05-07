@@ -82,17 +82,20 @@ export class GetExecuteLogsApi {
                         properties: {
                             results: {
                                 type : JsonSchemaType.ARRAY,
-                                properties: {
-                                    timestamp: {
-                                        type: JsonSchemaType.STRING,
-                                    },
-                                    message: {
-                                        type: JsonSchemaType.STRING,
-                                    },
-                                    logStream: {
-                                        type: JsonSchemaType.STRING,
+                                items: {
+                                    type: JsonSchemaType.OBJECT,
+                                    properties: {
+                                        timestamp: {
+                                            type: JsonSchemaType.STRING,
+                                        },
+                                        message: {
+                                            type: JsonSchemaType.STRING,
+                                        },
+                                        logStream: {
+                                            type: JsonSchemaType.STRING,
+                                        }
                                     }
-                                }
+                                },
                             }
                         }
                     },
