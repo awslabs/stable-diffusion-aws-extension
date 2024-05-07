@@ -58,12 +58,22 @@ def handler(event, context):
 
         logger.info(result)
 
-        update_inference_job_table(prompt_id=result.prompt_id, key="status", value=result.status)
-        update_inference_job_table(prompt_id=result.prompt_id, key="output_path", value=result.output_path)
-        update_inference_job_table(prompt_id=result.prompt_id, key="output_files", value=result.output_files)
-        update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
-        update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
-        update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
+        if result.message:
+            update_execute_job_table(prompt_id=result.prompt_id, key="message", value=result.message)
+
+        if result.device_id:
+            update_execute_job_table(prompt_id=result.prompt_id, key="device_id", value=result.device_id)
+
+        if result.endpoint_instance_id:
+            update_execute_job_table(prompt_id=result.prompt_id, key="endpoint_instance_id",
+                                     value=result.endpoint_instance_id)
+
+        update_execute_job_table(prompt_id=result.prompt_id, key="status", value=result.status)
+        update_execute_job_table(prompt_id=result.prompt_id, key="output_path", value=result.output_path)
+        update_execute_job_table(prompt_id=result.prompt_id, key="output_files", value=result.output_files)
+        update_execute_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
+        update_execute_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
+        update_execute_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
         if message["invocationStatus"] != "Completed":
             record_count_metrics(metric_name='InferenceFailed', service='Comfy')
@@ -75,7 +85,7 @@ def handler(event, context):
     return {}
 
 
-def update_inference_job_table(prompt_id, key, value):
+def update_execute_job_table(prompt_id, key, value):
     logger.info(f"Update inference job table with prompt_id: {prompt_id}, key: {key}, value: {value}")
 
     inference_table.update_item(
