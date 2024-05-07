@@ -72,3 +72,12 @@ class TestComfyApiBase:
         headers = {'x-api-key': config.api_key}
         resp = self.api.delete_executes(headers)
         assert resp.status_code == 400, resp.dumps()
+
+    def test_13_get_execute_job_logs_without_key(self):
+        resp = self.api.get_execute_job_logs(prompt_id="prompt_id")
+        assert resp.status_code == 403, resp.dumps()
+
+    def test_14_get_execute_job_logs_with_bad_key(self):
+        headers = {'x-api-key': "bad_key"}
+        resp = self.api.get_execute_job_logs(headers=headers, prompt_id="prompt_id")
+        assert resp.status_code == 403, resp.dumps()

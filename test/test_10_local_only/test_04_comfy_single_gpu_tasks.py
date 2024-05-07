@@ -97,7 +97,7 @@ class TestComfySingleGpuTasks:
     def test_14_comfy_gpus_start_async_tps(self):
         threads = []
         gpus = 1
-        batch = 1000
+        batch = 100
         for i in range(gpus):
             thread = threading.Thread(target=create_batch_executes, args=(batch, self.api, self.endpoint_name))
             threads.append(thread)

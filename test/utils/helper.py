@@ -238,12 +238,14 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
                 init_status = status
 
             if status == 'success':
+                resp = api.get_execute_job_logs(headers=headers, prompt_id=prompt_id)
+                assert resp.status_code == 200, resp.dumps()
                 break
             if status == InferenceStatus.FAILED.value:
                 logger.error(resp.json())
                 raise Exception(f"{n} {endpoint_name} {prompt_id} failed.")
         else:
-            raise Exception(f"{n}{endpoint_name} {prompt_id} timed out after 5 minutes.")
+            raise Exception(f"{n} {endpoint_name} {prompt_id} timed out after 5 minutes.")
 
 
 def get_endpoint_comfy_async(api):
