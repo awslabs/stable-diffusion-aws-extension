@@ -106,8 +106,9 @@ async def prepare_comfy_env(sync_item: dict):
             logger.info("sync_script")
             # sync_script.startswith('s5cmd') 不允许
             try:
-                if sync_script and (sync_script.startswith("python -m pip") or sync_script.startswith("pip install") or sync_script.startswith("apt-get")
-                                    or sync_script.startswith("os.environ")):
+                if sync_script and (sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
+                                    or sync_script.startswith("pip install") or sync_script.startswith("apt-get")
+                                    or sync_script.startswith("os.environ") or sync_script.startswith("ls")):
                     os.system(sync_script)
             except Exception as e:
                 logger.error(f"Exception while execute sync_scripts : {sync_script}")
@@ -146,7 +147,8 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
 
                     tar_filepath = os.path.join(local_path, filename)
                     with tarfile.open(tar_filepath, "r:gz") as tar:
-                        tar.extractall(path=extract_path)
+                        for member in tar.getmembers():
+                            tar.extract(member, path=extract_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
         return True
