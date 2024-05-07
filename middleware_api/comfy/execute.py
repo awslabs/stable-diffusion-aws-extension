@@ -136,6 +136,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         batch_id=''
     )
 
+    logger.info(f"inference job: {inference_job.__dict__}")
+
     if event.multi_async and ep.endpoint_type == 'Async':
         save_item = inference_job.__dict__
         sen_sqs_msg({"event": payload, "save_item": save_item, "inference_id": inference_id}, endpoint_name)
