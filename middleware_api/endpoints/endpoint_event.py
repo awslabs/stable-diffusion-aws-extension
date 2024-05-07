@@ -25,8 +25,12 @@ autoscaling_client = boto3.client('application-autoscaling')
 cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
-
+esd_version = os.environ.get("ESD_VERSION")
 cool_down_period = 15 * 60  # 15 minutes
+
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(s3_bucket_name)
 
 
 # lambda: handle sagemaker events
@@ -72,6 +76,7 @@ def handler(event, context):
                 update_endpoint_field(endpoint, 'current_instance_count', instance_count)
         else:
             delete_ep_model_config(endpoint_name)
+            bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_name}").delete()
             ddb_service.delete_item(sagemaker_endpoint_table,
                                     keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
             response = logs.delete_log_group(
