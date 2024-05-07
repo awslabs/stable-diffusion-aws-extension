@@ -80,33 +80,21 @@ export class GetExecuteLogsApi {
                     data: {
                         type: JsonSchemaType.OBJECT,
                         properties: {
-                            message_type: {
-                                type: JsonSchemaType.STRING,
-                            },
-                            message: {
-                                type: JsonSchemaType.STRING,
-                            },
-                            logGroup: {
-                                type: JsonSchemaType.STRING,
-                            },
-                            id: {
-                                type: JsonSchemaType.STRING,
-                            },
-                            logStream: {
-                                type: JsonSchemaType.STRING,
-                            },
-                            timestamp: {
-                                type: JsonSchemaType.STRING,
-                            },
-                        },
-                        required: [
-                            'message_type',
-                            'message',
-                            'logGroup',
-                            'id',
-                            'logStream',
-                            'timestamp',
-                        ],
+                            results: {
+                                type : JsonSchemaType.ARRAY,
+                                properties: {
+                                    timestamp: {
+                                        type: JsonSchemaType.STRING,
+                                    },
+                                    message: {
+                                        type: JsonSchemaType.STRING,
+                                    },
+                                    logStream: {
+                                        type: JsonSchemaType.STRING,
+                                    }
+                                }
+                            }
+                        }
                     },
                 },
                 required: [

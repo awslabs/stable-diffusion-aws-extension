@@ -67,7 +67,14 @@ def handler(event, ctx):
                 break
             time.sleep(1)
 
-        results = query_status['results']
+        results = []
+        for result in query_status['results']:
+            item = {field['field']: field['value'] for field in result}
+            results.append({
+                'timestamp': item["@timestamp"],
+                'message': item["@message"],
+                'logStream': item["@logStream"],
+            })
 
         return ok(data={'results': results}, decimal=True)
     except Exception as e:
