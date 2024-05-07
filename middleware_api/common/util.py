@@ -296,8 +296,21 @@ def split_s3_path(s3_path):
 
 @tracer.capture_method
 def s3_scan_files(job: InferenceResult):
-    job.output_files = s3_scan_files_in_patch(job.output_path)
-    job.temp_files = s3_scan_files_in_patch(job.temp_path)
+    if not job.output_path and not job.temp_path:
+        job.status = "failed"
+
+    if not job.status == 'fail':
+        job.status = "failed"
+
+    if job.output_files:
+        job.output_files = s3_scan_files_in_patch(job.output_path)
+    else:
+        job.output_files = []
+
+    if job.temp_files:
+        job.temp_files = s3_scan_files_in_patch(job.temp_path)
+    else:
+        job.temp_files = []
 
     return job
 
