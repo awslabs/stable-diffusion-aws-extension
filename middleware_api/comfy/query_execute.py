@@ -69,6 +69,7 @@ def handler(event, ctx):
                 'output_files': job.output_files,
                 'temp_path': job.temp_path,
                 'temp_files': job.temp_files,
+                'message': job.message,
             })
 
         data = {
