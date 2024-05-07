@@ -400,7 +400,7 @@ async def restart(self):
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
-        return {"message": "no need to reboot by os"}
+        return ok({"message": "no need to reboot by os"})
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")
