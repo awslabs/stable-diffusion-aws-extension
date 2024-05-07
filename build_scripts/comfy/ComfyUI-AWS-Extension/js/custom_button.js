@@ -36,7 +36,6 @@ export async function syncEnv() {
                 body: JSON.stringify(target)
             });
             const result = await response.json();
-            console.log(result)
             if (response.ok) {
                 // 如果请求成功，显示成功消息
                 alert('Sync completed successfully!');
@@ -56,7 +55,6 @@ export async function syncEnv() {
 
 export async function changeOnAWS(disableAWS) {
     var target
-    console.log(disableAWS)
     if(disableAWS === false) {
         if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
             try {
@@ -68,10 +66,9 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
-            return true;
+            return false;
         }
-    }
-    else {
+    } else {
         if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
           try {
             target = {'DISABLE_AWS_PROXY': "False"}
@@ -81,13 +78,12 @@ export async function changeOnAWS(disableAWS) {
               body: JSON.stringify(target)
             });
           } catch (exception) {
-
           }
           syncEnv()
           return true;
         }
     }
-    return false;
+    return disableAWS;
 }
 
 function createButton(text, onClick) {
@@ -135,10 +131,13 @@ function handleButtonClick() {
     // Reboot system
 }
 
-function handleCheckboxChange(event) {
+async function handleCheckboxChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
     changeOnAWS(event.target.checked);
+    const response = await api.fetchApi("/get_env");
+    const data = await response.json();
+    event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
 function handleRadioChange(event) {
@@ -163,7 +162,9 @@ const customButton = {
         // radioContainer.appendChild(radioOption2);
         // app.ui.menuContainer.appendChild(radioContainer);
 
-        const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', false, handleCheckboxChange);
+        const response = await api.fetchApi("/get_env");
+        const data = await response.json();
+        const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
         // const checkboxOption2 = createCheckboxOption('Local', 'options', false, handleCheckboxChange);
         const checkboxContainer = document.createElement('div');
         checkboxContainer.style.display = 'flex';

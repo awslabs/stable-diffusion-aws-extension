@@ -59,7 +59,8 @@ def ok(body: dict):
 
 
 def error(body: dict):
-    return web.Response(status=500, content_type='application/json', body=json.dumps(body))
+    # TODO 500 -》200 because of need resp anyway not exception
+    return web.Response(status=200, content_type='application/json', body=json.dumps(body))
 
 
 def sen_sqs_msg(message_body, prompt_id_key):
@@ -108,7 +109,8 @@ async def prepare_comfy_env(sync_item: dict):
             try:
                 if sync_script and (sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
                                     or sync_script.startswith("pip install") or sync_script.startswith("apt-get")
-                                    or sync_script.startswith("os.environ") or sync_script.startswith("ls")):
+                                    or sync_script.startswith("os.environ") or sync_script.startswith("ls")
+                                    or sync_script.startswith("curl") or sync_script.startswith("wget")):
                     os.system(sync_script)
             except Exception as e:
                 logger.error(f"Exception while execute sync_scripts : {sync_script}")
@@ -141,14 +143,13 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
                     tar_filepath = os.path.join(local_path, filename)
-                    extract_path = os.path.splitext(os.path.splitext(tar_filepath)[0])[0]
-                    os.makedirs(extract_path, exist_ok=True)
-                    logger.info(f'Extracting extract_path is {extract_path}')
+                    # extract_path = os.path.splitext(os.path.splitext(tar_filepath)[0])[0]
+                    # os.makedirs(extract_path, exist_ok=True)
+                    # logger.info(f'Extracting extract_path is {extract_path}')
 
-                    tar_filepath = os.path.join(local_path, filename)
                     with tarfile.open(tar_filepath, "r:gz") as tar:
                         for member in tar.getmembers():
-                            tar.extract(member, path=extract_path)
+                            tar.extract(member, path=local_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
         return True
@@ -400,7 +401,7 @@ async def restart(self):
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
-        return {"message": "no need to reboot by os"}
+        return ok({"message": "no need to reboot by os"})
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")

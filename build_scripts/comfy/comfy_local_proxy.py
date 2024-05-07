@@ -24,6 +24,8 @@ import logging
 import fcntl
 import hashlib
 
+DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
+
 sync_msg_list = []
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +43,7 @@ logger.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
+            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', DISABLE_AWS_PROXY, 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -67,8 +69,6 @@ comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
 msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 30)
-
-disable_aws_proxy = os.environ.get('DISABLE_AWS_PROXY', "True")
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -187,10 +187,10 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
-        if disable_aws_proxy is None or disable_aws_proxy == 'True':
+        if 'True' == os.environ.get(DISABLE_AWS_PROXY):
             logger.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
-        logger.info(f"enable aws proxy, use aws {comfy_endpoint} {disable_aws_proxy}")
+        logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
         executor = args[0]
         server_use = executor.server
         prompt = args[1]
@@ -249,12 +249,12 @@ def execute_proxy(func):
             send_error_msg(executor, prompt_id, "Your local environment has not been synchronized to the cloud already. Please click the 'sync' button to synchronize and wait for a moments then try again.")
             return
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
+        with concurrent.futures.ThreadPoolExecutor() as executorThread:
+            execute_future = executorThread.submit(send_post_request, f"{api_url}/executes", payload)
 
             save_already = False
             if comfy_need_sync:
-                msg_future = executor.submit(send_get_request,
+                msg_future = executorThread.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                   return_when=concurrent.futures.ALL_COMPLETED)
@@ -273,13 +273,19 @@ def execute_proxy(func):
                                     logger.info("no images found already ,waiting sagemaker thread result .....")
                                     time.sleep(3)
                                     i = i - 2
-                                elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                    logger.error("there is no response from execute thread result !!!!!!!!")
+                                elif response['data']['status'] == 'failed':
+                                    logger.error(f"there is no response on sagemaker from execute thread result !!!!!!!! ")
+                                    # send_error_msg(executor, prompt_id,
+                                    #                f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. error info: {response['data']['message']}")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
                                     time.sleep(2)
                                     i = i - 1
+                                elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                                    logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
+                                    # send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
+                                    break
                                 else:
                                     if ('temp_files' in images_response.json()['data'] and len(
                                             images_response.json()['data']['temp_files']) > 0) or ((
@@ -296,7 +302,7 @@ def execute_proxy(func):
                         logger.debug(execute_resp.json())
                     elif future == msg_future:
                         msg_response = future.result()
-                        logger.info(msg_response.json())
+                        logger.info(f"get syc msg: {msg_response.json()}")
                         if msg_response.status_code == 200:
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 logger.error("there is no response from sync msg by thread ")
@@ -339,13 +345,20 @@ def execute_proxy(func):
                             logger.info(f"{i} no images found already ,waiting sagemaker result .....")
                             i = i - 2
                             time.sleep(3)
-                        elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.info(f"{i} there is no response from sync executes")
+                        elif response['data']['status'] == 'failed':
+                            logger.error(
+                                f"there is no response on sagemaker from execute result !!!!!!!! ")
+                            send_error_msg(executor, prompt_id,
+                                           f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
                             time.sleep(3)
+                        elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                            logger.info(f"{i} there is no response from sync executes {response}")
+                            send_error_msg(executor, prompt_id,f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
+                            break
                         elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
                             if ('temp_files' in images_response.json()['data'] and len(images_response.json()['data']['temp_files']) > 0) or (('output_files' in images_response.json()['data'] and len(images_response.json()['data']['output_files']) > 0)):
                                 save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
@@ -364,7 +377,7 @@ def execute_proxy(func):
                                            "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
                             break
             logger.info("execute finished")
-        executor.shutdown()
+        executorThread.shutdown()
 
     return wrapper
 
@@ -690,8 +703,14 @@ async def sync_env(request):
 async def change_env(request):
     logger.info(f"start to change_env {request}")
     json_data = await request.json()
-    if 'DISABLE_AWS_PROXY' in json_data and json_data['DISABLE_AWS_PROXY'] is not None:
-        logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')} {str(json_data['DISABLE_AWS_PROXY'])}")
-        os.environ['DISABLE_AWS_PROXY'] = str(json_data['DISABLE_AWS_PROXY'])
-        logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
+    if DISABLE_AWS_PROXY in json_data and json_data[DISABLE_AWS_PROXY] is not None:
+        logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)} {str(json_data[DISABLE_AWS_PROXY])}")
+        os.environ[DISABLE_AWS_PROXY] = str(json_data[DISABLE_AWS_PROXY])
+        logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)}")
     return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
+
+
+@server.PromptServer.instance.routes.get("/get_env")
+async def get_env(request):
+    env = os.environ.get(DISABLE_AWS_PROXY, 'False')
+    return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
