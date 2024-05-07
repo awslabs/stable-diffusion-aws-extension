@@ -237,6 +237,12 @@ async def execute_proxy(request):
                     "message": "the environment is not ready valid[0] is false, need to resync"}
             executing = False
             return error(resp)
+        if len(valid[3]) > 0:
+            logger.info(f"Validating prompt error there is something error because of :valid: {valid}")
+            resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+                    "message": f"the valid is error, need to resync or check the workflow :{valid}"}
+            executing = False
+            return error(resp)
         extra_data = {}
         client_id = ''
         if "extra_data" in json_data:
