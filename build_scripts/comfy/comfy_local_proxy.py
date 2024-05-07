@@ -249,12 +249,12 @@ def execute_proxy(func):
             send_error_msg(executor, prompt_id, "Your local environment has not been synchronized to the cloud already. Please click the 'sync' button to synchronize and wait for a moments then try again.")
             return
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
+        with concurrent.futures.ThreadPoolExecutor() as executorThread:
+            execute_future = executorThread.submit(send_post_request, f"{api_url}/executes", payload)
 
             save_already = False
             if comfy_need_sync:
-                msg_future = executor.submit(send_get_request,
+                msg_future = executorThread.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                   return_when=concurrent.futures.ALL_COMPLETED)
@@ -366,7 +366,7 @@ def execute_proxy(func):
                                            "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
                             break
             logger.info("execute finished")
-        executor.shutdown()
+        executorThread.shutdown()
 
     return wrapper
 
