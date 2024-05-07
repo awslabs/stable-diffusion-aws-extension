@@ -59,7 +59,8 @@ def ok(body: dict):
 
 
 def error(body: dict):
-    return web.Response(status=500, content_type='application/json', body=json.dumps(body))
+    # TODO 500 -》200 because of need resp anyway not exception
+    return web.Response(status=200, content_type='application/json', body=json.dumps(body))
 
 
 def sen_sqs_msg(message_body, prompt_id_key):
@@ -399,7 +400,7 @@ async def restart(self):
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
-        return {"message": "no need to reboot by os"}
+        return ok({"message": "no need to reboot by os"})
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")

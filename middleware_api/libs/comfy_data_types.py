@@ -49,6 +49,9 @@ class ComfyExecuteTable:
     complete_time: Optional[Any] = None
     sagemaker_raw: Optional[Any] = None
     output_path: Optional[str] = None
+    message: Optional[str] = None
+    device_id: Optional[str] = None
+    endpoint_instance_id: Optional[str] = None
     output_files: Optional[List[str]] = None
     temp_path: Optional[str] = ''
     temp_files: Optional[List[str]] = ''

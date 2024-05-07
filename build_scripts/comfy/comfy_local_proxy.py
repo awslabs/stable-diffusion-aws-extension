@@ -249,12 +249,12 @@ def execute_proxy(func):
             send_error_msg(executor, prompt_id, "Your local environment has not been synchronized to the cloud already. Please click the 'sync' button to synchronize and wait for a moments then try again.")
             return
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
+        with concurrent.futures.ThreadPoolExecutor() as executorThread:
+            execute_future = executorThread.submit(send_post_request, f"{api_url}/executes", payload)
 
             save_already = False
             if comfy_need_sync:
-                msg_future = executor.submit(send_get_request,
+                msg_future = executorThread.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                   return_when=concurrent.futures.ALL_COMPLETED)
@@ -274,7 +274,8 @@ def execute_proxy(func):
                                     time.sleep(3)
                                     i = i - 2
                                 elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                    logger.error("there is no response from execute thread result !!!!!!!!")
+                                    logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
+                                    # send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
                                     break
                                 elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                                     logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
@@ -340,7 +341,8 @@ def execute_proxy(func):
                             i = i - 2
                             time.sleep(3)
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                            logger.info(f"{i} there is no response from sync executes")
+                            logger.info(f"{i} there is no response from sync executes {response}")
+                            send_error_msg(executor, prompt_id,f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
                             break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
@@ -364,7 +366,7 @@ def execute_proxy(func):
                                            "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
                             break
             logger.info("execute finished")
-        executor.shutdown()
+        executorThread.shutdown()
 
     return wrapper
 

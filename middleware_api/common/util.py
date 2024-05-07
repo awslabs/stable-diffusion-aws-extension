@@ -296,8 +296,21 @@ def split_s3_path(s3_path):
 
 @tracer.capture_method
 def s3_scan_files(job: InferenceResult):
-    job.output_files = s3_scan_files_in_patch(job.output_path)
-    job.temp_files = s3_scan_files_in_patch(job.temp_path)
+    if not job.output_path and not job.temp_path:
+        job.status = "failed"
+
+    if job.status == 'fail':
+        job.status = "failed"
+
+    if job.output_path:
+        job.output_files = s3_scan_files_in_patch(job.output_path)
+    else:
+        job.output_files = []
+
+    if job.temp_path:
+        job.temp_files = s3_scan_files_in_patch(job.temp_path)
+    else:
+        job.temp_files = []
 
     return job
 
@@ -326,6 +339,8 @@ def generate_presigned_url_for_key(key, expiration=3600):
 
 @tracer.capture_method
 def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
+    if not prefix or not keys:
+        return []
     prefix = prefix.replace(f"s3://{bucket_name}/", '')
     new_list = []
     for key in keys:
@@ -336,10 +351,10 @@ def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
 
 @tracer.capture_method
 def generate_presigned_url_for_job(job):
-    if 'output_path' in job and 'output_files' in job:
+    if 'output_path' in job and 'output_files' in job and job['output_path'] and job['output_files']:
         job['output_files'] = generate_presigned_url_for_keys(job['output_path'], job['output_files'])
 
-    if 'temp_path' in job and 'temp_files' in job:
+    if 'temp_path' in job and 'temp_files' in job and job['temp_path'] and job['temp_files']:
         job['temp_files'] = generate_presigned_url_for_keys(job['temp_path'], job['temp_files'])
 
     return job
