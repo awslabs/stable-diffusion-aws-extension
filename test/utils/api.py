@@ -388,7 +388,7 @@ class Api:
             with open(f"response.json", "w") as s:
                 s.write(json.dumps(resp.json(), indent=4))
 
-        validate_schema = self.get_schema_by_id_and_code(operation_id, resp.status_code)
+        validate_schema = self.get_schema_by_id_and_code(operation_id, resp)
 
         if resp.status_code == 204:
             return
@@ -404,7 +404,9 @@ class Api:
             print(f"\n**********************************************")
             raise e
 
-    def get_schema_by_id_and_code(self, operation_id: str, code: int):
+    def get_schema_by_id_and_code(self, operation_id: str, resp: requests.Response):
+        code = resp.status_code
+
         if not self.schema:
             raise Exception('api.schema is empty')
 
@@ -421,6 +423,7 @@ class Api:
             raise Exception(f'{operation_id} not found')
 
         if f"{code}" not in responses:
+            logger.info(f"responses: {resp.json()}")
             raise Exception(f'{code} not found in responses of {operation_id}')
 
         ref = responses[f"{code}"]['content']['application/json']['schema']['$ref']
