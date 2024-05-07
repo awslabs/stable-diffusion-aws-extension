@@ -210,6 +210,9 @@ Resources:
           sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
           
+          sudo mkdir -p /ComfyUI/models/vae/
+          sudo mkdir -p /ComfyUI/models/animatediff_models/
+          
           sudo wget -O /ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors  https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors 
           sudo wget -O /ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
           sudo chmod -R 777 /ComfyUI
