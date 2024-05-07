@@ -306,11 +306,13 @@ def s3_scan_files(job: InferenceResult):
         job.output_files = s3_scan_files_in_patch(job.output_path)
     else:
         job.output_files = []
+        job.output_path = ''
 
     if job.temp_path:
         job.temp_files = s3_scan_files_in_patch(job.temp_path)
     else:
         job.temp_files = []
+        job.temp_path = ''
 
     return job
 
@@ -339,8 +341,13 @@ def generate_presigned_url_for_key(key, expiration=3600):
 
 @tracer.capture_method
 def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
-    prefix = prefix.replace(f"s3://{bucket_name}/", '')
     new_list = []
+
+    if not prefix:
+        return new_list
+
+    prefix = prefix.replace(f"s3://{bucket_name}/", '')
+
     for key in keys:
         new_list.append(generate_presigned_url_for_key(f"{prefix}{key}", expiration))
 

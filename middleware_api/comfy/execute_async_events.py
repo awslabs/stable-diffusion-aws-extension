@@ -88,13 +88,17 @@ def handler(event, context):
 
 def update_execute_job_table(prompt_id, key, value):
     logger.info(f"Update inference job table with prompt_id: {prompt_id}, key: {key}, value: {value}")
-
-    inference_table.update_item(
-        Key={
-            "prompt_id": prompt_id,
-        },
-        UpdateExpression=f"set #k = :r",
-        ExpressionAttributeNames={'#k': key},
-        ExpressionAttributeValues={':r': value},
-        ReturnValues="UPDATED_NEW"
-    )
+    try:
+        inference_table.update_item(
+            Key={
+                "prompt_id": prompt_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(prompt_id)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update execute job table error: {e}")
+        raise e

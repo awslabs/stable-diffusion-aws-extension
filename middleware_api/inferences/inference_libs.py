@@ -71,16 +71,20 @@ def get_bucket_and_key(s3uri):
 
 def update_inference_job_table(inference_id, key, value):
     logger.info(f"Update inference job table with inference id: {inference_id}, key: {key}, value: {value}")
-
-    inference_table.update_item(
-        Key={
-            "InferenceJobId": inference_id,
-        },
-        UpdateExpression=f"set #k = :r",
-        ExpressionAttributeNames={'#k': key},
-        ExpressionAttributeValues={':r': value},
-        ReturnValues="UPDATED_NEW"
-    )
+    try:
+        inference_table.update_item(
+            Key={
+                "InferenceJobId": inference_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(InferenceJobId)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update Inference job table error: {e}")
+        raise e
 
 
 def esi_rembg(sagemaker_out, inference_id, endpoint_name):
