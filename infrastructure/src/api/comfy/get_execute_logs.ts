@@ -13,7 +13,7 @@ export interface GetExecuteLogsProps {
     httpMethod: string;
     router: aws_apigateway.Resource;
     s3Bucket: s3.Bucket;
-    esdLogSubTable: aws_dynamodb.Table;
+    executeTable: aws_dynamodb.Table;
     commonLayer: aws_lambda.LayerVersion;
 }
 
@@ -26,7 +26,7 @@ export class GetExecuteLogsApi {
     private readonly scope: Construct;
     private readonly layer: aws_lambda.LayerVersion;
     private readonly s3Bucket: s3.Bucket;
-    private readonly esdLogSubTable: aws_dynamodb.Table;
+    private readonly executeTable: aws_dynamodb.Table;
 
     constructor(scope: Construct, id: string, props: GetExecuteLogsProps) {
         this.scope = scope;
@@ -34,7 +34,7 @@ export class GetExecuteLogsApi {
         this.baseId = id;
         this.router = props.router;
         this.s3Bucket = props.s3Bucket;
-        this.esdLogSubTable = props.esdLogSubTable;
+        this.executeTable = props.executeTable;
         this.layer = props.commonLayer;
 
         const lambdaFunction = this.apiLambda();
@@ -133,7 +133,7 @@ export class GetExecuteLogsApi {
             memorySize: 2048,
             tracing: aws_lambda.Tracing.ACTIVE,
             environment: {
-                LOG_SUB_TABLE: this.esdLogSubTable.tableName,
+                EXECUTE_TABLE: this.executeTable.tableName,
             },
             layers: [this.layer],
         });
@@ -147,14 +147,11 @@ export class GetExecuteLogsApi {
         newRole.addToPolicy(new aws_iam.PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                'dynamodb:BatchGetItem',
                 'dynamodb:GetItem',
-                'dynamodb:Scan',
-                'dynamodb:Query',
             ],
             resources: [
-                this.esdLogSubTable.tableArn,
-                `${this.esdLogSubTable.tableArn}/*`,
+                this.executeTable.tableArn,
+                `${this.executeTable.tableArn}/*`,
             ],
         }));
 
@@ -178,6 +175,9 @@ export class GetExecuteLogsApi {
                 'logs:CreateLogGroup',
                 'logs:CreateLogStream',
                 'logs:PutLogEvents',
+                "logs:StartQuery",
+                "logs:GetQueryResults",
+                "logs:DescribeLogGroups"
             ],
             resources: ['*'],
         }));
