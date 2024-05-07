@@ -32,5 +32,5 @@ class TestApiDocExportApi:
 
     def test_3_get_schema_by_id(self):
         operation_id = 'GetInferenceJob'
-        code = 404
-        self.api.get_schema_by_id_and_code(operation_id, code)
+        resp = self.api.root()
+        self.api.get_schema_by_id_and_code(operation_id, resp)
