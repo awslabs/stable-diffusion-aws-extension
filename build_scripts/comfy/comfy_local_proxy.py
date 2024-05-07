@@ -68,8 +68,8 @@ comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 thread_max_wait_time = os.environ.get('THREAD_MAX_WAIT_TIME', 300)
-max_wait_time = os.environ.get('MAX_WAIT_TIME', 1200)
-msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 1200)
+max_wait_time = os.environ.get('MAX_WAIT_TIME', 86400)
+msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 86400)
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
