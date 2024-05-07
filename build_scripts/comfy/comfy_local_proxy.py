@@ -24,6 +24,8 @@ import logging
 import fcntl
 import hashlib
 
+DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
+
 sync_msg_list = []
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +43,7 @@ logger.info(f"env_path{env_path}")
 
 env_keys = ['ENV_FILE_PATH', 'COMFY_INPUT_PATH', 'COMFY_MODEL_PATH', 'COMFY_NODE_PATH', 'COMFY_API_URL',
             'COMFY_API_TOKEN', 'COMFY_ENDPOINT', 'COMFY_NEED_SYNC', 'COMFY_NEED_PREPARE', 'COMFY_BUCKET_NAME',
-            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', 'DISABLE_AWS_PROXY', 'DISABLE_AUTO_SYNC']
+            'MAX_WAIT_TIME', 'MSG_MAX_WAIT_TIME', DISABLE_AWS_PROXY, 'DISABLE_AUTO_SYNC']
 
 for item in os.environ.keys():
     if item in env_keys:
@@ -67,8 +69,6 @@ comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
 bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 120)
 msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 30)
-
-disable_aws_proxy = os.environ.get('DISABLE_AWS_PROXY', "True")
 
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
@@ -187,10 +187,10 @@ def handle_sync_messages(server_use, msg_array):
 
 def execute_proxy(func):
     def wrapper(*args, **kwargs):
-        if disable_aws_proxy is None or disable_aws_proxy == 'True':
+        if 'True' == os.environ.get(DISABLE_AWS_PROXY):
             logger.info("disabled aws proxy, use local")
             return func(*args, **kwargs)
-        logger.info(f"enable aws proxy, use aws {comfy_endpoint} {disable_aws_proxy}")
+        logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
         executor = args[0]
         server_use = executor.server
         prompt = args[1]
@@ -703,8 +703,14 @@ async def sync_env(request):
 async def change_env(request):
     logger.info(f"start to change_env {request}")
     json_data = await request.json()
-    if 'DISABLE_AWS_PROXY' in json_data and json_data['DISABLE_AWS_PROXY'] is not None:
-        logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')} {str(json_data['DISABLE_AWS_PROXY'])}")
-        os.environ['DISABLE_AWS_PROXY'] = str(json_data['DISABLE_AWS_PROXY'])
-        logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get('DISABLE_AWS_PROXY')}")
+    if DISABLE_AWS_PROXY in json_data and json_data[DISABLE_AWS_PROXY] is not None:
+        logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)} {str(json_data[DISABLE_AWS_PROXY])}")
+        os.environ[DISABLE_AWS_PROXY] = str(json_data[DISABLE_AWS_PROXY])
+        logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)}")
     return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
+
+
+@server.PromptServer.instance.routes.get("/get_env")
+async def get_env(request):
+    env = os.environ.get(DISABLE_AWS_PROXY, 'False')
+    return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
