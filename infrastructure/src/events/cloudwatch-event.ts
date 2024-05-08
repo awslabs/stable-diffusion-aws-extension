@@ -68,6 +68,7 @@ export class EndpointsCloudwatchEvents {
                 'cloudwatch:GetDashboard',
                 'cloudwatch:PutDashboard',
                 'cloudwatch:ListMetrics',
+                'sagemaker:DescribeEndpoint',
                 's3:Get*',
                 's3:List*',
                 's3:DeleteObject',

@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -6,6 +7,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
+from delete_endpoints import get_endpoint_in_sagemaker
 
 aws_region = os.environ.get('AWS_REGION')
 esd_version = os.environ.get("ESD_VERSION")
@@ -39,12 +41,23 @@ def handler(event, context):
     logger.info(f"Endpoints: {eps}")
 
     for ep in eps:
-        create_ds(ep['endpoint_name']['S'], custom_metrics)
+        ep_name = ep['endpoint_name']['S']
+        ep_status = ep['endpoint_status']['S']
+
+        if ep_status == 'Creating':
+            continue
+
+        endpoint = get_endpoint_in_sagemaker(ep_name)
+        if endpoint is None:
+            continue
+
+        create_ds(ep_name, custom_metrics)
 
     return {}
 
 
 def ds_body(ep_name: str, custom_metrics):
+    last_build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dashboard_body = {
         "widgets": [
             {
@@ -52,9 +65,9 @@ def ds_body(ep_name: str, custom_metrics):
                 "x": 0,
                 "y": 0,
                 "width": 24,
-                "height": 1,
+                "height": 2,
                 "properties": {
-                    "markdown": f"## Endpoint Dashboard - {ep_name}"
+                    "markdown": f"## Endpoint Dashboard - {ep_name} \n Last Build Time: {last_build_time}"
                 }
             },
             {

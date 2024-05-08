@@ -14,9 +14,9 @@ export class DashboardStack {
                         "x": 0,
                         "y": 0,
                         "width": 24,
-                        "height": 1,
+                        "height": 2,
                         "properties": {
-                            "markdown": `## ESD (Extension for Stable Diffusion on AWS) \n Last build time: ${last_build_time} \n`
+                            "markdown": `## ESD (Extension for Stable Diffusion on AWS) \n Last Build Time: ${last_build_time} \n`
                         }
                     },
                     {
