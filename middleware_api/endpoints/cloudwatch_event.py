@@ -491,7 +491,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "region": aws_region,
                 "stat": "Sum",
                 "period": period,
-                "title": f"{item['index']}-Tasks"
+                "title": f"Instance-{item['index']}-Tasks"
             }
         })
         i = i + 1
