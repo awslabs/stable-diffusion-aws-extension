@@ -110,7 +110,7 @@ def ds_body(ep_name: str, custom_metrics):
                             }
                         ]
                     ],
-                    "view": "gauge",
+                    "view": "singleValue",
                     "region": aws_region,
                     "yAxis": {
                         "left": {
@@ -186,7 +186,7 @@ def ds_body(ep_name: str, custom_metrics):
                         ]
                     ],
                     "sparkline": True,
-                    "view": "gauge",
+                    "view": "singleValue",
                     "region": aws_region,
                     "stat": "Average",
                     "period": period,

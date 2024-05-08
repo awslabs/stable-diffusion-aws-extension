@@ -420,7 +420,7 @@ export class DashboardStack {
                                 ]
                             ],
                             "sparkline": true,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "period": period,
                             "stat": "Average",
@@ -502,7 +502,7 @@ export class DashboardStack {
                                 ]
                             ],
                             "sparkline": true,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "stat": "Maximum",
                             "period": period,
@@ -736,7 +736,7 @@ export class DashboardStack {
                                     }
                                 ]
                             ],
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "yAxis": {
                                 "left": {
@@ -782,7 +782,7 @@ export class DashboardStack {
                                     "..."
                                 ]
                             ],
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "yAxis": {
                                 "left": {
