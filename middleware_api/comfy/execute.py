@@ -101,8 +101,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     logger.info(f"endpoint: {ep}")
 
-    record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal', service=ServiceType.Comfy.value)
-
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
 
@@ -134,6 +132,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     )
 
     logger.info(f"inference job: {inference_job.__dict__}")
+
+    record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal', service=ServiceType.Comfy.value)
 
     if event.multi_async and ep.endpoint_type == 'Async':
         save_item = inference_job.__dict__
