@@ -11,6 +11,7 @@ import { CreateEndpointApi } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi } from '../api/endpoints/list-endpoints';
 import { SagemakerEndpointEvents } from '../events/endpoints-event';
+import {EndpointsCloudwatchEvents} from "../events/cloudwatch-event";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -61,11 +62,19 @@ export class EndpointStack {
       },
     );
 
+      const endpointsCloudwatchEvents = new EndpointsCloudwatchEvents(
+          scope, 'EndpointsCloudwatchEvents', {
+              commonLayer: props.commonLayer,
+              endpointDeploymentTable: props.EndpointDeploymentJobTable,
+          },
+      );
+
     new SagemakerEndpointEvents(
       scope, 'EndpointEvents', {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        cloudwatchLambda: endpointsCloudwatchEvents.lambda,
       },
     );
 

@@ -13,7 +13,9 @@ import numpy
 from PIL import Image, PngImagePlugin
 from aws_lambda_powertools import Tracer
 
+from common.ddb_service.client import DynamoDbUtilsService
 from libs.comfy_data_types import InferenceResult
+from libs.data_types import Endpoint
 from libs.utils import log_json
 
 tracer = Tracer()
@@ -25,35 +27,17 @@ sns_client = boto3.client('sns')
 s3_client = boto3.client('s3')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3_bucket = s3_resource.Bucket(bucket_name)
-
+ddb_service = DynamoDbUtilsService(logger=logger)
 cloudwatch = boto3.client('cloudwatch')
-
+sagemaker = boto3.client('sagemaker')
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
+esd_version = os.environ.get("ESD_VERSION")
+logs = boto3.client('logs')
 
 
-def record_ep_metrics(ep_name: str):
-    response = cloudwatch.put_metric_data(
-        Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceCount',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': ep_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
-    )
-    logger.info(f"record_metric response: {response}")
-
-
-def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusion'):
+def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service='Stable-Diffusion'):
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
         MetricData=[
@@ -63,6 +47,18 @@ def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusi
                     {
                         'Name': 'Service',
                         'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': ep_name
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
@@ -98,7 +94,7 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service='St
     logger.info(f"record_metric response: {response}")
 
 
-def record_latency_metrics(start_time, metric_name='Inference', service='Stable-Diffusion'):
+def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service='Stable-Diffusion'):
     start_time = datetime.datetime.fromisoformat(start_time)
     latency = (datetime.datetime.now() - start_time).microseconds
 
@@ -111,6 +107,18 @@ def record_latency_metrics(start_time, metric_name='Inference', service='Stable-
                     {
                         'Name': 'Service',
                         'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': latency,
+                'Unit': 'Microseconds'
+            },
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': ep_name
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
@@ -363,3 +371,41 @@ def generate_presigned_url_for_job(job):
         job['temp_files'] = generate_presigned_url_for_keys(job['temp_path'], job['temp_files'])
 
     return job
+
+
+def endpoint_clean(ep: Endpoint):
+    try:
+        sagemaker.delete_endpoint_config(EndpointConfigName=ep.endpoint_name)
+        logger.info(f"Delete {ep.endpoint_name} endpoint config")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    try:
+        sagemaker.delete_model(ModelName=ep.endpoint_name)
+        logger.info(f"Delete {ep.endpoint_name} model")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    try:
+        s3_bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()
+        logger.info(f"Delete {ep.endpoint_name} artifacts")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    try:
+        logs.delete_log_group(logGroupName=f"/aws/sagemaker/Endpoints/{ep.endpoint_name}")
+        logger.info(f"Delete {ep.endpoint_name} log group")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    try:
+        cloudwatch.delete_dashboards(DashboardNames=[ep.endpoint_name])
+        logger.info(f"Delete {ep.endpoint_name} dashboard")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    ddb_service.delete_item(
+        table=sagemaker_endpoint_table,
+        keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
+    )
+    logger.info(f"Delete {ep.endpoint_name} endpoint from DDB")

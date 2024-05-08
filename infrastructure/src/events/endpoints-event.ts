@@ -11,6 +11,7 @@ export interface SagemakerEndpointEventsProps {
   endpointDeploymentTable: Table;
   multiUserTable: Table;
   commonLayer: LayerVersion;
+  cloudwatchLambda: PythonFunction;
 }
 
 export class SagemakerEndpointEvents {
@@ -19,6 +20,7 @@ export class SagemakerEndpointEvents {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
+  private readonly cloudwatchLambda: PythonFunction;
 
   constructor(scope: Construct, id: string, props: SagemakerEndpointEventsProps) {
     this.scope = scope;
@@ -26,6 +28,7 @@ export class SagemakerEndpointEvents {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
+    this.cloudwatchLambda = props.cloudwatchLambda;
 
     this.createEndpointEventBridge();
   }
@@ -65,6 +68,7 @@ export class SagemakerEndpointEvents {
         'cloudwatch:PutMetricAlarm',
         'cloudwatch:PutMetricData',
         'cloudwatch:UpdateMetricAlarm',
+        'cloudwatch:DeleteDashboards',
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',
         'iam:CreateServiceLinkedRole',
@@ -81,8 +85,6 @@ export class SagemakerEndpointEvents {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
-        'logs:PutSubscriptionFilter',
-        'logs:DescribeSubscriptionFilters',
         'logs:DeleteLogGroup',
       ],
       resources: ['*'],
@@ -114,6 +116,7 @@ export class SagemakerEndpointEvents {
     });
 
     rule.addTarget(new LambdaFunction(lambdaFunction));
+    rule.addTarget(new LambdaFunction(this.cloudwatchLambda));
 
   }
 }

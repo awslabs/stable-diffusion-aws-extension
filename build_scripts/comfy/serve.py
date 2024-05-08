@@ -214,6 +214,7 @@ def ping():
 
 def wrap_response(response, comfy_app: ComfyApp):
     data = response.json()
+    data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
     data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
     data['device_id'] = comfy_app.device_id
     return data
@@ -224,7 +225,7 @@ def record_metric(comfy_app: ComfyApp):
         Namespace='ESD',
         MetricData=[
             {
-                'MetricName': 'InferenceCount',
+                'MetricName': 'InferenceTotal',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
@@ -239,15 +240,8 @@ def record_metric(comfy_app: ComfyApp):
                 'Value': 1,
                 'Unit': 'Count'
             },
-        ]
-    )
-    logger.info(f"record_metric response: {response}")
-
-    response = cloudwatch.put_metric_data(
-        Namespace='ESD',
-        MetricData=[
             {
-                'MetricName': 'InferenceCount',
+                'MetricName': 'InferenceTotal',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
@@ -269,6 +263,7 @@ def record_metric(comfy_app: ComfyApp):
         ]
     )
     logger.info(f"record_metric response: {response}")
+
 
 
 def get_gpu_count():

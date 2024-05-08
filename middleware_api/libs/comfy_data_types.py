@@ -33,6 +33,7 @@ class InferenceResult:
     temp_path: Optional[str] = None
     temp_files: Optional[List[str]] = None
     endpoint_instance_id: Optional[str] = None
+    endpoint_name: Optional[str] = None
     device_id: Optional[int] = None
 
 
