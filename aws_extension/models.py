@@ -3,6 +3,7 @@ from typing import Optional
 
 
 class InvocationsRequest(BaseModel):
+    id: str
     task: str
     username: Optional[str]
     # checkpoint_info:Optional[dict]

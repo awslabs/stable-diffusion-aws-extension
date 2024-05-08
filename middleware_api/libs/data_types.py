@@ -154,7 +154,7 @@ class InferenceJob:
     owner_group_or_role: Optional[List[str]] = None
     # todo will delete
     inference_info_name: Optional[Any] = None
-    startTime: Optional[Any] = None
+    startTime: Optional[Any] = ''
     createTime: Optional[Any] = None
     image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
