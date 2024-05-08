@@ -62,19 +62,20 @@ export class EndpointStack {
       },
     );
 
+      const endpointsCloudwatchEvents = new EndpointsCloudwatchEvents(
+          scope, 'EndpointsCloudwatchEvents', {
+              commonLayer: props.commonLayer,
+              endpointDeploymentTable: props.EndpointDeploymentJobTable,
+          },
+      );
+
     new SagemakerEndpointEvents(
       scope, 'EndpointEvents', {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        cloudwatchLambda: endpointsCloudwatchEvents.lambda,
       },
-    );
-
-    new EndpointsCloudwatchEvents(
-        scope, 'EndpointsCloudwatchEvents', {
-            commonLayer: props.commonLayer,
-            endpointDeploymentTable: props.EndpointDeploymentJobTable,
-        },
     );
 
     new CreateEndpointApi(

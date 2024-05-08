@@ -2,7 +2,6 @@ import base64
 import json
 import logging
 import os
-import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,7 +17,7 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
-from common.util import s3_scan_files, generate_presigned_url_for_keys, record_ep_metrics, record_latency_metrics, \
+from common.util import s3_scan_files, generate_presigned_url_for_keys, record_latency_metrics, \
     record_count_metrics
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus
@@ -102,8 +101,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     logger.info(f"endpoint: {ep}")
 
-    record_ep_metrics(ep.endpoint_name)
-    record_count_metrics(metric_name='InferenceTotal', service='Comfy')
+    record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal', service='Comfy')
 
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
@@ -188,10 +186,13 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
                                                                    inference_job.temp_files)
 
     if resp.statuss != 'Completed':
-        record_count_metrics(metric_name='InferenceFailed', service='Comfy')
+        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service='Comfy')
     else:
-        record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
-        record_latency_metrics(start_time=inference_job.start_time, metric_name='InferenceLatency', service='Comfy')
+        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceSucceed', service='Comfy')
+        record_latency_metrics(start_time=inference_job.start_time,
+                               ep_name=ep.endpoint_name,
+                               metric_name='InferenceLatency',
+                               service='Comfy')
 
     return ok(data=response_schema(inference_job), decimal=True)
 

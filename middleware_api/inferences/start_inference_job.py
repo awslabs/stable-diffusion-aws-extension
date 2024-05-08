@@ -99,14 +99,14 @@ def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_
                                                 )
 
     if 'error' in sagemaker_out:
-        record_count_metrics(metric_name='InferenceFailed')
+        record_count_metrics(ep_name=endpoint_name, metric_name='InferenceFailed')
         update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
         raise Exception(str(sagemaker_out))
 
     parse_sagemaker_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
 
-    record_count_metrics(metric_name='InferenceSucceed')
-    record_latency_metrics(start_time=job.startTime, metric_name='InferenceLatency')
+    record_count_metrics(ep_name=endpoint_name, metric_name='InferenceSucceed')
+    record_latency_metrics(start_time=job.startTime, ep_name=endpoint_name, metric_name='InferenceLatency')
 
     return get_infer_data(job.InferenceJobId)
 

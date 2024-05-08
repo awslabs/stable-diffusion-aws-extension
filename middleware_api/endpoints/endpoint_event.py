@@ -78,14 +78,23 @@ def handler(event, context):
                 update_endpoint_field(endpoint, 'current_instance_count', instance_count)
         else:
             delete_ep_model_config(endpoint_name)
-            bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_name}").delete()
+            delete_dashboard(endpoint_name)
+
             ddb_service.delete_item(sagemaker_endpoint_table,
                                     keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
-            response = logs.delete_log_group(
-                logGroupName=f"/aws/sagemaker/Endpoints/{endpoint_name}"
-            )
-            logger.info(f"Delete log group response: {response}")
-            delete_dashboard(endpoint_name)
+
+            try:
+                bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_name}").delete()
+            except Exception as e:
+                logger.error(e, exc_info=True)
+
+            try:
+                response = logs.delete_log_group(
+                    logGroupName=f"/aws/sagemaker/Endpoints/{endpoint_name}"
+                )
+                logger.info(f"Delete log group response: {response}")
+            except Exception as e:
+                logger.error(e, exc_info=True)
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(endpoint, 'error', event['FailureReason'])
@@ -98,10 +107,13 @@ def handler(event, context):
 
 
 def delete_dashboard(endpoint_name: str):
-    cloudwatch.delete_dashboards(
-        DashboardNames=[endpoint_name]
-    )
-    logger.info(f"Delete dashboard")
+    try:
+        cloudwatch.delete_dashboards(
+            DashboardNames=[endpoint_name]
+        )
+        logger.info(f"Delete dashboard")
+    except Exception as e:
+        logger.error(e, exc_info=True)
 
 
 def delete_ep_model_config(endpoint_name: str):

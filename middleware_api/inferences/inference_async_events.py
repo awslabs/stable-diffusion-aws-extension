@@ -35,15 +35,16 @@ def handler(event, context):
     inference_id = message["inferenceId"]
     job = get_inference_job(inference_id)
 
+    endpoint_name = message["requestParameters"]["endpointName"]
+
     if invocation_status != "Completed":
         update_inference_job_table(inference_id, 'status', 'failed')
         update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         print(f"Not complete invocation!")
         send_message_to_sns(message, SNS_TOPIC)
-        record_count_metrics(metric_name='InferenceFailed')
+        record_count_metrics(ep_name=endpoint_name, metric_name='InferenceFailed')
         return message
 
-    endpoint_name = message["requestParameters"]["endpointName"]
     output_location = message["responseParameters"]["outputLocation"]
     bucket, key = get_bucket_and_key(output_location)
     obj = s3_resource.Object(bucket, key)
@@ -67,5 +68,7 @@ def handler(event, context):
 
     parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)
 
-    record_count_metrics(metric_name='InferenceSucceed')
-    record_latency_metrics(start_time=job.get('startTime'), metric_name='InferenceLatency')
+    record_count_metrics(ep_name=endpoint_name, metric_name='InferenceSucceed')
+    record_latency_metrics(start_time=job.get('startTime'),
+                           ep_name=endpoint_name,
+                           metric_name='InferenceLatency')

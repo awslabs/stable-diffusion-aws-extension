@@ -5,6 +5,7 @@ import {Aws} from "aws-cdk-lib";
 export class DashboardStack {
 
     constructor(scope: Construct) {
+        const last_build_time = new Date().toISOString();
 
         const dashboardBody = {
                 "widgets": [
@@ -15,7 +16,7 @@ export class DashboardStack {
                         "width": 24,
                         "height": 1,
                         "properties": {
-                            "markdown": "## ESD (Extension for Stable Diffusion on AWS)"
+                            "markdown": `## ESD (Extension for Stable Diffusion on AWS) \n Last build time: ${last_build_time} \n`
                         }
                     },
                     {
@@ -53,7 +54,7 @@ export class DashboardStack {
                             "view": "gauge",
                             "stacked": false,
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "Comfy-EndpointReadySeconds",
                             "yAxis": {
@@ -100,7 +101,7 @@ export class DashboardStack {
                             "view": "gauge",
                             "region": Aws.REGION,
                             "title": "SD-EndpointReadySeconds",
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "yAxis": {
                                 "left": {
@@ -145,7 +146,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "Comfy-DownloadFileSeconds"
                         }
@@ -185,7 +186,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "Comfy-InstanceInitSeconds"
                         }
@@ -226,7 +227,7 @@ export class DashboardStack {
                             "view": "singleValue",
                             "region": Aws.REGION,
                             "title": "Comfy-DecompressFileSeconds",
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum"
                         }
                     },
@@ -265,7 +266,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "SD-DownloadFileSeconds"
                         }
@@ -305,7 +306,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "SD-InstanceInitSeconds"
                         }
@@ -345,7 +346,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "SD-DecompressFileSeconds"
                         }
@@ -380,7 +381,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Sum",
                             "title": "SD-Inference",
                             "stacked": false
@@ -421,7 +422,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "gauge",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Average",
                             "stacked": false,
                             "title": "SD-InferenceLatency",
@@ -464,7 +465,7 @@ export class DashboardStack {
                             "view": "singleValue",
                             "region": Aws.REGION,
                             "title": "Comfy-Inference",
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Sum"
                         }
                     },
@@ -504,7 +505,7 @@ export class DashboardStack {
                             "view": "gauge",
                             "region": Aws.REGION,
                             "stat": "Maximum",
-                            "period": 86400,
+                            "period": 300,
                             "yAxis": {
                                 "left": {
                                     "min": 0,
@@ -549,7 +550,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Average",
                             "title": "SD-UploadEndpointCacheSeconds"
                         }
@@ -590,7 +591,7 @@ export class DashboardStack {
                             "view": "singleValue",
                             "region": Aws.REGION,
                             "title": "Comfy-UploadEndpointCacheSeconds",
-                            "period": 86400,
+                            "period": 300,
                             "stat": "Average"
                         }
                     },
@@ -662,7 +663,7 @@ export class DashboardStack {
                             "sparkline": true,
                             "view": "singleValue",
                             "region": Aws.REGION,
-                            "period": 60,
+                            "period": 300,
                             "stat": "Maximum",
                             "title": "TrainingLatency"
                         }
@@ -692,7 +693,7 @@ export class DashboardStack {
                             "view": "singleValue",
                             "region": Aws.REGION,
                             "stat": "Maximum",
-                            "period": 900,
+                            "period": 300,
                             "title": "Comfy-DownloadFileSize"
                         }
                     }

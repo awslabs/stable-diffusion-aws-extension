@@ -77,10 +77,12 @@ def handler(event, context):
         update_execute_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
         if message["invocationStatus"] != "Completed":
-            record_count_metrics(metric_name='InferenceFailed', service='Comfy')
+            record_count_metrics(ep_name=result.endpoint_name, metric_name='InferenceFailed', service='Comfy')
         else:
-            record_count_metrics(metric_name='InferenceSucceed', service='Comfy')
-            record_latency_metrics(start_time=resp['Item']['start_time'], metric_name='InferenceLatency',
+            record_count_metrics(ep_name=result.endpoint_name, metric_name='InferenceSucceed', service='Comfy')
+            record_latency_metrics(start_time=resp['Item']['start_time'],
+                                   ep_name=result.endpoint_name,
+                                   metric_name='InferenceLatency',
                                    service='Comfy')
 
     return {}

@@ -8,36 +8,43 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 
 aws_region = os.environ.get('AWS_REGION')
-
-cloudwatch = boto3.client('cloudwatch')
-logs = boto3.client('logs')
-lambda_client = boto3.client('lambda')
+esd_version = os.environ.get("ESD_VERSION")
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
+
 tracer = Tracer()
-sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
+cloudwatch = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
-esd_version = os.environ.get("ESD_VERSION")
 
 
-# lambda: handle sagemaker events
 @tracer.capture_lambda_handler
 def handler(event, context):
     logger.info(json.dumps(event))
 
-    eps = list_sagemaker_endpoints()
+    custom_metrics = cloudwatch.list_metrics(Namespace='ESD')['Metrics']
+
+    if 'detail' in event and 'EndpointStatus' in event['detail']:
+        endpoint_name = event['detail']['EndpointName']
+        endpoint_status = event['detail']['EndpointStatus']
+        if endpoint_status == 'InService':
+            create_ds(endpoint_name, custom_metrics)
+            return {}
+
+    eps = ddb_service.scan(sagemaker_endpoint_table)
+    logger.info(f"Endpoints: {eps}")
+
     for ep in eps:
-        create_ds(ep['EndpointName'])
+        create_ds(ep['endpoint_name']['S'], custom_metrics)
 
     return {}
 
 
-def ds(ep_name: str):
+def ds_body(ep_name: str, custom_metrics):
     dashboard_body = {
         "widgets": [
             {
@@ -52,6 +59,82 @@ def ds(ep_name: str):
             },
             {
                 "height": 5,
+                "width": 8,
+                "y": 1,
+                "x": 0,
+                "type": "metric",
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "InferenceSucceed",
+                            "Endpoint",
+                            ep_name,
+                            {
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            ".",
+                            "InferenceFailed",
+                            ".",
+                            ".",
+                            {
+                                "region": aws_region
+                            }
+                        ]
+                    ],
+                    "sparkline": True,
+                    "view": "singleValue",
+                    "region": aws_region,
+                    "title": "Inference Results",
+                    "period": 300,
+                    "stat": "Sum"
+                }
+            },
+            {
+                "height": 5,
+                "width": 16,
+                "y": 1,
+                "x": 8,
+                "type": "metric",
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "InferenceLatency",
+                            "Endpoint",
+                            ep_name
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "p99"
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "Maximum"
+                            }
+                        ]
+                    ],
+                    "sparkline": True,
+                    "view": "gauge",
+                    "region": aws_region,
+                    "stat": "Average",
+                    "period": 300,
+                    "yAxis": {
+                        "left": {
+                            "min": 0,
+                            "max": 10
+                        }
+                    },
+                    "title": "InferenceLatency"
+                }
+            },
+            {
+                "height": 5,
                 "width": 6,
                 "y": 0,
                 "x": 0,
@@ -60,7 +143,7 @@ def ds(ep_name: str):
                     "metrics": [
                         [
                             "ESD",
-                            "InferenceCount",
+                            "InferenceTotal",
                             "Endpoint",
                             ep_name,
                             {
@@ -73,7 +156,7 @@ def ds(ep_name: str):
                     "region": aws_region,
                     "title": "Endpoint Inference",
                     "stat": "Sum",
-                    "period": 86400
+                    "period": 300
                 }
             },
             {
@@ -107,7 +190,7 @@ def ds(ep_name: str):
                     "view": "gauge",
                     "region": aws_region,
                     "title": "MemoryUtilization",
-                    "period": 900,
+                    "period": 300,
                     "yAxis": {
                         "left": {
                             "min": 1,
@@ -148,7 +231,7 @@ def ds(ep_name: str):
                     "stacked": True,
                     "region": aws_region,
                     "title": "\t GPUMemoryUtilization",
-                    "period": 900,
+                    "period": 300,
                     "yAxis": {
                         "left": {
                             "min": 1,
@@ -196,7 +279,7 @@ def ds(ep_name: str):
                     "view": "singleValue",
                     "region": aws_region,
                     "title": "GPUUtilization",
-                    "period": 3600,
+                    "period": 300,
                     "yAxis": {
                         "left": {
                             "min": 0,
@@ -245,7 +328,7 @@ def ds(ep_name: str):
                     "view": "singleValue",
                     "region": aws_region,
                     "title": "CPUUtilization",
-                    "period": 3600,
+                    "period": 300,
                     "stat": "Average"
                 }
             },
@@ -285,23 +368,20 @@ def ds(ep_name: str):
         ]
     }
 
-    gpus_ds = resolve_gpu_ds(ep_name)
+    gpus_ds = resolve_gpu_ds(ep_name, custom_metrics)
     for gpu_ds in gpus_ds:
         dashboard_body['widgets'].append(gpu_ds)
 
     return json.dumps(dashboard_body)
 
 
-def resolve_gpu_ds(ep_name: str):
+def resolve_gpu_ds(ep_name: str, custom_metrics):
     list = []
-
-    # Call the function with the custom namespace you want to list metrics from
-    custom_metrics = list_custom_metrics('ESD')
 
     ids = []
     # Print or process the metrics
     for metric in custom_metrics:
-        if metric['MetricName'] == 'InferenceCount':
+        if metric['MetricName'] == 'InferenceTotal':
             if len(metric['Dimensions']) == 3:
                 for dm in metric['Dimensions']:
                     if dm['Name'] == 'Endpoint' and dm['Value'] == ep_name:
@@ -327,7 +407,7 @@ def resolve_gpu_ds(ep_name: str):
                 "metrics": [
                     [
                         "ESD",
-                        "InferenceCount",
+                        "InferenceTotal",
                         "Endpoint",
                         ep_name,
                         "Instance",
@@ -344,7 +424,7 @@ def resolve_gpu_ds(ep_name: str):
                 "stacked": True,
                 "region": aws_region,
                 "stat": "Sum",
-                "period": 900,
+                "period": 300,
                 "title": f"{item['index']}-Tasks"
             }
         })
@@ -358,13 +438,6 @@ def resolve_gpu_ds(ep_name: str):
     return list
 
 
-def delete_dashboard(ep_name: str):
-    cloudwatch.delete_dashboards(
-        DashboardNames=[ep_name]
-    )
-    print(f"Dashboard {ep_name} deleted")
-
-
 def get_dashboard(dashboard_name):
     try:
         response = cloudwatch.get_dashboard(DashboardName=dashboard_name)
@@ -373,30 +446,12 @@ def get_dashboard(dashboard_name):
         return None
 
 
-def create_ds(ep_name: str):
-    # Check if the dashboard exists
+def create_ds(ep_name: str, custom_metrics):
     existing_dashboard = get_dashboard(ep_name)
 
+    cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds_body(ep_name, custom_metrics))
+
     if existing_dashboard:
-        # Update the existing dashboard
-        cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds(ep_name))
-        print(f"Dashboard '{ep_name}' updated successfully.")
+        logger.info(f"Dashboard '{ep_name}' updated successfully.")
     else:
-        # Create a new dashboard
-        cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds(ep_name))
-        print(f"Dashboard '{ep_name}' created successfully.")
-
-
-def list_custom_metrics(namespace):
-    # Use the list_metrics function to retrieve metrics from the specified namespace
-    response = cloudwatch.list_metrics(
-        Namespace=namespace
-    )
-
-    # Extract and return the list of metrics from the response
-    return response['Metrics']
-
-
-def list_sagemaker_endpoints():
-    response = sagemaker.list_endpoints()
-    return response['Endpoints']
+        logger.info(f"Dashboard '{ep_name}' created successfully.")

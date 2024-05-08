@@ -32,28 +32,7 @@ endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID')
 
 
-def record_ep_metrics(ep_name: str):
-    response = cloudwatch.put_metric_data(
-        Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceCount',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': ep_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
-    )
-    logger.info(f"record_metric response: {response}")
-
-
-def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusion'):
+def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service='Stable-Diffusion'):
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
         MetricData=[
@@ -63,6 +42,18 @@ def record_count_metrics(metric_name='InferenceSucceed', service='Stable-Diffusi
                     {
                         'Name': 'Service',
                         'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': ep_name
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
@@ -98,7 +89,7 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service='St
     logger.info(f"record_metric response: {response}")
 
 
-def record_latency_metrics(start_time, metric_name='Inference', service='Stable-Diffusion'):
+def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service='Stable-Diffusion'):
     start_time = datetime.datetime.fromisoformat(start_time)
     latency = (datetime.datetime.now() - start_time).microseconds
 
@@ -111,6 +102,18 @@ def record_latency_metrics(start_time, metric_name='Inference', service='Stable-
                     {
                         'Name': 'Service',
                         'Value': service
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': latency,
+                'Unit': 'Microseconds'
+            },
+            {
+                'MetricName': metric_name,
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': ep_name
                     },
                 ],
                 'Timestamp': datetime.datetime.utcnow(),
