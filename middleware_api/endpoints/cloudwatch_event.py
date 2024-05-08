@@ -110,14 +110,8 @@ def ds_body(ep_name: str, custom_metrics):
                             }
                         ]
                     ],
-                    "view": "gauge",
+                    "view": "singleValue",
                     "region": aws_region,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 100
-                        }
-                    },
                     "period": period,
                     "stat": "Maximum",
                     "title": "QueueLatency"
@@ -125,7 +119,7 @@ def ds_body(ep_name: str, custom_metrics):
             },
             {
                 "height": 5,
-                "width": 8,
+                "width": 6,
                 "y": 1,
                 "x": 0,
                 "type": "metric",
@@ -160,7 +154,7 @@ def ds_body(ep_name: str, custom_metrics):
             },
             {
                 "height": 5,
-                "width": 16,
+                "width": 18,
                 "y": 1,
                 "x": 8,
                 "type": "metric",
@@ -170,32 +164,38 @@ def ds_body(ep_name: str, custom_metrics):
                             "ESD",
                             "InferenceLatency",
                             "Endpoint",
-                            ep_name
-                        ],
-                        [
-                            "...",
+                            ep_name,
                             {
-                                "stat": "p99"
+                                "region": aws_region,
+                                "stat": "Minimum"
                             }
                         ],
                         [
                             "...",
                             {
-                                "stat": "Maximum"
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "p99",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "Maximum",
+                                "region": aws_region
                             }
                         ]
                     ],
                     "sparkline": True,
-                    "view": "gauge",
+                    "view": "singleValue",
                     "region": aws_region,
                     "stat": "Average",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 10
-                        }
-                    },
                     "title": "InferenceLatency"
                 }
             },
@@ -346,12 +346,6 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "title": "GPUUtilization",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 100
-                        }
-                    },
                     "stacked": False,
                     "stat": "Average"
                 }
@@ -423,12 +417,6 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "title": "DiskUtilization",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 1,
-                            "max": 100
-                        }
-                    }
                 }
             },
         ]
@@ -464,7 +452,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     i = 0
     for item in sorted_ids:
         list.append({
-            "height": 7,
+            "height": 5,
             "width": 6,
             "y": y,
             "x": x,
@@ -491,7 +479,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "region": aws_region,
                 "stat": "Sum",
                 "period": period,
-                "title": f"{item['index']}-Tasks"
+                "title": f"Instance-{item['index']}-Tasks"
             }
         })
         i = i + 1

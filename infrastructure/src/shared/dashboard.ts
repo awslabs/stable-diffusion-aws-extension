@@ -420,18 +420,12 @@ export class DashboardStack {
                                 ]
                             ],
                             "sparkline": true,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "period": period,
                             "stat": "Average",
                             "stacked": false,
                             "title": "SD-InferenceLatency",
-                            "yAxis": {
-                                "left": {
-                                    "min": 0,
-                                    "max": 100
-                                }
-                            }
                         }
                     },
                     {
@@ -502,16 +496,10 @@ export class DashboardStack {
                                 ]
                             ],
                             "sparkline": true,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
                             "stat": "Maximum",
                             "period": period,
-                            "yAxis": {
-                                "left": {
-                                    "min": 0,
-                                    "max": 10
-                                }
-                            },
                             "title": "Comfy-InferenceLatency"
                         }
                     },
@@ -736,14 +724,8 @@ export class DashboardStack {
                                     }
                                 ]
                             ],
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
-                            "yAxis": {
-                                "left": {
-                                    "min": 0,
-                                    "max": 100
-                                }
-                            },
                             "period": period,
                             "stat": "Average",
                             "title": "SDQueueLatency"
@@ -782,14 +764,8 @@ export class DashboardStack {
                                     "..."
                                 ]
                             ],
-                            "view": "gauge",
+                            "view": "singleValue",
                             "region": Aws.REGION,
-                            "yAxis": {
-                                "left": {
-                                    "min": 0,
-                                    "max": 100
-                                }
-                            },
                             "period": period,
                             "stat": "Maximum",
                             "title": "ComfyQueueLatency"
