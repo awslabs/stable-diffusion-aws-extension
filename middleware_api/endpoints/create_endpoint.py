@@ -182,7 +182,7 @@ def handler(raw_event, ctx):
         data = Endpoint(
             EndpointDeploymentJobId=endpoint_id,
             endpoint_name=endpoint_name,
-            startTime=str(datetime.now()),
+            startTime=datetime.now().isoformat(),
             endpoint_status=EndpointStatus.CREATING.value,
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,

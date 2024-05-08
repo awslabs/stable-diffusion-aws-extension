@@ -139,6 +139,9 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
 
         request_obj['port'] = comfy_app.port
         request_obj['out_path'] = comfy_app.device_id
+
+        start_time = datetime.datetime.now().isoformat()
+
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
             async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
@@ -152,7 +155,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        return wrap_response(response, comfy_app)
+        return wrap_response(start_time, response, comfy_app)
     except Exception as e:
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
@@ -212,8 +215,9 @@ def ping():
     return {'status': 'Healthy'}
 
 
-def wrap_response(response, comfy_app: ComfyApp):
+def wrap_response(start_time, response, comfy_app: ComfyApp):
     data = response.json()
+    data['start_time'] = start_time
     data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
     data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
     data['device_id'] = comfy_app.device_id
@@ -263,7 +267,6 @@ def record_metric(comfy_app: ComfyApp):
         ]
     )
     logger.info(f"record_metric response: {response}")
-
 
 
 def get_gpu_count():

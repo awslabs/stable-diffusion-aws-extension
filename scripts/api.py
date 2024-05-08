@@ -218,11 +218,19 @@ def sagemaker_api(_, app: FastAPI):
     global thread_deque
     thread_deque = deque()
 
+    def wrap_response(start_time, data):
+        data['start_time'] = start_time
+        data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
+        data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
+        return data
+
     @app.post("/invocations")
     def invocations(req: InvocationsRequest):
 
         logger.info(f'-------invocation on port {req.port}------')
         logger.info(json.dumps(req.__dict__, default=str))
+
+        start_time = datetime.datetime.now().isoformat()
 
         record_metric()
 
@@ -263,7 +271,7 @@ def sagemaker_api(_, app: FastAPI):
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp.update(response.json())
-                    return resp
+                    return wrap_response(start_time, resp)
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
                     checkspace_and_update_models(req.models)
@@ -278,11 +286,11 @@ def sagemaker_api(_, app: FastAPI):
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp.update(response.json())
-                    return resp
+                    return wrap_response(start_time, resp)
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'extra-single-image':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-single-image',
                                              json=payload)
@@ -290,10 +298,10 @@ def sagemaker_api(_, app: FastAPI):
                 elif req.task == 'extra-batch-images':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-batch-images',
                                              json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'rembg':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/rembg', json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'db-create-model':
                     r"""
                     task: db-create-model

@@ -12,6 +12,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from common.util import publish_msg, generate_presigned_url_for_key, record_seconds_metrics
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
+from libs.enums import ServiceType
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ def check_status(training_job: TrainJob):
 
         float_timestamp = float(training_job.timestamp)
         timestamp = datetime.datetime.fromtimestamp(float_timestamp).isoformat()
-        record_seconds_metrics(start_time=timestamp, metric_name='TrainingLatency', service='Stable-diffusion')
+        record_seconds_metrics(start_time=timestamp, metric_name='TrainingLatency', service=ServiceType.SD.value)
 
         try:
             notify_user(training_job)

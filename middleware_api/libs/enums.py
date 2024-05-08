@@ -2,6 +2,13 @@ from enum import Enum, unique
 
 
 @unique
+class ServiceType(Enum):
+    Comfy = "Comfy"
+    SD = "Stable-Diffusion"
+    List = [Comfy, SD]
+
+
+@unique
 class EndpointType(Enum):
     RealTime = "Real-time"
     Async = "Async"

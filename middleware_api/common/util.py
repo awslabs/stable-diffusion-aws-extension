@@ -16,6 +16,7 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from libs.comfy_data_types import InferenceResult
 from libs.data_types import Endpoint
+from libs.enums import ServiceType
 from libs.utils import log_json
 
 tracer = Tracer()
@@ -37,7 +38,7 @@ esd_version = os.environ.get("ESD_VERSION")
 logs = boto3.client('logs')
 
 
-def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service='Stable-Diffusion'):
+def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service=ServiceType.SD.value):
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
         MetricData=[
@@ -70,7 +71,7 @@ def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service='
     logger.info(f"record_metric response: {response}")
 
 
-def record_seconds_metrics(start_time: str, metric_name='Inference', service='Stable-Diffusion'):
+def record_seconds_metrics(start_time: str, metric_name='Inference', service=ServiceType.SD.value):
     start_time = datetime.datetime.fromisoformat(start_time)
     latency = (datetime.datetime.now() - start_time).seconds
 
@@ -94,7 +95,7 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service='St
     logger.info(f"record_metric response: {response}")
 
 
-def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service='Stable-Diffusion'):
+def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service=ServiceType.SD.value):
     start_time = start_time.replace(" ", "T")
     logger.info(f"start {start_time}")
 
