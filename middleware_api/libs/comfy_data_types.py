@@ -27,6 +27,7 @@ class InferenceResult:
     instance_id: str
     status: str
     prompt_id: str
+    start_time: Optional[str] = None
     message: Optional[str] = None
     output_path: Optional[str] = None
     output_files: Optional[List[str]] = None

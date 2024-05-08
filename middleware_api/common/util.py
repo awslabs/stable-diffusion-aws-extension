@@ -96,7 +96,6 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service=Ser
 
 
 def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service=ServiceType.SD.value):
-    start_time = start_time.replace(" ", "T")
     logger.info(f"start {start_time}")
 
     end_time = datetime.datetime.now().isoformat()
@@ -104,6 +103,55 @@ def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLaten
 
     time1 = datetime.datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
     time2 = datetime.datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f")
+
+    time_difference = time2 - time1
+
+    latency = time_difference.total_seconds() * 1000
+
+    logger.info(f"{service} {metric_name}: {latency} Milliseconds")
+
+    data = [
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': service
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': latency,
+            'Unit': 'Milliseconds'
+        },
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': ep_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': latency,
+            'Unit': 'Milliseconds'
+        },
+    ]
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=data
+    )
+    logger.info(f"record_metric response: {response}")
+
+
+def record_queue_latency_metrics(create_time: str, start_time, ep_name: str, service=ServiceType.SD.value):
+    metric_name = 'QueueLatency'
+
+    logger.info(f"create_time {create_time}")
+    logger.info(f"start_time {start_time}")
+
+    time1 = datetime.datetime.strptime(create_time, "%Y-%m-%dT%H:%M:%S.%f")
+    time2 = datetime.datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
 
     time_difference = time2 - time1
 

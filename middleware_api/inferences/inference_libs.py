@@ -9,7 +9,8 @@ import boto3
 from PIL import Image
 from aws_lambda_powertools import Tracer
 
-from common.util import upload_file_to_s3
+from common.util import upload_file_to_s3, record_queue_latency_metrics
+from libs.enums import ServiceType
 from libs.utils import log_json
 
 tracer = Tracer()
@@ -27,8 +28,15 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 
 @tracer.capture_method
-def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name):
+def parse_sagemaker_result(sagemaker_out, create_time, inference_id, task_type, endpoint_name):
+    update_inference_job_table(inference_id, 'startTime', sagemaker_out['start_time'])
     update_inference_job_table(inference_id, 'completeTime', datetime.now().isoformat())
+
+    record_queue_latency_metrics(create_time=create_time,
+                                 start_time=sagemaker_out['start_time'],
+                                 ep_name=endpoint_name,
+                                 service=ServiceType.SD.value)
+
     try:
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
