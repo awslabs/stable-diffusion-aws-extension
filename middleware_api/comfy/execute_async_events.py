@@ -7,7 +7,8 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, record_latency_metrics
+from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, record_latency_metrics, \
+    record_queue_latency_metrics
 from libs.comfy_data_types import InferenceResult
 from libs.enums import ServiceType
 
@@ -60,6 +61,12 @@ def handler(event, context):
 
         logger.info(result)
 
+        update_execute_job_table(prompt_id=result.prompt_id, key="start_time", value=result.start_time)
+        record_queue_latency_metrics(create_time=resp['Item']['create_time'],
+                                     start_time=result.start_time,
+                                     ep_name=result.endpoint_name,
+                                     service=ServiceType.Comfy.value)
+
         if result.message:
             update_execute_job_table(prompt_id=result.prompt_id, key="message", value=result.message)
 
@@ -83,7 +90,7 @@ def handler(event, context):
         else:
             record_count_metrics(ep_name=result.endpoint_name, metric_name='InferenceSucceed',
                                  service=ServiceType.Comfy.value)
-            record_latency_metrics(start_time=resp['Item']['start_time'],
+            record_latency_metrics(start_time=result.start_time,
                                    ep_name=result.endpoint_name,
                                    metric_name='InferenceLatency',
                                    service=ServiceType.Comfy.value)
