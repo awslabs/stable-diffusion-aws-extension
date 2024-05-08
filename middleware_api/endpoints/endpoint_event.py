@@ -12,6 +12,7 @@ from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import get_endpoint_by_name
 
+cloudwatch = boto3.client('cloudwatch')
 logs = boto3.client('logs')
 lambda_client = boto3.client('lambda')
 
@@ -31,6 +32,7 @@ cool_down_period = 15 * 60  # 15 minutes
 s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3 = boto3.resource('s3')
 bucket = s3.Bucket(s3_bucket_name)
+aws_region = os.environ.get('AWS_REGION')
 
 
 # lambda: handle sagemaker events
@@ -83,6 +85,7 @@ def handler(event, context):
                 logGroupName=f"/aws/sagemaker/Endpoints/{endpoint_name}"
             )
             logger.info(f"Delete log group response: {response}")
+            delete_dashboard(endpoint_name)
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(endpoint, 'error', event['FailureReason'])
@@ -92,6 +95,13 @@ def handler(event, context):
         logger.error(e, exc_info=True)
 
     return {'statusCode': 200}
+
+
+def delete_dashboard(endpoint_name: str):
+    cloudwatch.delete_dashboards(
+        DashboardNames=[endpoint_name]
+    )
+    logger.info(f"Delete dashboard")
 
 
 def delete_ep_model_config(endpoint_name: str):
