@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestComfyEndpointCreateE2E:
+class TestComfyMutilGpusEndpointCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)

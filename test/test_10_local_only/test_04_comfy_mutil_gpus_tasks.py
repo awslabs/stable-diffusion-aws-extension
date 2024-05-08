@@ -24,7 +24,7 @@ id = str(uuid.uuid4())
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestComfyMutilTaskGPUs:
+class TestComfyMutilGpusTasks:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
