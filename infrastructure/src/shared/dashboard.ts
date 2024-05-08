@@ -696,6 +696,104 @@ export class DashboardStack {
                             "period": period,
                             "title": "Comfy-DownloadFileSize"
                         }
+                    },
+                    {
+                        "type": "metric",
+                        "x": 0,
+                        "y": 0,
+                        "width": 24,
+                        "height": 5,
+                        "properties": {
+                            "metrics": [
+                                [
+                                    "ESD",
+                                    "QueueLatency",
+                                    "Service",
+                                    "Stable-Diffusion",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "Minimum"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "p99"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "Maximum"
+                                    }
+                                ]
+                            ],
+                            "view": "gauge",
+                            "region": Aws.REGION,
+                            "yAxis": {
+                                "left": {
+                                    "min": 0,
+                                    "max": 100
+                                }
+                            },
+                            "period": period,
+                            "stat": "Average",
+                            "title": "SDQueueLatency"
+                        }
+                    },
+                    {
+                        "type": "metric",
+                        "x": 0,
+                        "y": 5,
+                        "width": 24,
+                        "height": 5,
+                        "properties": {
+                            "metrics": [
+                                [
+                                    "ESD",
+                                    "QueueLatency",
+                                    "Service",
+                                    "Comfy",
+                                    {
+                                        "stat": "Minimum"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "stat": "Average"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "stat": "p99"
+                                    }
+                                ],
+                                [
+                                    "..."
+                                ]
+                            ],
+                            "view": "gauge",
+                            "region": Aws.REGION,
+                            "yAxis": {
+                                "left": {
+                                    "min": 0,
+                                    "max": 100
+                                }
+                            },
+                            "period": period,
+                            "stat": "Maximum",
+                            "title": "ComfyQueueLatency"
+                        }
                     }
                 ]
             }

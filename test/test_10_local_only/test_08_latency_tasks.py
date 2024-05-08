@@ -148,6 +148,15 @@ class TestLatencyCompareTasks:
         assert resp.status_code == 201, resp.dumps()
         assert resp.json()["statusCode"] == 201
 
+    def create_batch_executes(self, n, api, endpoint_name):
+        for i in range(n):
+            comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=True,
+                                 workflow='./data/api_params/latency-comfy.json')
+
+    def create_batch_inferences(self, n, api, endpoint_name):
+        for i in range(n):
+            sd_inference_create(n=i, api=api, endpoint_name=endpoint_name, workflow='./data/api_params/latency-sd.json')
+
     def test_8_lantency_compare_start(self):
         self.test_7_update_api_roles()
 
@@ -155,10 +164,10 @@ class TestLatencyCompareTasks:
 
         batch = 1000
 
-        thread = threading.Thread(target=create_batch_executes, args=(batch, self.api, self.endpoint_name))
+        thread = threading.Thread(target=self.create_batch_executes, args=(batch, self.api, self.endpoint_name))
         threads.append(thread)
 
-        thread = threading.Thread(target=create_batch_inferences, args=(batch, self.api, self.endpoint_name_sd))
+        thread = threading.Thread(target=self.create_batch_inferences, args=(batch, self.api, self.endpoint_name_sd))
         threads.append(thread)
 
         for thread in threads:
@@ -166,14 +175,3 @@ class TestLatencyCompareTasks:
 
         for thread in threads:
             thread.join()
-
-
-def create_batch_executes(n, api, endpoint_name):
-    for i in range(n):
-        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=True,
-                             workflow='./data/api_params/latency-comfy.json')
-
-
-def create_batch_inferences(n, api, endpoint_name):
-    for i in range(n):
-        sd_inference_create(n=i, api=api, endpoint_name=endpoint_name, workflow='./data/api_params/latency-sd.json')

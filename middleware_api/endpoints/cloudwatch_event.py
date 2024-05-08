@@ -72,6 +72,58 @@ def ds_body(ep_name: str, custom_metrics):
                 }
             },
             {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 24,
+                "height": 5,
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "QueueLatency",
+                            "Endpoint",
+                            ep_name,
+                            {
+                                "stat": "Minimum",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "Average",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "p99",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "region": aws_region
+                            }
+                        ]
+                    ],
+                    "view": "gauge",
+                    "region": aws_region,
+                    "yAxis": {
+                        "left": {
+                            "min": 0,
+                            "max": 100
+                        }
+                    },
+                    "period": period,
+                    "stat": "Maximum",
+                    "title": "QueueLatency"
+                }
+            },
+            {
                 "height": 5,
                 "width": 8,
                 "y": 1,
