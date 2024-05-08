@@ -49,7 +49,7 @@ class TestComfySingleGpuEpCreateE2E:
                 else:
                     break
 
-    def test_3_create_confy_endpoint_async(self):
+    def test_3_create_comfy_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

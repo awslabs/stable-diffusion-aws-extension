@@ -145,7 +145,7 @@ class TestEndpointCreateE2E:
         resp = self.api.create_endpoint(headers=headers, data=data)
         assert "Cannot create already existing model" in resp.json()["message"]
 
-    def test_3_create_confy_endpoint_async(self):
+    def test_3_create_comfy_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

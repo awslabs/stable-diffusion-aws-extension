@@ -5,9 +5,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-import pytest
-
 import config as config
+import pytest
 from utils.api import Api
 from utils.helper import endpoints_wait_for_in_service
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestComfyMutilGpusEndpointCreateE2E:
+class TestLatencyEndpointCreate:
 
     def setup_class(self):
         self.api = Api(config)
@@ -50,17 +49,17 @@ class TestComfyMutilGpusEndpointCreateE2E:
                 else:
                     break
 
-    def test_3_create_comfy_endpoint_async(self):
+    def test_2_create_comfy_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
         }
 
         data = {
-            "endpoint_name": 'gpus',
+            "endpoint_name": 'latency',
             "service_type": "comfy",
             "endpoint_type": "Async",
-            "instance_type": 'ml.g5.12xlarge',
+            "instance_type": 'ml.g5.2xlarge',
             "initial_instance_count": 1,
             "autoscaling_enabled": False,
             "assign_to_roles": [config.role_comfy_async],
@@ -74,7 +73,31 @@ class TestComfyMutilGpusEndpointCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_1_list_endpoints_status(self):
+    def test_3_create_sd_endpoint_async(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        data = {
+            "endpoint_name": 'latency',
+            "service_type": "sd",
+            "endpoint_type": "Async",
+            "instance_type": 'ml.g5.2xlarge',
+            "initial_instance_count": 1,
+            "autoscaling_enabled": False,
+            "assign_to_roles": [config.role_sd_async],
+            "creator": config.username
+        }
+
+        if config.custom_docker_image_uri:
+            data["custom_docker_image_uri"] = config.custom_docker_image_uri
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert 'data' in resp.json(), resp.dumps()
+        assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
+
+    def test_4_list_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
