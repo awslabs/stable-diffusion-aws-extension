@@ -61,7 +61,6 @@ def handler(event, context):
 
         logger.info(result)
 
-        update_execute_job_table(prompt_id=result.prompt_id, key="start_time", value=result.start_time)
         record_queue_latency_metrics(create_time=resp['Item']['create_time'],
                                      start_time=result.start_time,
                                      ep_name=result.endpoint_name,

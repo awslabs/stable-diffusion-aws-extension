@@ -39,6 +39,9 @@ cloudwatch = boto3.client('cloudwatch')
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
+ddb_client = boto3.resource('dynamodb')
+inference_table = ddb_client.Table('ComfyExecuteTable')
+
 
 class Api:
     def add_api_route(self, path: str, endpoint, **kwargs):
@@ -129,6 +132,24 @@ class ComfyApp:
             f.write(str(prompt_id))
 
 
+def update_execute_job_table(prompt_id, key, value):
+    logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    try:
+        inference_table.update_item(
+            Key={
+                "prompt_id": prompt_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(prompt_id)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update execute job table error: {e}")
+        raise e
+
+
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
         record_metric(comfy_app)
@@ -141,6 +162,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         request_obj['out_path'] = comfy_app.device_id
 
         start_time = datetime.datetime.now().isoformat()
+        update_execute_job_table(prompt_id=request_obj['prompt_id'], key="start_time", value=start_time)
 
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:

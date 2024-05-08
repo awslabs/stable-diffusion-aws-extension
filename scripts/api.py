@@ -34,6 +34,25 @@ cloudwatch = boto3.client('cloudwatch')
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
+ddb_client = boto3.resource('dynamodb')
+inference_table = ddb_client.Table('SDInferenceJobTable')
+
+def update_execute_job_table(prompt_id, key, value):
+    logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    try:
+        inference_table.update_item(
+            Key={
+                "InferenceJobId": prompt_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(InferenceJobId)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update execute job table error: {e}")
+        raise e
 
 def record_metric():
     response = cloudwatch.put_metric_data(
@@ -231,6 +250,8 @@ def sagemaker_api(_, app: FastAPI):
         logger.info(json.dumps(req.__dict__, default=str))
 
         start_time = datetime.datetime.now().isoformat()
+
+        update_execute_job_table(req.id, 'startTime', start_time)
 
         record_metric()
 

@@ -47,7 +47,7 @@ class ComfyExecuteTable:
     create_time: Optional[str] = None
     prompt_path: Optional[str] = None
     instance_id: Optional[str] = None
-    start_time: Optional[Any] = None
+    start_time: Optional[Any] = ''
     complete_time: Optional[Any] = None
     sagemaker_raw: Optional[Any] = None
     output_path: Optional[str] = None
