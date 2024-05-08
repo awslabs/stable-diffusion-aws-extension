@@ -20,7 +20,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 6,
+                        "height": 5,
                         "width": 16,
                         "y": 30,
                         "x": 0,
@@ -657,7 +657,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 6,
+                        "height": 5,
                         "width": 8,
                         "y": 30,
                         "x": 16,
