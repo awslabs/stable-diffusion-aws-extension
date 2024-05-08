@@ -51,12 +51,12 @@ export class DashboardStack {
                                     }
                                 ]
                             ],
-                            "view": "gauge",
                             "stacked": false,
                             "region": Aws.REGION,
                             "period": period,
                             "stat": "Maximum",
                             "title": "Comfy-EndpointReadySeconds",
+                            "view": "gauge",
                             "yAxis": {
                                 "left": {
                                     "min": 0,
@@ -352,7 +352,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 8,
                         "y": 12,
                         "x": 0,
@@ -388,7 +388,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 16,
                         "y": 12,
                         "x": 8,
@@ -429,7 +429,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 8,
                         "y": 2,
                         "x": 0,
@@ -464,7 +464,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 16,
                         "y": 2,
                         "x": 8,
@@ -686,7 +686,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 24,
                         "y": 17,
                         "x": 0,
@@ -732,7 +732,7 @@ export class DashboardStack {
                         }
                     },
                     {
-                        "height": 5,
+                        "height": 4,
                         "width": 24,
                         "y": 7,
                         "x": 0,

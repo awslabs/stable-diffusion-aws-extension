@@ -76,7 +76,7 @@ def ds_body(ep_name: str, custom_metrics):
                 "x": 0,
                 "y": 0,
                 "width": 24,
-                "height": 5,
+                "height": 4,
                 "properties": {
                     "metrics": [
                         [
@@ -118,7 +118,7 @@ def ds_body(ep_name: str, custom_metrics):
                 }
             },
             {
-                "height": 5,
+                "height": 4,
                 "width": 6,
                 "y": 1,
                 "x": 0,
@@ -153,7 +153,7 @@ def ds_body(ep_name: str, custom_metrics):
                 }
             },
             {
-                "height": 5,
+                "height": 4,
                 "width": 18,
                 "y": 1,
                 "x": 8,
@@ -342,7 +342,13 @@ def ds_body(ep_name: str, custom_metrics):
                         ]
                     ],
                     "sparkline": True,
-                    "view": "singleValue",
+                    "view": "gauge",
+                    "yAxis": {
+                        "left": {
+                            "min": 0,
+                            "max": 100
+                        }
+                    },
                     "region": aws_region,
                     "title": "GPUUtilization",
                     "period": period,
@@ -385,7 +391,13 @@ def ds_body(ep_name: str, custom_metrics):
                         ]
                     ],
                     "sparkline": True,
-                    "view": "singleValue",
+                    "view": "gauge",
+                    "yAxis": {
+                        "left": {
+                            "min": 0,
+                            "max": 100
+                        }
+                    },
                     "region": aws_region,
                     "title": "CPUUtilization",
                     "period": period,
