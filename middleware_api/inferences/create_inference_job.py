@@ -75,8 +75,6 @@ def handler(raw_event: dict, context: LambdaContext):
                                           event.inference_type,
                                           username)
 
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal')
-
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
@@ -149,6 +147,8 @@ def handler(raw_event: dict, context: LambdaContext):
                                            for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
+
+        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal')
 
         if event.payload_string:
             return inference_start(inference_job, username)
