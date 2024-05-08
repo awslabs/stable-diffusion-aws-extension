@@ -315,7 +315,7 @@ def sagemaker_api(_, app: FastAPI):
                 elif req.task == 'extra-single-image':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-single-image',
                                              json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'extra-batch-images':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-batch-images',
                                              json=payload)
