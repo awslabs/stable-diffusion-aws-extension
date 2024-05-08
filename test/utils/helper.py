@@ -15,7 +15,7 @@ import requests
 
 import config as config
 from utils.api import Api
-from utils.enums import InferenceStatus
+from utils.enums import InferenceStatus, InferenceType
 
 logger = logging.getLogger(__name__)
 
@@ -200,8 +200,9 @@ class DecimalEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
-    with open('./data/api_params/comfy_workflow.json', 'r') as f:
+def comfy_execute_create(n, api, endpoint_name, wait_succeed=True,
+                         workflow: str = './data/api_params/comfy_workflow.json'):
+    with open(workflow, 'r') as f:
         headers = {
             "x-api-key": config.api_key,
         }
@@ -225,7 +226,7 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
             resp = api.get_execute_job(headers=headers, prompt_id=prompt_id)
             if resp.status_code == 404:
                 init_status = "not found"
-                logger.info(f"{n} {endpoint_name} {prompt_id} is {init_status}")
+                logger.info(f"comfy {n} {endpoint_name} {prompt_id} is {init_status}")
                 continue
 
             assert resp.status_code == 200, resp.dumps()
@@ -234,7 +235,7 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
             status = resp.json()["data"]["status"]
 
             if init_status != status:
-                logger.info(f"Thread {n} {endpoint_name} {prompt_id} is {status}")
+                logger.info(f"comfy {n} {endpoint_name} {prompt_id} is {status}")
                 init_status = status
 
             if status == 'success':
@@ -246,6 +247,60 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True):
                 raise Exception(f"{n} {endpoint_name} {prompt_id} failed.")
         else:
             raise Exception(f"{n} {endpoint_name} {prompt_id} timed out after 5 minutes.")
+
+
+def sd_inference_create(n, api, endpoint_name: str, workflow: str = './data/api_params/sd.json'):
+    with open(workflow, 'r') as f:
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        data = {
+            "inference_type": "Async",
+            "task_type": InferenceType.TXT2IMG.value,
+            "models": {
+                "Stable-diffusion": [config.default_model_id],
+                "embeddings": []
+            },
+        }
+
+        resp = api.create_inference(headers=headers, data=data)
+        assert resp.status_code == 201, resp.dumps()
+
+        inference_data = resp.json()['data']["inference"]
+        inference_id = inference_data["id"]
+
+        assert resp.json()["statusCode"] == 201
+        assert inference_data["type"] == InferenceType.TXT2IMG.value
+        assert len(inference_data["api_params_s3_upload_url"]) > 0
+
+        upload_with_put(inference_data["api_params_s3_upload_url"], workflow)
+
+        resp = api.get_inference_job(headers=headers, job_id=inference_data["id"])
+        assert resp.status_code == 200, resp.dumps()
+
+        resp = api.start_inference_job(job_id=inference_id, headers=headers)
+        assert resp.status_code == 202, resp.dumps()
+
+        assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
+
+        timeout = datetime.now() + timedelta(minutes=2)
+
+        while datetime.now() < timeout:
+            status = get_inference_job_status(
+                api_instance=api,
+                job_id=inference_id
+            )
+            logger.info(f"sd {n} {endpoint_name} {inference_id} is {status}")
+            if status == InferenceStatus.SUCCEED.value:
+                break
+            if status == InferenceStatus.FAILED.value:
+                logger.error(inference_data)
+                break
+            time.sleep(4)
+        else:
+            raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
 
 
 def get_endpoint_comfy_async(api):

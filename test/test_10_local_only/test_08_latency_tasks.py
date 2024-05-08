@@ -10,7 +10,8 @@ import pytest
 
 import config as config
 from utils.api import Api
-from utils.helper import wget_file, comfy_execute_create, get_endpoint_comfy_async
+from utils.helper import wget_file, comfy_execute_create, get_endpoint_comfy_async, get_endpoint_sd_async, \
+    sd_inference_create
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,24 +25,25 @@ id = str(uuid.uuid4())
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestComfyMutilGpusTasks:
+class TestLatencyCompareTasks:
     def setup_class(self):
         self.api = Api(config)
         self.api.feat_oas_schema()
         self.endpoint_name = get_endpoint_comfy_async(self.api)
+        self.endpoint_name_sd = get_endpoint_sd_async(self.api)
 
     @classmethod
     def teardown_class(self):
         pass
 
-    def test_10_download_file(self):
+    def test_1_download_file(self):
         local_path = f"./data/comfy/models/checkpoints/v1-5-pruned-emaonly.ckpt"
         wget_file(
             local_path,
             'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt'
         )
 
-    def test_11_sync_files_to_comfy_endpoint(self):
+    def test_2_sync_files_to_comfy_endpoint(self):
         local = "'./data/comfy/models/*'"
         target = f"'s3://{config.bucket}/comfy/{self.endpoint_name}/{id}/models/'"
         logger.info(f"Syncing {local} to {target}")
@@ -50,7 +52,7 @@ class TestComfyMutilGpusTasks:
         os.system(f"chmod +x ./s5cmd")
         os.system(f"./s5cmd sync {local} {target}")
 
-    def test_12_sync_files(self):
+    def test_3_comfy_sync_files(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -62,10 +64,10 @@ class TestComfyMutilGpusTasks:
         resp = self.api.prepare(data=data, headers=headers)
         assert resp.status_code == 200, resp.dumps()
         logger.info(resp.json())
-        logger.info(f"wait 30s for endpoint sync files...")
-        time.sleep(30)
+        logger.info(f"wait 20s for endpoint sync files...")
+        time.sleep(20)
 
-    def test_13_clean_all_executes(self):
+    def test_4_clean_all_executes(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
@@ -94,13 +96,68 @@ class TestComfyMutilGpusTasks:
                 time.sleep(5)
                 continue
 
-    def test_14_comfy_gpus_start_async_tps(self):
+    def test_6_clean_all_inferences(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        while True:
+
+            resp = self.api.list_inferences(headers=headers)
+            inferences = resp.json()['data']['inferences']
+            if len(inferences) == 0:
+                break
+
+            for inference in inferences:
+                inference_id = inference['InferenceJobId']
+                data = {
+                    "inference_id_list": [
+                        inference_id
+                    ],
+                }
+                resp = self.api.delete_inferences(headers=headers, data=data)
+                logger.info(f"delete inference {inference_id}")
+                if resp.status_code == 400:
+                    logger.info(resp.json()['message'])
+                    time.sleep(5)
+                    continue
+
+    def test_7_update_api_roles(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username,
+        }
+
+        data = {
+            "username": "api",
+            "password": "admin",
+            "creator": "api",
+            "roles": [
+                'IT Operator',
+                'byoc',
+                config.role_sd_real_time,
+                config.role_sd_async,
+                config.role_comfy_async,
+                config.role_comfy_real_time,
+            ],
+        }
+
+        resp = self.api.create_user(headers=headers, data=data)
+
+        assert resp.status_code == 201, resp.dumps()
+        assert resp.json()["statusCode"] == 201
+
+    def test_8_lantency_compare_start(self):
         threads = []
-        gpus = 4
-        batch = 10000
-        for i in range(gpus):
-            thread = threading.Thread(target=create_batch_executes, args=(batch, self.api, self.endpoint_name))
-            threads.append(thread)
+
+        batch = 1000
+
+        thread = threading.Thread(target=create_batch_executes, args=(batch, self.api, self.endpoint_name))
+        threads.append(thread)
+
+        thread = threading.Thread(target=create_batch_inferences, args=(batch, self.api, self.endpoint_name_sd))
+        threads.append(thread)
 
         for thread in threads:
             thread.start()
@@ -111,4 +168,10 @@ class TestComfyMutilGpusTasks:
 
 def create_batch_executes(n, api, endpoint_name):
     for i in range(n):
-        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=True)
+        comfy_execute_create(n=i, api=api, endpoint_name=endpoint_name, wait_succeed=True,
+                             workflow='./data/api_params/latency-comfy.json')
+
+
+def create_batch_inferences(n, api, endpoint_name):
+    for i in range(n):
+        sd_inference_create(n=i, api=api, endpoint_name=endpoint_name, workflow='./data/api_params/latency-sd.json')
