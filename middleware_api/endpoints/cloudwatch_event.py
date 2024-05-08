@@ -119,7 +119,7 @@ def ds_body(ep_name: str, custom_metrics):
             },
             {
                 "height": 5,
-                "width": 8,
+                "width": 6,
                 "y": 1,
                 "x": 0,
                 "type": "metric",
@@ -154,7 +154,7 @@ def ds_body(ep_name: str, custom_metrics):
             },
             {
                 "height": 5,
-                "width": 16,
+                "width": 18,
                 "y": 1,
                 "x": 8,
                 "type": "metric",
@@ -164,18 +164,30 @@ def ds_body(ep_name: str, custom_metrics):
                             "ESD",
                             "InferenceLatency",
                             "Endpoint",
-                            ep_name
-                        ],
-                        [
-                            "...",
+                            ep_name,
                             {
-                                "stat": "p99"
+                                "region": aws_region,
+                                "stat": "Minimum"
                             }
                         ],
                         [
                             "...",
                             {
-                                "stat": "Maximum"
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "p99",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "Maximum",
+                                "region": aws_region
                             }
                         ]
                     ],
