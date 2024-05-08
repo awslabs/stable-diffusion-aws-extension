@@ -53,10 +53,32 @@ export async function syncEnv() {
     return false;
 }
 
+export async function syncEnvNoAlert() {
+    try {
+        var target = {}
+        const response = await api.fetchApi("/sync_env", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(target)
+        });
+        const result = await response.json();
+        if (response.ok) {
+            // 如果请求成功，显示成功消息
+            // alert('Sync local to s3 completed ! Please wait for a moment then execute your prompt！');
+        } else {
+            // 如果请求失败，显示错误消息
+            alert('Please click your synchronized button then execute prompt.');
+        }
+    } catch (exception) {
+        console.error('Error occurred during sync:', exception);
+        alert('Please click your synchronized button then try again later.');
+    }
+}
+
 
 export async function changeOnAWS(disableAWS) {
     var target
-    if(disableAWS === false) {
+    if (disableAWS === false) {
         if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
             try {
                 target = {'DISABLE_AWS_PROXY': "True"}
@@ -71,17 +93,17 @@ export async function changeOnAWS(disableAWS) {
         }
     } else {
         if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
-          try {
-            target = {'DISABLE_AWS_PROXY': "False"}
-            const response = await api.fetchApi("/change_env", {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify(target)
-            });
-          } catch (exception) {
-          }
-          syncEnv()
-          return true;
+            try {
+                target = {'DISABLE_AWS_PROXY': "False"}
+                const response = await api.fetchApi("/change_env", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(target)
+                });
+            } catch (exception) {
+            }
+            syncEnvNoAlert()
+            return true;
         }
     }
     return disableAWS;
