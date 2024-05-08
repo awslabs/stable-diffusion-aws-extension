@@ -10,11 +10,11 @@ export class DashboardStack {
         const dashboardBody = {
                 "widgets": [
                     {
-                        "type": "text",
-                        "x": 0,
-                        "y": 0,
-                        "width": 24,
                         "height": 2,
+                        "width": 24,
+                        "y": 0,
+                        "x": 0,
+                        "type": "text",
                         "properties": {
                             "markdown": `## ESD (Extension for Stable Diffusion on AWS) \n Last Build Time: ${last_build_time} \n`
                         }
@@ -22,7 +22,7 @@ export class DashboardStack {
                     {
                         "height": 6,
                         "width": 16,
-                        "y": 18,
+                        "y": 30,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -68,7 +68,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 16,
-                        "y": 32,
+                        "y": 44,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -114,7 +114,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 10,
+                        "y": 22,
                         "x": 12,
                         "type": "metric",
                         "properties": {
@@ -154,7 +154,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 10,
+                        "y": 22,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -194,7 +194,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 14,
+                        "y": 26,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -234,7 +234,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 24,
+                        "y": 36,
                         "x": 12,
                         "type": "metric",
                         "properties": {
@@ -274,7 +274,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 24,
+                        "y": 36,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -314,7 +314,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 28,
+                        "y": 40,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -354,7 +354,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 8,
-                        "y": 5,
+                        "y": 12,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -390,7 +390,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 16,
-                        "y": 5,
+                        "y": 12,
                         "x": 8,
                         "type": "metric",
                         "properties": {
@@ -437,7 +437,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 8,
-                        "y": 0,
+                        "y": 2,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -472,7 +472,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 16,
-                        "y": 0,
+                        "y": 2,
                         "x": 8,
                         "type": "metric",
                         "properties": {
@@ -518,7 +518,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 28,
+                        "y": 40,
                         "x": 12,
                         "type": "metric",
                         "properties": {
@@ -558,7 +558,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 12,
-                        "y": 14,
+                        "y": 26,
                         "x": 12,
                         "type": "metric",
                         "properties": {
@@ -598,7 +598,7 @@ export class DashboardStack {
                     {
                         "height": 5,
                         "width": 8,
-                        "y": 32,
+                        "y": 44,
                         "x": 16,
                         "type": "metric",
                         "properties": {
@@ -631,7 +631,7 @@ export class DashboardStack {
                     {
                         "height": 4,
                         "width": 24,
-                        "y": 37,
+                        "y": 49,
                         "x": 0,
                         "type": "metric",
                         "properties": {
@@ -671,7 +671,7 @@ export class DashboardStack {
                     {
                         "height": 6,
                         "width": 8,
-                        "y": 18,
+                        "y": 30,
                         "x": 16,
                         "type": "metric",
                         "properties": {
@@ -696,9 +696,108 @@ export class DashboardStack {
                             "period": period,
                             "title": "Comfy-DownloadFileSize"
                         }
+                    },
+                    {
+                        "height": 5,
+                        "width": 24,
+                        "y": 17,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [
+                                    "ESD",
+                                    "QueueLatency",
+                                    "Service",
+                                    "Stable-Diffusion",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "Minimum"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "p99"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "region": Aws.REGION,
+                                        "stat": "Maximum"
+                                    }
+                                ]
+                            ],
+                            "view": "gauge",
+                            "region": Aws.REGION,
+                            "yAxis": {
+                                "left": {
+                                    "min": 0,
+                                    "max": 100
+                                }
+                            },
+                            "period": period,
+                            "stat": "Average",
+                            "title": "SDQueueLatency"
+                        }
+                    },
+                    {
+                        "height": 5,
+                        "width": 24,
+                        "y": 7,
+                        "x": 0,
+                        "type": "metric",
+                        "properties": {
+                            "metrics": [
+                                [
+                                    "ESD",
+                                    "QueueLatency",
+                                    "Service",
+                                    "Comfy",
+                                    {
+                                        "stat": "Minimum"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "stat": "Average"
+                                    }
+                                ],
+                                [
+                                    "...",
+                                    {
+                                        "stat": "p99"
+                                    }
+                                ],
+                                [
+                                    "..."
+                                ]
+                            ],
+                            "view": "gauge",
+                            "region": Aws.REGION,
+                            "yAxis": {
+                                "left": {
+                                    "min": 0,
+                                    "max": 100
+                                }
+                            },
+                            "period": period,
+                            "stat": "Maximum",
+                            "title": "ComfyQueueLatency"
+                        }
                     }
                 ]
             }
+
         ;
 
         new cw.CfnDashboard(scope, `EsdDashboard`, {

@@ -39,7 +39,7 @@ export class EndpointsCloudwatchEvents {
         });
 
         const rule = new Rule(this.scope, `${this.baseId}-rule`, {
-            schedule: Schedule.rate(Duration.minutes(10)),
+            schedule: Schedule.rate(Duration.minutes(5)),
         });
 
         rule.addTarget(new LambdaFunction(this.lambda));

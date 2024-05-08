@@ -58,7 +58,7 @@ def handler(event, context):
 
 
 def ds_body(ep_name: str, custom_metrics):
-    last_build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_build_time = datetime.datetime.now().isoformat()
     dashboard_body = {
         "widgets": [
             {
@@ -68,7 +68,59 @@ def ds_body(ep_name: str, custom_metrics):
                 "width": 24,
                 "height": 2,
                 "properties": {
-                    "markdown": f"## Endpoint - {ep_name} \n Last Build Time: {last_build_time}"
+                    "markdown": f"## ESD - {ep_name} \n Last Build Time: {last_build_time}"
+                }
+            },
+            {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 24,
+                "height": 5,
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "QueueLatency",
+                            "Endpoint",
+                            ep_name,
+                            {
+                                "stat": "Minimum",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "Average",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "stat": "p99",
+                                "region": aws_region
+                            }
+                        ],
+                        [
+                            "...",
+                            {
+                                "region": aws_region
+                            }
+                        ]
+                    ],
+                    "view": "gauge",
+                    "region": aws_region,
+                    "yAxis": {
+                        "left": {
+                            "min": 0,
+                            "max": 100
+                        }
+                    },
+                    "period": period,
+                    "stat": "Maximum",
+                    "title": "QueueLatency"
                 }
             },
             {
