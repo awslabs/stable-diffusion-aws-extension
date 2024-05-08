@@ -7,13 +7,11 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import record_seconds_metrics
+from common.util import record_seconds_metrics, endpoint_clean
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import get_endpoint_by_name
 
-cloudwatch = boto3.client('cloudwatch')
-logs = boto3.client('logs')
 lambda_client = boto3.client('lambda')
 
 tracer = Tracer()
@@ -77,55 +75,15 @@ def handler(event, context):
                 instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
                 update_endpoint_field(endpoint, 'current_instance_count', instance_count)
         else:
-            delete_ep_model_config(endpoint_name)
-            delete_dashboard(endpoint_name)
-
-            ddb_service.delete_item(sagemaker_endpoint_table,
-                                    keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
-
-            try:
-                bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{endpoint_name}").delete()
-            except Exception as e:
-                logger.error(e, exc_info=True)
-
-            try:
-                response = logs.delete_log_group(
-                    logGroupName=f"/aws/sagemaker/Endpoints/{endpoint_name}"
-                )
-                logger.info(f"Delete log group response: {response}")
-            except Exception as e:
-                logger.error(e, exc_info=True)
+            endpoint_clean(endpoint)
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(endpoint, 'error', event['FailureReason'])
 
     except Exception as e:
-        delete_ep_model_config(endpoint_name)
         logger.error(e, exc_info=True)
 
     return {'statusCode': 200}
-
-
-def delete_dashboard(endpoint_name: str):
-    try:
-        cloudwatch.delete_dashboards(
-            DashboardNames=[endpoint_name]
-        )
-        logger.info(f"Delete dashboard")
-    except Exception as e:
-        logger.error(e, exc_info=True)
-
-
-def delete_ep_model_config(endpoint_name: str):
-    try:
-        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-
-    try:
-        sagemaker.delete_model(ModelName=endpoint_name)
-    except Exception as e:
-        logger.error(e, exc_info=True)
 
 
 def check_and_enable_autoscaling(ep: Endpoint, variant_name):

@@ -10,6 +10,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import NotFoundException
 from common.response import no_content
+from common.util import endpoint_clean
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus
 from libs.utils import response_error, get_endpoint_by_name
@@ -24,10 +25,6 @@ cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 esd_version = os.environ.get("ESD_VERSION")
-
-s3 = boto3.resource('s3')
-s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
-bucket = s3.Bucket(s3_bucket_name)
 
 
 @dataclass
@@ -76,7 +73,7 @@ def delete_endpoint(ep: Endpoint):
 
     endpoint = get_endpoint_in_sagemaker(ep.endpoint_name)
     if endpoint is None:
-        delete_endpoint_item(ep)
+        endpoint_clean(ep)
         return
 
     sagemaker.delete_endpoint(EndpointName=ep.endpoint_name)
@@ -86,7 +83,7 @@ def delete_endpoint(ep: Endpoint):
     response = cw_client.delete_alarms(AlarmNames=[f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
     logger.info(f"delete_metric_alarm response: {response}")
 
-    delete_endpoint_item(ep)
+    endpoint_clean(ep)
 
 
 @tracer.capture_method
@@ -96,12 +93,3 @@ def get_endpoint_in_sagemaker(endpoint_name):
     except (BotoCoreError, ClientError) as error:
         logger.error(error, exc_info=True)
         return None
-
-
-def delete_endpoint_item(ep: Endpoint):
-    ddb_service.delete_item(
-        table=sagemaker_endpoint_table,
-        keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
-    )
-
-    bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()
