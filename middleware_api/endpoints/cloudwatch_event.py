@@ -58,7 +58,7 @@ def handler(event, context):
 
 
 def ds_body(ep_name: str, custom_metrics):
-    last_build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_build_time = datetime.datetime.now().isoformat()
     dashboard_body = {
         "widgets": [
             {
@@ -68,7 +68,7 @@ def ds_body(ep_name: str, custom_metrics):
                 "width": 24,
                 "height": 2,
                 "properties": {
-                    "markdown": f"## Endpoint - {ep_name} \n Last Build Time: {last_build_time}"
+                    "markdown": f"## ESD - {ep_name} \n Last Build Time: {last_build_time}"
                 }
             },
             {
