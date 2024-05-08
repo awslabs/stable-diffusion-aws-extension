@@ -452,7 +452,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     i = 0
     for item in sorted_ids:
         list.append({
-            "height": 7,
+            "height": 5,
             "width": 6,
             "y": y,
             "x": x,
