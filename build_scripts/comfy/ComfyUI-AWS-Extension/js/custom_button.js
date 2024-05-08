@@ -158,9 +158,9 @@ async function handleCheckboxChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
     changeOnAWS(event.target.checked);
-    const response = await api.fetchApi("/get_env");
-    const data = await response.json();
-    event.target.checked = data.env.toUpperCase() === 'FALSE';
+    // const response = await api.fetchApi("/get_env");
+    // const data = await response.json();
+    // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
 function handleRadioChange(event) {
