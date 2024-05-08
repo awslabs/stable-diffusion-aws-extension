@@ -9,7 +9,7 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.util import record_seconds_metrics, endpoint_clean
 from libs.data_types import Endpoint
-from libs.enums import EndpointStatus, EndpointType
+from libs.enums import EndpointStatus, EndpointType, ServiceType
 from libs.utils import get_endpoint_by_name
 
 lambda_client = boto3.client('lambda')
@@ -39,7 +39,7 @@ def handler(event, context):
     logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
-    current_time = str(datetime.now())
+    current_time = datetime.now().isoformat()
 
     try:
         endpoint = get_endpoint_by_name(endpoint_name)
@@ -55,9 +55,9 @@ def handler(event, context):
             update_endpoint_field(endpoint, 'endTime', current_time)
 
             if endpoint.service_type == 'sd':
-                service_type = 'Stable-Diffusion'
+                service_type = ServiceType.SD.value
             else:
-                service_type = 'Comfy'
+                service_type = ServiceType.Comfy.value
 
             record_seconds_metrics(start_time=endpoint.startTime,
                                    metric_name='EndpointReadySeconds',

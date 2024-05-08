@@ -85,8 +85,7 @@ def handler(raw_event: dict, context: LambdaContext):
             presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
-            createTime=str(datetime.now()),
-            startTime=str(datetime.now()),
+            createTime=datetime.now().isoformat(),
             status='created',
             taskType=_type,
             inference_type=event.inference_type,

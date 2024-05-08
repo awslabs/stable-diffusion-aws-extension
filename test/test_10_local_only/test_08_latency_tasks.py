@@ -149,6 +149,8 @@ class TestLatencyCompareTasks:
         assert resp.json()["statusCode"] == 201
 
     def test_8_lantency_compare_start(self):
+        self.test_7_update_api_roles()
+
         threads = []
 
         batch = 1000

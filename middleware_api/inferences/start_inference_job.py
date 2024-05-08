@@ -82,9 +82,8 @@ def inference_start(job: InferenceJob, username):
     log_json("inference job", job.__dict__)
     log_json("inference invoke payload", payload.__dict__)
 
-    update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
-
     if job.inference_type == EndpointType.RealTime.value:
+        update_inference_job_table(job.InferenceJobId, 'startTime', datetime.now().isoformat())
         return real_time_inference(payload, job, endpoint_name)
 
     return async_inference(payload, job, endpoint_name)

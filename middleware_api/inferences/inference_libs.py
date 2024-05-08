@@ -28,7 +28,7 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 @tracer.capture_method
 def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name):
-    update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
+    update_inference_job_table(inference_id, 'completeTime', datetime.now().isoformat())
     try:
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
@@ -70,7 +70,7 @@ def get_bucket_and_key(s3uri):
 
 
 def update_inference_job_table(inference_id, key, value):
-    logger.info(f"Update inference job table with inference id: {inference_id}, key: {key}, value: {value}")
+    logger.info(f"Update job with inference id: {inference_id}, key: {key}, value: {value}")
     try:
         inference_table.update_item(
             Key={
