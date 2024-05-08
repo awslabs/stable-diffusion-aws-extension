@@ -22,6 +22,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 cloudwatch = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
+period = 300
 
 
 @tracer.capture_lambda_handler
@@ -67,7 +68,7 @@ def ds_body(ep_name: str, custom_metrics):
                 "width": 24,
                 "height": 2,
                 "properties": {
-                    "markdown": f"## Endpoint Dashboard - {ep_name} \n Last Build Time: {last_build_time}"
+                    "markdown": f"## Endpoint - {ep_name} \n Last Build Time: {last_build_time}"
                 }
             },
             {
@@ -101,7 +102,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "singleValue",
                     "region": aws_region,
                     "title": "Inference Results",
-                    "period": 300,
+                    "period": period,
                     "stat": "Sum"
                 }
             },
@@ -136,7 +137,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "gauge",
                     "region": aws_region,
                     "stat": "Average",
-                    "period": 300,
+                    "period": period,
                     "yAxis": {
                         "left": {
                             "min": 0,
@@ -169,7 +170,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "title": "Endpoint Inference",
                     "stat": "Sum",
-                    "period": 300
+                    "period": period
                 }
             },
             {
@@ -203,7 +204,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "gauge",
                     "region": aws_region,
                     "title": "MemoryUtilization",
-                    "period": 300,
+                    "period": period,
                     "yAxis": {
                         "left": {
                             "min": 1,
@@ -244,7 +245,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "stacked": True,
                     "region": aws_region,
                     "title": "\t GPUMemoryUtilization",
-                    "period": 300,
+                    "period": period,
                     "yAxis": {
                         "left": {
                             "min": 1,
@@ -292,7 +293,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "singleValue",
                     "region": aws_region,
                     "title": "GPUUtilization",
-                    "period": 300,
+                    "period": period,
                     "yAxis": {
                         "left": {
                             "min": 0,
@@ -341,7 +342,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "singleValue",
                     "region": aws_region,
                     "title": "CPUUtilization",
-                    "period": 300,
+                    "period": period,
                     "stat": "Average"
                 }
             },
@@ -369,7 +370,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "stacked": True,
                     "region": aws_region,
                     "title": "DiskUtilization",
-                    "period": 300,
+                    "period": period,
                     "yAxis": {
                         "left": {
                             "min": 1,
@@ -437,7 +438,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "stacked": True,
                 "region": aws_region,
                 "stat": "Sum",
-                "period": 300,
+                "period": period,
                 "title": f"{item['index']}-Tasks"
             }
         })
