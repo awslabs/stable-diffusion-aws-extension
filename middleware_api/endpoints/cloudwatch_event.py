@@ -112,12 +112,6 @@ def ds_body(ep_name: str, custom_metrics):
                     ],
                     "view": "singleValue",
                     "region": aws_region,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 100
-                        }
-                    },
                     "period": period,
                     "stat": "Maximum",
                     "title": "QueueLatency"
@@ -190,12 +184,6 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "stat": "Average",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 10
-                        }
-                    },
                     "title": "InferenceLatency"
                 }
             },
@@ -346,12 +334,6 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "title": "GPUUtilization",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 0,
-                            "max": 100
-                        }
-                    },
                     "stacked": False,
                     "stat": "Average"
                 }
@@ -423,12 +405,6 @@ def ds_body(ep_name: str, custom_metrics):
                     "region": aws_region,
                     "title": "DiskUtilization",
                     "period": period,
-                    "yAxis": {
-                        "left": {
-                            "min": 1,
-                            "max": 100
-                        }
-                    }
                 }
             },
         ]
