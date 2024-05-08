@@ -95,37 +95,51 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service='St
 
 
 def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service='Stable-Diffusion'):
-    start_time = datetime.datetime.fromisoformat(start_time)
-    latency = (datetime.datetime.now() - start_time).microseconds
+    start_time = start_time.replace(" ", "T")
+    logger.info(f"start {start_time}")
+
+    end_time = datetime.datetime.now().isoformat()
+    logger.info(f"end {end_time}")
+
+    time1 = datetime.datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
+    time2 = datetime.datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%f")
+
+    time_difference = time2 - time1
+
+    latency = time_difference.total_seconds() * 1000
+
+    logger.info(f"{service} {metric_name}: {latency} Milliseconds")
+
+    data = [
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': service
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': latency,
+            'Unit': 'Milliseconds'
+        },
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': ep_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': latency,
+            'Unit': 'Milliseconds'
+        },
+    ]
 
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': metric_name,
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': service
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': latency,
-                'Unit': 'Microseconds'
-            },
-            {
-                'MetricName': metric_name,
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': ep_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': latency,
-                'Unit': 'Microseconds'
-            },
-        ]
+        MetricData=data
     )
     logger.info(f"record_metric response: {response}")
 

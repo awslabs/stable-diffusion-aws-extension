@@ -702,7 +702,7 @@ export class DashboardStack {
         ;
 
         new cw.CfnDashboard(scope, `EsdDashboard`, {
-            dashboardName: `Extension-for-Stable-Diffusion-on-AWS`,
+            dashboardName: `ESD`,
             dashboardBody: JSON.stringify(dashboardBody)
         });
     }

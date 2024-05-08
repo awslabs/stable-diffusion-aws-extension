@@ -84,6 +84,12 @@ export class Middleware extends Stack {
       '366590864501',
     );
 
+    const consoleUrl = Fn.conditionIf(
+        isChinaCondition.logicalId,
+        'amazonaws.cn',
+        'aws.amazon.com',
+    );
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
@@ -369,6 +375,12 @@ export class Middleware extends Stack {
       value: snsTopics.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
     });
+
+    new CfnOutput(this, 'DashboardURL', {
+      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudwatch/home?region=${Aws.REGION}#dashboards/dashboard/ESD`,
+      description: 'CloudWatch Dashboard URL',
+    });
+
   }
 
   addEnvToAllLambdas(variableName: string, value: string) {

@@ -89,7 +89,7 @@ def handler(event, context):
 
 
 def update_execute_job_table(prompt_id, key, value):
-    logger.info(f"Update inference job table with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
     try:
         inference_table.update_item(
             Key={
