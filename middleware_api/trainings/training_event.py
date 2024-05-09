@@ -11,6 +11,7 @@ from common import const
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from common.util import publish_msg, generate_presigned_url_for_key, record_seconds_metrics
+from inferences.inference_libs import update_table_by_pk
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 from libs.enums import ServiceType
 
@@ -62,12 +63,7 @@ def check_status(training_job: TrainJob):
     training_job_status = resp['TrainingJobStatus']
     secondary_status = resp['SecondaryStatus']
 
-    ddb_service.update_item(
-        table=train_table,
-        key={'id': training_job.id},
-        field_name='job_status',
-        value=secondary_status
-    )
+    update_table_by_pk(table_name=train_table, pk='id', id=training_job.id, key='job_status', value=secondary_status)
 
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
         if 'FailureReason' in resp:
@@ -102,31 +98,16 @@ def check_status(training_job: TrainJob):
                 insert_ckpt(checkpoint_name, training_job)
 
                 logs = get_logs(training_job.id)
-                ddb_service.update_item(
-                    table=train_table,
-                    key={'id': training_job.id},
-                    field_name='logs',
-                    value=logs
-                )
+                update_table_by_pk(table_name=train_table, pk='id', id=training_job.id, key='logs', value=logs)
 
         else:
-            ddb_service.update_item(
-                table=train_table,
-                key={'id': training_job.id},
-                field_name='job_status',
-                value=TrainJobStatus.Fail
-            )
+            update_table_by_pk(table_name=train_table, pk='id', id=training_job.id, key='job_status', value=TrainJobStatus.Fail)
 
         training_job.params['resp'] = {
             'raw_resp': resp
         }
 
-    ddb_service.update_item(
-        table=train_table,
-        key={'id': training_job.id},
-        field_name='params',
-        value=training_job.params
-    )
+    update_table_by_pk(table_name=train_table, pk='id', id=training_job.id, key='params', value=training_job.params)
 
     return
 

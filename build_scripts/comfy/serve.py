@@ -286,6 +286,30 @@ def record_metric(comfy_app: ComfyApp):
                 'Value': 1,
                 'Unit': 'Count'
             },
+            {
+                'MetricName': 'InferenceEndpointReceived',
+                'Dimensions': [
+                    {
+                        'Name': 'Service',
+                        'Value': 'Comfy'
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+            {
+                'MetricName': 'InferenceEndpointReceived',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
         ]
     )
     logger.info(f"record_metric response: {response}")
