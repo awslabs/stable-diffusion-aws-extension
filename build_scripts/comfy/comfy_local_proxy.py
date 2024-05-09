@@ -206,7 +206,7 @@ def execute_proxy(func):
             "endpoint_name": comfy_endpoint,
             "need_prepare": comfy_need_prepare,
             "need_sync": comfy_need_sync,
-            "multi_async": True
+            "multi_async": False
         }
 
         def send_post_request(url, params):

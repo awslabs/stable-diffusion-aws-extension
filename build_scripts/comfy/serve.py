@@ -23,6 +23,8 @@ PHY_LOCALHOST = '127.0.0.1'
 
 SLEEP_TIME = 60
 TIME_OUT_TIME = 86400
+MAX_KEEPALIVE_CONNECTIONS = 100
+MAX_CONNECTIONS = 1500
 
 app = FastAPI()
 
@@ -166,7 +168,9 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
 
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
         if need_async:
-            async with httpx.AsyncClient(timeout=TIME_OUT_TIME) as client:
+            async with httpx.AsyncClient(timeout=TIME_OUT_TIME,
+                                         limits=httpx.Limits(max_keepalive_connections=MAX_KEEPALIVE_CONNECTIONS,
+                                                             max_connections=MAX_CONNECTIONS)) as client:
                 response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
         else:
             response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
@@ -180,7 +184,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         return wrap_response(start_time, response, comfy_app)
     except Exception as e:
         logger.error(f"send_request error {e}")
-        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs {e}")
+        raise HTTPException(status_code=500, detail=f"COMFY service not available for internal multi reqs {e}")
     finally:
         comfy_app.busy = False
         comfy_app.set_prompt()
