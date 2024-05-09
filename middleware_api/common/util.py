@@ -157,6 +157,9 @@ def record_queue_latency_metrics(create_time: str, start_time, ep_name: str, ser
 
     latency = time_difference.total_seconds() * 1000
 
+    if latency < 0:
+        latency = 0
+
     logger.info(f"{service} {metric_name}: {latency} Milliseconds")
 
     data = [

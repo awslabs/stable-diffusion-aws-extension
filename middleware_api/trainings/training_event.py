@@ -107,7 +107,12 @@ def check_status(training_job: TrainJob):
             'raw_resp': resp
         }
 
-    update_table_by_pk(table_name=train_table, pk='id', id=training_job.id, key='params', value=training_job.params)
+    ddb_service.update_item(
+        table=train_table,
+        key={'id': training_job.id},
+        field_name='params',
+        value=training_job.params
+    )
 
     return
 

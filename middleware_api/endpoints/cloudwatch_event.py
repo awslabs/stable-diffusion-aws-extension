@@ -127,7 +127,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "metrics": [
                         [
                             "ESD",
-                            "InferenceSucceed",
+                            "InferenceEndpointReceived",
                             "Endpoint",
                             ep_name,
                             {
@@ -136,7 +136,7 @@ def ds_body(ep_name: str, custom_metrics):
                         ],
                         [
                             ".",
-                            "InferenceFailed",
+                            "InferenceSucceed",
                             ".",
                             ".",
                             {
