@@ -50,6 +50,8 @@ Mappings:
       AMI: ami-09a7fb29eb7375468
     ap-northeast-1:
       AMI: ami-0a1f6795aeb907a68
+    us-west-1:
+      AMI: ami-0ea5aefd1471f67b2
 
 Resources:
   ComfyVPC:
