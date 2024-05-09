@@ -29,7 +29,7 @@ export function rebootAPI() {
 export async function syncEnv() {
     if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
         try {
-            var target = {}
+            var target = {};
             const response = await api.fetchApi("/sync_env", {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -37,13 +37,21 @@ export async function syncEnv() {
             });
             const result = await response.json();
             if (response.ok) {
-                const responseCheck = await api.fetchApi("/check_prepare");
-                const resultCheck = await responseCheck.json();
-                if (responseCheck.ok) {
-                    alert('Sync success!');
-                }else {
-                    alert('Sync error, please try again later.');
+                const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
+                const RETRY_INTERVAL = 5000; // 5 seconds in milliseconds
+                let responseCheck;
+                let resultCheck;
+                const startTime = Date.now();
+                while (Date.now() - startTime < TIMEOUT_DURATION) {
+                    responseCheck = await api.fetchApi("/check_prepare");
+                    resultCheck = await responseCheck.json();
+                    if (responseCheck.ok) {
+                        alert('Sync success!');
+                        return true;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
                 }
+                alert('Sync timeout. Please try again later.');
             } else {
                 // 如果请求失败，显示错误消息
                 alert('Sync failed. Please try again later.');
@@ -57,6 +65,7 @@ export async function syncEnv() {
     return false;
 }
 
+
 export async function syncEnvNoAlert() {
     try {
         var target = {}
@@ -67,15 +76,21 @@ export async function syncEnvNoAlert() {
         });
         const result = await response.json();
         if (response.ok) {
-            // 如果请求成功，显示成功消息
-            // alert('Sync local to s3 completed ! Please wait for a moment then execute your prompt！');
-            const responseCheck = await api.fetchApi("/check_prepare");
-            const resultCheck = await responseCheck.json();
-            if (responseCheck.ok) {
-                alert('Sync success!');
-            }else {
-                alert('Sync error, please try again later.');
-            }
+            const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
+                const RETRY_INTERVAL = 5000; // 5 seconds in milliseconds
+                let responseCheck;
+                let resultCheck;
+                const startTime = Date.now();
+                while (Date.now() - startTime < TIMEOUT_DURATION) {
+                    responseCheck = await api.fetchApi("/check_prepare");
+                    resultCheck = await responseCheck.json();
+                    if (responseCheck.ok) {
+                        alert('Sync success!');
+                        return true;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
+                }
+                alert('Sync timeout. Please try again later.');
         } else {
             // 如果请求失败，显示错误消息
             alert('Please click your synchronized button then execute prompt.');
