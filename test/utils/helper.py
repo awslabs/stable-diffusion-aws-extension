@@ -1,3 +1,4 @@
+import base64
 import decimal
 import io
 import json
@@ -82,6 +83,35 @@ def get_inference_job_status(api_instance, job_id):
     return resp.json()['data']['status']
 
 
+def get_inference_image(api_instance, job_id: str, target_file: str):
+    resp = api_instance.get_inference_job(
+        job_id=job_id,
+        headers={
+            "x-api-key": config.api_key,
+            "username": config.username
+        },
+    )
+
+    if 'data' not in resp.json():
+        raise Exception(f"data not found in inference job: {resp.json()}")
+
+    if 'img_presigned_urls' not in resp.json()['data']:
+        raise Exception(f"img_presigned_urls not found in inference job: {resp.json()}")
+
+    if config.compare_content == 'false':
+        logger.info(f"compare_content is false, skip comparing image {target_file}")
+        return
+
+    img_presigned_urls = resp.json()['data']['img_presigned_urls']
+
+    for img_url in img_presigned_urls:
+        resp = requests.get(img_url)
+
+        with open(f"{target_file}", "wb") as f:
+            f.write(resp.content)
+            logger.info(f"Image {target_file} saved")
+
+
 def get_inference_job_image(api_instance, job_id: str, target_file: str):
     resp = api_instance.get_inference_job(
         job_id=job_id,
@@ -120,7 +150,7 @@ def get_inference_job_image(api_instance, job_id: str, target_file: str):
 
         logger.info(f"Image {target_file} not same with {target_file}.png")
         return
-        # raise Exception(f"Image {target_file} not same with {target_file}.png")
+        # raise Exception(f"Image {target_file} different with {target_file}.png")
 
     raise Exception(f"Image not found in inference job: {resp.json()}")
 
@@ -250,57 +280,181 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True,
 
 
 def sd_inference_create(n, api, endpoint_name: str, workflow: str = './data/api_params/sd.json'):
-    with open(workflow, 'r') as f:
-        headers = {
-            "x-api-key": config.api_key,
-            "username": config.username
-        }
+    headers = {
+        "x-api-key": config.api_key,
+        "username": config.username
+    }
 
-        data = {
-            "inference_type": "Async",
-            "task_type": InferenceType.TXT2IMG.value,
-            "models": {
-                "Stable-diffusion": [config.default_model_id],
-                "embeddings": []
-            },
-        }
+    data = {
+        "inference_type": "Async",
+        "task_type": InferenceType.TXT2IMG.value,
+        "models": {
+            "Stable-diffusion": [config.default_model_id],
+            "embeddings": []
+        },
+    }
 
-        resp = api.create_inference(headers=headers, data=data)
-        assert resp.status_code == 201, resp.dumps()
+    resp = api.create_inference(headers=headers, data=data)
+    assert resp.status_code == 201, resp.dumps()
 
-        inference_data = resp.json()['data']["inference"]
-        inference_id = inference_data["id"]
+    inference_data = resp.json()['data']["inference"]
+    inference_id = inference_data["id"]
 
-        assert resp.json()["statusCode"] == 201
-        assert inference_data["type"] == InferenceType.TXT2IMG.value
-        assert len(inference_data["api_params_s3_upload_url"]) > 0
+    assert resp.json()["statusCode"] == 201
+    assert inference_data["type"] == InferenceType.TXT2IMG.value
+    assert len(inference_data["api_params_s3_upload_url"]) > 0
 
-        upload_with_put(inference_data["api_params_s3_upload_url"], workflow)
+    upload_with_put(inference_data["api_params_s3_upload_url"], workflow)
 
-        resp = api.get_inference_job(headers=headers, job_id=inference_data["id"])
-        assert resp.status_code == 200, resp.dumps()
+    resp = api.get_inference_job(headers=headers, job_id=inference_data["id"])
+    assert resp.status_code == 200, resp.dumps()
 
-        resp = api.start_inference_job(job_id=inference_id, headers=headers)
-        assert resp.status_code == 202, resp.dumps()
+    resp = api.start_inference_job(job_id=inference_id, headers=headers)
+    assert resp.status_code == 202, resp.dumps()
 
-        assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
+    assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
 
-        timeout = datetime.now() + timedelta(minutes=2)
+    timeout = datetime.now() + timedelta(minutes=2)
 
-        while datetime.now() < timeout:
-            status = get_inference_job_status(
-                api_instance=api,
-                job_id=inference_id
-            )
-            logger.info(f"sd {n} {endpoint_name} {inference_id} is {status}")
-            if status == InferenceStatus.SUCCEED.value:
-                break
-            if status == InferenceStatus.FAILED.value:
-                logger.error(inference_data)
-                break
-            time.sleep(4)
-        else:
-            raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
+    while datetime.now() < timeout:
+        status = get_inference_job_status(
+            api_instance=api,
+            job_id=inference_id
+        )
+        logger.info(f"sd {n} {endpoint_name} {inference_id} is {status}")
+        if status == InferenceStatus.SUCCEED.value:
+            break
+        if status == InferenceStatus.FAILED.value:
+            logger.error(inference_data)
+            break
+        time.sleep(4)
+    else:
+        raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
+
+
+def base64_image(image_url: str):
+    response = requests.get(image_url)
+    image_data = response.content
+    base64_encoded_image = base64.b64encode(image_data).decode('utf-8')
+    return base64_encoded_image
+
+
+def sd_inference_esi(api, workflow: str = './data/api_params/extra-single-image-api-params.json', image: str = None):
+    headers = {
+        "x-api-key": config.api_key,
+        "username": config.username
+    }
+
+    data = {
+        "inference_type": "Async",
+        "task_type": InferenceType.ESI.value,
+        "models": {
+            "Stable-diffusion": [config.default_model_id],
+            "embeddings": []
+        },
+    }
+
+    resp = api.create_inference(headers=headers, data=data)
+    assert resp.status_code == 201, resp.dumps()
+
+    inference_data = resp.json()['data']["inference"]
+    inference_id = inference_data["id"]
+
+    assert resp.json()["statusCode"] == 201
+    assert len(inference_data["api_params_s3_upload_url"]) > 0
+
+    with open(workflow, 'rb') as data:
+        if image:
+            data = json.loads(data.read())
+            data['image'] = image
+        response = requests.put(inference_data["api_params_s3_upload_url"], data=json.dumps(data))
+        response.raise_for_status()
+
+    resp = api.get_inference_job(headers=headers, job_id=inference_data["id"])
+    assert resp.status_code == 200, resp.dumps()
+
+    resp = api.start_inference_job(job_id=inference_id, headers=headers)
+    assert resp.status_code == 202, resp.dumps()
+
+    assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
+
+    timeout = datetime.now() + timedelta(minutes=2)
+
+    while datetime.now() < timeout:
+        status = get_inference_job_status(
+            api_instance=api,
+            job_id=inference_id
+        )
+        logger.info(f"sd {inference_id} is {status}")
+        if status == InferenceStatus.SUCCEED.value:
+            break
+        if status == InferenceStatus.FAILED.value:
+            logger.error(inference_data)
+            break
+        time.sleep(4)
+    else:
+        raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
+
+    return inference_id
+
+
+def sd_inference_rembg(api, workflow: str = './data/api_params/rembg-api-params.json', image: str = None):
+    headers = {
+        "x-api-key": config.api_key,
+        "username": config.username
+    }
+
+    data = {
+        "inference_type": "Async",
+        "task_type": InferenceType.REMBG.value,
+        "models": {
+            "Stable-diffusion": [config.default_model_id],
+            "embeddings": []
+        },
+    }
+
+    resp = api.create_inference(headers=headers, data=data)
+    assert resp.status_code == 201, resp.dumps()
+
+    inference_data = resp.json()['data']["inference"]
+    inference_id = inference_data["id"]
+
+    assert resp.json()["statusCode"] == 201
+    assert len(inference_data["api_params_s3_upload_url"]) > 0
+
+    with open(workflow, 'rb') as data:
+        if image:
+            data = json.loads(data.read())
+            data['input_image'] = image
+        response = requests.put(inference_data["api_params_s3_upload_url"], data=json.dumps(data))
+        response.raise_for_status()
+
+    resp = api.get_inference_job(headers=headers, job_id=inference_data["id"])
+    assert resp.status_code == 200, resp.dumps()
+
+    resp = api.start_inference_job(job_id=inference_id, headers=headers)
+    assert resp.status_code == 202, resp.dumps()
+
+    assert resp.json()['data']["inference"]["status"] == InferenceStatus.INPROGRESS.value
+
+    timeout = datetime.now() + timedelta(minutes=2)
+
+    while datetime.now() < timeout:
+        status = get_inference_job_status(
+            api_instance=api,
+            job_id=inference_id
+        )
+        logger.info(f"sd {inference_id} is {status}")
+        if status == InferenceStatus.SUCCEED.value:
+            break
+        if status == InferenceStatus.FAILED.value:
+            logger.error(inference_data)
+            break
+        time.sleep(4)
+    else:
+        raise Exception(f"Inference {inference_id} timed out after 2 minutes.")
+
+    return inference_id
 
 
 def get_endpoint_comfy_async(api):
