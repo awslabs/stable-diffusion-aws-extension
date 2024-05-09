@@ -8,6 +8,7 @@ from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from delete_endpoints import get_endpoint_in_sagemaker
+from libs.utils import get_endpoint_by_name
 
 aws_region = os.environ.get('AWS_REGION')
 esd_version = os.environ.get("ESD_VERSION")
@@ -36,6 +37,7 @@ def handler(event, context):
         endpoint_status = event['detail']['EndpointStatus']
         if endpoint_status == 'InService':
             create_ds(endpoint_name, custom_metrics)
+            clean_ds()
             return {}
 
     eps = ddb_service.scan(sagemaker_endpoint_table)
@@ -54,7 +56,23 @@ def handler(event, context):
 
         create_ds(ep_name, custom_metrics)
 
+    clean_ds()
     return {}
+
+
+def clean_ds():
+    ds = cloudwatch.list_dashboards()
+    if 'DashboardEntries' in ds:
+        prefix = ('comfy-async-', 'comfy-real-time-', 'sd-async-', 'sd-real-time-')
+        filtered_dashboards = [dashboard['DashboardName'] for dashboard in ds['DashboardEntries'] if
+                               dashboard['DashboardName'].startswith(prefix)]
+        for ep_name in filtered_dashboards:
+            try:
+                get_endpoint_by_name(ep_name)
+            except Exception as e:
+                print(f"Error: {e}")
+                print(f"Deleting {ep_name}")
+                cloudwatch.delete_dashboards(DashboardNames=[ep_name])
 
 
 def ds_body(ep_name: str, custom_metrics):

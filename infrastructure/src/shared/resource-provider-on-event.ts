@@ -26,12 +26,13 @@ import {
 import { CreateBucketCommand, GetBucketLocationCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
 import { ESD_ROLE } from './const';
-
+import { CloudWatchClient, PutDashboardCommand } from "@aws-sdk/client-cloudwatch";
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
 const snsClient = new SNSClient({});
 const kmsClient = new KMSClient({});
 const iamClient = new IAMClient({});
+const cwClient = new CloudWatchClient({});
 
 const {
   AWS_REGION,
@@ -75,6 +76,7 @@ async function createAndCheckResources() {
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
+  await putDashboard();
   await waitTableReady('MultiUserTable');
   await putItemUsersTable();
 
@@ -504,6 +506,821 @@ async function putBucketCors(bucketName: string) {
   });
 
   await s3Client.send(putBucketCorsCommand);
+}
+
+async function putDashboard() {
+
+    const last_build_time = new Date().toISOString();
+    const dashboardBody = {
+          'widgets': [
+            {
+              'height': 2,
+              'width': 24,
+              'y': 0,
+              'x': 0,
+              'type': 'text',
+              'properties': {
+                'markdown': `## ESD (Extension for Stable Diffusion on AWS) \n Last Build Time: ${last_build_time}`,
+              },
+            },
+            {
+              'height': 5,
+              'width': 16,
+              'y': 26,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'EndpointReadySeconds',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'stacked': false,
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'Comfy-EndpointReadySeconds',
+                'view': 'gauge',
+                'yAxis': {
+                  'left': {
+                    'min': 0,
+                    'max': 100,
+                  },
+                },
+              },
+            },
+            {
+              'height': 5,
+              'width': 16,
+              'y': 39,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'EndpointReadySeconds',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'gauge',
+                'region': AWS_REGION,
+                'title': 'SD-EndpointReadySeconds',
+                'period': 300,
+                'stat': 'Maximum',
+                'yAxis': {
+                  'left': {
+                    'min': 0,
+                    'max': 100,
+                  },
+                },
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 18,
+              'x': 12,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DownloadFileSeconds',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'Comfy-DownloadFileSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 18,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InstanceInitSeconds',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'Comfy-InstanceInitSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 22,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DecompressFileSeconds',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'title': 'Comfy-DecompressFileSeconds',
+                'period': 300,
+                'stat': 'Maximum',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 31,
+              'x': 12,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DownloadFileSeconds',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'SD-DownloadFileSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 31,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InstanceInitSeconds',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'SD-InstanceInitSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 35,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DecompressFileSeconds',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'SD-DecompressFileSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 9,
+              'y': 10,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InferenceTotal',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '.',
+                    'InferenceEndpointReceived',
+                    '.',
+                    '.',
+                  ],
+                  [
+                    '.',
+                    'InferenceSucceed',
+                    '.',
+                    '.',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Sum',
+                'title': 'SD-Inference',
+                'stacked': false,
+              },
+            },
+            {
+              'height': 4,
+              'width': 15,
+              'y': 10,
+              'x': 9,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InferenceLatency',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'p99',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Average',
+                'stacked': false,
+                'title': 'SD-InferenceLatency',
+              },
+            },
+            {
+              'height': 4,
+              'width': 9,
+              'y': 2,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InferenceTotal',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '.',
+                    'InferenceEndpointReceived',
+                    '.',
+                    '.',
+                  ],
+                  [
+                    '.',
+                    'InferenceSucceed',
+                    '.',
+                    '.',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'title': 'Comfy-Inference',
+                'period': 300,
+                'stat': 'Sum',
+              },
+            },
+            {
+              'height': 4,
+              'width': 15,
+              'y': 2,
+              'x': 9,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'InferenceLatency',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'stat': 'p99',
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'stat': 'Average',
+                'period': 300,
+                'title': 'Comfy-InferenceLatency',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 35,
+              'x': 12,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'UploadEndpointCacheSeconds',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Average',
+                'title': 'SD-UploadEndpointCacheSeconds',
+              },
+            },
+            {
+              'height': 4,
+              'width': 12,
+              'y': 22,
+              'x': 12,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'UploadEndpointCacheSeconds',
+                    'Service',
+                    'Comfy',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'title': 'Comfy-UploadEndpointCacheSeconds',
+                'period': 300,
+                'stat': 'Average',
+              },
+            },
+            {
+              'height': 5,
+              'width': 8,
+              'y': 39,
+              'x': 16,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DownloadFileSize',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'SD-DownloadFileSize',
+              },
+            },
+            {
+              'height': 4,
+              'width': 24,
+              'y': 44,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'TrainingLatency',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'stat': 'p99',
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 900,
+                'stat': 'Average',
+                'title': 'TrainingLatency',
+              },
+            },
+            {
+              'height': 5,
+              'width': 8,
+              'y': 26,
+              'x': 16,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'DownloadFileSize',
+                    'Service',
+                    'Comfy',
+                    {
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                  ],
+                ],
+                'sparkline': true,
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'stat': 'Maximum',
+                'period': 300,
+                'title': 'Comfy-DownloadFileSize',
+              },
+            },
+            {
+              'height': 4,
+              'width': 24,
+              'y': 14,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'QueueLatency',
+                    'Service',
+                    'Stable-Diffusion',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'p99',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'region': AWS_REGION,
+                      'stat': 'Maximum',
+                    },
+                  ],
+                ],
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Average',
+                'title': 'SDQueueLatency',
+              },
+            },
+            {
+              'height': 4,
+              'width': 24,
+              'y': 6,
+              'x': 0,
+              'type': 'metric',
+              'properties': {
+                'metrics': [
+                  [
+                    'ESD',
+                    'QueueLatency',
+                    'Service',
+                    'Comfy',
+                    {
+                      'stat': 'Minimum',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'stat': 'Average',
+                    },
+                  ],
+                  [
+                    '...',
+                    {
+                      'stat': 'p99',
+                    },
+                  ],
+                  [
+                    '...',
+                  ],
+                ],
+                'view': 'singleValue',
+                'region': AWS_REGION,
+                'period': 300,
+                'stat': 'Maximum',
+                'title': 'ComfyQueueLatency',
+              },
+            },
+          ],
+        }
+    ;
+
+    const putDashboardCommand = new PutDashboardCommand({
+      DashboardName: 'ESD',
+      DashboardBody: JSON.stringify(dashboardBody),
+    });
+
+    await cwClient.send(putDashboardCommand);
+
+    console.log(`Dashboard ESD created.`);
+
 }
 
 async function createTopics() {

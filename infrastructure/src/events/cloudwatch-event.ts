@@ -67,11 +67,14 @@ export class EndpointsCloudwatchEvents {
             actions: [
                 'cloudwatch:GetDashboard',
                 'cloudwatch:PutDashboard',
+                'cloudwatch:DeleteDashboards',
+                'cloudwatch:ListDashboards',
                 'cloudwatch:ListMetrics',
                 'sagemaker:DescribeEndpoint',
                 's3:Get*',
                 's3:List*',
                 's3:DeleteObject',
+                'dynamodb:Query',
             ],
             resources: ['*'],
         }));
