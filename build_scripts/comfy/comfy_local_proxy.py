@@ -275,11 +275,13 @@ def execute_proxy(func):
                                 already_synced = handle_sync_messages(server_use, msg_response.json().get("data"))
                     elif future == execute_future:
                         execute_resp = future.result()
+                        logger.info(f"get execute status: {execute_resp.status_code}")
                         if execute_resp.status_code == 200 or execute_resp.status_code == 201 or execute_resp.status_code == 202:
                             i = thread_max_wait_time
                             while i > 0:
                                 images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
                                 response = images_response.json()
+                                logger.info(f"get execute images: {images_response.status_code}")
                                 if images_response.status_code == 404:
                                     logger.info("no images found already ,waiting sagemaker thread result .....")
                                     time.sleep(3)
@@ -316,6 +318,14 @@ def execute_proxy(func):
                                     logger.debug(images_response.json())
                                     save_already = True
                                     break
+                        else:
+                            logger.error(f"get execute error: {execute_resp}")
+                            # send_error_msg(executor, prompt_id, "Please valid your prompt and try again.")
+                            # send_error_msg(executor, prompt_id,
+                            #                f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. error info: {response['data']['message']}")
+                            # no need to send msg anymore
+                            already_synced = True
+                            break
                         logger.debug(execute_resp.json())
 
                 m = msg_max_wait_time
@@ -364,7 +374,7 @@ def execute_proxy(func):
                             time.sleep(3)
                         elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
                             logger.info(f"{i} there is no response from sync executes {response}")
-                            send_error_msg(executor, prompt_id,f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
+                            send_error_msg(executor, prompt_id, f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
                             break
                         elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
                             if ('temp_files' in images_response.json()['data'] and len(images_response.json()['data']['temp_files']) > 0) or (('output_files' in images_response.json()['data'] and len(images_response.json()['data']['output_files']) > 0)):
@@ -383,6 +393,9 @@ def execute_proxy(func):
                             send_error_msg(executor, prompt_id,
                                            "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
                             break
+                else:
+                    logger.error(f"get execute error: {execute_resp}")
+                    send_error_msg(executor, prompt_id, "Please valid your prompt and try again.")
             logger.info("execute finished")
         executorThread.shutdown()
 

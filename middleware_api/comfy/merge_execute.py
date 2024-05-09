@@ -23,17 +23,28 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 sqs = boto3.client('sqs')
 sqs_url = os.environ.get('MERGE_SQS_URL')
-execute_table = os.environ.get('EXECUTE_TABLE')
+execute_table_name = os.environ.get('EXECUTE_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
+dynamodb = boto3.resource('dynamodb')
+execute_table = dynamodb.Table(execute_table_name)
 
 
-def batch_put_items(table_name, items):
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table(table_name)
-
-    with table.batch_writer() as batch:
-        for item in items:
-            batch.put_item(Item=item)
+def update_execute_job_table(prompt_id, key, value):
+    logger.info(f"Update execute table with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    try:
+        execute_table.update_item(
+            Key={
+                "prompt_id": prompt_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(prompt_id)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update execute job table error: {e}")
+        raise e
 
 
 def convert_float_to_decimal(data):
@@ -82,8 +93,10 @@ def handler(raw_event, ctx):
                 execute_merge_req[endpoint_name] = [event]
                 execute_merge_req_batch_id[endpoint_name] = batch_id
             inference_job.batch_id = execute_merge_req_batch_id.get(endpoint_name)
-            logger.info(F'save inference job: {inference_job.__dict__}')
-            ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+            logger.info(F'update inference job batch_id: {inference_job.batch_id}, prompt_id: {inference_job.prompt_id}')
+            update_execute_job_table(prompt_id=inference_job.prompt_id, key="batch_id", value=inference_job.batch_id)
+            # logger.info(F'save inference job: {inference_job.__dict__}')
+            # ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
         for key, vals in execute_merge_req.items():
             resp = async_inference(execute_merge_req.get(key), execute_merge_req_batch_id.get(key), key)

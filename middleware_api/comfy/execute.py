@@ -38,6 +38,8 @@ sqs_url = os.environ.get('MERGE_SQS_URL')
 index_name = "endpoint_name-startTime-index"
 predictors = {}
 
+multi_gpu_instance_type_list = ['ml.p5.48xlarge', 'ml.p4d.24xlarge', 'ml.p3.8xlarge', 'ml.p3.16xlarge', 'ml.p3dn.24xlarge', 'ml.p2.8xlarge', 'ml.p2.16xlarge', 'ml.g4dn.12xlarge', 'ml.g5.12xlarge', 'ml.g5.24xlarge', 'ml.g5.48xlarge']
+
 
 @dataclass
 class PrepareProps:
@@ -135,8 +137,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal', service=ServiceType.Comfy.value)
 
-    if event.multi_async and ep.endpoint_type == 'Async':
+    if event.multi_async and ep.endpoint_type == 'Async' and ep.instance_type in multi_gpu_instance_type_list:
+        logger.info(f"executing multi-gpu inference {ep.instance_type} {ep.endpoint_type} {event.multi_async}")
         save_item = inference_job.__dict__
+        ddb_service.put_items(execute_table, entries=save_item)
         sen_sqs_msg({"event": payload, "save_item": save_item, "inference_id": inference_id}, endpoint_name)
 
         # just for test multi gpu
@@ -156,7 +160,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     elif ep.endpoint_type == 'Async':
         resp = async_inference([payload], inference_id, ep.endpoint_name)
         # TODO status check and save
-        logger.info(f"async inference response: {resp}")
+        logger.info(f"async inference {ep.instance_type} {ep.endpoint_type} {event.multi_async} response: {resp}")
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=response_schema(inference_job), decimal=True)
 
