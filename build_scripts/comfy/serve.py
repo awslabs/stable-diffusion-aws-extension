@@ -167,13 +167,17 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         update_execute_job_table(prompt_id=request_obj['prompt_id'], key="start_time", value=start_time)
 
         logger.info(f"Invocations start req: {request_obj}, url: {PHY_LOCALHOST}:{comfy_app.port}/execute_proxy")
-        if need_async:
-            async with httpx.AsyncClient(timeout=TIME_OUT_TIME,
-                                         limits=httpx.Limits(max_keepalive_connections=MAX_KEEPALIVE_CONNECTIONS,
-                                                             max_connections=MAX_CONNECTIONS)) as client:
-                response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
-        else:
-            response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        # if need_async:
+        #     async with httpx.AsyncClient(timeout=TIME_OUT_TIME,
+        #                                  limits=httpx.Limits(max_keepalive_connections=MAX_KEEPALIVE_CONNECTIONS,
+        #                                                      max_connections=MAX_CONNECTIONS)) as client:
+        #         response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        # else:
+        #     response = requests.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
+        async with httpx.AsyncClient(timeout=TIME_OUT_TIME,
+                                     limits=httpx.Limits(max_keepalive_connections=MAX_KEEPALIVE_CONNECTIONS,
+                                                         max_connections=MAX_CONNECTIONS)) as client:
+            response = await client.post(f"http://{PHY_LOCALHOST}:{comfy_app.port}/execute_proxy", json=request_obj)
 
         comfy_app.busy = False
         comfy_app.set_prompt()
