@@ -77,8 +77,6 @@ def delete_endpoint(ep: Endpoint):
         return
 
     sagemaker.delete_endpoint(EndpointName=ep.endpoint_name)
-    sagemaker.delete_endpoint_config(EndpointConfigName=ep.endpoint_name)
-    sagemaker.delete_model(ModelName=ep.endpoint_name)
 
     response = cw_client.delete_alarms(AlarmNames=[f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
     logger.info(f"delete_metric_alarm response: {response}")
