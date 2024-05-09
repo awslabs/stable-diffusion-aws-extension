@@ -467,6 +467,12 @@ def endpoint_clean(ep: Endpoint):
     except Exception as e:
         logger.error(e, exc_info=True)
 
+    try:
+        response = cloudwatch.delete_alarms(AlarmNames=[f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
+        logger.info(f"delete_metric_alarm response: {response}")
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
     ddb_service.delete_item(
         table=sagemaker_endpoint_table,
         keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
