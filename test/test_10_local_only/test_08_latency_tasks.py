@@ -104,24 +104,27 @@ class TestLatencyCompareTasks:
 
         while True:
 
-            resp = self.api.list_inferences(headers=headers)
+            resp = self.api.list_inferences(headers=headers, params={"limit": 20})
             inferences = resp.json()['data']['inferences']
             if len(inferences) == 0:
                 break
 
+            ids = []
+            i = 0
             for inference in inferences:
+                i = i + 1
                 inference_id = inference['InferenceJobId']
-                data = {
-                    "inference_id_list": [
-                        inference_id
-                    ],
-                }
-                resp = self.api.delete_inferences(headers=headers, data=data)
-                logger.info(f"delete inference {inference_id}")
-                if resp.status_code == 400:
-                    logger.info(resp.json()['message'])
-                    time.sleep(5)
-                    continue
+                ids.append(inference_id)
+                logger.info(f"delete execute {i} {inference_id}")
+
+            data = {
+                "inference_id_list": ids,
+            }
+            resp = self.api.delete_inferences(headers=headers, data=data)
+            if resp.status_code == 400:
+                logger.info(resp.json()['message'])
+                time.sleep(5)
+                continue
 
     def test_7_update_api_roles(self):
         headers = {
@@ -162,7 +165,7 @@ class TestLatencyCompareTasks:
 
         threads = []
 
-        batch = 1000
+        batch = 10000
 
         thread = threading.Thread(target=self.create_batch_executes, args=(batch, self.api, self.endpoint_name))
         threads.append(thread)

@@ -87,6 +87,30 @@ def record_metric():
                 'Value': 1,
                 'Unit': 'Count'
             },
+            {
+                'MetricName': 'InferenceEndpointReceived',
+                'Dimensions': [
+                    {
+                        'Name': 'Service',
+                        'Value': 'Stable-Diffusion'
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
+            {
+                'MetricName': 'InferenceEndpointReceived',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': 1,
+                'Unit': 'Count'
+            },
         ]
     )
     logger.info(f"record_metric response: {response}")

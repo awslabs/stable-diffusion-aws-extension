@@ -20,9 +20,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sns = boto3.client('sns')
 s3_client = boto3.client('s3')
 
-inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 ddb_client = boto3.resource('dynamodb')
-inference_table = ddb_client.Table(inference_table_name)
+inference_table = ddb_client.Table('SDInferenceJobTable')
 
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
@@ -92,6 +91,23 @@ def update_inference_job_table(inference_id, key, value):
         logger.error(f"Update Inference job table error: {e}")
         raise e
 
+def update_table_by_pk(table_name:str, pk:str, id:str, key: str, value):
+    logger.info(f"Update {table_name} with {pk}: {id}, key: {key}, value: {value}")
+    try:
+        ddb_table = ddb_client.Table(table_name)
+        ddb_table.update_item(
+            Key={
+                pk: id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression=f"attribute_exists({pk})",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update {table_name} error: {e}")
+        raise e
 
 def esi_rembg(sagemaker_out, inference_id, endpoint_name):
     if 'image' not in sagemaker_out:
