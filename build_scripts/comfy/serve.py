@@ -206,8 +206,16 @@ async def invocations(request: Request):
             tasks = []
             for request_obj in req:
                 comfy_app = check_available_app(True)
-                if comfy_app is None:
-                    raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+                max_retries = TIME_OUT_TIME
+                while comfy_app is None:
+                    if max_retries > 0:
+                        max_retries = max_retries - 60
+                        time.sleep(60)
+                        comfy_app = check_available_app(True)
+                    else:
+                        raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
+                # if comfy_app is None:
+                #     raise HTTPException(status_code=500, detail=f"COMFY service not available for multi reqs")
                 tasks.append(send_request(request_obj, comfy_app, True))
             logger.info("all tasks completed send, waiting result")
             results = await asyncio.gather(*tasks)
