@@ -32,16 +32,6 @@ export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-ex
 
 export ENDPOINT_INSTANCE_ID=$(date +"%m%d%H%M%S")
 
-if [[ $IMAGE_URL == *"dev"* ]]; then
-  # Enable dev mode
-  trap 'echo "error_lock" > /error_lock; exit 1' ERR
-  if [ -f "/error_lock" ]; then
-      echo "start failed, please check the log"
-      sleep 30
-      exit 1
-  fi
-fi
-
 cores=$(lscpu | grep "^Core(s) per socket:" | awk '{print $4}')
 sockets=$(lscpu | grep "^Socket(s):" | awk '{print $2}')
 export CUP_CORE_NUMS=$((cores * sockets))
@@ -115,6 +105,10 @@ sd_install_build(){
   bash install_sd.sh
 }
 
+sd_launch_cmd(){
+  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
+}
+
 sd_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate sd launch..."
@@ -131,13 +125,13 @@ sd_launch(){
     mv /home/ubuntu/stable-diffusion-webui/default_config.yaml /root/.cache/huggingface/accelerate/
   fi
 
+  echo "initiated_lock" > /initiated_lock
+
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
   python /metrics.py &
 
-  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
-
-   # python /controller.py
+  sd_launch_cmd
 }
 
 sd_launch_from_private_s3(){
@@ -285,6 +279,9 @@ comfy_launch(){
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
+
+  echo "initiated_lock" > /initiated_lock
+
   python serve.py
 }
 
@@ -349,6 +346,21 @@ comfy_launch_from_public_s3(){
 #      exit 1
 #  fi
 #fi
+
+if [ -f "/initiated_lock" ]; then
+    echo "already initiated, start service directly..."
+    if [ "$SERVICE_TYPE" == "sd" ]; then
+      cd /home/ubuntu/stable-diffusion-webui || exit 1
+      source venv/bin/activate
+      sd_launch_cmd
+      exit 1
+    else
+      cd /home/ubuntu/ComfyUI || exit 1
+      source venv/bin/activate
+      python serve.py
+      exit 1
+    fi
+fi
 
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
