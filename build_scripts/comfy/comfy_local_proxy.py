@@ -695,6 +695,24 @@ async def restart(self):
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
+@server.PromptServer.instance.routes.get("/check_prepare")
+async def check_prepare(self):
+    logger.info(f"start to check_prepare {self}")
+    try:
+        get_response = requests.get(f"{api_url}/prepare/{comfy_endpoint}", headers=headers)
+        response = get_response.json()
+        logger.info(f"check sync response is {response}")
+        if get_response.status_code == 200 and response['data']['prepareSuccess']:
+            return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
+        else:
+            logger.info(f"check sync response is {response} {response['data']['prepareSuccess']}")
+            return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
+    except Exception as e:
+        logger.info(f"error restart  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
 @server.PromptServer.instance.routes.get("/restart")
 async def restart(self):
     logger.info(f"start to restart {self}")

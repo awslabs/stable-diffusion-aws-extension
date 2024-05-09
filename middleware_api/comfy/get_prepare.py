@@ -59,7 +59,16 @@ def check_sync_and_instance_from_ddb(endpoint_name):
         return False
     if len(instance_monitor_records_resp) < instance_count:
         logger.info(f"No enough instance record for check_sync_and_instance_from_ddb return False")
-        logger.debug(f" {instance_monitor_records_resp} {sync_record}")
+        logger.debug(f"false {instance_monitor_records_resp} {sync_record}")
+        return False
+    list_sync_instance = []
+    for item in instance_monitor_records_resp:
+        logger.debug(f"instance_monitor_records_resp :{item} {str(item['last_sync_request_id'].get('S'))} {sync_record['request_id']}")
+        if str(item['last_sync_request_id'].get('S')) == sync_record['request_id']:
+            list_sync_instance.append(item)
+    if len(list_sync_instance) < instance_count:
+        logger.info(f"{sync_record['request_id']} No enough instance record {list_sync_instance} for check_sync_and_instance_from_ddb return False")
+        # logger.debug(f"false {instance_monitor_records_resp} {sync_record}")
         return False
     logger.info(f"check_sync_and_instance_from_ddb return True")
     return True

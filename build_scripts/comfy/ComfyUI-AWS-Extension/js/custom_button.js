@@ -37,9 +37,13 @@ export async function syncEnv() {
             });
             const result = await response.json();
             if (response.ok) {
-
-                // 如果请求成功，显示成功消息
-                alert('Sync local to s3 completed ! Please wait for a moment then execute your prompt！');
+                const responseCheck = await api.fetchApi("/check_prepare");
+                const resultCheck = await responseCheck.json();
+                if (responseCheck.ok) {
+                    alert('Sync success!');
+                }else {
+                    alert('Sync error, please try again later.');
+                }
             } else {
                 // 如果请求失败，显示错误消息
                 alert('Sync failed. Please try again later.');
@@ -65,6 +69,13 @@ export async function syncEnvNoAlert() {
         if (response.ok) {
             // 如果请求成功，显示成功消息
             // alert('Sync local to s3 completed ! Please wait for a moment then execute your prompt！');
+            const responseCheck = await api.fetchApi("/check_prepare");
+            const resultCheck = await responseCheck.json();
+            if (responseCheck.ok) {
+                alert('Sync success!');
+            }else {
+                alert('Sync error, please try again later.');
+            }
         } else {
             // 如果请求失败，显示错误消息
             alert('Please click your synchronized button then execute prompt.');
