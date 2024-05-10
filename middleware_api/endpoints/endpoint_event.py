@@ -6,8 +6,8 @@ from datetime import datetime
 import boto3
 from aws_lambda_powertools import Tracer
 
-from common.ddb_service.client import DynamoDbUtilsService
 from common.util import record_seconds_metrics, endpoint_clean
+from inferences.inference_libs import update_table_by_pk
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus, EndpointType, ServiceType
 from libs.utils import get_endpoint_by_name
@@ -23,7 +23,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 autoscaling_client = boto3.client('application-autoscaling')
 cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
-ddb_service = DynamoDbUtilsService(logger=logger)
+
 esd_version = os.environ.get("ESD_VERSION")
 cool_down_period = 15 * 60  # 15 minutes
 
@@ -300,11 +300,11 @@ def enable_autoscaling_real_time(ep: Endpoint, variant_name):
 
 
 def update_endpoint_field(ep: Endpoint, field_name, field_value):
-    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {ep.EndpointDeploymentJobId}")
-    ddb_service.update_item(
-        table=sagemaker_endpoint_table,
-        key={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
-        field_name=field_name,
+    update_table_by_pk(
+        table_name=sagemaker_endpoint_table,
+        pk='EndpointDeploymentJobId',
+        id=ep.EndpointDeploymentJobId,
+        key=field_name,
         value=field_value
     )
 

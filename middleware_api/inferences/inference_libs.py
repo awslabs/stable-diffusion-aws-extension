@@ -91,7 +91,8 @@ def update_inference_job_table(inference_id, key, value):
         logger.error(f"Update Inference job table error: {e}")
         raise e
 
-def update_table_by_pk(table_name:str, pk:str, id:str, key: str, value):
+
+def update_table_by_pk(table_name: str, pk: str, id: str, key: str, value):
     logger.info(f"Update {table_name} with {pk}: {id}, key: {key}, value: {value}")
     try:
         ddb_table = ddb_client.Table(table_name)
@@ -108,6 +109,7 @@ def update_table_by_pk(table_name:str, pk:str, id:str, key: str, value):
     except Exception as e:
         logger.error(f"Update {table_name} error: {e}")
         raise e
+
 
 def esi_rembg(sagemaker_out, inference_id, endpoint_name):
     if 'image' not in sagemaker_out:
