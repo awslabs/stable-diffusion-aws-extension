@@ -479,6 +479,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "singleValue",
+                            "stat": "Sum",
                             "metric": "InferenceTotal"})
 
                         ids.append({
@@ -486,6 +487,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "gauge",
+                            "stat": "Average",
                             "metric": "GPUUtilization"})
 
                         ids.append({
@@ -493,6 +495,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "gauge",
+                            "stat": "Average",
                             "metric": "GPUMemoryUtilization"})
 
     sorted_ids = sorted(ids, key=lambda x: x['i'], reverse=True)
@@ -533,7 +536,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 },
                 "stacked": True,
                 "region": aws_region,
-                "stat": "Sum",
+                "stat": item['stat'],
                 "period": period,
                 "title": f"Instance - {item['instance_id']} - GPU{item['gpu_id']} - {item['metric']}"
             }
