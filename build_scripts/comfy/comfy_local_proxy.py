@@ -247,7 +247,7 @@ def execute_proxy(func):
         is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
         if not is_synced:
             logger.debug(f"is_synced is {is_synced} stop cloud prompt")
-            send_error_msg(executor, prompt_id, "Your local environment has not been synchronized to the cloud already. Please click the 'sync' button to synchronize and wait for a moments then try again.")
+            send_error_msg(executor, prompt_id, "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'sync' button .")
             return
 
         with concurrent.futures.ThreadPoolExecutor() as executorThread:
