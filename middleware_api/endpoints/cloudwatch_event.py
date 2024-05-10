@@ -463,7 +463,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     list = []
 
     ids = []
-    # Print or process the metrics
+
     for metric in custom_metrics:
         if metric['MetricName'] == 'InferenceTotal':
             if len(metric['Dimensions']) == 3:
@@ -488,6 +488,14 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "gpu_id": gpu_id,
                             "view": "gauge",
                             "stat": "Average",
+                            "metric": "GPUUtilization"})
+
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "stat": "Maximum",
                             "metric": "GPUUtilization"})
 
                         ids.append({
@@ -538,7 +546,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "region": aws_region,
                 "stat": item['stat'],
                 "period": period,
-                "title": f"Instance - {item['instance_id']} - {item['gpu_id']} - {item['metric']}"
+                "title": f"Instance - {item['instance_id']} - {item['gpu_id']} - {item['metric']} - {item['stat']}"
             }
         })
         i = i + 1
