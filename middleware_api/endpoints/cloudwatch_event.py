@@ -8,6 +8,7 @@ from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from delete_endpoints import get_endpoint_in_sagemaker
+from libs.data_types import Endpoint
 from libs.utils import get_endpoint_by_name
 
 aws_region = os.environ.get('AWS_REGION')
@@ -34,7 +35,8 @@ def handler(event, context):
         endpoint_name = event['detail']['EndpointName']
         endpoint_status = event['detail']['EndpointStatus']
         if endpoint_status == 'InService':
-            create_ds(endpoint_name)
+            ep = get_endpoint_by_name(endpoint_name)
+            create_ds(ep)
             clean_ds()
             return {}
 
@@ -43,16 +45,16 @@ def handler(event, context):
 
     for ep in eps:
         ep_name = ep['endpoint_name']['S']
-        ep_status = ep['endpoint_status']['S']
+        ep = get_endpoint_by_name(ep_name)
 
-        if ep_status == 'Creating':
+        if ep.endpoint_status == 'Creating':
             continue
 
         endpoint = get_endpoint_in_sagemaker(ep_name)
         if endpoint is None:
             continue
 
-        create_ds(ep_name)
+        create_ds(ep)
 
     clean_ds()
     return {}
@@ -73,7 +75,8 @@ def clean_ds():
                 cloudwatch.delete_dashboards(DashboardNames=[ep_name])
 
 
-def ds_body(ep_name: str, custom_metrics):
+def ds_body(ep: Endpoint, custom_metrics):
+    ep_name = ep.endpoint_name
     last_build_time = datetime.datetime.now().isoformat()
     dashboard_body = {
         "widgets": [
@@ -312,12 +315,12 @@ def ds_body(ep_name: str, custom_metrics):
                     "view": "gauge",
                     "stacked": True,
                     "region": aws_region,
-                    "title": "\t GPUMemoryUtilization",
+                    "title": "GPUMemoryUtilization",
                     "period": period,
                     "yAxis": {
                         "left": {
                             "min": 1,
-                            "max": 100
+                            "max": resolve_gpu_nums(ep) * 100
                         }
                     },
                     "stat": "Maximum"
@@ -362,7 +365,7 @@ def ds_body(ep_name: str, custom_metrics):
                     "yAxis": {
                         "left": {
                             "min": 0,
-                            "max": 100
+                            "max": resolve_gpu_nums(ep) * 100
                         }
                     },
                     "region": aws_region,
@@ -407,7 +410,7 @@ def ds_body(ep_name: str, custom_metrics):
                         ]
                     ],
                     "sparkline": True,
-                    "view": "gauge",
+                    "view": "singleValue",
                     "yAxis": {
                         "left": {
                             "min": 0,
@@ -450,14 +453,28 @@ def ds_body(ep_name: str, custom_metrics):
         ]
     }
 
-    gpus_ds = resolve_gpu_ds(ep_name, custom_metrics)
+    gpus_ds = resolve_gpu_ds(ep, custom_metrics)
     for gpu_ds in gpus_ds:
         dashboard_body['widgets'].append(gpu_ds)
 
     return json.dumps(dashboard_body)
 
 
-def resolve_gpu_ds(ep_name: str, custom_metrics):
+def resolve_gpu_nums(ep: Endpoint):
+    maps = {
+        "ml.p4d.24xlarge": 8,
+        "ml.g4dn.12xlarge": 4,
+        "ml.g5.12xlarge": 4,
+        "ml.g5.24xlarge": 4,
+        "ml.g5.48xlarge": 8,
+    }
+
+    return maps.get(ep.instance_type, 1)
+
+
+def resolve_gpu_ds(ep: Endpoint, custom_metrics):
+    ep_name = ep.endpoint_name
+
     list = []
     ids = []
 
@@ -506,7 +523,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     x = 0
     y = 10
 
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f"]
+    colors = ["#9467bd", "#ff7f0e", "#2ca02c", "#8c564b", "#e377c2", "#7f7f7f", "#1f77b4"]
     color_index = 0
 
     for item in ids:
@@ -528,10 +545,13 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "x": 0,
                 "y": y,
                 "width": 24,
-                "height": 1,
+                "height": 3,
                 "properties": {
-                    "background": "transparent",
-                    "markdown": f"# Endpoint Instance - {item['instance_id']}"
+                    "markdown": f"# Endpoint Instance - {item['instance_id']} \n"
+                                f"- InferenceTotal: inference Job Count \n"
+                                f"- GPUUtilization: The percentage of GPU units that are used on a GPU in an instance.\n"
+                                f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU in an instance."
+
                 }
             })
             y = y + 2
@@ -572,7 +592,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "region": aws_region,
                 "stat": item['stat'],
                 "period": period,
-                "title": f"{item['gpu_id']}"
+                "title": f"{item['gpu_id']}",
             }
         })
 
@@ -600,7 +620,8 @@ def get_dashboard(dashboard_name):
         return None
 
 
-def create_ds(ep_name: str):
+def create_ds(ep: Endpoint):
+    ep_name = ep.endpoint_name
     dimensions = [
         {
             'Name': 'Endpoint',
@@ -620,7 +641,7 @@ def create_ds(ep_name: str):
 
     existing_dashboard = get_dashboard(ep_name)
 
-    cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds_body(ep_name, custom_metrics))
+    cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds_body(ep, custom_metrics))
 
     if existing_dashboard:
         logger.info(f"Dashboard '{ep_name}' updated successfully.")

@@ -560,7 +560,7 @@ async function putDashboard() {
                 'period': 300,
                 'stat': 'Maximum',
                 'title': 'Comfy-EndpointReadySeconds',
-                'view': 'gauge',
+                'view': 'singleValue',
                 'yAxis': {
                   'left': {
                     'min': 0,
@@ -602,7 +602,7 @@ async function putDashboard() {
                   ],
                 ],
                 'sparkline': true,
-                'view': 'gauge',
+                'view': 'singleValue',
                 'region': AWS_REGION,
                 'title': 'SD-EndpointReadySeconds',
                 'period': 300,
