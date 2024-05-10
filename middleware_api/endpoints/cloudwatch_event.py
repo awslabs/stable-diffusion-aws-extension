@@ -506,17 +506,8 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     x = 0
     y = 10
 
-    color_map = {
-        "GPU0": "#1f77b4",
-        "GPU1": "#ff7f0e",
-        "GPU2": "#2ca02c",
-        "GPU3": "#d62728",
-        "GPU4": "#9467bd",
-        "GPU5": "#8c564b",
-        "GPU6": "#e377c2",
-        "GPU7": "#7f7f7f",
-        "GPU8": "#bcbd22",
-    }
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f"]
+    color_index = 0
 
     for item in ids:
         if cur_instance_id != item['instance_id']:
@@ -529,10 +520,21 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "height": 1,
                 "properties": {
                     "background": "transparent",
-                    "markdown": f"# Instance - {item['instance_id']}"
+                    "markdown": f""
                 }
             })
-            y = y + 1
+            list.append({
+                "type": "text",
+                "x": 0,
+                "y": y,
+                "width": 24,
+                "height": 1,
+                "properties": {
+                    "background": "transparent",
+                    "markdown": f"# Endpoint Instance - {item['instance_id']}"
+                }
+            })
+            y = y + 2
 
         list.append({
             "height": 4,
@@ -554,7 +556,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                         {
                             "region": aws_region,
                             "label": f"{item['metric']} - {item['stat']}",
-                            "color": color_map.get(item['gpu_id'], '#1f77b4'),
+                            "color": colors[color_index]
                         }
                     ]
                 ],
@@ -576,6 +578,11 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
 
         x = x + 6
         if x >= 24:
+
+            color_index = color_index + 1
+            if color_index >= len(colors):
+                color_index = 0
+
             x = 0
             y = y + 1
 
