@@ -30,13 +30,11 @@ period = 300
 def handler(event, context):
     logger.info(json.dumps(event))
 
-    custom_metrics = cloudwatch.list_metrics(Namespace='ESD')['Metrics']
-
     if 'detail' in event and 'EndpointStatus' in event['detail']:
         endpoint_name = event['detail']['EndpointName']
         endpoint_status = event['detail']['EndpointStatus']
         if endpoint_status == 'InService':
-            create_ds(endpoint_name, custom_metrics)
+            create_ds(endpoint_name)
             clean_ds()
             return {}
 
@@ -54,7 +52,7 @@ def handler(event, context):
         if endpoint is None:
             continue
 
-        create_ds(ep_name, custom_metrics)
+        create_ds(ep_name)
 
     clean_ds()
     return {}
@@ -556,6 +554,9 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
             x = 0
             y = y + 1
 
+    logger.info(f"Metrics List:")
+    logger.info(json.dumps(list))
+
     return list
 
 
@@ -567,7 +568,17 @@ def get_dashboard(dashboard_name):
         return None
 
 
-def create_ds(ep_name: str, custom_metrics):
+def create_ds(ep_name: str):
+    dimensions = [
+        {
+            'Name': 'Endpoint',
+            'Value': ep_name
+        }
+    ]
+    custom_metrics = cloudwatch.list_metrics(Namespace='ESD', Dimensions=dimensions)['Metrics']
+    logger.info(f"Custom Metrics: ")
+    logger.info(json.dumps(custom_metrics))
+
     existing_dashboard = get_dashboard(ep_name)
 
     cloudwatch.put_dashboard(DashboardName=ep_name, DashboardBody=ds_body(ep_name, custom_metrics))
