@@ -575,7 +575,13 @@ def create_ds(ep_name: str):
             'Value': ep_name
         }
     ]
-    custom_metrics = cloudwatch.list_metrics(Namespace='ESD', Dimensions=dimensions)['Metrics']
+
+    metrics1 = cloudwatch.list_metrics(Namespace='ESD', MetricName='GPUMemoryUtilization', Dimensions=dimensions)['Metrics']
+    metrics2 = cloudwatch.list_metrics(Namespace='ESD', MetricName='GPUUtilization', Dimensions=dimensions)['Metrics']
+    metrics3 = cloudwatch.list_metrics(Namespace='ESD', MetricName='InferenceTotal', Dimensions=dimensions)['Metrics']
+
+    custom_metrics = metrics1 + metrics2 + metrics3
+
     logger.info(f"Custom Metrics: ")
     logger.info(json.dumps(custom_metrics))
 
