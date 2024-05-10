@@ -394,7 +394,7 @@ def check_available_app(need_check_busy: bool):
 
 
 def check_sync():
-    logger.info("start check_sync!")
+    logger.debug("start check_sync!")
     while True:
         try:
             comfy_app = check_available_app(False)
@@ -493,7 +493,7 @@ def gpu_metrics():
         Namespace='ESD',
         MetricData=data
     )
-    logger.info(f"gpu_metrics response: {response}")
+    logger.debug(f"gpu_metrics response: {response}")
 
 
 def monitor_gpu_info(interval=10):
