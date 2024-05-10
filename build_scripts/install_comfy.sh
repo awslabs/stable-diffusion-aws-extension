@@ -3,7 +3,7 @@
 echo "---------------------------------------------------------------------------------"
 echo "install comfy..."
 
-export INITIAL_COMFY_COMMIT_ROOT=e6482fbbfc83cd25add0532b2e4c51d305e8a232
+export INITIAL_COMFY_COMMIT_ROOT=0fecfd2b1a2794b77277c7e256c84de54a63d860
 
 rm -rf ComfyUI
 rm -rf stable-diffusion-aws-extension
