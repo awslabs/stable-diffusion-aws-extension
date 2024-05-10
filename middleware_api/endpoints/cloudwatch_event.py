@@ -461,6 +461,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     list = []
     ids = []
 
+    cur_instance_id = None
     for metric in custom_metrics:
         if metric['MetricName'] == 'InferenceTotal':
             if len(metric['Dimensions']) == 3:
@@ -479,22 +480,22 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                         ids.append({
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "stat": "Average",
                             "metric": "GPUUtilization"})
 
                         ids.append({
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
-                            "view": "gauge",
+                            "view": "singleValue",
                             "stat": "Maximum",
                             "metric": "GPUUtilization"})
 
                         ids.append({
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
-                            "view": "gauge",
-                            "stat": "Average",
+                            "view": "singleValue",
+                            "stat": "Maximum",
                             "metric": "GPUMemoryUtilization"})
 
     def custom_sort(obj):
@@ -504,10 +505,37 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
 
     x = 0
     y = 10
-    i = 0
+
+    color_map = {
+        "GPU0": "#1f77b4",
+        "GPU1": "#ff7f0e",
+        "GPU2": "#2ca02c",
+        "GPU3": "#d62728",
+        "GPU4": "#9467bd",
+        "GPU5": "#8c564b",
+        "GPU6": "#e377c2",
+        "GPU7": "#7f7f7f",
+        "GPU8": "#bcbd22",
+    }
+
     for item in ids:
+        if cur_instance_id != item['instance_id']:
+            cur_instance_id = item['instance_id']
+            list.append({
+                "type": "text",
+                "x": 0,
+                "y": y,
+                "width": 24,
+                "height": 1,
+                "properties": {
+                    "background": "transparent",
+                    "markdown": f"# Instance - {item['instance_id']}"
+                }
+            })
+            y = y + 1
+
         list.append({
-            "height": 5,
+            "height": 4,
             "width": 6,
             "y": y,
             "x": x,
@@ -524,7 +552,9 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                         "InstanceGPU",
                         item['gpu_id'],
                         {
-                            "region": aws_region
+                            "region": aws_region,
+                            "label": f"{item['metric']} - {item['stat']}",
+                            "color": color_map.get(item['gpu_id'], '#1f77b4'),
                         }
                     ]
                 ],
@@ -540,13 +570,12 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "region": aws_region,
                 "stat": item['stat'],
                 "period": period,
-                "title": f"{item['instance_id']} - {item['gpu_id']} - {item['metric']} - {item['stat']}"
+                "title": f"{item['gpu_id']}"
             }
         })
-        i = i + 1
+
         x = x + 6
-        if i >= 4:
-            i = 0
+        if x >= 24:
             x = 0
             y = y + 1
 
@@ -572,7 +601,8 @@ def create_ds(ep_name: str):
         }
     ]
 
-    metrics1 = cloudwatch.list_metrics(Namespace='ESD', MetricName='GPUMemoryUtilization', Dimensions=dimensions)['Metrics']
+    metrics1 = cloudwatch.list_metrics(Namespace='ESD', MetricName='GPUMemoryUtilization', Dimensions=dimensions)[
+        'Metrics']
     metrics2 = cloudwatch.list_metrics(Namespace='ESD', MetricName='GPUUtilization', Dimensions=dimensions)['Metrics']
     metrics3 = cloudwatch.list_metrics(Namespace='ESD', MetricName='InferenceTotal', Dimensions=dimensions)['Metrics']
 
