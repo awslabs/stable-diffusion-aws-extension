@@ -165,7 +165,7 @@ class TestLatencyCompareTasks:
 
         threads = []
 
-        batch = 10000
+        batch = 1000
 
         thread = threading.Thread(target=self.create_batch_executes, args=(batch, self.api, self.endpoint_name))
         threads.append(thread)

@@ -463,19 +463,50 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
     list = []
 
     ids = []
-    # Print or process the metrics
+
     for metric in custom_metrics:
         if metric['MetricName'] == 'InferenceTotal':
             if len(metric['Dimensions']) == 3:
                 for dm in metric['Dimensions']:
                     if dm['Name'] == 'Endpoint' and dm['Value'] == ep_name:
                         instance_id = metric['Dimensions'][1]['Value']
-                        gpu_number = metric['Dimensions'][2]['Value']
+                        gpu_id = metric['Dimensions'][2]['Value']
 
-                        ids.append({"instance_id": instance_id, "gpu_number": gpu_number,
-                                    "index": f"{instance_id}-{gpu_number}"})
+                        index = f"{instance_id}-{gpu_id}"
 
-    sorted_ids = sorted(ids, key=lambda x: x['index'], reverse=True)
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "singleValue",
+                            "stat": "Sum",
+                            "metric": "InferenceTotal"})
+
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "stat": "Average",
+                            "metric": "GPUUtilization"})
+
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "stat": "Maximum",
+                            "metric": "GPUUtilization"})
+
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "stat": "Average",
+                            "metric": "GPUMemoryUtilization"})
+
+    sorted_ids = sorted(ids, key=lambda x: x['i'], reverse=True)
 
     x = 0
     y = 10
@@ -491,25 +522,31 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                 "metrics": [
                     [
                         "ESD",
-                        "InferenceTotal",
+                        item['metric'],
                         "Endpoint",
                         ep_name,
                         "Instance",
                         item['instance_id'],
                         "InstanceGPU",
-                        item['gpu_number'],
+                        item['gpu_id'],
                         {
                             "region": aws_region
                         }
                     ]
                 ],
                 "sparkline": True,
-                "view": "singleValue",
+                "view": item['view'],
+                "yAxis": {
+                    "left": {
+                        "min": 1,
+                        "max": 100
+                    }
+                },
                 "stacked": True,
                 "region": aws_region,
-                "stat": "Sum",
+                "stat": item['stat'],
                 "period": period,
-                "title": f"Instance-{item['index']}-Tasks"
+                "title": f"{item['instance_id']} - {item['gpu_id']} - {item['metric']} - {item['stat']}"
             }
         })
         i = i + 1
