@@ -474,14 +474,28 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
 
                         index = f"{instance_id}-{gpu_id}"
 
-                        ids.append({"instance_id": instance_id, "gpu_id": gpu_id, "index": index,
-                                    "metric": "InferenceTotal"})
-                        ids.append({"instance_id": instance_id, "gpu_id": gpu_id, "index": index,
-                                    "metric": "GPUUtilization"})
-                        ids.append({"instance_id": instance_id, "gpu_id": gpu_id, "index": index,
-                                    "metric": "GPUMemoryUtilization"})
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "singleValue",
+                            "metric": "InferenceTotal"})
 
-    sorted_ids = sorted(ids, key=lambda x: x['index'], reverse=True)
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "metric": "GPUUtilization"})
+
+                        ids.append({
+                            "i": index,
+                            "instance_id": instance_id,
+                            "gpu_id": gpu_id,
+                            "view": "gauge",
+                            "metric": "GPUMemoryUtilization"})
+
+    sorted_ids = sorted(ids, key=lambda x: x['i'], reverse=True)
 
     x = 0
     y = 10
@@ -510,12 +524,18 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                     ]
                 ],
                 "sparkline": True,
-                "view": "singleValue",
+                "view": item['view'],
+                "yAxis": {
+                    "left": {
+                        "min": 1,
+                        "max": 100
+                    }
+                },
                 "stacked": True,
                 "region": aws_region,
                 "stat": "Sum",
                 "period": period,
-                "title": f"Instance-{item['index']}-{item['metric']}"
+                "title": f"Instance - {item['instance_id']} - GPU{item['gpu_id']} - {item['metric']}"
             }
         })
         i = i + 1
