@@ -459,7 +459,6 @@ def ds_body(ep_name: str, custom_metrics):
 
 def resolve_gpu_ds(ep_name: str, custom_metrics):
     list = []
-
     ids = []
 
     for metric in custom_metrics:
@@ -470,10 +469,7 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                         instance_id = metric['Dimensions'][1]['Value']
                         gpu_id = metric['Dimensions'][2]['Value']
 
-                        index = f"{instance_id}-{gpu_id}"
-
                         ids.append({
-                            "i": index,
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "singleValue",
@@ -481,7 +477,6 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "metric": "InferenceTotal"})
 
                         ids.append({
-                            "i": index,
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "gauge",
@@ -489,7 +484,6 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "metric": "GPUUtilization"})
 
                         ids.append({
-                            "i": index,
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "gauge",
@@ -497,19 +491,21 @@ def resolve_gpu_ds(ep_name: str, custom_metrics):
                             "metric": "GPUUtilization"})
 
                         ids.append({
-                            "i": index,
                             "instance_id": instance_id,
                             "gpu_id": gpu_id,
                             "view": "gauge",
                             "stat": "Average",
                             "metric": "GPUMemoryUtilization"})
 
-    sorted_ids = sorted(ids, key=lambda x: x['i'], reverse=True)
+    def custom_sort(obj):
+        return (-int(obj['instance_id']), obj['gpu_id'])
+
+    ids = sorted(ids, key=custom_sort)
 
     x = 0
     y = 10
     i = 0
-    for item in sorted_ids:
+    for item in ids:
         list.append({
             "height": 5,
             "width": 6,
