@@ -493,7 +493,7 @@ def gpu_metrics():
         Namespace='ESD',
         MetricData=data
     )
-    logger.info(f"record_metric response: {response}")
+    logger.info(f"gpu_metrics response: {response}")
 
 
 def monitor_gpu_info(interval=10):
@@ -515,9 +515,7 @@ if __name__ == "__main__":
 
     api_process.start()
     check_sync_thread.start()
-
-    api_process.join()
-
     gpu_metrics_thread = threading.Thread(target=monitor_gpu_info, args=(10,))
     gpu_metrics_thread.start()
 
+    api_process.join()
