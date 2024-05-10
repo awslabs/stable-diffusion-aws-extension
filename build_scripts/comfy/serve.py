@@ -469,7 +469,7 @@ def gpu_metrics():
     if memory_utilization is not None:
         for device_id, utilization in enumerate(memory_utilization):
             data.append({
-                'MetricName': 'GPUUtilization',
+                'MetricName': 'GPUMemoryUtilization',
                 'Dimensions': [
                     {
                         'Name': 'Endpoint',
