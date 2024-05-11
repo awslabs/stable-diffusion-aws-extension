@@ -548,7 +548,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
                 "height": 3,
                 "properties": {
                     "markdown": f"# Endpoint Instance - {item['instance_id']} \n"
-                                f"- InferenceTotal: inference Job Count (Comfy Only)\n"
+                                f"- InferenceTotal: Inference Job Count (Comfy Only)\n"
                                 f"- GPUUtilization: The percentage of GPU units that are used on a GPU in an instance.\n"
                                 f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU in an instance."
 
