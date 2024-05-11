@@ -448,6 +448,7 @@ def ds_body(ep: Endpoint, custom_metrics):
                     "region": aws_region,
                     "title": "DiskUtilization",
                     "period": period,
+                    "stat": "Maximum"
                 }
             },
         ]
