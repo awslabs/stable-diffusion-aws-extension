@@ -129,13 +129,13 @@ class ComfyApp:
         else:
             prompt_id = ""
 
-        logger.info(f"set_prompt '{prompt_id}' on device {self.device_id}")
+        logger.debug(f"set_prompt '{prompt_id}' on device {self.device_id}")
         with open(f"/tmp/gpu{self.device_id}", "w") as f:
             f.write(str(prompt_id))
 
 
 def update_execute_job_table(prompt_id, key, value):
-    logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    logger.debug(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
     try:
         inference_table.update_item(
             Key={
