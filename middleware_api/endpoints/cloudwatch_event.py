@@ -480,7 +480,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
 
     cur_instance_id = None
     for metric in custom_metrics:
-        if metric['MetricName'] == 'InferenceTotal':
+        if metric['MetricName'] == 'GPUUtilization':
             if len(metric['Dimensions']) == 3:
                 for dm in metric['Dimensions']:
                     if dm['Name'] == 'Endpoint' and dm['Value'] == ep_name:
@@ -548,7 +548,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
                 "height": 3,
                 "properties": {
                     "markdown": f"# Endpoint Instance - {item['instance_id']} \n"
-                                f"- InferenceTotal: inference Job Count \n"
+                                f"- InferenceTotal: inference Job Count (Comfy Only)\n"
                                 f"- GPUUtilization: The percentage of GPU units that are used on a GPU in an instance.\n"
                                 f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU in an instance."
 
