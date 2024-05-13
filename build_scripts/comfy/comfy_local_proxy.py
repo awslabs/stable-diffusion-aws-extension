@@ -417,7 +417,7 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
-def compress_and_upload(folder_path, timestamp):
+def compress_and_upload(folder_path, prepare_version):
     for subdir in next(os.walk(folder_path))[1]:
         subdir_path = os.path.join(folder_path, subdir)
         tar_filename = f"{subdir}.tar.gz"
@@ -426,7 +426,7 @@ def compress_and_upload(folder_path, timestamp):
         # 创建 tar 压缩文件
         with tarfile.open(tar_filename, "w:gz") as tar:
             tar.add(subdir_path, arcname=os.path.basename(subdir_path))
-        s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/custom_nodes/"'
         logger.info(s5cmd_syn_node_command)
         os.system(s5cmd_syn_node_command)
         logger.info(f"rm {tar_filename}")
@@ -450,6 +450,7 @@ def compress_and_upload(folder_path, timestamp):
 def sync_default_files():
     try:
         timestamp = str(int(time.time() * 1000))
+        prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
         need_prepare = True
         prepare_type = 'default'
         need_reboot = True
@@ -457,19 +458,19 @@ def sync_default_files():
         # s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
         # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
         # os.system(s5cmd_syn_node_command)
-        compress_and_upload(f"{DIR2}", timestamp)
+        compress_and_upload(f"{DIR2}", prepare_version)
         logger.info(f" sync input files")
-        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
         logger.info(f"sync input files start {s5cmd_syn_input_command}")
         os.system(s5cmd_syn_input_command)
         logger.info(f" sync models files")
-        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
         logger.info(f"sync models files start {s5cmd_syn_model_command}")
         os.system(s5cmd_syn_model_command)
         logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
         url = api_url + "prepare"
         logger.info(f"URL:{url}")
-        data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": (PREPARE_ID if PREPARE_MODE == 'additional' else timestamp),
+        data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": prepare_version,
                 "prepare_type": prepare_type}
         logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
         result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
@@ -498,10 +499,11 @@ def sync_files(filepath, is_folder, is_auto):
             if filepath.endswith(ignore_item):
                 logger.info(f"no need to sync files by ignore files {filepath} ends by {ignore_item}")
                 return None
+        prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or str(filepath) == f'./{DIR2}' or f"{DIR2}/" in filepath):
             logger.info(f" sync custom nodes files: {filepath}")
-            s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
 
@@ -518,7 +520,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
             logger.info(f" sync input files: {filepath}")
-            s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
             # 判断文件写完后再同步
             if is_auto:
@@ -537,7 +539,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
             logger.info(f" sync models files: {filepath}")
-            s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
             # 判断文件写完后再同步
             if is_auto:
@@ -559,7 +561,7 @@ def sync_files(filepath, is_folder, is_auto):
         if need_prepare:
             url = api_url + "prepare"
             logger.info(f"URL:{url}")
-            data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id":  (PREPARE_ID if PREPARE_MODE == 'additional' else timestamp),
+            data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id":  prepare_version,
                     "prepare_type": prepare_type}
             logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
             result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
