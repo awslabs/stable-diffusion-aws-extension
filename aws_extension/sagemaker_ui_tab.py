@@ -30,6 +30,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
+region_name = os.getenv('AWS_REGION')
 
 page_key = {}
 
@@ -1526,7 +1527,7 @@ def trainings_tab():
                                 return None
                         def get_instance_public_ip(instance_id):
                             # Create a Boto3 EC2 client
-                            ec2_client = boto3.client('ec2', region_name=os.getenv('AWS_REGION'))
+                            ec2_client = boto3.client('ec2', region_name=region_name)
 
                             # Use the describe_instances() method to get information about the specified instance
                             response = ec2_client.describe_instances(InstanceIds=[instance_id])
