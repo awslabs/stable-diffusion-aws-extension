@@ -88,6 +88,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
 
   WebUiInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -116,6 +117,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 7860
           ToPort: 7860
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 6006
+          ToPort: 6006
           CidrIp: 0.0.0.0/0
 
   WebUiInternetGateway:
@@ -177,6 +182,10 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
           
+          echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "export AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
+          source /etc/environment
+          
           sudo apt-get update
           
           sudo apt install nginx -y
@@ -198,6 +207,10 @@ Resources:
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
           
           cd stable-diffusion-aws-extension
+
+          source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
+          pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
+          pip install boto3
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz

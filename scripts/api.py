@@ -26,10 +26,12 @@ def dummy_function(*args, **kwargs):
     return None
 
 
+region_name = os.getenv('AWS_REGION', 'us-east-1')
+
 logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-cloudwatch = boto3.client('cloudwatch')
+cloudwatch = boto3.client('cloudwatch', region_name=region_name)
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
