@@ -1526,7 +1526,7 @@ def trainings_tab():
                                 return None
                         def get_instance_public_ip(instance_id):
                             # Create a Boto3 EC2 client
-                            ec2_client = boto3.client('ec2')
+                            ec2_client = boto3.client('ec2', region_name=os.getenv('AWS_REGION'))
 
                             # Use the describe_instances() method to get information about the specified instance
                             response = ec2_client.describe_instances(InstanceIds=[instance_id])
