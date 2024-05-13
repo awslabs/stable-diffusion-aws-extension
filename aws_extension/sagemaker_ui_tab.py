@@ -1525,9 +1525,10 @@ def trainings_tab():
                                 # If an exception occurred, print the error
                                 print("Error:", e)
                                 return None
+
                         def get_instance_public_ip(instance_id):
                             # Create a Boto3 EC2 client
-                            ec2_client = boto3.client('ec2', region_name=region_name)
+                            ec2_client = boto3.client('ec2')
 
                             # Use the describe_instances() method to get information about the specified instance
                             response = ec2_client.describe_instances(InstanceIds=[instance_id])
@@ -1536,6 +1537,7 @@ def trainings_tab():
                             public_ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 
                             return public_ip
+
                         def choose_training(evt: gr.SelectData, dataset, rq: gr.Request):
                             row_index = evt.index[0]
                             train_id = dataset.values[row_index][0]

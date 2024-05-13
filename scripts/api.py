@@ -26,18 +26,17 @@ def dummy_function(*args, **kwargs):
     return None
 
 
-region_name = os.getenv('AWS_REGION', 'us-east-1')
-
 logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-cloudwatch = boto3.client('cloudwatch', region_name=region_name)
+cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table('SDInferenceJobTable')
+
 
 def update_execute_job_table(prompt_id, key, value):
     logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
@@ -55,6 +54,7 @@ def update_execute_job_table(prompt_id, key, value):
     except Exception as e:
         logger.error(f"Update execute job table error: {e}")
         raise e
+
 
 def record_metric():
     response = cloudwatch.put_metric_data(

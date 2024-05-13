@@ -230,6 +230,8 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
             'ESD_COMMIT_ID': esd_commit_id,
             'SERVICE_TYPE': event.service_type,
             'ON_DOCKER': 'true',
+            'AWS_REGION': aws_region,
+            'AWS_DEFAULT_REGION': aws_region,
         },
     }
 
