@@ -459,11 +459,11 @@ def sync_default_files():
         # os.system(s5cmd_syn_node_command)
         compress_and_upload(f"{DIR2}", timestamp)
         logger.info(f" sync input files")
-        s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
         logger.info(f"sync input files start {s5cmd_syn_input_command}")
         os.system(s5cmd_syn_input_command)
         logger.info(f" sync models files")
-        s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
         logger.info(f"sync models files start {s5cmd_syn_model_command}")
         os.system(s5cmd_syn_model_command)
         logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
@@ -501,7 +501,7 @@ def sync_files(filepath, is_folder, is_auto):
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or str(filepath) == f'./{DIR2}' or f"{DIR2}/" in filepath):
             logger.info(f" sync custom nodes files: {filepath}")
-            s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
 
@@ -518,7 +518,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
             logger.info(f" sync input files: {filepath}")
-            s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
 
             # 判断文件写完后再同步
             if is_auto:
@@ -537,7 +537,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
             logger.info(f" sync models files: {filepath}")
-            s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
 
             # 判断文件写完后再同步
             if is_auto:
