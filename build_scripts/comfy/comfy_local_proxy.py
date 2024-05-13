@@ -460,11 +460,11 @@ def sync_default_files():
         # os.system(s5cmd_syn_node_command)
         compress_and_upload(f"{DIR2}", prepare_version)
         logger.info(f" sync input files")
-        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+        s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
         logger.info(f"sync input files start {s5cmd_syn_input_command}")
         os.system(s5cmd_syn_input_command)
         logger.info(f" sync models files")
-        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+        s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
         logger.info(f"sync models files start {s5cmd_syn_model_command}")
         os.system(s5cmd_syn_model_command)
         logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
