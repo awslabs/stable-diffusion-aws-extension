@@ -160,7 +160,7 @@ class TestLatencyCompareTasks:
         for i in range(n):
             sd_inference_create(n=i, api=api, endpoint_name=endpoint_name, workflow='./data/api_params/latency-sd.json')
 
-    def test_8_lantency_compare_start(self):
+    def test_8_latency_compare_start(self):
         self.test_7_update_api_roles()
 
         threads = []

@@ -524,7 +524,7 @@ async function putDashboard() {
               },
             },
             {
-              'height': 5,
+              'height': 4,
               'width': 16,
               'y': 26,
               'x': 0,
@@ -570,7 +570,7 @@ async function putDashboard() {
               },
             },
             {
-              'height': 5,
+              'height': 4,
               'width': 16,
               'y': 39,
               'x': 0,
@@ -1114,7 +1114,7 @@ async function putDashboard() {
               },
             },
             {
-              'height': 5,
+              'height': 4,
               'width': 8,
               'y': 39,
               'x': 16,
@@ -1194,7 +1194,7 @@ async function putDashboard() {
               },
             },
             {
-              'height': 5,
+              'height': 4,
               'width': 8,
               'y': 26,
               'x': 16,

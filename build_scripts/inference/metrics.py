@@ -1,6 +1,9 @@
 import datetime
 import logging
 import os
+import subprocess
+import threading
+import time
 
 import boto3
 
@@ -16,6 +19,9 @@ decompress_seconds = os.getenv('DECOMPRESS_SECONDS')
 instance_init_seconds = os.getenv('INSTANCE_INIT_SECONDS')
 upload_endpoint_cache_seconds = os.getenv('UPLOAD_ENDPOINT_CACHE_SECONDS')
 download_file_size = os.getenv('DOWNLOAD_FILE_SIZE')
+
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 if service_type == 'sd':
     service_type = 'Stable-Diffusion'
@@ -67,6 +73,92 @@ def record_seconds(metric_name, seconds):
     logger.info(f"record_metric response: {response}")
 
 
+def get_gpu_utilization():
+    try:
+        output = subprocess.check_output(['nvidia-smi', '--query-gpu=utilization.gpu', '--format=csv,noheader,nounits'])
+        gpu_utilization = [int(util.strip()) for util in output.decode('utf-8').split('\n') if util.strip()]
+        return gpu_utilization
+    except subprocess.CalledProcessError:
+        return None
+
+
+def get_gpu_memory_utilization():
+    try:
+        output = subprocess.check_output(
+            ['nvidia-smi', '--query-gpu=utilization.memory', '--format=csv,noheader,nounits'])
+        gpu_memory_utilization = [int(utilization.strip()) for utilization in output.decode('utf-8').split('\n') if
+                                  utilization.strip()]
+        return gpu_memory_utilization
+    except subprocess.CalledProcessError:
+        return None
+
+
+def gpu_metrics():
+    data = []
+    utilization = get_gpu_utilization()
+    if utilization is not None:
+        for device_id, util in enumerate(utilization):
+            data.append({
+                'MetricName': 'GPUUtilization',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': endpoint_instance_id
+                    },
+                    {
+                        'Name': 'InstanceGPU',
+                        'Value': f"GPU{device_id}"
+                    }
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': util,
+                'Unit': 'Percent'
+            })
+
+    memory_utilization = get_gpu_memory_utilization()
+    if memory_utilization is not None:
+        for device_id, utilization in enumerate(memory_utilization):
+            data.append({
+                'MetricName': 'GPUMemoryUtilization',
+                'Dimensions': [
+                    {
+                        'Name': 'Endpoint',
+                        'Value': endpoint_name
+                    },
+                    {
+                        'Name': 'Instance',
+                        'Value': endpoint_instance_id
+                    },
+                    {
+                        'Name': 'InstanceGPU',
+                        'Value': f"GPU{device_id}"
+                    }
+                ],
+                'Timestamp': datetime.datetime.utcnow(),
+                'Value': utilization,
+                'Unit': 'Percent'
+            })
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=data
+    )
+    logger.debug(f"gpu_metrics response: {response}")
+
+
+def monitor_gpu_info(interval=10):
+    while True:
+        time.sleep(interval)
+        try:
+            gpu_metrics()
+        except Exception as e:
+            logger.error(f"Error in monitoring GPU info: {e}")
+
+
 if __name__ == "__main__":
     if download_file_seconds is not None:
         download_file_seconds = int(download_file_seconds)
@@ -87,3 +179,6 @@ if __name__ == "__main__":
     if download_file_size is not None:
         download_file_size = float(download_file_size)
         record_size('DownloadFileSize', download_file_size)
+
+    gpu_metrics_thread = threading.Thread(target=monitor_gpu_info, args=(10,))
+    gpu_metrics_thread.start()
