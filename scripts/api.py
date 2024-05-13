@@ -26,7 +26,7 @@ def dummy_function(*args, **kwargs):
     return None
 
 
-region_name = os.getenv('AWS_REGION')
+region_name = os.getenv('AWS_REGION', 'us-east-1')
 
 logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)

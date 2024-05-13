@@ -30,7 +30,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
-region_name = os.getenv('AWS_REGION')
+region_name = os.getenv('AWS_REGION', 'us-east-1')
 
 page_key = {}
 
