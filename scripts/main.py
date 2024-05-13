@@ -1064,7 +1064,9 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     thread.daemon = True
     thread.start()
 
-    load_dotenv('/etc/environment')
+    if os.path.exists('/etc/environment'):
+        load_dotenv('/etc/environment')
+
     if os.getenv("ESD_EC2") == "true":
         log_dir = f"/tmp/trains_logs/"
         if not os.path.exists(log_dir):
