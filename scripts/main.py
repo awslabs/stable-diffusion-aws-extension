@@ -16,7 +16,7 @@ from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
-
+from dotenv import load_dotenv
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
@@ -1064,7 +1064,8 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     thread.daemon = True
     thread.start()
 
-    if os.environ.get('ESD_EC2', "false") == "true":
+    load_dotenv('/etc/environment')
+    if os.getenv("ESD_EC2") == "true":
         log_dir = f"/tmp/trains_logs/"
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
