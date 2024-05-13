@@ -2,9 +2,11 @@ import datetime
 import json
 import logging
 import os
+import shutil
 import subprocess
 import threading
 
+import boto3
 import gradio as gr
 import modules.ui
 import requests
@@ -1502,6 +1504,37 @@ def trainings_tab():
                         t_list_next_btn.click(fn=list_ep_next, inputs=[],
                                               outputs=[train_list, train_list_info, train_selected, list_logs])
                     with gr.Row():
+                        def get_instance_id():
+                            # EC2 metadata URL to retrieve instance ID
+                            metadata_url = "http://169.254.169.254/latest/meta-data/instance-id"
+
+                            try:
+                                # Send a GET request to the metadata URL
+                                response = requests.get(metadata_url)
+
+                                # Check if the request was successful
+                                if response.status_code == 200:
+                                    # Extract and return the instance ID from the response
+                                    return response.text.strip()
+                                else:
+                                    # If the request failed, print an error message
+                                    print("Failed to retrieve instance ID. Status code:", response.status_code)
+                                    return None
+                            except Exception as e:
+                                # If an exception occurred, print the error
+                                print("Error:", e)
+                                return None
+                        def get_instance_public_ip(instance_id):
+                            # Create a Boto3 EC2 client
+                            ec2_client = boto3.client('ec2')
+
+                            # Use the describe_instances() method to get information about the specified instance
+                            response = ec2_client.describe_instances(InstanceIds=[instance_id])
+
+                            # Extract the public IP address from the response
+                            public_ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+                            return public_ip
                         def choose_training(evt: gr.SelectData, dataset, rq: gr.Request):
                             row_index = evt.index[0]
                             train_id = dataset.values[row_index][0]
@@ -1514,10 +1547,23 @@ def trainings_tab():
                                 if 'data' in resp and 'logs' in resp['data'] and len(resp['data']['logs']) > 0:
                                     logs = "<div style='padding: 10px'>"
                                     logs += "<h2>Logs</h2>"
+                                    pip = get_instance_public_ip(get_instance_id())
                                     for item in resp['data']['logs']:
                                         filename = item['filename']
                                         url = item['url']
-                                        logs += f"<p><a href='{url}'>{filename}</a></p>\n"
+
+                                        for root, dirs, files in os.walk("/tmp/trains_logs/"):
+                                            for d in dirs:
+                                                shutil.rmtree(os.path.join(root, d))
+
+                                        log_dir = f"/tmp/trains_logs/{train_id}/"
+                                        if not os.path.exists(log_dir):
+                                            os.makedirs(log_dir)
+                                        log_path = f"{log_dir}{filename}"
+                                        if not os.path.exists(log_path):
+                                            with open(log_path, 'wb') as f:
+                                                f.write(requests.get(url).content)
+                                        logs += f"<p><a href='http://{pip}:6006/' target='_blank'>{filename}</a></p>\n"
                                     logs += f"</div>"
                             else:
                                 train_id = ""
