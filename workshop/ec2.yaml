@@ -204,7 +204,7 @@ Resources:
           
           cd stable-diffusion-aws-extension
 
-          source ./venv/bin/activate
+          source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
           pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
           pip install boto3
 
