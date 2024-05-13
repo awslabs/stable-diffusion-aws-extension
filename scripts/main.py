@@ -1067,7 +1067,13 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     log_dir = f"/tmp/trains_logs/"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-    subprocess.Popen(["tensorboard", f"--logdir={log_dir}", f"--window_title=ESD Train Logs", "--host=0.0.0.0"])
+    subprocess.Popen(["tensorboard",
+                      f"--logdir={log_dir}",
+                      f"--window_title=ESD Train Logs",
+                      "--host=0.0.0.0",
+                      "--port=6006",
+                      "--load_fast=false"
+                      ])
 
     from modules import call_queue, fifo_lock
 
