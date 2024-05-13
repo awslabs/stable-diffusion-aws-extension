@@ -16,7 +16,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import ok, created
+from common.response import ok, created, internal_server_error
 from common.util import s3_scan_files, generate_presigned_url_for_keys, record_latency_metrics, \
     record_count_metrics
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
@@ -165,39 +165,45 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         return created(data=response_schema(inference_job), decimal=True)
 
     inference_job.start_time = datetime.now().isoformat()
-    resp = real_time_inference([payload], inference_id, ep.endpoint_name)
-
-    logger.info(f"real time inference response: ")
-    logger.info(resp)
-
-    resp = InferenceResult(**resp[0])
-    resp = s3_scan_files(resp)
-
-    inference_job.status = resp.status
-    inference_job.sagemaker_raw = resp.__dict__
-    inference_job.output_path = resp.output_path
-    inference_job.output_files = resp.output_files
-    inference_job.temp_path = resp.temp_path
-    inference_job.temp_files = resp.temp_files
-    inference_job.complete_time = datetime.now().isoformat()
-
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    if ep.endpoint_type == 'Real-time':
-        inference_job.output_files = generate_presigned_url_for_keys(inference_job.output_path,
-                                                                     inference_job.output_files)
-        inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
-                                                                   inference_job.temp_files)
+    resp = real_time_inference([payload], inference_id, ep.endpoint_name)
 
-    if resp.statuss != 'Completed':
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service=ServiceType.Comfy.value)
+    logger.info(f"real time inference response: {resp}")
+    if resp and len(resp) > 0:
+        resp = InferenceResult(**resp[0])
+        resp = s3_scan_files(resp)
+
+        inference_job.status = resp.status
+        inference_job.sagemaker_raw = resp.__dict__
+        inference_job.output_path = resp.output_path
+        inference_job.output_files = resp.output_files
+        inference_job.temp_path = resp.temp_path
+        inference_job.temp_files = resp.temp_files
+        inference_job.complete_time = datetime.now().isoformat()
+        if resp.status == 'fail' or resp.status != 'Completed' or resp.status != 'success':
+            inference_job.message = resp.message
+
+        ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+
+        if ep.endpoint_type == 'Real-time':
+            inference_job.output_files = generate_presigned_url_for_keys(inference_job.output_path,
+                                                                         inference_job.output_files)
+            inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
+                                                                       inference_job.temp_files)
+
+        if resp.status == 'fail' or resp.status != 'Completed' or resp.status != 'success':
+            inference_job.message = resp.message
+            record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service=ServiceType.Comfy.value)
+        else:
+            record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceSucceed', service=ServiceType.Comfy.value)
+            record_latency_metrics(start_time=inference_job.start_time,
+                                   ep_name=ep.endpoint_name,
+                                   metric_name='InferenceLatency',
+                                   service=ServiceType.Comfy.value)
     else:
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceSucceed', service=ServiceType.Comfy.value)
-        record_latency_metrics(start_time=inference_job.start_time,
-                               ep_name=ep.endpoint_name,
-                               metric_name='InferenceLatency',
-                               service=ServiceType.Comfy.value)
-
+        logger.info(f"inference error by sg resp none!{resp}")
+        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service=ServiceType.Comfy.value)
     return ok(data=response_schema(inference_job), decimal=True)
 
 

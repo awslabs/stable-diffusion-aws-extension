@@ -367,9 +367,15 @@ def execute_proxy(func):
                         elif response['data']['status'] == 'failed':
                             logger.error(
                                 f"there is no response on sagemaker from execute result !!!!!!!! ")
-                            send_error_msg(executor, prompt_id,
-                                           f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
-                            break
+                            if 'message' in response['data'] and response['data']['message']:
+                                send_error_msg(executor, prompt_id,
+                                               f"There may be some errors when valid or execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
+                                break
+                            else:
+                                logger.error(f"valid error on sagemaker :{response['data']}")
+                                send_error_msg(executor, prompt_id,
+                                               f"There may be some errors when valid or execute the prompt on the cloud. errors")
+                                break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
