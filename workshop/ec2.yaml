@@ -184,6 +184,7 @@ Resources:
           
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "export AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
+          echo "export ESD_EC2=true" >> /etc/environment
           source /etc/environment
           
           sudo apt-get update

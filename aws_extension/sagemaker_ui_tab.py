@@ -1538,6 +1538,12 @@ def trainings_tab():
 
                             return public_ip
 
+                        def get_tensorboard_url():
+                            if os.environ.get('ESD_EC2', "false") == "true":
+                                return get_instance_public_ip(get_instance_id())
+                            else:
+                                return "localhost"
+
                         def choose_training(evt: gr.SelectData, dataset, rq: gr.Request):
                             row_index = evt.index[0]
                             train_id = dataset.values[row_index][0]
@@ -1550,7 +1556,7 @@ def trainings_tab():
                                 if 'data' in resp and 'logs' in resp['data'] and len(resp['data']['logs']) > 0:
                                     logs = "<div style='padding: 10px'>"
                                     logs += "<h2>Logs</h2>"
-                                    pip = get_instance_public_ip(get_instance_id())
+                                    pip = get_tensorboard_url()
                                     for item in resp['data']['logs']:
                                         filename = item['filename']
                                         url = item['url']
