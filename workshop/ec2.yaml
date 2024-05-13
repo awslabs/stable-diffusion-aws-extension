@@ -88,6 +88,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
 
   WebUiInstanceProfile:
     Type: AWS::IAM::InstanceProfile
