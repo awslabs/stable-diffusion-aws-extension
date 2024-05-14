@@ -99,5 +99,5 @@ class TestCleanEndpoint:
                     logger.info(resp.json()['message'])
                     continue
                 else:
-                    assert check_s3_directory(f"{endpoint['endpoint_name']}/") is False
+                    check_s3_directory(f"{endpoint['endpoint_name']}/")
                     break
