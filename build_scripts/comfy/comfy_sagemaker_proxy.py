@@ -7,6 +7,7 @@ import sys
 import tarfile
 import time
 import uuid
+import gc
 from dataclasses import dataclass
 from typing import Optional
 
@@ -16,6 +17,7 @@ import server
 import folder_paths
 from aiohttp import web
 from boto3.dynamodb.conditions import Key
+import comfy
 
 global need_sync
 global prompt_id
@@ -300,6 +302,14 @@ async def execute_proxy(request):
         }
         sen_finish_sqs_msg(prompt_id)
         logger.info(f"execute inference response is {response_body}")
+
+        try:
+            e.reset()
+            comfy.model_management.cleanup_models()
+            gc.collect()
+            comfy.model_management.soft_empty_cache()
+        except Exception as e:
+            logger.info(f"gc error: {e}")
 
         executing = False
         return ok(response_body)
