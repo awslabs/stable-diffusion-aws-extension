@@ -73,6 +73,16 @@ def sen_sqs_msg(message_body, prompt_id_key):
     return message_id
 
 
+def sen_finish_sqs_msg(prompt_id_key):
+    global need_sync
+    # logger.info(f"sen_finish_sqs_msg start... {need_sync},{prompt_id_key}")
+    if need_sync and QUEUE_URL and REGION:
+        message_body = {'prompt_id': prompt_id_key, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id_key},
+                        'sid': None}
+        message_id = sen_sqs_msg(message_body, prompt_id_key)
+        logger.info(f"finish message sent {message_id}")
+
+
 async def prepare_comfy_env(sync_item: dict):
     try:
         request_id = sync_item['request_id']
@@ -210,6 +220,7 @@ async def execute_proxy(request):
         if executing is True:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
+            sen_finish_sqs_msg(prompt_id)
             return error(resp)
         executing = True
         logger.info(
@@ -221,6 +232,7 @@ async def execute_proxy(request):
                 resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                         "message": "the environment is not ready with sync"}
                 executing = False
+                sen_finish_sqs_msg(prompt_id)
                 return error(resp)
         server_instance = server.PromptServer.instance
         if "number" in json_data:
@@ -239,6 +251,7 @@ async def execute_proxy(request):
                     "message": "the environment is not ready valid[0] is false, need to resync"}
             executing = False
             response = {"prompt_id": prompt_id, "number": number, "node_errors": valid[3]}
+            sen_finish_sqs_msg(prompt_id)
             return error(resp)
         # if len(valid) == 4 and len(valid[3]) > 0:
         #     logger.info(f"Validating prompt error there is something error because of :valid: {valid}")
@@ -281,9 +294,7 @@ async def execute_proxy(request):
             "output_path": f's3://{BUCKET}/comfy/{s3_out_path}',
             "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
-        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
-        message_id = sen_sqs_msg(message_body, prompt_id)
-        logger.info(f"finish message sent {message_id} {message_body}")
+        sen_finish_sqs_msg(prompt_id)
         logger.info(f"execute inference response is {response_body}")
 
         executing = False
