@@ -41,7 +41,7 @@ class TestEndpointsApi:
                     logger.info(resp.json()['message'])
                     continue
                 else:
-                    assert check_s3_directory(f"{endpoint['endpoint_name']}/") is False
+                    check_s3_directory(f"{endpoint['endpoint_name']}/")
                     break
 
     def test_1_endpoints_delete_async_before(self):

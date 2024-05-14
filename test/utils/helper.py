@@ -518,16 +518,15 @@ def endpoints_wait_for_in_service(api, endpoint_name: str = None):
 
 def check_s3_directory(directory):
     try:
-        time.sleep(5)
+        time.sleep(10)
         paginator = s3.get_paginator('list_objects_v2')
         pages = paginator.paginate(Bucket=config.bucket, Delimiter='/')
 
         for page in pages:
             if 'CommonPrefixes' in page:
                 for prefix in page['CommonPrefixes']:
-                    print(prefix['Prefix'])
                     if prefix['Prefix'].endswith(directory):
-                        return True
+                        raise Exception(f"cache *-{directory} still exists in {prefix['Prefix']}")
         return False
     except (NoCredentialsError, PartialCredentialsError):
         print("Credentials not available.")
