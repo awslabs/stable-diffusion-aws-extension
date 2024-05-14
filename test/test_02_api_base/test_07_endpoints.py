@@ -6,7 +6,7 @@ from time import sleep
 
 import config as config
 from utils.api import Api
-from utils.helper import get_endpoint_status, delete_sagemaker_endpoint
+from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, check_s3_directory
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ class TestEndpointsApi:
                     logger.info(resp.json()['message'])
                     continue
                 else:
+                    assert check_s3_directory(f"{endpoint['endpoint_name']}/") is False
                     break
 
     def test_1_endpoints_delete_async_before(self):
