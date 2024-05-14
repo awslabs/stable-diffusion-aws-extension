@@ -43,13 +43,15 @@ Parameters:
 Mappings:
   RegionToAmiId:
     us-east-1:
-      AMI: ami-0e4cc88070dfcf17b
+      AMI: ami-02a07d31009cc8717
     us-east-2:
-      AMI: ami-0a48cc2a4a0988c70
+      AMI: ami-02a912b010cf774bd
     ap-southeast-1:
-      AMI: ami-09a7fb29eb7375468
+      AMI: ami-06f0228bde7a6dac2
     ap-northeast-1:
-      AMI: ami-0a1f6795aeb907a68
+      AMI: ami-0f9b45ca95cee6386
+    ap-northeast-2:
+      AMI: ami-0aba6dcbc1be4e85e
     us-west-1:
       AMI: ami-0ea5aefd1471f67b2
     us-west-2:
