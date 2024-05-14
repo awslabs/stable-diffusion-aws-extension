@@ -12,13 +12,17 @@ import time
 import uuid
 from datetime import datetime, timedelta
 
+import boto3
 import requests
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
 
 logger = logging.getLogger(__name__)
+
+s3 = boto3.client('s3')
 
 
 def get_parts_number(local_path: str):
@@ -510,3 +514,24 @@ def endpoints_wait_for_in_service(api, endpoint_name: str = None):
             return True
 
     return False
+
+
+def check_s3_directory(directory):
+    try:
+        time.sleep(5)
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=config.bucket, Delimiter='/')
+
+        for page in pages:
+            if 'CommonPrefixes' in page:
+                for prefix in page['CommonPrefixes']:
+                    print(prefix['Prefix'])
+                    if prefix['Prefix'].endswith(directory):
+                        return True
+        return False
+    except (NoCredentialsError, PartialCredentialsError):
+        print("Credentials not available.")
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
