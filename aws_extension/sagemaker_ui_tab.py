@@ -1451,6 +1451,7 @@ def trainings_tab():
                 "output_name": "model_name",
                 "save_every_n_epochs": 5,
                 "max_train_epochs": 100,
+                "enable_wd14_tagger": False,
             }
             config_params = gr.TextArea(value=json.dumps(default_config, indent=4),
                                         label="config_params",
