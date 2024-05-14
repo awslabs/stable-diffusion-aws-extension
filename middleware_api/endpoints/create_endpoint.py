@@ -146,6 +146,12 @@ def handler(raw_event, ctx):
             endpoint = Endpoint(**(ddb_service.deserialize(endpoint_row)))
             logger.info("endpoint:")
             logger.info(endpoint.__dict__)
+
+            if not endpoint.owner_group_or_role:
+                raise BadRequestException(
+                    message=f"Endpoint {endpoint.EndpointDeploymentJobId} owner_group_or_role is empty,"
+                            f"Please contact with admin to fix it or delete id")
+
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
