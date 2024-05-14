@@ -734,7 +734,7 @@ async def restart(self):
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-@server.PromptServer.instance.routes.post("/sync_env")
+@server.PromptServer.instance.routes.get("/sync_env")
 async def sync_env(request):
     logger.info(f"start to sync_env {request}")
     try:

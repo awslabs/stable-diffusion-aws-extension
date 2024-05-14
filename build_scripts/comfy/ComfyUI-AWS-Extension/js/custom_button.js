@@ -31,7 +31,7 @@ export async function syncEnv() {
         try {
             var target = {};
             const response = await api.fetchApi("/sync_env", {
-                method: 'POST',
+                method: 'GET',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(target)
             });
@@ -70,7 +70,7 @@ export async function syncEnvNoAlert() {
     try {
         var target = {}
         const response = await api.fetchApi("/sync_env", {
-            method: 'POST',
+            method: 'GET',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(target)
         });

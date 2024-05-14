@@ -245,7 +245,7 @@ comfy_cache_endpoint() {
   start_at=$(date +%s)
 
   upload_files=$(mktemp)
-  big_files=$(find "/home/ubuntu/ComfyUI" -type f -size +2520k)
+  big_files=$(find "/tmp/ComfyUI" -type f -size +2520k)
   for file in $big_files; do
     key=$(echo "$file" | cut -d'/' -f4-)
     echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/$key" >> "$upload_files"
@@ -254,7 +254,7 @@ comfy_cache_endpoint() {
   echo "tar files..."
   filelist=$(mktemp)
   # shellcheck disable=SC2164
-  cd /home/ubuntu/ComfyUI
+  cd /tmp/ComfyUI
   find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
   tar -cf $TAR_FILE -T "$filelist"
 
@@ -273,10 +273,10 @@ comfy_launch(){
   echo "accelerate comfy launch..."
 
   set_conda
-
-  cd /home/ubuntu/ComfyUI || exit 1
-  rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
-  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
+  mv /home/ubuntu/ComfyUI /tmp || exit 1
+  cd /tmp/ComfyUI || exit 1
+  rm -rf /tmp/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
+  rm /tmp/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
 
@@ -296,7 +296,7 @@ comfy_launch_from_private_s3(){
     export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
-    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
+    tar --overwrite -xf "$TAR_FILE" -C /tmp/ComfyUI/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     export DECOMPRESS_SECONDS=$((end_at-start_at))
@@ -355,7 +355,7 @@ if [ -f "/initiated_lock" ]; then
       sd_launch_cmd
       exit 1
     else
-      cd /home/ubuntu/ComfyUI || exit 1
+      cd /tmp/ComfyUI || exit 1
       source venv/bin/activate
       python serve.py
       exit 1

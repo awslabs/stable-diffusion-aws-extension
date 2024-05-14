@@ -27,6 +27,11 @@ executing = False
 global reboot
 reboot = False
 
+global last_call_time
+last_call_time = None
+global gc_triggered
+gc_triggered = False
+
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
@@ -45,8 +50,10 @@ instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
 
-ROOT_PATH = '/home/ubuntu/ComfyUI'
+ROOT_PATH = '/tmp/ComfyUI'
 sqs_client = boto3.client('sqs', region_name=REGION)
+
+GC_WAIT_TIME = 1800
 
 
 @dataclass
@@ -302,15 +309,6 @@ async def execute_proxy(request):
         }
         sen_finish_sqs_msg(prompt_id)
         logger.info(f"execute inference response is {response_body}")
-
-        try:
-            e.reset()
-            comfy.model_management.cleanup_models()
-            gc.collect()
-            comfy.model_management.soft_empty_cache()
-        except Exception as e:
-            logger.info(f"gc error: {e}")
-
         executing = False
         return ok(response_body)
     except Exception as e:
@@ -319,6 +317,27 @@ async def execute_proxy(request):
                 "message": f"exception occurred {e}"}
         executing = False
         return error(resp)
+    finally:
+        try:
+            global last_call_time, gc_triggered
+            gc_triggered = False
+            if last_call_time is None:
+                last_call_time = time.time()
+            else:
+                if time.time() - last_call_time > GC_WAIT_TIME:
+                    if not gc_triggered:
+                        logger.info(f"gc start: {time.time()} - {last_call_time}")
+                        e.reset()
+                        comfy.model_management.cleanup_models()
+                        gc.collect()
+                        comfy.model_management.soft_empty_cache()
+                        gc_triggered = True
+                        logger.info(f"gc end: {time.time()} - {last_call_time}")
+                    last_call_time = time.time()
+                else:
+                    last_call_time = time.time()
+        except Exception as e:
+            logger.info(f"gc error: {e}")
 
 
 def get_last_ddb_sync_record():
