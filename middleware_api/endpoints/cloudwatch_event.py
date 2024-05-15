@@ -544,7 +544,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
             list.append({
                 "type": "text",
                 "x": 0,
-                "y": y,
+                "y": y + 1,
                 "width": 24,
                 "height": 3,
                 "properties": {
@@ -555,7 +555,56 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
 
                 }
             })
-            y = y + 2
+            list.append({
+                "type": "metric",
+                "x": 0,
+                "y": y + 2,
+                "width": 24,
+                "height": 3,
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "DiskTotal",
+                            "Endpoint",
+                            ep_name,
+                            "Instance",
+                            item['instance_id'],
+                        ],
+                        [
+                            ".",
+                            "DiskUsed",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ],
+                        [
+                            ".",
+                            "DiskFree",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ],
+                        [
+                            ".",
+                            "DiskPercentage",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ]
+                    ],
+                    "sparkline": True,
+                    "view": "singleValue",
+                    "region": aws_region,
+                    "stat": "Maximum",
+                    "period": period,
+                    "title": "Disk(tmp)"
+                }
+            })
+            y = y + 3
 
         list.append({
             "height": 4,
