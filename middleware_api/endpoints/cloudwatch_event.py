@@ -560,7 +560,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
                 "x": 0,
                 "y": y + 2,
                 "width": 24,
-                "height": 3,
+                "height": 4,
                 "properties": {
                     "metrics": [
                         [

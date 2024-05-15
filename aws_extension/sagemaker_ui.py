@@ -152,7 +152,7 @@ def server_request(path):
 
 
 def datetime_to_short_form(datetime_str):
-    dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S.%f")
+    dt = get_strptime(datetime_str)
     short_form = dt.strftime("%Y-%m-%d-%H-%M-%S")
     return short_form
 
@@ -902,6 +902,11 @@ def fake_gan(selected_value, original_prompt):
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 
+def get_strptime(time_str):
+    time_str = time_str.replace("T", " ")
+    return datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S.%f')
+
+
 def get_infer_job_time(job):
     string_array = []
 
@@ -910,20 +915,20 @@ def get_infer_job_time(job):
         inference_type = job['inference_type'] + " "
 
     if 'createTime' in job and 'completeTime' in job:
-        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
-        create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
+        complete_time = get_strptime(job['completeTime'])
+        create_time = get_strptime(job['createTime'])
         duration = complete_time - create_time
         duration = round(duration.total_seconds(), 2)
         string = f"End-to-end API Duration: {duration} seconds"
 
-        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+        start_time = get_strptime(job['startTime'])
         duration = complete_time - start_time
         duration = round(duration.total_seconds(), 2)
         string_array.append(f"{string} (in which {inference_type}Inference: {duration} seconds)")
     else:
         if 'startTime' in job and 'completeTime' in job:
-            complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
-            start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+            complete_time = get_strptime(job['completeTime'])
+            start_time = get_strptime(job['startTime'])
             duration = complete_time - start_time
             duration = round(duration.total_seconds(), 2)
             string_array.append(f"{inference_type}Inference Time: {duration} seconds")
