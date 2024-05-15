@@ -30,7 +30,11 @@ export async function syncEnv() {
     if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
         try {
             var target = {};
-            const response = await api.fetchApi("/sync_env");
+            const FETCH_TIMEOUT = 1800000; // 30 seconds in milliseconds
+            const response = await Promise.race([
+                api.fetchApi("/sync_env"),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT))
+            ]);
             const result = await response.json();
             if (response.ok) {
                 const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
@@ -65,7 +69,11 @@ export async function syncEnv() {
 export async function syncEnvNoAlert() {
     try {
         var target = {}
-        const response = await api.fetchApi("/sync_env");
+        const FETCH_TIMEOUT = 1800000; // 30 seconds in milliseconds
+        const response = await Promise.race([
+            api.fetchApi("/sync_env"),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT))
+        ]);
         const result = await response.json();
         if (response.ok) {
             const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
