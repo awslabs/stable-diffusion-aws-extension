@@ -245,7 +245,7 @@ comfy_cache_endpoint() {
   start_at=$(date +%s)
 
   upload_files=$(mktemp)
-  big_files=$(find "/tmp/ComfyUI" -type f -size +2520k)
+  big_files=$(find "/home/ubuntu/ComfyUI" -type f -size +2520k)
   for file in $big_files; do
     key=$(echo "$file" | cut -d'/' -f4-)
     echo "sync $file s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/$key" >> "$upload_files"
@@ -254,7 +254,7 @@ comfy_cache_endpoint() {
   echo "tar files..."
   filelist=$(mktemp)
   # shellcheck disable=SC2164
-  cd /tmp/ComfyUI
+  cd /home/ubuntu/ComfyUI
   find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
   tar -cf $TAR_FILE -T "$filelist"
 
@@ -355,7 +355,7 @@ if [ -f "/initiated_lock" ]; then
       sd_launch_cmd
       exit 1
     else
-      cd /tmp/ComfyUI || exit 1
+      cd /home/ubuntu/ComfyUI || exit 1
       source venv/bin/activate
       python serve.py
       exit 1
