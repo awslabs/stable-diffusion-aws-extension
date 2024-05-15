@@ -275,7 +275,7 @@ comfy_launch(){
   echo "accelerate comfy launch..."
 
   set_conda
-#  mv /home/ubuntu/ComfyUI /tmp || exit 1
+
   cd /home/ubuntu/ComfyUI || exit 1
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
