@@ -68,7 +68,7 @@ class ComfyApp:
         self.device_id = device_id
         self.process = None
         self.busy = False
-        self.cwd = '/tmp/ComfyUI'
+        self.cwd = '/home/ubuntu/ComfyUI'
         self.name = f"{endpoint_instance_id}-gpus-{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
@@ -90,8 +90,8 @@ class ComfyApp:
 
     def start(self):
         cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
-               f"/tmp/ComfyUI/output/{self.device_id}/", "--temp-directory",
-               f"/tmp/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
+               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
+               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
         self.process = subprocess.Popen(
             cmd,
             cwd=self.cwd,

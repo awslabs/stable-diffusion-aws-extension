@@ -50,7 +50,7 @@ instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
 
-ROOT_PATH = '/tmp/ComfyUI'
+ROOT_PATH = '/home/ubuntu/ComfyUI'
 sqs_client = boto3.client('sqs', region_name=REGION)
 
 GC_WAIT_TIME = 1800

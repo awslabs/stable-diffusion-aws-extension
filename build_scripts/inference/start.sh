@@ -275,10 +275,10 @@ comfy_launch(){
   echo "accelerate comfy launch..."
 
   set_conda
-  mv /home/ubuntu/ComfyUI /tmp || exit 1
-  cd /tmp/ComfyUI || exit 1
-  rm -rf /tmp/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
-  rm /tmp/ComfyUI/custom_nodes/comfy_local_proxy.py
+
+  cd /home/ubuntu/ComfyUI || exit 1
+  rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
+  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
 
@@ -298,7 +298,7 @@ comfy_launch_from_private_s3(){
     export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
 
     start_at=$(date +%s)
-    tar --overwrite -xf "$TAR_FILE" -C /tmp/ComfyUI/
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     export DECOMPRESS_SECONDS=$((end_at-start_at))
@@ -357,7 +357,7 @@ if [ -f "/initiated_lock" ]; then
       sd_launch_cmd
       exit 1
     else
-      cd /tmp/ComfyUI || exit 1
+      cd /home/ubuntu/ComfyUI || exit 1
       source venv/bin/activate
       python serve.py
       exit 1
