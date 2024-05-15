@@ -21,7 +21,7 @@ instance_init_seconds = os.getenv('INSTANCE_INIT_SECONDS')
 upload_endpoint_cache_seconds = os.getenv('UPLOAD_ENDPOINT_CACHE_SECONDS')
 download_file_size = os.getenv('DOWNLOAD_FILE_SIZE')
 
-endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_name = os.getenv('ENDPOINT_NAME', 'test')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 
 if service_type == 'sd':
@@ -148,7 +148,6 @@ def gpu_metrics():
         Namespace='ESD',
         MetricData=data
     )
-    logger.debug(f"gpu_metrics response: {response}")
 
 
 def get_disk_usage(path):
@@ -234,7 +233,7 @@ def storage_metrics():
             },
         ],
         'Timestamp': datetime.datetime.utcnow(),
-        'Value': disk_usage['used_percent'],
+        'Value': float(disk_usage['used_percent']),
         'Unit': 'Percent'
     })
 
@@ -242,7 +241,6 @@ def storage_metrics():
         Namespace='ESD',
         MetricData=data
     )
-    logger.debug(f"disk_metrics response: {response}")
 
 
 def monitor_metrics(interval=10):
