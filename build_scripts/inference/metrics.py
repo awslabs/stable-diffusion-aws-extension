@@ -234,7 +234,7 @@ def storage_metrics():
             },
         ],
         'Timestamp': datetime.datetime.utcnow(),
-        'Value': disk_usage['used_percent'],
+        'Value': float(disk_usage['used_percent']),
         'Unit': 'Percent'
     })
 
