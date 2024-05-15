@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import shutil
 import subprocess
 import threading
 import time
@@ -150,13 +151,108 @@ def gpu_metrics():
     logger.debug(f"gpu_metrics response: {response}")
 
 
-def monitor_gpu_info(interval=10):
+def get_disk_usage(path):
+    total, used, free = shutil.disk_usage(path)
+    return {
+        "total": total,
+        "used": used,
+        "free": free,
+        "used_percent": used / total * 100
+    }
+
+
+def storage_metrics():
+    data = []
+    disk_usage = get_disk_usage('/tmp')
+
+    disk_usage['total'] = disk_usage['total'] // (2 ** 30)
+    disk_usage['used'] = disk_usage['used'] // (2 ** 30)
+    disk_usage['free'] = disk_usage['free'] // (2 ** 30)
+    disk_usage['used_percent'] = f"{disk_usage['used_percent']:.2f}"
+
+    data.append({
+        'MetricName': 'DiskTotal',
+        'Dimensions': [
+            {
+                'Name': 'Endpoint',
+                'Value': endpoint_name
+            },
+            {
+                'Name': 'Instance',
+                'Value': endpoint_instance_id
+            },
+        ],
+        'Timestamp': datetime.datetime.utcnow(),
+        'Value': disk_usage['total'],
+        'Unit': 'Gigabytes'
+    })
+
+    data.append({
+        'MetricName': 'DiskUsed',
+        'Dimensions': [
+            {
+                'Name': 'Endpoint',
+                'Value': endpoint_name
+            },
+            {
+                'Name': 'Instance',
+                'Value': endpoint_instance_id
+            },
+        ],
+        'Timestamp': datetime.datetime.utcnow(),
+        'Value': disk_usage['used'],
+        'Unit': 'Gigabytes'
+    })
+
+    data.append({
+        'MetricName': 'DiskFree',
+        'Dimensions': [
+            {
+                'Name': 'Endpoint',
+                'Value': endpoint_name
+            },
+            {
+                'Name': 'Instance',
+                'Value': endpoint_instance_id
+            },
+        ],
+        'Timestamp': datetime.datetime.utcnow(),
+        'Value': disk_usage['free'],
+        'Unit': 'Gigabytes'
+    })
+
+    data.append({
+        'MetricName': 'DiskPercentage',
+        'Dimensions': [
+            {
+                'Name': 'Endpoint',
+                'Value': endpoint_name
+            },
+            {
+                'Name': 'Instance',
+                'Value': endpoint_instance_id
+            },
+        ],
+        'Timestamp': datetime.datetime.utcnow(),
+        'Value': disk_usage['used_percent'],
+        'Unit': 'Percent'
+    })
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=data
+    )
+    logger.debug(f"disk_metrics response: {response}")
+
+
+def monitor_metrics(interval=10):
     while True:
         time.sleep(interval)
         try:
             gpu_metrics()
+            storage_metrics()
         except Exception as e:
-            logger.error(f"Error in monitoring GPU info: {e}")
+            logger.error(f"Error in monitoring info: {e}")
 
 
 if __name__ == "__main__":
@@ -180,5 +276,5 @@ if __name__ == "__main__":
         download_file_size = float(download_file_size)
         record_size('DownloadFileSize', download_file_size)
 
-    gpu_metrics_thread = threading.Thread(target=monitor_gpu_info, args=(10,))
+    gpu_metrics_thread = threading.Thread(target=monitor_metrics, args=(10,))
     gpu_metrics_thread.start()
