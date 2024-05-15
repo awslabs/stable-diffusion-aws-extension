@@ -357,7 +357,7 @@ if [ -f "/initiated_lock" ]; then
       sd_launch_cmd
       exit 1
     else
-      cd /home/ubuntu/ComfyUI || exit 1
+      cd /tmp/ComfyUI || exit 1
       source venv/bin/activate
       python serve.py
       exit 1
