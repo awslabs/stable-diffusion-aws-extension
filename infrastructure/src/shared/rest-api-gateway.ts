@@ -76,19 +76,17 @@ export class RestApiGateway {
       },
     });
 
-    const policy = new PolicyDocument({
-      statements: [
-        new PolicyStatement({
-          actions: ['execute-api:Invoke'],
-          resources: [`*`],
-          principals: [new AnyPrincipal()],
-        }),
-      ],
-    });
-
     Fn.conditionIf(
         isPrivateApiCondition.logicalId,
-        (api.node.defaultChild as CfnRestApi).policy = policy,
+        (api.node.defaultChild as CfnRestApi).policy = new PolicyDocument({
+          statements: [
+            new PolicyStatement({
+              actions: ['execute-api:Invoke'],
+              resources: [`*`],
+              principals: [new AnyPrincipal()],
+            }),
+          ],
+        }),
         (api.node.defaultChild as CfnRestApi).policy = undefined
     )
 
