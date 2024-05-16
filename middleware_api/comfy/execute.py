@@ -158,10 +158,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         return created(data=response_schema(inference_job), decimal=True)
 
     elif ep.endpoint_type == 'Async':
+        ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         resp = async_inference([payload], inference_id, ep.endpoint_name)
         # TODO status check and save
         logger.info(f"async inference {ep.instance_type} {ep.endpoint_type} {event.multi_async} response: {resp}")
-        ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=response_schema(inference_job), decimal=True)
 
     inference_job.start_time = datetime.now().isoformat()
