@@ -23,11 +23,9 @@ export class RestApiGateway {
   public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
   private readonly apiEndpointType: CfnParameter;
-  private readonly isChinaCondition: CfnCondition;
 
-  constructor(scope: Construct, apiKey: string, apiEndpointType:CfnParameter, isChinaCondition:CfnCondition, routes: string[]) {
+  constructor(scope: Construct, apiKey: string, apiEndpointType:CfnParameter, routes: string[]) {
     this.apiEndpointType = apiEndpointType;
-    this.isChinaCondition = isChinaCondition;
     this.scope = scope;
     [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
     for (let route of routes) {
@@ -62,11 +60,7 @@ export class RestApiGateway {
       },
       endpointConfiguration: {
         types: [
-          Fn.conditionIf(
-              isPrivateApiCondition.logicalId,
-              'PRIVATE',
-              Fn.conditionIf(this.isChinaCondition.logicalId, 'REGIONAL', 'EDGE')
-          ).toString() as EndpointType
+          this.apiEndpointType.valueAsString as EndpointType
         ],
       },
       defaultCorsPreflightOptions: {

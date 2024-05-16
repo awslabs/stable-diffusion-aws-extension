@@ -75,9 +75,9 @@ export class Middleware extends Stack {
 
     const apiEndpointType = new CfnParameter(this, 'ApiEndpointType', {
       type: 'String',
-      description: 'API Endpoint, example: REGIONAL | PRIVATE',
+      description: 'API Endpoint, example: REGIONAL | PRIVATE | EDGE',
       default: 'REGIONAL',
-      allowedValues: ['REGIONAL', 'PRIVATE'],
+      allowedValues: ['REGIONAL', 'PRIVATE', 'EDGE'],
     });
 
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
@@ -122,7 +122,7 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
-    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, apiEndpointType, isChinaCondition,[
+    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, apiEndpointType, [
       // service
       'api',
       'ping',
