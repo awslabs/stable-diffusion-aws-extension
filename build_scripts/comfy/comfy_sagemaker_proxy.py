@@ -138,6 +138,11 @@ async def prepare_comfy_env(sync_item: dict):
                                     or sync_script.startswith("curl") or sync_script.startswith("wget")
                                     or sync_script.startswith("print") or sync_script.startswith("cat")):
                     os.system(sync_script)
+                elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
+                    sync_script_key = sync_script.split(" ")[1]
+                    sync_script_value = sync_script.split(" ")[2]
+                    os.environ[sync_script_key] = sync_script_value
+                    logger.info(os.environ.get(sync_script_key))
             except Exception as e:
                 logger.error(f"Exception while execute sync_scripts : {sync_script}")
                 rlt = False
