@@ -384,7 +384,7 @@ export class Middleware extends Stack {
       description: 'S3 Bucket Name',
     });
 
-    new CfnOutput(this, 'ApiEndpointType', {
+    new CfnOutput(this, 'EndpointType', {
       value: apiEndpointType.valueAsString,
       description: 'API Endpoint Type',
     });
