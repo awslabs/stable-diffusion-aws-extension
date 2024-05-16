@@ -69,14 +69,14 @@ export class Middleware extends Stack {
 
     const logLevel = new CfnParameter(this, 'LogLevel', {
       type: 'String',
-      description: 'Log level, example: ERROR|INFO|DEBUG',
+      description: 'Log level, example: ERROR | INFO | DEBUG',
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
     const apiEndpointType = new CfnParameter(this, 'ApiEndpointType', {
       type: 'String',
-      description: 'API Endpoint, example: REGIONAL|PRIVATE',
+      description: 'API Endpoint, example: REGIONAL | PRIVATE',
       default: 'REGIONAL',
       allowedValues: ['REGIONAL', 'PRIVATE'],
     });
