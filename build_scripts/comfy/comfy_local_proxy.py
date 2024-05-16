@@ -13,6 +13,8 @@ from aiohttp import web
 import folder_paths
 import server
 from execution import PromptExecutor
+import execution
+import comfy
 
 import time
 import json
@@ -717,6 +719,25 @@ async def check_prepare(self):
         else:
             logger.info(f"check sync response is {response} {response['data']['prepareSuccess']}")
             return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
+    except Exception as e:
+        logger.info(f"error restart  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+@server.PromptServer.instance.routes.get("/gc")
+async def gc(self):
+    logger.info(f"start to gc {self}")
+    try:
+        logger.info(f"gc start: {time.time()}")
+        server_instance = server.PromptServer.instance
+        e = execution.PromptExecutor(server_instance)
+        e.reset()
+        comfy.model_management.cleanup_models()
+        gc.collect()
+        comfy.model_management.soft_empty_cache()
+        gc_triggered = True
+        logger.info(f"gc end: {time.time()}")
     except Exception as e:
         logger.info(f"error restart  {e}")
         pass
