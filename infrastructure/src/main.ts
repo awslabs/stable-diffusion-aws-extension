@@ -25,7 +25,6 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
-
 const app = new App();
 
 export class Middleware extends Stack {
@@ -73,6 +72,17 @@ export class Middleware extends Stack {
       description: 'Log level, example: ERROR|INFO|DEBUG',
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
+    const apiEndpointType = new CfnParameter(this, 'ApiEndpointType', {
+      type: 'String',
+      description: 'API Endpoint, example: REGIONAL|PRIVATE',
+      default: 'REGIONAL',
+      allowedValues: ['REGIONAL', 'PRIVATE'],
+    });
+
+    const isPrivateApiCondition = new CfnCondition(this, 'IsPrivateApi', {
+      expression: Fn.conditionEquals(apiEndpointType.valueAsString, 'PRIVATE')
     });
 
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
@@ -141,7 +151,13 @@ export class Middleware extends Stack {
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
     cfnApi.addPropertyOverride('EndpointConfiguration', {
-      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+      Types: [
+          Fn.conditionIf(
+              isPrivateApiCondition.logicalId,
+              'PRIVATE',
+              Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE')
+          ).toString()
+      ],
     });
 
     new MultiUsers(this, {
@@ -366,6 +382,11 @@ export class Middleware extends Stack {
     new CfnOutput(this, 'S3BucketName', {
       value: s3BucketName.valueAsString,
       description: 'S3 Bucket Name',
+    });
+
+    new CfnOutput(this, 'EndpointType', {
+      value: apiEndpointType.valueAsString,
+      description: 'API Endpoint Type',
     });
 
     new CfnOutput(this, 'SNSTopicName', {

@@ -44,6 +44,14 @@ inference_choices = ["ml.g4dn.2xlarge",
                      "ml.g5.12xlarge",
                      "ml.g5.24xlarge",
                      "ml.p4d.24xlarge",
+                     "ml.g6.xlarge",
+                     "ml.g6.2xlarge",
+                     "ml.g6.4xlarge",
+                     "ml.g6.8xlarge",
+                     "ml.g6.12xlarge",
+                     "ml.g6.16xlarge",
+                     "ml.g6.24xlarge",
+                     "ml.g6.48xlarge",
                      ]
 
 if is_gcr():
