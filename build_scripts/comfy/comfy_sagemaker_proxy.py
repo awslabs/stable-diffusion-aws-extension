@@ -56,6 +56,11 @@ sqs_client = boto3.client('sqs', region_name=REGION)
 GC_WAIT_TIME = 1800
 
 
+def print_env():
+    for key, value in os.environ.items():
+        logger.info(f"{key}: {value}")
+
+
 @dataclass
 class ComfyResponse:
     statusCode: int
