@@ -323,17 +323,19 @@ async def execute_proxy(request):
         logger.info(f"execute inference response is {response_body}")
         executing = False
         return ok(response_body)
-    except Exception as e:
-        logger.info(f"exception occurred {e}")
+    except Exception as ecp:
+        logger.info(f"exception occurred {ecp}")
         resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
-                "message": f"exception occurred {e}"}
+                "message": f"exception occurred {ecp}"}
         executing = False
         return error(resp)
     finally:
+        logger.info(f"gc check: {time.time()}")
         try:
             global last_call_time, gc_triggered
             gc_triggered = False
             if last_call_time is None:
+                logger.info(f"gc check last time is NONE")
                 last_call_time = time.time()
             else:
                 if time.time() - last_call_time > GC_WAIT_TIME:
@@ -348,6 +350,7 @@ async def execute_proxy(request):
                     last_call_time = time.time()
                 else:
                     last_call_time = time.time()
+            logger.info(f"gc check end: {time.time()}")
         except Exception as e:
             logger.info(f"gc error: {e}")
 
