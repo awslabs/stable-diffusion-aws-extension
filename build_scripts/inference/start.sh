@@ -137,9 +137,8 @@ sd_launch(){
 }
 
 sd_launch_from_private_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
+    s5cmd sync "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -163,9 +162,8 @@ sd_launch_from_private_s3(){
 }
 
 sd_launch_from_public_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
+    s5cmd cp "s3://$CACHE_PUBLIC_SD" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -288,9 +286,8 @@ comfy_launch(){
 }
 
 comfy_launch_from_private_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
+    s5cmd sync "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -308,9 +305,8 @@ comfy_launch_from_private_s3(){
 }
 
 comfy_launch_from_public_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
+    s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -367,18 +363,18 @@ fi
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_launch_from_private_s3 "$CACHE_ENDPOINT"
+    sd_launch_from_private_s3
     exit 1
   else
-    comfy_launch_from_private_s3 "$CACHE_ENDPOINT"
+    comfy_launch_from_private_s3
     exit 1
   fi
 fi
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
-  sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
+  sd_launch_from_public_s3
   exit 1
 else
-  comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
+  comfy_launch_from_public_s3
   exit 1
 fi

@@ -451,6 +451,23 @@ def ds_body(ep: Endpoint, custom_metrics):
                     "stat": "Maximum"
                 }
             },
+            {
+                "type": "log",
+                "x": 0,
+                "y": 20,
+                "width": 24,
+                "height": 8,
+                "properties": {
+                    "query": f"SOURCE '/aws/sagemaker/Endpoints/{ep_name}' "
+                             f"| fields @timestamp, @logStream, @message\r\n"
+                             f"| filter @message like /error/\r\n"
+                             f"| sort @timestamp desc\r\n| limit 500",
+                    "region": aws_region,
+                    "stacked": False,
+                    "view": "table",
+                    "title": "Endpoint Error Log"
+                }
+            }
         ]
     }
 
@@ -522,7 +539,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
     ids = sorted(ids, key=custom_sort)
 
     x = 0
-    y = 10
+    y = 30
 
     colors = ["#9467bd", "#ff7f0e", "#2ca02c", "#8c564b", "#e377c2", "#7f7f7f", "#1f77b4"]
     color_index = 0
@@ -550,8 +567,8 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
                 "properties": {
                     "markdown": f"# Endpoint Instance - {item['instance_id']} \n"
                                 f"- InferenceTotal: Inference Job Count (Comfy Only)\n"
-                                f"- GPUUtilization: The percentage of GPU units that are used on a GPU in an instance.\n"
-                                f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU in an instance."
+                                f"- GPUUtilization: The percentage of GPU units that are used on a GPU.\n"
+                                f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU."
 
                 }
             })
@@ -601,7 +618,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
                     "region": aws_region,
                     "stat": "Maximum",
                     "period": period,
-                    "title": "Disk(tmp)"
+                    "title": "Disk"
                 }
             })
             y = y + 3

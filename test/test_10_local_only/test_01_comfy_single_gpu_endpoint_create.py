@@ -56,7 +56,7 @@ class TestComfySingleGpuEpCreateE2E:
         }
 
         data = {
-            "endpoint_name": 'single-gpu',
+            "endpoint_name": f'single-gpu-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.2xlarge',

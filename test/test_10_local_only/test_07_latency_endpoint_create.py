@@ -56,7 +56,7 @@ class TestLatencyEndpointCreate:
         }
 
         data = {
-            "endpoint_name": 'latency',
+            "endpoint_name": f'latency-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.2xlarge',
@@ -80,7 +80,7 @@ class TestLatencyEndpointCreate:
         }
 
         data = {
-            "endpoint_name": 'latency',
+            "endpoint_name": f'latency-{config.endpoint_name}',
             "service_type": "sd",
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.2xlarge',
