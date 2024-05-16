@@ -1,1 +1,5 @@
-デフォルトでは、API はパブリックネットワークに公開されています。パブリックネットワークからのアクセスを防ぐには、[リソースポリシー](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-resource-policies.html) によってアクセス制御を行うことができます。
+API はパブリックネットワークに対して開放され、デフォルトではタイプは `REGIONAL` である。
+
+APIへのアクセスを制限する場合は、`ApiEndpointType` を `PRIVATE` に設定します。
+
+`VpcEndpointIds` を設定することで、`VpcEndpoint` をAPIにリンクすることができます。
