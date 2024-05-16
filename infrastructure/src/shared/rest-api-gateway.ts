@@ -1,4 +1,12 @@
-import { AccessLogFormat, Cors, EndpointType, LogGroupLogDestination, ResponseType, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import {
+  AccessLogFormat,
+  CfnRestApi,
+  Cors,
+  EndpointType,
+  LogGroupLogDestination,
+  ResponseType,
+  RestApi
+} from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
@@ -6,14 +14,18 @@ import { ApiModels } from './models';
 import { SCHEMA_204, SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
 import { ESD_VERSION } from './version';
 import { ApiValidators } from './validator';
+import {AnyPrincipal, PolicyDocument, PolicyStatement} from "aws-cdk-lib/aws-iam";
+import {CfnCondition, CfnParameter, Fn} from "aws-cdk-lib";
 
 export class RestApiGateway {
   public apiGateway: RestApi;
   public readonly apiKey: string;
   public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
+  private readonly apiEndpointType: CfnParameter;
 
-  constructor(scope: Construct, apiKey: string, routes: string[]) {
+  constructor(scope: Construct, apiKey: string, apiEndpointType:CfnParameter, routes: string[]) {
+    this.apiEndpointType = apiEndpointType;
     this.scope = scope;
     [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
     for (let route of routes) {
@@ -34,6 +46,10 @@ export class RestApiGateway {
       'aigc-api-logs',
     );
 
+    const isPrivateApiCondition = new CfnCondition(this.scope, 'IsPrivateApi', {
+      expression: Fn.conditionEquals(this.apiEndpointType.valueAsString, 'PRIVATE')
+    });
+
     // Create an API Gateway, will merge with existing API Gateway
     const api = new RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: this.scope.node.id,
@@ -43,7 +59,7 @@ export class RestApiGateway {
         accessLogFormat: AccessLogFormat.clf(),
       },
       endpointConfiguration: {
-        types: [EndpointType.EDGE],
+        types: [this.apiEndpointType.valueAsString as EndpointType],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
@@ -51,6 +67,22 @@ export class RestApiGateway {
         allowHeaders: ['*'],
       },
     });
+
+    const policy = new PolicyDocument({
+      statements: [
+        new PolicyStatement({
+          actions: ['execute-api:Invoke'],
+          resources: [`*`],
+          principals: [new AnyPrincipal()],
+        }),
+      ],
+    });
+
+    Fn.conditionIf(
+        isPrivateApiCondition.logicalId,
+        (api.node.defaultChild as CfnRestApi).policy = policy,
+        (api.node.defaultChild as CfnRestApi).policy = undefined
+    )
 
     this.createResponses(api);
 

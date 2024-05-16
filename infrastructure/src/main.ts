@@ -1,5 +1,4 @@
 import { App, Aspects, Aws, aws_apigateway, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
-import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
@@ -76,13 +75,9 @@ export class Middleware extends Stack {
 
     const apiEndpointType = new CfnParameter(this, 'ApiEndpointType', {
       type: 'String',
-      description: 'API Endpoint, example: REGIONAL | PRIVATE',
+      description: 'API Endpoint, example: REGIONAL | PRIVATE | EDGE',
       default: 'REGIONAL',
-      allowedValues: ['REGIONAL', 'PRIVATE'],
-    });
-
-    const isPrivateApiCondition = new CfnCondition(this, 'IsPrivateApi', {
-      expression: Fn.conditionEquals(apiEndpointType.valueAsString, 'PRIVATE')
+      allowedValues: ['REGIONAL', 'PRIVATE', 'EDGE'],
     });
 
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
@@ -127,7 +122,7 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
-    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, apiEndpointType,[
       // service
       'api',
       'ping',
@@ -149,16 +144,6 @@ export class Middleware extends Stack {
       'sync',
       'merge',
     ]);
-    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    cfnApi.addPropertyOverride('EndpointConfiguration', {
-      Types: [
-          Fn.conditionIf(
-              isPrivateApiCondition.logicalId,
-              'PRIVATE',
-              Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE')
-          ).toString()
-      ],
-    });
 
     new MultiUsers(this, {
       synthesizer: props.synthesizer,
@@ -290,6 +275,7 @@ export class Middleware extends Stack {
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
         timestamp: new Date().toISOString(),
+        apiEndpointType: apiEndpointType.valueAsString,
       },
     );
 
