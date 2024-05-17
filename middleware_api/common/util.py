@@ -38,36 +38,57 @@ esd_version = os.environ.get("ESD_VERSION")
 logs = boto3.client('logs')
 
 
-def record_count_metrics(ep_name: str, metric_name='InferenceSucceed', service=ServiceType.SD.value):
+def record_count_metrics(ep_name: str,
+                         metric_name='InferenceSucceed',
+                         service=ServiceType.SD.value,
+                         workflow: str = None
+                         ):
+    data = [
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': service
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': ep_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if workflow:
+        data.append({
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': workflow
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': metric_name,
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': service
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': metric_name,
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': ep_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
+        MetricData=data
     )
+
     logger.info(f"record_metric response: {response}")
 
 
@@ -95,7 +116,12 @@ def record_seconds_metrics(start_time: str, metric_name='Inference', service=Ser
     logger.info(f"record_metric response: {response}")
 
 
-def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLatency', service=ServiceType.SD.value):
+def record_latency_metrics(start_time,
+                           ep_name: str,
+                           metric_name='InferenceLatency',
+                           service=ServiceType.SD.value,
+                           workflow: str = None
+                           ):
     logger.info(f"start {start_time}")
 
     end_time = datetime.datetime.now().isoformat()
@@ -136,6 +162,20 @@ def record_latency_metrics(start_time, ep_name: str, metric_name='InferenceLaten
             'Unit': 'Milliseconds'
         },
     ]
+
+    if workflow:
+        data.append({
+            'MetricName': metric_name,
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': workflow
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': latency,
+            'Unit': 'Milliseconds'
+        })
 
     response = cloudwatch.put_metric_data(
         Namespace='ESD',

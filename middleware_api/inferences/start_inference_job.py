@@ -90,23 +90,32 @@ def inference_start(job: InferenceJob, username):
 
 
 @tracer.capture_method
-def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name):
+def real_time_inference(payload: InvocationRequest, job: InferenceJob, ep_name: str):
     tracer.put_annotation(key="InferenceJobId", value=job.InferenceJobId)
-    sagemaker_out = predictor_real_time_predict(endpoint_name=endpoint_name,
+    sagemaker_out = predictor_real_time_predict(endpoint_name=ep_name,
                                                 data=payload.__dict__,
                                                 inference_id=job.InferenceJobId,
                                                 )
 
     if 'error' in sagemaker_out:
-        record_count_metrics(ep_name=endpoint_name, metric_name='InferenceFailed')
+        record_count_metrics(ep_name=ep_name,
+                             metric_name='InferenceFailed',
+                             workflow=job.workflow,
+                             )
         update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
         raise Exception(str(sagemaker_out))
 
-    parse_sagemaker_result(sagemaker_out, job.createTime, job.InferenceJobId, job.taskType, endpoint_name)
+    parse_sagemaker_result(sagemaker_out, job.createTime, job.InferenceJobId, job.taskType, ep_name)
 
-    record_count_metrics(ep_name=endpoint_name, metric_name='InferenceSucceed')
-    record_latency_metrics(start_time=sagemaker_out['start_time'], ep_name=endpoint_name,
-                           metric_name='InferenceLatency')
+    record_count_metrics(ep_name=ep_name,
+                         metric_name='InferenceSucceed',
+                         workflow=job.workflow,
+                         )
+    record_latency_metrics(start_time=sagemaker_out['start_time'],
+                           ep_name=ep_name,
+                           metric_name='InferenceLatency',
+                           workflow=job.workflow,
+                           )
 
     return get_infer_data(job.InferenceJobId)
 

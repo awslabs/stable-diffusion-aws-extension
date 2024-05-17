@@ -60,6 +60,7 @@ class ExecuteEvent:
     front: Optional[bool] = None
     extra_data: Optional[dict] = None
     client_id: Optional[str] = None
+    workflow: Optional[str] = None
     need_prepare: Optional[bool] = False
     prepare_props: Optional[PrepareProps] = None
     multi_async: Optional[bool] = False
@@ -130,12 +131,17 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         output_files=[],
         temp_files=[],
         multi_async=event.multi_async,
-        batch_id=''
+        batch_id='',
+        workflow=event.workflow,
     )
 
     logger.info(f"inference job: {inference_job.__dict__}")
 
-    record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal', service=ServiceType.Comfy.value)
+    record_count_metrics(ep_name=ep.endpoint_name,
+                         metric_name='InferenceTotal',
+                         service=ServiceType.Comfy.value,
+                         workflow=inference_job.workflow
+                         )
 
     if event.multi_async and ep.endpoint_type == 'Async' and ep.instance_type in multi_gpu_instance_type_list:
         logger.info(f"executing multi-gpu inference {ep.instance_type} {ep.endpoint_type} {event.multi_async}")
@@ -194,16 +200,29 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
         if resp.status == 'fail' or resp.status != 'Completed' or resp.status != 'success':
             inference_job.message = resp.message
-            record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service=ServiceType.Comfy.value)
+            record_count_metrics(ep_name=ep.endpoint_name,
+                                 metric_name='InferenceFailed',
+                                 service=ServiceType.Comfy.value,
+                                 workflow=inference_job.workflow
+                                 )
         else:
-            record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceSucceed', service=ServiceType.Comfy.value)
+            record_count_metrics(ep_name=ep.endpoint_name,
+                                 metric_name='InferenceSucceed',
+                                 service=ServiceType.Comfy.value,
+                                 workflow=inference_job.workflow
+                                 )
             record_latency_metrics(start_time=inference_job.start_time,
                                    ep_name=ep.endpoint_name,
                                    metric_name='InferenceLatency',
+                                   workflow=inference_job.workflow,
                                    service=ServiceType.Comfy.value)
     else:
         logger.info(f"inference error by sg resp none!{resp}")
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceFailed', service=ServiceType.Comfy.value)
+        record_count_metrics(ep_name=ep.endpoint_name,
+                             metric_name='InferenceFailed',
+                             service=ServiceType.Comfy.value,
+                             workflow=inference_job.workflow
+                             )
     return ok(data=response_schema(inference_job), decimal=True)
 
 

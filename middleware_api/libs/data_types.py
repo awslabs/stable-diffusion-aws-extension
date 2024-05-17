@@ -162,6 +162,7 @@ class InferenceJob:
     params: Optional[dict[str, Any]] = None
     inference_type: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
 
 
 @dataclass
