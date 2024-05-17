@@ -137,7 +137,7 @@ async def prepare_comfy_env(sync_item: dict):
                                     or sync_script.startswith("env") or sync_script.startswith("source")
                                     or sync_script.startswith("curl") or sync_script.startswith("wget")
                                     or sync_script.startswith("print") or sync_script.startswith("cat")
-                                    or sync_script.startswith("chmod")):
+                                    or sync_script.startswith("sudo chmod")):
                     os.system(sync_script)
                 elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
                     sync_script_key = sync_script.split(" ")[1]
