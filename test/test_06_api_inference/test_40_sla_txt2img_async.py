@@ -174,12 +174,11 @@ class TestSLaTxt2ImgAsync:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'sd_async_txt2img_sla',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []
             },
-            "filters": {
-            }
         }
 
         create_infer_start_time = datetime.now()
