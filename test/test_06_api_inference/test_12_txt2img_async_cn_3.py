@@ -59,6 +59,7 @@ class TestTxt2ImgInferenceAsyncCn3E2E:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'cn2',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []

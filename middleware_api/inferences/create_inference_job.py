@@ -42,6 +42,7 @@ class CreateInferenceEvent:
     filters: dict[str, Any] = None
     user_id: Optional[str] = ""
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
 
 
 # POST /inferences
@@ -87,6 +88,7 @@ def handler(raw_event: dict, context: LambdaContext):
             status='created',
             taskType=_type,
             inference_type=event.inference_type,
+            workflow=event.workflow,
             owner_group_or_role=[username],
             payload_string=event.payload_string,
             params={
@@ -148,7 +150,10 @@ def handler(raw_event: dict, context: LambdaContext):
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal')
+        record_count_metrics(ep_name=ep.endpoint_name,
+                             metric_name='InferenceTotal',
+                             workflow=event.workflow,
+                             )
 
         if event.payload_string:
             return inference_start(inference_job, username)

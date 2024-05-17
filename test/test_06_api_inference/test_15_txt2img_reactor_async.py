@@ -59,6 +59,7 @@ class TestTxt2ImgReactorAsyncE2E:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'sd_reactor_txt2img',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []

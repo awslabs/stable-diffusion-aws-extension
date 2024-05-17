@@ -59,6 +59,7 @@ class TestImg2ImgInferenceAsyncE2E:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.IMG2IMG.value,
+            "workflow": 'sd_img2img',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []
