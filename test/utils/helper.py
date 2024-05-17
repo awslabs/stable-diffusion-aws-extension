@@ -243,6 +243,7 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True,
         prompt_id = str(uuid.uuid4())
         workflow = json.load(f)
         workflow['prompt_id'] = prompt_id
+        workflow['workflow'] = 'latency_compare_comfy'
         workflow['endpoint_name'] = endpoint_name
 
         resp = api.create_execute(headers=headers, data=workflow)
@@ -292,6 +293,7 @@ def sd_inference_create(n, api, endpoint_name: str, workflow: str = './data/api_
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.TXT2IMG.value,
+        "workflow": 'latency_compare_sd',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []
@@ -352,6 +354,7 @@ def sd_inference_esi(api, workflow: str = './data/api_params/extra-single-image-
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.ESI.value,
+        "workflow": 'esi',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []
@@ -411,6 +414,7 @@ def sd_inference_rembg(api, workflow: str = './data/api_params/rembg-api-params.
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.REMBG.value,
+        "workflow": 'rembg',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []

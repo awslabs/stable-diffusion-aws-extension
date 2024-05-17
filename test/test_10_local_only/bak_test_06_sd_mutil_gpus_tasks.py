@@ -73,6 +73,7 @@ class TestMutilTaskGPUs:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'gpus',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []

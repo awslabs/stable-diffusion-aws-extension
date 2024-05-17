@@ -48,6 +48,7 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         }
         data = {"endpoint_name": f"{self.ep_name}",
                 "need_reboot": True,
+                "workflow": 'comfy_txt2img',
                 "prepare_id": prepare_id,
                 "prepare_type": "models"}
         resp = self.api.prepare(data=data, headers=headers)

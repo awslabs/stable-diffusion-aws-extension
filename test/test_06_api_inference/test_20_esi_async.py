@@ -59,6 +59,7 @@ class TestEsiInferenceAsyncE2E:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.ESI.value,
+            "workflow": 'sd_esi',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []

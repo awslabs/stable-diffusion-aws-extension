@@ -7,8 +7,8 @@ import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, record_latency_metrics, \
-    record_queue_latency_metrics
+from common.util import s3_scan_files, load_json_from_s3, record_count_metrics, \
+    record_latency_metrics, record_queue_latency_metrics
 from libs.comfy_data_types import InferenceResult
 from libs.enums import ServiceType
 

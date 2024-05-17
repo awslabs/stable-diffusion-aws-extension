@@ -154,7 +154,7 @@ def update_execute_job_table(prompt_id, key, value):
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
-        record_metric(comfy_app)
+        record_metric(comfy_app, request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
 
         comfy_app.busy = True
@@ -185,7 +185,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        return wrap_response(start_time, response, comfy_app)
+        return wrap_response(start_time, response, comfy_app, request_obj)
     except Exception as e:
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for internal multi reqs {e}")
@@ -253,80 +253,100 @@ def ping():
     return {'status': 'Healthy'}
 
 
-def wrap_response(start_time, response, comfy_app: ComfyApp):
+def wrap_response(start_time, response, comfy_app: ComfyApp, request_obj):
     data = response.json()
     data['start_time'] = start_time
     data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
     data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
     data['device_id'] = comfy_app.device_id
+
+    if 'workflow' in request_obj and request_obj['workflow']:
+        data['workflow'] = request_obj['workflow']
+
     return data
 
 
-def record_metric(comfy_app: ComfyApp):
+def record_metric(comfy_app: ComfyApp, request_obj):
+    data = [
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+                {
+                    'Name': 'InstanceGPU',
+                    'Value': f"GPU{comfy_app.device_id}"
+                }
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': 'Comfy'
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if 'workflow' in request_obj and request_obj['workflow']:
+        data.append({
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': request_obj['workflow']
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                    {
-                        'Name': 'InstanceGPU',
-                        'Value': f"GPU{comfy_app.device_id}"
-                    }
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': 'Comfy'
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
+        MetricData=data
     )
     logger.info(f"record_metric response: {response}")
 

@@ -16,9 +16,9 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import ok, created, internal_server_error
-from common.util import s3_scan_files, generate_presigned_url_for_keys, record_latency_metrics, \
-    record_count_metrics
+from common.response import ok, created
+from common.util import s3_scan_files, generate_presigned_url_for_keys, \
+    record_latency_metrics, record_count_metrics
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus, ServiceType
 from libs.utils import get_endpoint_by_name, response_error
@@ -38,7 +38,9 @@ sqs_url = os.environ.get('MERGE_SQS_URL')
 index_name = "endpoint_name-startTime-index"
 predictors = {}
 
-multi_gpu_instance_type_list = ['ml.p5.48xlarge', 'ml.p4d.24xlarge', 'ml.p3.8xlarge', 'ml.p3.16xlarge', 'ml.p3dn.24xlarge', 'ml.p2.8xlarge', 'ml.p2.16xlarge', 'ml.g4dn.12xlarge', 'ml.g5.12xlarge', 'ml.g5.24xlarge', 'ml.g5.48xlarge']
+multi_gpu_instance_type_list = ['ml.p5.48xlarge', 'ml.p4d.24xlarge', 'ml.p3.8xlarge', 'ml.p3.16xlarge',
+                                'ml.p3dn.24xlarge', 'ml.p2.8xlarge', 'ml.p2.16xlarge', 'ml.g4dn.12xlarge',
+                                'ml.g5.12xlarge', 'ml.g5.24xlarge', 'ml.g5.48xlarge']
 
 
 @dataclass

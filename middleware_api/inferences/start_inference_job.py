@@ -73,6 +73,7 @@ def inference_start(job: InferenceJob, username):
     payload = InvocationRequest(
         id=job.InferenceJobId,
         task=job.taskType,
+        workflow=job.workflow,
         username=username,
         models=models,
         param_s3=job.params['input_body_s3'],

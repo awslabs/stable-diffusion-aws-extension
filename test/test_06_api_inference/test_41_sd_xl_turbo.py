@@ -157,6 +157,7 @@ class TestTurboE2E:
         data = {
             "inference_type": "Async",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'sd_turbo_xl',
             "models": {
                 "Stable-diffusion": [filename],
                 "embeddings": []

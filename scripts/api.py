@@ -56,65 +56,82 @@ def update_execute_job_table(prompt_id, key, value):
         raise e
 
 
-def record_metric():
+def record_metric(req: InvocationsRequest):
+    data = [
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': 'Stable-Diffusion'
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if req.workflow:
+        data.append({
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': req.workflow
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': 'Stable-Diffusion'
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
+        MetricData=data
     )
+
     logger.info(f"record_metric response: {response}")
 
 
@@ -279,7 +296,7 @@ def sagemaker_api(_, app: FastAPI):
 
         update_execute_job_table(req.id, 'startTime', start_time)
 
-        record_metric()
+        record_metric(req)
 
         with condition:
             try:

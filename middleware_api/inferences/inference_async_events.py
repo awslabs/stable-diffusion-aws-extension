@@ -73,7 +73,10 @@ def handler(event, context):
 
     parse_sagemaker_result(sagemaker_out, create_time, inference_id, task_type, endpoint_name)
 
-    record_count_metrics(ep_name=endpoint_name, metric_name='InferenceSucceed')
+    record_count_metrics(ep_name=endpoint_name,
+                         metric_name='InferenceSucceed',
+                         workflow=workflow
+                         )
     record_latency_metrics(start_time=sagemaker_out['start_time'],
                            ep_name=endpoint_name,
                            workflow=workflow,
