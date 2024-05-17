@@ -148,9 +148,7 @@ def handler(raw_event, ctx):
             logger.info(endpoint.__dict__)
 
             if not endpoint.owner_group_or_role:
-                raise BadRequestException(
-                    message=f"Endpoint {endpoint.EndpointDeploymentJobId} owner_group_or_role is empty,"
-                            f"Please contact with admin to fix it or delete id")
+                continue
 
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
