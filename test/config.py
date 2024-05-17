@@ -68,6 +68,10 @@ async_instance_type = os.environ.get("ASYNC_INSTANCE_TYPE", "ml.g5.2xlarge")
 if is_gcr:
     async_instance_type = "ml.g4dn.2xlarge"
 # special case for sometimes
+if region_name == "us-east-1":
+    async_instance_type = "ml.g4dn.2xlarge"
+if region_name == "ap-southeast-1":
+    async_instance_type = "ml.g5.2xlarge"
 if region_name == "us-west-2":
     async_instance_type = "ml.g6.2xlarge"
 logger.info(f"config.async_instance_type: {async_instance_type}")
