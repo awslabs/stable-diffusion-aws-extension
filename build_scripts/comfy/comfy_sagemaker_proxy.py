@@ -132,7 +132,7 @@ async def prepare_comfy_env(sync_item: dict):
             # sync_script.startswith('s5cmd') 不允许
             try:
                 if sync_script and (sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
-                                    or sync_script.startswith("pip install") or sync_script.startswith("apt-get")
+                                    or sync_script.startswith("pip install") or sync_script.startswith("apt")
                                     or sync_script.startswith("os.environ") or sync_script.startswith("ls")
                                     or sync_script.startswith("env") or sync_script.startswith("source")
                                     or sync_script.startswith("curl") or sync_script.startswith("wget")
