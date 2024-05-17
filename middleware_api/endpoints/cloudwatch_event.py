@@ -31,6 +31,8 @@ period = 300
 def handler(event, context):
     logger.info(json.dumps(event))
 
+    gen_workflow_ds()
+
     if 'detail' in event and 'EndpointStatus' in event['detail']:
         endpoint_name = event['detail']['EndpointName']
         endpoint_status = event['detail']['EndpointStatus']
@@ -58,6 +60,91 @@ def handler(event, context):
 
     clean_ds()
     return {}
+
+
+def gen_workflow_ds():
+    dimensions = [{'Name': 'Workflow'}]
+    metrics = cloudwatch.list_metrics(Namespace='ESD', MetricName='InferenceTotal', Dimensions=dimensions)['Metrics']
+
+    workflow_name = []
+    for m in metrics:
+        workflow = m['Dimensions'][0]['Value']
+        workflow_name.append(workflow)
+
+    workflow_name.sort()
+
+    y = 0
+    widgets = []
+    for workflow in workflow_name:
+        widgets.append({
+            "height": 4,
+            "width": 24,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [
+                        "ESD",
+                        "InferenceTotal",
+                        "Workflow",
+                        workflow,
+                        {
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        ".",
+                        "InferenceSucceed",
+                        ".",
+                        ".",
+                        {
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        ".",
+                        "InferenceLatency",
+                        ".",
+                        ".",
+                        {
+                            "stat": "Minimum",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "Average",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "p99",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "region": aws_region
+                        }
+                    ]
+                ],
+                "sparkline": True,
+                "view": "singleValue",
+                "region": aws_region,
+                "stat": "Maximum",
+                "period": 300,
+                "title": f"{workflow}"
+            }
+        })
+        y = y + 1
+
+    if len(widgets) > 0:
+        cloudwatch.put_dashboard(DashboardName='ESD-Workflow', DashboardBody=json.dumps({"widgets": widgets}))
 
 
 def clean_ds():
