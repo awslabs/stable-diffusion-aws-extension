@@ -168,12 +168,6 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
-    ModelTable: {
-      partitionKey: {
-        name: 'id',
-        type: AttributeType.STRING,
-      },
-    },
     TrainingTable: {
       partitionKey: {
         name: 'id',

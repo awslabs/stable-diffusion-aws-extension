@@ -1,7 +1,6 @@
 CheckpointTable
 DatasetInfoTable
 DatasetItemTable
-ModelTable
 MultiUserTable
 SDEndpointDeploymentJobTable
 SDInferenceJobTable

@@ -82,7 +82,6 @@ if [ "$result" = "Passed" ]; then
      aws dynamodb delete-table --table-name "CheckpointTable" | jq
      aws dynamodb delete-table --table-name "DatasetInfoTable" | jq
      aws dynamodb delete-table --table-name "DatasetItemTable" | jq
-     aws dynamodb delete-table --table-name "ModelTable" | jq
      aws dynamodb delete-table --table-name "MultiUserTable" | jq
      aws dynamodb delete-table --table-name "SDEndpointDeploymentJobTable" | jq
      aws dynamodb delete-table --table-name "SDInferenceJobTable" | jq
