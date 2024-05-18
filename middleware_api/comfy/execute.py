@@ -18,7 +18,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
 from common.util import s3_scan_files, generate_presigned_url_for_keys, \
-    record_latency_metrics, record_count_metrics
+    record_latency_metrics, record_count_metrics, get_workflow_name
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus, ServiceType
 from libs.utils import get_endpoint_by_name, response_error
@@ -103,6 +103,9 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     if ep.endpoint_status not in [EndpointStatus.IN_SERVICE.value, EndpointStatus.UPDATING.value]:
         raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService or Updating.")
+
+    if event.workflow:
+        event.workflow = get_workflow_name(event.workflow, ep.instance_type)
 
     logger.info(f"endpoint: {ep}")
 

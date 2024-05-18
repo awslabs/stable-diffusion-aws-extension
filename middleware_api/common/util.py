@@ -521,3 +521,11 @@ def endpoint_clean(ep: Endpoint):
         keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
     )
     logger.info(f"Delete {ep.endpoint_name} endpoint from DDB")
+
+
+def get_workflow_name(workflow, instance_type: str):
+    if not workflow:
+        return None
+
+    instance_type.replace('.', '_')
+    return f"{workflow}_{instance_type}"
