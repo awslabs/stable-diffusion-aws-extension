@@ -527,4 +527,4 @@ def get_workflow_name(workflow, instance_type: str):
     if not workflow:
         return None
 
-    return f"{workflow}({instance_type})"
+    return f"{workflow} ({instance_type})"
