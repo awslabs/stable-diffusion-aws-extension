@@ -444,6 +444,7 @@ export const SCHEMA_EXECUTE_PROMPT_PATH: JsonSchema = {
 export const SCHEMA_WORKFLOW: JsonSchema = {
   type: JsonSchemaType.STRING,
   description: 'Workflow remark',
+  pattern: '^[A-Za-z][A-Za-z0-9_]*$',
 };
 
 export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
