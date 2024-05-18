@@ -51,8 +51,8 @@ class TestTxt2ImgInferenceAsyncAfterComfyE2E:
         resp = self.api.prepare(data=data, headers=headers)
         assert resp.status_code == 200, resp.dumps()
         logger.info(resp.json())
-        logger.info(f"prepare {prepare_id} wait 20s for endpoint sync files...")
-        time.sleep(20)
+        logger.info(f"prepare {prepare_id} wait 30s for endpoint sync files...")
+        time.sleep(30)
 
-    def test_1_comfy_txt2img_async_create(self):
+    def test_3_comfy_txt2img_async_create(self):
         comfy_execute_create(1, self.api, self.ep_name)
