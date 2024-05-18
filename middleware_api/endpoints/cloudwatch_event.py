@@ -73,6 +73,8 @@ def gen_workflow_ds():
 
     workflow_name.sort()
 
+    logger.info(f"Workflow Names: {workflow_name}")
+
     y = 0
     widgets = []
     for workflow in workflow_name:
