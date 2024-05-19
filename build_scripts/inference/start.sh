@@ -345,6 +345,19 @@ comfy_launch_from_public_s3(){
 #  fi
 #fi
 
+if [ -n "$APP_SOURCE" ]; then
+  if [ -n "$APP_CWD" ]; then
+    start_at=$(date +%s)
+    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$APP_SOURCE/*" "$APP_CWD"
+    end_at=$(date +%s)
+    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+    bash "$APP_CWD/start.sh"
+    exit 1
+  fi
+fi
+
 if [ -f "/initiated_lock" ]; then
     echo "already initiated, start service directly..."
     if [ "$SERVICE_TYPE" == "sd" ]; then

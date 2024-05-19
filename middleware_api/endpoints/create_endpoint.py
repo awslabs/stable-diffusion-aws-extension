@@ -57,6 +57,8 @@ class CreateEndpointEvent:
     custom_extensions: str = ""
     # service for: sd / comfy
     service_type: str = "sd"
+    app_source: str = ""
+    app_cwd: str = ""
     # todo will be removed
     creator: str = ""
 
@@ -215,28 +217,34 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
     tracer.put_annotation('endpoint_name', endpoint_name)
     image_url = get_docker_image_uri(event)
 
+    environment = {
+        'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
+        'S3_BUCKET_NAME': s3_bucket_name,
+        'IMAGE_URL': image_url,
+        'INSTANCE_TYPE': event.instance_type,
+        'ENDPOINT_NAME': endpoint_name,
+        'ENDPOINT_ID': endpoint_id,
+        'EXTENSIONS': event.custom_extensions,
+        'CREATED_AT': datetime.utcnow().isoformat(),
+        'COMFY_QUEUE_URL': queue_url or '',
+        'COMFY_SYNC_TABLE': sync_table or '',
+        'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
+        'ESD_VERSION': esd_version,
+        'ESD_COMMIT_ID': esd_commit_id,
+        'SERVICE_TYPE': event.service_type,
+        'ON_DOCKER': 'true',
+        'AWS_REGION': aws_region,
+        'AWS_DEFAULT_REGION': aws_region,
+    }
+
+    if event.app_cwd:
+        environment['APP_SOURCE'] = event.app_source
+        environment['APP_CWD'] = event.app_cwd
+
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
-        'Environment': {
-            'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
-            'S3_BUCKET_NAME': s3_bucket_name,
-            'IMAGE_URL': image_url,
-            'INSTANCE_TYPE': event.instance_type,
-            'ENDPOINT_NAME': endpoint_name,
-            'ENDPOINT_ID': endpoint_id,
-            'EXTENSIONS': event.custom_extensions,
-            'CREATED_AT': datetime.utcnow().isoformat(),
-            'COMFY_QUEUE_URL': queue_url or '',
-            'COMFY_SYNC_TABLE': sync_table or '',
-            'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
-            'ESD_VERSION': esd_version,
-            'ESD_COMMIT_ID': esd_commit_id,
-            'SERVICE_TYPE': event.service_type,
-            'ON_DOCKER': 'true',
-            'AWS_REGION': aws_region,
-            'AWS_DEFAULT_REGION': aws_region,
-        },
+        'Environment': environment,
     }
 
     tracer.put_metadata('primary_container', primary_container)
@@ -258,8 +266,8 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
-            "ModelDataDownloadTimeoutInSeconds": 60 * 30,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 10,  # Specify the health checkup timeout in seconds
+            "ModelDataDownloadTimeoutInSeconds": 60 * 20,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 7,  # Specify the health checkup timeout in seconds
         }
     ]
 
