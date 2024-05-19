@@ -40,6 +40,7 @@ cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
+app_cwd = os.getenv('APP_CWD', '/home/ubuntu/ComfyUI')
 
 ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table('ComfyExecuteTable')
@@ -68,7 +69,7 @@ class ComfyApp:
         self.device_id = device_id
         self.process = None
         self.busy = False
-        self.cwd = '/home/ubuntu/ComfyUI'
+        self.cwd = app_cwd
         self.name = f"{endpoint_instance_id}-gpus-{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
@@ -89,9 +90,18 @@ class ComfyApp:
                         sys.stdout.write(f"{self.name}: {line}")
 
     def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
-               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
-               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
+        cmd = ["python", "main.py",
+               "--listen", self.host,
+               "--port", str(self.port),
+               "--output-directory", f"{self.cwd}/output/{self.device_id}/",
+               "--temp-directory", f"{self.cwd}/temp/{self.device_id}/",
+               "--cuda-device", str(self.device_id),
+               "--cuda-malloc"
+               ]
+
+        logger.info(f"Starting comfy app on {self.port}")
+        logger.info(f"Command: {cmd}")
+
         self.process = subprocess.Popen(
             cmd,
             cwd=self.cwd,
