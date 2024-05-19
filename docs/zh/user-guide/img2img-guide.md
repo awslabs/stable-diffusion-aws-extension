@@ -74,10 +74,8 @@
 2. Interrogate只需要在**img2img**标签页把图片上传即可。
 ![img2img tab](../images/clip_tab.png)
 
-3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
-
-4. 点击**Interrogate CLIP on cloud**或**Interrogate DeepBooru on cloud**。
-5. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。
+3. 点击**Interrogate CLIP on cloud**或**Interrogate DeepBooru on cloud**。
+4. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。
 img2img标签的提示词区域就能看到结果。
 ![interrogate generate results](../images/clip.png)
 
