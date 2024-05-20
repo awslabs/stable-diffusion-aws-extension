@@ -107,6 +107,7 @@ class TestTpsRealTimeE2E:
         data = {
             "inference_type": "Real-time",
             "task_type": InferenceType.TXT2IMG.value,
+            "workflow": 'sd_rt_txt2img_tps',
             "models": {
                 "Stable-diffusion": [config.default_model_id],
                 "embeddings": []

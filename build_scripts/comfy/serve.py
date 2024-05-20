@@ -40,6 +40,7 @@ cloudwatch = boto3.client('cloudwatch')
 
 endpoint_name = os.getenv('ENDPOINT_NAME')
 endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
+app_cwd = os.getenv('APP_CWD', '/home/ubuntu/ComfyUI')
 
 ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table('ComfyExecuteTable')
@@ -68,7 +69,7 @@ class ComfyApp:
         self.device_id = device_id
         self.process = None
         self.busy = False
-        self.cwd = '/home/ubuntu/ComfyUI'
+        self.cwd = app_cwd
         self.name = f"{endpoint_instance_id}-gpus-{device_id}"
         self.stdout_thread = None
         self.stderr_thread = None
@@ -89,9 +90,18 @@ class ComfyApp:
                         sys.stdout.write(f"{self.name}: {line}")
 
     def start(self):
-        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port), "--output-directory",
-               f"/home/ubuntu/ComfyUI/output/{self.device_id}/", "--temp-directory",
-               f"/home/ubuntu/ComfyUI/temp/{self.device_id}/", "--cuda-device", str(self.device_id)]
+        cmd = ["python", "main.py",
+               "--listen", self.host,
+               "--port", str(self.port),
+               "--output-directory", f"{self.cwd}/output/{self.device_id}/",
+               "--temp-directory", f"{self.cwd}/temp/{self.device_id}/",
+               "--cuda-device", str(self.device_id),
+               "--cuda-malloc"
+               ]
+
+        logger.info(f"Starting comfy app on {self.port}")
+        logger.info(f"Command: {cmd}")
+
         self.process = subprocess.Popen(
             cmd,
             cwd=self.cwd,
@@ -154,7 +164,7 @@ def update_execute_job_table(prompt_id, key, value):
 
 async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
     try:
-        record_metric(comfy_app)
+        record_metric(comfy_app, request_obj)
         logger.info(f"Starting on {comfy_app.port} {need_async} {request_obj}")
 
         comfy_app.busy = True
@@ -185,7 +195,7 @@ async def send_request(request_obj, comfy_app: ComfyApp, need_async: bool):
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code,
                                 detail=f"COMFY service returned an error: {response.text}")
-        return wrap_response(start_time, response, comfy_app)
+        return wrap_response(start_time, response, comfy_app, request_obj)
     except Exception as e:
         logger.error(f"send_request error {e}")
         raise HTTPException(status_code=500, detail=f"COMFY service not available for internal multi reqs {e}")
@@ -253,80 +263,100 @@ def ping():
     return {'status': 'Healthy'}
 
 
-def wrap_response(start_time, response, comfy_app: ComfyApp):
+def wrap_response(start_time, response, comfy_app: ComfyApp, request_obj):
     data = response.json()
     data['start_time'] = start_time
     data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
     data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
     data['device_id'] = comfy_app.device_id
+
+    if 'workflow' in request_obj and request_obj['workflow']:
+        data['workflow'] = request_obj['workflow']
+
     return data
 
 
-def record_metric(comfy_app: ComfyApp):
+def record_metric(comfy_app: ComfyApp, request_obj):
+    data = [
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+                {
+                    'Name': 'InstanceGPU',
+                    'Value': f"GPU{comfy_app.device_id}"
+                }
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': 'Comfy'
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if 'workflow' in request_obj and request_obj['workflow']:
+        data.append({
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': request_obj['workflow']
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                    {
-                        'Name': 'InstanceGPU',
-                        'Value': f"GPU{comfy_app.device_id}"
-                    }
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': 'Comfy'
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
+        MetricData=data
     )
     logger.info(f"record_metric response: {response}")
 

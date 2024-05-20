@@ -54,7 +54,7 @@ Method Three:
 4. After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click **Deploy**. You'll see a message indicating **Endpoint deployment started** under **Label**.
    ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
 
-5. You can navigate to tab **txt2img**, session **Amazon SageMaker Inference**, refresh and select drop down list **Select Cloud SageMaker Endpoint** to check all the deployment status of endpoints.
+5. You can navigate to tab **Amazon SageMaker**, session **Inference Endpoint Management**, refresh list to check all the deployment status of endpoints.
 
     > **Note:** The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time.
 
@@ -62,7 +62,7 @@ Method Three:
 
 
 ### Delete deployed endpoints
-1. Refresh and select endpoint(s) under the dropdown list of **Select Cloud SageMaker Endpoint**.
+1. Refresh and select endpoint(s) under the dropdown list of **Inference Endpoint Management**.
 2. Click **Delete**, message *Endpoint delete completed* will appear on the left side, which indicates that the selected endpoint(s) has been successfully deleted.
 
 

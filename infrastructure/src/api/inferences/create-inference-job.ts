@@ -12,7 +12,7 @@ import {
   SCHEMA_INFERENCE,
   SCHEMA_INFERENCE_ASYNC_MODEL,
   SCHEMA_INFERENCE_REAL_TIME_MODEL,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
@@ -148,6 +148,7 @@ export class CreateInferenceJobApi {
                   type: {
                     type: JsonSchemaType.STRING,
                   },
+                  workflow: SCHEMA_WORKFLOW,
                   api_params_s3_location: {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
@@ -225,6 +226,7 @@ export class CreateInferenceJobApi {
             type: JsonSchemaType.STRING,
           },
           inference_type: SCHEMA_INFER_TYPE,
+          workflow: SCHEMA_WORKFLOW,
           payload_string: {
             type: JsonSchemaType.STRING,
           },

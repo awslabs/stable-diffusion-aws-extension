@@ -57,6 +57,13 @@ def handler(event, ctx):
             if not job.temp_files:
                 job.temp_files = []
 
+            if not job.need_sync:
+                job.need_sync = False
+
+            # todo will fix this in the future
+            if job.need_sync == 'false':
+                job.need_sync = False
+
             new_list.append({
                 'prompt_id': job.prompt_id,
                 'endpoint_name': job.endpoint_name,

@@ -68,8 +68,12 @@ async_instance_type = os.environ.get("ASYNC_INSTANCE_TYPE", "ml.g5.2xlarge")
 if is_gcr:
     async_instance_type = "ml.g4dn.2xlarge"
 # special case for sometimes
-# if region_name == "us-west-2":
-#     async_instance_type = "ml.g6.2xlarge"
+if region_name == "us-east-1":
+    async_instance_type = "ml.g4dn.2xlarge"
+if region_name == "ap-southeast-1":
+    async_instance_type = "ml.g5.2xlarge"
+if region_name == "us-west-2":
+    async_instance_type = "ml.g6.2xlarge"
 logger.info(f"config.async_instance_type: {async_instance_type}")
 
 real_time_instance_type = os.environ.get("REAL_TIME_INSTANCE_TYPE", "ml.g5.2xlarge")
@@ -90,7 +94,7 @@ logger.info(f"config.ckpt_message: {ckpt_message}")
 
 train_instance_type = os.environ.get("TRAIN_INSTANCE_TYPE", "ml.g5.2xlarge")
 if region_name == "ap-southeast-1":
-    train_instance_type = "ml.g4dn.12xlarge"
+    train_instance_type = "ml.g4dn.2xlarge"
 if is_gcr:
     train_instance_type = "ml.g4dn.2xlarge"
 logger.info(f"config.train_instance_type: {train_instance_type}")
