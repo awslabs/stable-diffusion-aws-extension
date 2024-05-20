@@ -130,6 +130,8 @@ sd_launch(){
   echo "initiated_lock" > /initiated_lock
 
   cd /home/ubuntu/stable-diffusion-webui || exit 1
+  chmod -R +x venv/bin
+
   source venv/bin/activate
   python /metrics.py &
 
@@ -275,6 +277,8 @@ comfy_launch(){
   set_conda
 
   cd /home/ubuntu/ComfyUI || exit 1
+  chmod -R +x venv/bin
+
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
@@ -362,11 +366,13 @@ if [ -f "/initiated_lock" ]; then
     echo "already initiated, start service directly..."
     if [ "$SERVICE_TYPE" == "sd" ]; then
       cd /home/ubuntu/stable-diffusion-webui || exit 1
+      chmod -R +x venv/bin
       source venv/bin/activate
       sd_launch_cmd
       exit 1
     else
       cd /home/ubuntu/ComfyUI || exit 1
+      chmod -R +x venv/bin
       source venv/bin/activate
       python serve.py
       exit 1
