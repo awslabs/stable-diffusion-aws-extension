@@ -16,7 +16,7 @@ set_conda(){
 }
 
 start_process(){
-  init_port=8180
+  init_port=8187
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       init_port=$((init_port + i))
       if [ "$i" -eq "$PROCESS_NUMBER" ]; then
