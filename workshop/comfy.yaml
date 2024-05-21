@@ -281,3 +281,6 @@ Outputs:
   ComfyRealURL:
     Description: URL for Comfy WebUI
     Value: !Sub http://${ComfyEIP}:8188
+  Dockerfile:
+    Description: Dockerfile for EC2 and SageMaker
+    Value: /root/stable-diffusion-aws-extension/workshop/Dockerfile.comfy
