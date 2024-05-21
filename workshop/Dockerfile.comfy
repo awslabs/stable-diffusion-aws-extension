@@ -16,7 +16,14 @@ RUN apt-get update -y && \
     apt-get install ffmpeg -y && \
     rm -rf /var/lib/apt/lists/*
 
+RUN echo "ESD_VERSION: $ESD_VERSION"
+
+ARG ESD_VERSION
+RUN echo "ESD_VERSION: $ESD_VERSION"
+
 ENV ESD_VERSION $ESD_VERSION
+RUN echo "ESD_VERSION: $ESD_VERSION"
+
 ENV S3_BUCKET_NAME $S3_BUCKET_NAME
 ENV SERVICE_TYPE $SERVICE_TYPE
 ENV AWS_REGION $AWS_REGION
