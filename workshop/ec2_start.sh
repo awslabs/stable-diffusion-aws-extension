@@ -48,6 +48,9 @@ echo "docker push $release_image"
 docker push "$release_image"
 echo "docker pushed $release_image"
 
+set -euxo pipefail
+
+echo "mkdir -p ComfyUI"
 mkdir -p ComfyUI
 
 echo "Starting container..."
