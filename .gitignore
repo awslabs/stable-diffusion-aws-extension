@@ -49,3 +49,4 @@ test/**/.env
 *.iml
 .DS_Store
 /workshop/ComfyUI/
+/.env
