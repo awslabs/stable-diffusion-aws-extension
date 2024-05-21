@@ -43,8 +43,11 @@ echo "docker pushed $release_image"
 mkdir -p ./ComfyUI
 
 echo "Starting container..."
+local_volume="./ComfyUI"
+# local vol can be replace with your local directory
+
 docker run -v ~/.aws:/root/.aws \
-           -v ./ComfyUI:/home/ubuntu/ComfyUI \
+           -v $local_volume:/home/ubuntu/ComfyUI \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            -e "ESD_VERSION=$ESD_VERSION" \
