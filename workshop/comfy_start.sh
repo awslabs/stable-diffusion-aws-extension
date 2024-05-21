@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials
+
 printenv
 
 download_conda(){
@@ -54,6 +56,16 @@ curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extens
 rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
 cd /home/ubuntu/ComfyUI || exit 1
+rm -rf web/extensions/ComfyLiterals
+chmod -R +x venv
+source venv/bin/activate
+
+pip install dynamicprompts
+pip install ultralytics
+pip install awscli
+
+aws s3 ls
+aws sts get-caller-identity
 
 mkdir -p models/vae/
 wget -O --quiet models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
@@ -68,17 +80,6 @@ wget -O --quiet models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface
 
 chmod -R 777 /home/ubuntu/ComfyUI
 
-chmod -R +x venv
-source venv/bin/activate
-
-pip install dynamicprompts
-pip install ultralytics
-pip install awscli
-
-aws s3 ls
-aws sts get-caller-identity
-
-rm -rf web/extensions/ComfyLiterals
 
 start_comfy(){
   port=$1
