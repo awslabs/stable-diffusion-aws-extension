@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+s5cmd ls
+
 aws s3 ls
 
 aws sts get-caller-identity

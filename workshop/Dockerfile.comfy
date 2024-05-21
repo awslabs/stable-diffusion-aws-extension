@@ -15,8 +15,10 @@ ARG PROCESS_NUMBER
 
 # TODO BYOC
 RUN apt-get update -y && \
-    apt-get install ffmpeg awscli -y && \
+    apt-get install ffmpeg -y && \
     rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir awscli
 
 ENV ESD_VERSION $ESD_VERSION
 ENV S3_BUCKET_NAME $S3_BUCKET_NAME
