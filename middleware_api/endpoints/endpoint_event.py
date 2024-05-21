@@ -25,7 +25,7 @@ cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 
 esd_version = os.environ.get("ESD_VERSION")
-cool_down_period = 5 * 60  # 15 minutes
+cool_down_period = 15 * 60  # 15 minutes
 
 s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3 = boto3.resource('s3')
@@ -141,9 +141,9 @@ def enable_autoscaling_async(ep: Endpoint, variant_name):
                 "Dimensions": [{"Name": "EndpointName", "Value": ep.endpoint_name}],
                 "Statistic": "Average",
             },
-            "ScaleInCooldown": 10,
+            "ScaleInCooldown": 180,
             # The cooldown period helps you prevent your Auto Scaling group from launching or terminating
-            "ScaleOutCooldown": 10
+            "ScaleOutCooldown": 60
             # ScaleOutCooldown - The amount of time, in seconds, after a scale out activity completes before another
             # scale out activity can start.
         },
@@ -269,8 +269,8 @@ def enable_autoscaling_real_time(ep: Endpoint, variant_name):
         comparison_operator = response.get('MetricAlarms')[0]['ComparisonOperator']
         if comparison_operator == "LessThanThreshold":
             period = cool_down_period  # 15 minutes
-            evaluation_periods = 1
-            datapoints_to_alarm = 1
+            evaluation_periods = 4
+            datapoints_to_alarm = 4
             target_value = 1
         else:
             period = 30
