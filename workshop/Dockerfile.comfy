@@ -1,0 +1,23 @@
+FROM 366590864501.dkr.ecr.ap-northeast-1.amazonaws.com/esd-inference:dev
+
+# TODO BYOC
+RUN apt-get update -y && \
+    apt-get install ffmpeg -y && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ESD_VERSION="ec2"
+ENV S3_BUCKET_NAME="elonniu"
+ENV SERVICE_TYPE="comfy"
+ENV AWS_REGION="ap-northeast-1"
+ENV ON_EC2="true"
+ENV COMFY_API_URL="https://jj1n9rcewi.execute-api.ap-northeast-1.amazonaws.com/prod/"
+ENV COMFY_API_TOKEN="09876743210987654325"
+ENV COMFY_ENDPOINT="comfy-async-single-gpu-0520234038"
+ENV COMFY_NEED_SYNC="false"
+ENV COMFY_BUCKET_NAME="elonniu"
+
+COPY start.sh /
+RUN chmod +x /start.sh
+
+COPY sync.sh /
+RUN chmod +x /sync.sh

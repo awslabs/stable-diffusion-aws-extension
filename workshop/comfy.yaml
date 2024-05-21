@@ -94,6 +94,13 @@ Resources:
               - Effect: Allow
                 Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
                 Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
+        - PolicyName: EcrPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:*' ]
+                Resource: [ '*' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -191,6 +198,8 @@ Resources:
           echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           source /etc/environment
+          
+          sudo systemctl enable docker
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -249,30 +258,6 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
-
-#          cat > comfy_upload.service <<EOF
-#          [Unit]
-#          Description=Comfy Upload Service
-#          After=network.target
-#          StartLimitIntervalSec=0
-#
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
-#
-#          [Install]
-#          WantedBy=default.target
-#
-#          EOF
-#          sudo mv comfy_upload.service /etc/systemd/system
-#          sudo chown root:root /etc/systemd/system/comfy_upload.service
-#          sudo systemctl enable comfy_upload.service
-#          sudo systemctl start comfy_upload.service
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
