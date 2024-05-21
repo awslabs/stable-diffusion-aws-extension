@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -euxo pipefail
+
+printenv
+
 download_conda(){
   echo "---------------------------------------------------------------------------------"
   mkdir -p /home/ubuntu/conda/lib/
@@ -10,7 +14,7 @@ download_conda(){
 
 set_conda(){
     echo "set conda environment..."
-    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_PRELOAD
 }
 
 download_conda
@@ -26,21 +30,38 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     exit 1
 fi
 
+#export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
+#echo "downloading comfy file $CACHE_PUBLIC_COMFY ..."
+#
+#start_at=$(date +%s)
+#s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
+#end_at=$(date +%s)
+#export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+#echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+#
+#echo "decompressing comfy file..."
+#start_at=$(date +%s)
+#tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
+#rm -rf "comfy.tar"
+#end_at=$(date +%s)
+#export DECOMPRESS_SECONDS=$((end_at-start_at))
+#echo "decompress file: $DECOMPRESS_SECONDS seconds"
+
 curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
 rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
 cd /home/ubuntu/ComfyUI || exit 1
 
 mkdir -p models/vae/
-wget -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
+wget -Oq models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
 
-mkdir -p models/checkpoints/
-wget -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
+#mkdir -p models/checkpoints/
+#wget -Oq models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
 
 mkdir -p models/animatediff_models/
-wget -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
+wget -Oq models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
 
-wget -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true"
+wget -Oq models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true"
 
 chmod -R 777 /home/ubuntu/ComfyUI
 
@@ -52,5 +73,19 @@ pip install ultralytics
 
 rm -rf web/extensions/ComfyLiterals
 
-python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
+start_comfy(){
+  port=$1
+  python3 main.py --listen 0.0.0.0 --port "$port" --cuda-malloc
+}
+
+init_port=8188
+for i in $(seq 1 "$PROCESS_NUMBER"); do
+    if [ "$i" -eq "$PROCESS_NUMBER" ]; then
+        start_comfy $init_port
+        break
+    fi
+    start_comfy $init_port &
+    init_port=$((init_port + i))
+done
+
 exit 1

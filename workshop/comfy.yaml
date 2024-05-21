@@ -39,6 +39,16 @@ Parameters:
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
+  ProcessNumber:
+    Description: Number of the Comfy Processes
+    Type: String
+    AllowedValues:
+      - 1
+      - 5
+      - 10
+      - 15
+      - 20
+    Default: 5
 
 Mappings:
   RegionToAmiId:
@@ -124,7 +134,7 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 8188
-          ToPort: 8188
+          ToPort: 8288
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -199,6 +209,7 @@ Resources:
           echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
           
           source /etc/environment
           
