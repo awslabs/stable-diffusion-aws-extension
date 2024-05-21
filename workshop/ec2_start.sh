@@ -25,7 +25,7 @@ fi
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com"
 docker pull "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
 docker build -f Dockerfile.comfy \
-             --build-arg ESD_VERSION='ec2' \
+             --build-arg ESD_VERSION="$ESD_VERSION" \
              --build-arg SERVICE_TYPE='comfy' \
              --build-arg ON_EC2='true' \
              --build-arg S3_BUCKET_NAME="$COMFY_BUCKET_NAME" \

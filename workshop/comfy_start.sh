@@ -26,6 +26,23 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     exit 1
 fi
 
+export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
+
+start_at=$(date +%s)
+s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
+end_at=$(date +%s)
+export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
+
+start_at=$(date +%s)
+tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
+rm -rf "$SERVICE_TYPE.tar"
+end_at=$(date +%s)
+export DECOMPRESS_SECONDS=$((end_at-start_at))
+echo "decompress file: $DECOMPRESS_SECONDS seconds"
+
 curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
 rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
