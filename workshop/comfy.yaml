@@ -94,6 +94,13 @@ Resources:
               - Effect: Allow
                 Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
                 Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
+        - PolicyName: EcrPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:*' ]
+                Resource: [ '*' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -190,11 +197,17 @@ Resources:
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
           echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
+          echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
+          
           source /etc/environment
-
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
+          
+          sudo systemctl enable docker
+          
+          cd /home/ubuntu
+          
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/Dockerfile.comfy
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/ec2_start.sh
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/comfy_start.sh
 
           sudo apt-get update
           
@@ -205,27 +218,6 @@ Resources:
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt update -y
-          sudo apt --fix-broken install wget python3.10 python3.10-venv python3-dev python3.10-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
-          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
-          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
-          sudo python3 -m venv venv
-          source venv/bin/activate
-          
-          sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
-          sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
-          
-          sudo mkdir -p /ComfyUI/models/vae/
-          sudo wget -O /ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
-          
-          sudo mkdir -p /ComfyUI/models/checkpoints/
-          sudo wget -O /ComfyUI/models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
-          
-          sudo mkdir -p /ComfyUI/models/animatediff_models/
-          sudo wget -O /ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
-          sudo chmod -R 777 /ComfyUI
-          
           cat > comfy.service <<EOF
           [Unit]
           Description=Comfy Service
@@ -233,8 +225,8 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/ComfyUI
-          ExecStart=sudo /venv/bin/python3 main.py --listen
+          WorkingDirectory=/home/ubuntu
+          ExecStart=bash ec2_start.sh
           Type=simple
           Restart=always
           RestartSec=3
@@ -249,30 +241,6 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
-
-#          cat > comfy_upload.service <<EOF
-#          [Unit]
-#          Description=Comfy Upload Service
-#          After=network.target
-#          StartLimitIntervalSec=0
-#
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
-#
-#          [Install]
-#          WantedBy=default.target
-#
-#          EOF
-#          sudo mv comfy_upload.service /etc/systemd/system
-#          sudo chown root:root /etc/systemd/system/comfy_upload.service
-#          sudo systemctl enable comfy_upload.service
-#          sudo systemctl start comfy_upload.service
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f

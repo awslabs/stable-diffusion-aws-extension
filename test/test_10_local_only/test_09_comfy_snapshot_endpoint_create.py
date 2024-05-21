@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(not config.is_local, reason="local test only")
-class TestComfySingleGpuEpCreateE2E:
+class TestComfySnapshotEpCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)
@@ -50,19 +50,21 @@ class TestComfySingleGpuEpCreateE2E:
                 else:
                     break
 
-    def test_3_create_comfy_endpoint_async(self):
+    def test_2_create_comfy_snapshot_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
         }
 
         data = {
-            "endpoint_name": f'single-gpu-{config.endpoint_name}',
+            "endpoint_name": f'snapshot-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.8xlarge',
+            "app_source": 'comfy/workflows/versions/1',
+            "app_cwd": '/home/ubuntu/ComfyUI',
             "initial_instance_count": 1,
-            "autoscaling_enabled": True,
+            "autoscaling_enabled": False,
             "assign_to_roles": [config.role_comfy_async],
             "creator": config.username
         }
@@ -74,7 +76,7 @@ class TestComfySingleGpuEpCreateE2E:
         assert 'data' in resp.json(), resp.dumps()
         assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_1_list_endpoints_status(self):
+    def test_3_list_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
