@@ -350,6 +350,7 @@ comfy_launch_from_public_s3(){
 #fi
 
 ec2_start_process(){
+  set -euxo pipefail
   echo "---------------------------------------------------------------------------------"
   export LD_LIBRARY_PATH=$LD_PRELOAD
   download_conda
@@ -375,6 +376,7 @@ ec2_start_process(){
 }
 
 if [ -n "$COMFY_EC2" ]; then
+  set -euxo pipefail
   cd /home/ubuntu || exit 1
 
   if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
