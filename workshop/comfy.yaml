@@ -213,7 +213,7 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
-          echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
+          echo "export DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
