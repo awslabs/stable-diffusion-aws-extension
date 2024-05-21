@@ -34,14 +34,14 @@ end_at=$(date +%s)
 export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
 echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
 
-export DOWNLOAD_FILE_SIZE=$(du -sm /home/ubuntu | awk '{print $1}' | grep -oE '[0-9]+')
-
 start_at=$(date +%s)
 tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
-rm -rf "$SERVICE_TYPE.tar"
+rm -rf "comfy.tar"
 end_at=$(date +%s)
 export DECOMPRESS_SECONDS=$((end_at-start_at))
 echo "decompress file: $DECOMPRESS_SECONDS seconds"
+
+ls -la
 
 curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
 rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
