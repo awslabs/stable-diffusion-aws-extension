@@ -205,10 +205,9 @@ Resources:
           
           cd /home/ubuntu
           
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/venv/workshop/Dockerfile.comfy
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/venv/workshop/ec2_start.sh
-
-
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/Dockerfile.comfy
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/ec2_start.sh
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/comfy_start.sh
 
           sudo apt-get update
           
@@ -219,27 +218,6 @@ Resources:
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
-          sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt update -y
-          sudo apt --fix-broken install wget python3.10 python3.10-venv python3-dev python3.10-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
-          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
-          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
-          sudo python3 -m venv venv
-          source venv/bin/activate
-          
-          sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
-          sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
-          
-          sudo mkdir -p /ComfyUI/models/vae/
-          sudo wget -O /ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
-          
-          sudo mkdir -p /ComfyUI/models/checkpoints/
-          sudo wget -O /ComfyUI/models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
-          
-          sudo mkdir -p /ComfyUI/models/animatediff_models/
-          sudo wget -O /ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
-          sudo chmod -R 777 /ComfyUI
-          
           cat > comfy.service <<EOF
           [Unit]
           Description=Comfy Service
@@ -247,8 +225,8 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/ComfyUI
-          ExecStart=sudo /venv/bin/python3 main.py --listen
+          WorkingDirectory=/home/ubuntu
+          ExecStart=bash ec2_start.sh
           Type=simple
           Restart=always
           RestartSec=3

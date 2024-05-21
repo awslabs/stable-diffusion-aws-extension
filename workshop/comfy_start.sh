@@ -1,33 +1,5 @@
 #!/bin/bash
 
-if [ -n "$ON_EC2" ]; then
-    cd /home/ubuntu || exit 1
-
-    if [ -d "venv" ]; then
-        cd /home/ubuntu/ComfyUI || exit 1
-        rm -rf web/extensions/ComfyLiterals
-        chmod -R +x venv
-        source venv/bin/activate
-        python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
-        exit 1
-    fi
-
-    sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
-    sudo rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
-
-
-    cd /home/ubuntu/ComfyUI || exit 1
-
-    chmod -R +x venv
-    source venv/bin/activate
-    pip install dynamicprompts
-
-    rm -rf web/extensions/ComfyLiterals
-
-    python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
-    exit 1
-fi
-
 download_conda(){
   echo "---------------------------------------------------------------------------------"
   mkdir -p /home/ubuntu/conda/lib/
@@ -42,14 +14,39 @@ set_conda(){
 }
 
 download_conda
-cd "$APP_CWD" || exit 1
-chown -R root:root venv
+
+cd /home/ubuntu || exit 1
+
+if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
+    cd /home/ubuntu/ComfyUI || exit 1
+    rm -rf web/extensions/ComfyLiterals
+    chmod -R +x venv
+    source venv/bin/activate
+    python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
+    exit 1
+fi
+
+sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
+sudo rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+
+cd /home/ubuntu/ComfyUI || exit 1
+
+mkdir -p models/vae/
+wget -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
+
+mkdir -p models/checkpoints/
+wget -O models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
+
+mkdir -p models/animatediff_models/
+wget -O models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
+
+chmod -R 777 /home/ubuntu/ComfyUI
+
 chmod -R +x venv
 source venv/bin/activate
+pip install dynamicprompts
 
-python3 /metrics.py &
-python3 /serve.py
+rm -rf web/extensions/ComfyLiterals
 
-#python main.py --listen 0.0.0.0 --port 23000 --output-directory /home/ubuntu/ComfyUI/output/0/ --temp-directory /home/ubuntu/ComfyUI/temp/0/ --cuda-device 0 --cuda-malloc
-
+python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
 exit 1

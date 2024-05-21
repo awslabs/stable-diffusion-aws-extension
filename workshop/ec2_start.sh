@@ -9,7 +9,7 @@ docker build -f Dockerfile.comfy \
              --build-arg ESD_VERSION='ec2' \
              --build-arg S3_BUCKET_NAME='elonniu' \
              --build-arg SERVICE_TYPE='comfy' \
-             --build-arg AWS_REGION='' \
+             --build-arg AWS_REGION="$AWS_REGION" \
              --build-arg ON_EC2='true' \
              --build-arg COMFY_API_URL="$COMFY_API_URL" \
              --build-arg COMFY_API_TOKEN="$COMFY_API_TOKEN" \
@@ -20,8 +20,10 @@ docker build -f Dockerfile.comfy \
 
 docker rm "$CONTAINER_NAME" || true
 
+mkdir -p ComfyUI
+
 docker run -v ~/.aws:/root/.aws \
-           -v ./:/home/ubuntu/ComfyUI \
+           -v ./ComfyUI:/home/ubuntu/ComfyUI \
            --gpus all \
            --name "$CONTAINER_NAME" \
            -it -p 8189:8189 ec2-start
