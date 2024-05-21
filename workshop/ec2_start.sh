@@ -35,6 +35,7 @@ docker build -f Dockerfile.comfy \
              --build-arg COMFY_API_TOKEN="$COMFY_API_TOKEN" \
              --build-arg COMFY_ENDPOINT="$COMFY_ENDPOINT" \
              --build-arg COMFY_BUCKET_NAME="$COMFY_BUCKET_NAME" \
+             --build-arg PROCESS_NUMBER="$PROCESS_NUMBER" \
              -t "$image" .
 
 image_hash=$(docker inspect "$image"  | jq -r ".[0].Id")

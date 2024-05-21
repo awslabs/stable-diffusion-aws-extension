@@ -55,8 +55,8 @@ cd /home/ubuntu/ComfyUI || exit 1
 mkdir -p models/vae/
 wget -Oq models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
 
-mkdir -p models/checkpoints/
-wget -Oq models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
+#mkdir -p models/checkpoints/
+#wget -Oq models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
 
 mkdir -p models/animatediff_models/
 wget -Oq models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
@@ -79,8 +79,8 @@ start_comfy(){
 }
 
 init_port=8188
-for i in $(seq 1 10); do
-    if [ "$i" -eq 10 ]; then
+for i in $(seq 1 "$PROCESS_NUMBER"); do
+    if [ "$i" -eq "$PROCESS_NUMBER" ]; then
         start_comfy $init_port
         break
     fi
