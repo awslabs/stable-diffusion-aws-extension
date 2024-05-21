@@ -24,7 +24,7 @@ docker rm "$CONTAINER_NAME" || true
 mkdir -p ComfyUI
 
 docker run -v ~/.aws:/root/.aws \
-           -v ./ComfyUI:/home/ubuntu/ComfyUI \
+           -v ~/ComfyUI:/home/ubuntu/ComfyUI \
            --gpus all \
            --name "$CONTAINER_NAME" \
            -it -p 8189:8189 ec2-start
