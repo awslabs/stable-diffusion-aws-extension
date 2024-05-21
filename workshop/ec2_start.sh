@@ -56,17 +56,5 @@ docker run -v ~/.aws:/root/.aws \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            --name "$CONTAINER_NAME" \
-           -p 8188 \
-           -p 8189 \
-           -p 8190 \
-           -p 8191 \
-           -p 8192 \
-           -p 8193 \
-           -p 8194 \
-           -p 8195 \
-           -p 8196 \
-           -p 8197 \
-           -p 8198 \
-           -p 8199 \
-           -p 8200 \
+           -p 8188-8288:8188-8288 \
            "$image"
