@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#set -euxo pipefail
+set -euxo pipefail
+
 printenv
 
 download_conda(){
