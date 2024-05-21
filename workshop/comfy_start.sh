@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 download_conda(){
   echo "---------------------------------------------------------------------------------"
   mkdir -p /home/ubuntu/conda/lib/
