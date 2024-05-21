@@ -4,10 +4,6 @@ set -euxo pipefail
 
 s5cmd ls
 
-aws s3 ls
-
-aws sts get-caller-identity
-
 printenv
 
 download_conda(){
@@ -76,6 +72,11 @@ source venv/bin/activate
 
 pip install dynamicprompts
 pip install ultralytics
+pip install awscli
+
+aws s3 ls
+
+aws sts get-caller-identity
 
 rm -rf web/extensions/ComfyLiterals
 
