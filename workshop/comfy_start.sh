@@ -73,8 +73,6 @@ pip install ultralytics
 
 rm -rf web/extensions/ComfyLiterals
 
-python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
-
 start_comfy(){
   port=$1
   python3 main.py --listen 0.0.0.0 --port "$port" --cuda-malloc
@@ -82,6 +80,10 @@ start_comfy(){
 
 init_port=8188
 for i in $(seq 1 10); do
+    if [ "$i" -eq 10 ]; then
+        start_comfy $init_port
+        break
+    fi
     start_comfy $init_port &
     init_port=$((init_port + i))
 done
