@@ -49,6 +49,13 @@ Parameters:
       - 15
       - 20
     Default: 5
+  EsdVersion:
+    Description: Version of the ESD
+    Type: String
+    AllowedValues:
+      - latest
+      - dev
+    Default: latest
 
 Mappings:
   RegionToAmiId:
@@ -103,7 +110,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
-                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
+                Resource: [ '*' ]
         - PolicyName: EcrPolicy
           PolicyDocument:
             Version: '2012-10-17'
@@ -210,6 +217,7 @@ Resources:
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
+          echo "export ESD_VERSION=${EsdVersion}" >> /etc/environment
           
           source /etc/environment
           

@@ -2,7 +2,6 @@
 
 set -euxo pipefail
 
-export ESD_VERSION='dev'
 export CONTAINER_NAME='comfy_ec2'
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
