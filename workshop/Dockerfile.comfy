@@ -1,3 +1,5 @@
+FROM 366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:dev
+
 ARG ESD_VERSION
 ARG S3_BUCKET_NAME
 ARG SERVICE_TYPE
@@ -9,7 +11,7 @@ ARG COMFY_ENDPOINT
 ARG COMFY_NEED_SYNC
 ARG COMFY_BUCKET_NAME
 
-FROM 366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:dev
+
 
 # TODO BYOC
 RUN apt-get update -y && \
