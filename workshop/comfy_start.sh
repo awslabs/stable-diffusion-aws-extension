@@ -26,6 +26,7 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     rm -rf web/extensions/ComfyLiterals
     chmod -R +x venv
     source venv/bin/activate
+    pip install awscli
     aws s3 ls
     aws sts get-caller-identity
     python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
