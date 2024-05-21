@@ -48,10 +48,10 @@ echo "docker push $release_image"
 docker push "$release_image"
 echo "docker pushed $release_image"
 
-mkdir -p ~/ComfyUI
+mkdir -p ComfyUI
 
 docker run -v ~/.aws:/root/.aws \
-           -v ~/ComfyUI:/home/ubuntu/ComfyUI \
+           -v ./:/home/ubuntu/ComfyUI \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            --name "$CONTAINER_NAME" \
