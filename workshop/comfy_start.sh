@@ -2,7 +2,9 @@
 
 set -euxo pipefail
 
-curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials
+export AWS_EC2_ROLE=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials)
+
+echo "AWS_EC2_ROLE: $AWS_EC2_ROLE"
 
 printenv
 
@@ -28,7 +30,6 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     rm -rf web/extensions/ComfyLiterals
     chmod -R +x venv
     source venv/bin/activate
-    pip install awscli
     aws s3 ls
     aws sts get-caller-identity
     python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
