@@ -70,9 +70,9 @@ export class RestApiGateway {
       },
     });
 
-    Fn.conditionIf(
+    (api.node.defaultChild as CfnRestApi).policy = Fn.conditionIf(
         isPrivateApiCondition.logicalId,
-        (api.node.defaultChild as CfnRestApi).policy = new PolicyDocument({
+        new PolicyDocument({
           statements: [
             new PolicyStatement({
               actions: ['execute-api:Invoke'],
@@ -81,8 +81,8 @@ export class RestApiGateway {
             }),
           ],
         }),
-        (api.node.defaultChild as CfnRestApi).policy = undefined
-    )
+        undefined
+    );
 
     this.createResponses(api);
 
