@@ -26,19 +26,19 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     exit 1
 fi
 
-sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
-sudo rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
+rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
 cd /home/ubuntu/ComfyUI || exit 1
 
 mkdir -p models/vae/
 wget -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
 
-mkdir -p models/checkpoints/
-wget -O models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
-
-mkdir -p models/animatediff_models/
-wget -O models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
+#mkdir -p models/checkpoints/
+#wget -O models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
+#
+#mkdir -p models/animatediff_models/
+#wget -O models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
 
 chmod -R 777 /home/ubuntu/ComfyUI
 

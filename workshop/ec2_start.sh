@@ -7,10 +7,10 @@ aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS 
 docker pull 366590864501.dkr.ecr."$AWS_REGION".amazonaws.com/esd-inference:$ESD_VERSION
 docker build -f Dockerfile.comfy \
              --build-arg ESD_VERSION='ec2' \
-             --build-arg S3_BUCKET_NAME='elonniu' \
              --build-arg SERVICE_TYPE='comfy' \
-             --build-arg AWS_REGION="$AWS_REGION" \
              --build-arg ON_EC2='true' \
+             --build-arg S3_BUCKET_NAME="$COMFY_BUCKET_NAME" \
+             --build-arg AWS_REGION="$AWS_REGION" \
              --build-arg COMFY_API_URL="$COMFY_API_URL" \
              --build-arg COMFY_API_TOKEN="$COMFY_API_TOKEN" \
              --build-arg COMFY_ENDPOINT="$COMFY_ENDPOINT" \
@@ -18,6 +18,7 @@ docker build -f Dockerfile.comfy \
              --build-arg COMFY_BUCKET_NAME="$COMFY_BUCKET_NAME" \
              -t ec2-start .
 
+docker stop "$CONTAINER_NAME" || true
 docker rm "$CONTAINER_NAME" || true
 
 mkdir -p ComfyUI
