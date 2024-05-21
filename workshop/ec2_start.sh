@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+#set -euxo pipefail
 
 export ESD_VERSION='dev'
 export CONTAINER_NAME='comfy_ec2'

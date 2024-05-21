@@ -166,6 +166,7 @@ Resources:
   ComfyEC2Instance:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
+    DependsOn: ComfyInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -229,7 +230,7 @@ Resources:
           ExecStart=bash ec2_start.sh
           Type=simple
           Restart=always
-          RestartSec=3
+          RestartSec=5
           User=root
           StartLimitAction=reboot
 

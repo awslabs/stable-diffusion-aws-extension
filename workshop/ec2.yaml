@@ -176,6 +176,7 @@ Resources:
   WebUiEC2Instance:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
+    DependsOn: WebUiInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref WebUiInstanceProfile
