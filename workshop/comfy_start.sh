@@ -47,7 +47,9 @@ end_at=$(date +%s)
 export DECOMPRESS_SECONDS=$((end_at-start_at))
 echo "decompress file: $DECOMPRESS_SECONDS seconds"
 
-curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
+ls -la
+
+#curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
 rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
 cd /home/ubuntu/ComfyUI || exit 1
