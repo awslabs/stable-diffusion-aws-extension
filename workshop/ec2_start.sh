@@ -59,4 +59,4 @@ docker run -v ~/.aws:/root/.aws \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            --name "$CONTAINER_NAME" \
-           -it -p 8188:8188 "$image"
+           -p 8188:8188 "$image"
