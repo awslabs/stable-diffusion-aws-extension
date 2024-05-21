@@ -197,13 +197,18 @@ Resources:
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
           echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
+          echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
+          
           source /etc/environment
           
           sudo systemctl enable docker
+          
+          cd /home/ubuntu
+          
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/venv/workshop/Dockerfile.comfy
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/venv/workshop/ec2_start.sh
 
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
+
 
           sudo apt-get update
           
