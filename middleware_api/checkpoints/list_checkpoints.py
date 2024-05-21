@@ -87,7 +87,9 @@ def handler(event, context):
                     'name': ckpt.checkpoint_names,
                     'created': ckpt.timestamp,
                     'params': ckpt.params,
-                    'allowed_roles_or_users': ckpt.allowed_roles_or_users
+                    'allowed_roles_or_users': ckpt.allowed_roles_or_users,
+                    'source_path': ckpt.source_path,
+                    'target_path': ckpt.target_path,
                 })
 
         ckpts = sort_checkpoints(ckpts)

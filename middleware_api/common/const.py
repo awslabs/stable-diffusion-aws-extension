@@ -26,6 +26,8 @@ KOHYA_XL_TOML_FILE_NAME = 'kohya_config_cloud_xl.toml'
 KOHYA_MODEL_ID = 'kohya'
 TRAIN_TYPE = "Stable-diffusion"
 
+COMFY_TYPE = 'Comfy'
+
 PERMISSION_INFERENCE_ALL = "inference:all"
 # todo will be remove, compatible with old data
 PERMISSION_INFERENCE_LIST = "inference:list"

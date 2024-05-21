@@ -46,6 +46,8 @@ class CheckPoint:
     version: str = 'v1.0'  # todo: this is for the future
     checkpoint_names: Optional[list[str]] = None  # the actual checkpoint file names
     params: Optional[dict[str, Any]] = None
+    source_path: Optional[str] = None
+    target_path: Optional[str] = None
 
     def __post_init__(self):
         if type(self.checkpoint_status) == str:

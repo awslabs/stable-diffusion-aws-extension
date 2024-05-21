@@ -5,13 +5,14 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import requests
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, forbidden
+from const import COMFY_TYPE
 from libs.common_tools import get_base_checkpoint_s3_key, multipart_upload_from_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.utils import get_user_roles, get_permissions_by_username
@@ -69,6 +70,8 @@ class CreateCheckPointByUrlEvent:
     checkpoint_type: str
     params: dict[str, Any]
     url: str
+    source_path: Optional[str] = None
+    target_path: Optional[str] = None
 
 
 @tracer.capture_lambda_handler
@@ -78,7 +81,13 @@ def handler(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointByUrlEvent(**raw_event)
 
-    base_key = get_base_checkpoint_s3_key(event.checkpoint_type, 'custom', request_id)
+    if event.checkpoint_type == COMFY_TYPE:
+        if not event.source_path or not event.target_path:
+            return bad_request(message='Please check your source_path or target_path of the checkpoints')
+        # such as source_path :"comfy/{comfy_endpoint}/{prepare_version}/models/"  target_path:"models/checkpoints"
+        base_key = event.source_path
+    else:
+        base_key = get_base_checkpoint_s3_key(event.checkpoint_type, 'custom', request_id)
     file_names = []
     logger.info(f"start to upload model:{event.url}")
     checkpoint_params = {}
@@ -111,6 +120,8 @@ def handler(raw_event, context):
         params=checkpoint_params,
         timestamp=datetime.datetime.now().timestamp(),
         allowed_roles_or_users=user_roles,
+        source_path=event.source_path,
+        target_path=event.target_path,
     )
     ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
     logger.info("finished insert item to ddb")
@@ -120,7 +131,9 @@ def handler(raw_event, context):
             'type': event.checkpoint_type,
             's3_location': checkpoint.s3_location,
             'status': checkpoint.checkpoint_status.value,
-            'params': checkpoint.params
+            'params': checkpoint.params,
+            'source_path': checkpoint.source_path,
+            'target_path': checkpoint.target_path,
         }
     }
     logger.info(data)
