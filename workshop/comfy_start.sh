@@ -48,5 +48,5 @@ pip install dynamicprompts
 
 rm -rf web/extensions/ComfyLiterals
 
-python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
+python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
 exit 1

@@ -30,6 +30,7 @@ docker build -f Dockerfile.comfy \
              --build-arg ON_EC2='true' \
              --build-arg S3_BUCKET_NAME="$COMFY_BUCKET_NAME" \
              --build-arg AWS_REGION="$AWS_REGION" \
+             --build-arg AWS_DEFAULT_REGION="$AWS_REGION" \
              --build-arg COMFY_API_URL="$COMFY_API_URL" \
              --build-arg COMFY_API_TOKEN="$COMFY_API_TOKEN" \
              --build-arg COMFY_ENDPOINT="$COMFY_ENDPOINT" \
@@ -52,4 +53,4 @@ docker run -v ~/.aws:/root/.aws \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            --name "$CONTAINER_NAME" \
-           -it -p 8189:8189 "$image"
+           -it -p 8188:8188 "$image"
