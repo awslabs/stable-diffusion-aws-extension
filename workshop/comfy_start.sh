@@ -15,6 +15,19 @@ set_conda(){
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_PRELOAD
 }
 
+start_process(){
+  init_port=8188
+  for i in $(seq 1 "$PROCESS_NUMBER"); do
+      if [ "$i" -eq "$PROCESS_NUMBER" ]; then
+          python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc
+          exit 1
+      fi
+
+      nohup python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc &
+      init_port=$((init_port + i))
+  done
+}
+
 download_conda
 
 cd /home/ubuntu || exit 1
@@ -24,7 +37,7 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     rm -rf web/extensions/ComfyLiterals
     chmod -R +x venv
     source venv/bin/activate
-    python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
+    start_process
     exit 1
 fi
 
@@ -70,15 +83,6 @@ wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface
 
 chmod -R 777 /home/ubuntu/ComfyUI
 
-init_port=8188
-for i in $(seq 1 "$PROCESS_NUMBER"); do
-    if [ "$i" -eq "$PROCESS_NUMBER" ]; then
-        python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc
-        exit 1
-    fi
-
-    nohup python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc &
-    init_port=$((init_port + i))
-done
+start_process
 
 exit 1
