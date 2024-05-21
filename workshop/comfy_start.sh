@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #set -euxo pipefail
+printenv
 
 download_conda(){
   echo "---------------------------------------------------------------------------------"
