@@ -2,6 +2,10 @@
 
 set -euxo pipefail
 
+aws s3 ls
+
+aws sts get-caller-identity
+
 printenv
 
 download_conda(){
@@ -53,15 +57,15 @@ rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 cd /home/ubuntu/ComfyUI || exit 1
 
 mkdir -p models/vae/
-wget -Oq models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
+wget -O --quiet models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
 
 #mkdir -p models/checkpoints/
-#wget -Oq models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
+#wget -O --quiet models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
 
 mkdir -p models/animatediff_models/
-wget -Oq models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
+wget -O --quiet models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
 
-wget -Oq models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true"
+wget -O --quiet models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true"
 
 chmod -R 777 /home/ubuntu/ComfyUI
 
