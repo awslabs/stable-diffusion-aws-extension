@@ -33,7 +33,6 @@ start_process(){
                             --cuda-malloc \
                             --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
                             --temp-directory "/home/ubuntu/ComfyUI/temp/$init_port" &
-
   done
 }
 
