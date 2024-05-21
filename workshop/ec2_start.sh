@@ -48,6 +48,6 @@ mkdir -p ~/ComfyUI
 docker run -v ~/.aws:/root/.aws \
            -v ~/ComfyUI:/home/ubuntu/ComfyUI \
            --gpus all \
-           -e "IMAGE_HASH=$image_hash" \
+           -e "IMAGE_HASH=$release_image" \
            --name "$CONTAINER_NAME" \
            -it -p 8189:8189 "$image"
