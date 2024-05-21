@@ -22,8 +22,8 @@ else
     echo "ECR repository '$repository_name' created successfully."
 fi
 
-aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin 366590864501.dkr.ecr."$AWS_REGION".amazonaws.com
-docker pull 366590864501.dkr.ecr."$AWS_REGION".amazonaws.com/esd-inference:$ESD_VERSION
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com"
+docker pull "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
 docker build -f Dockerfile.comfy \
              --build-arg ESD_VERSION='ec2' \
              --build-arg SERVICE_TYPE='comfy' \
@@ -41,6 +41,8 @@ image_hash=${image_hash:7}
 
 release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$repository_name:$image_hash"
 docker tag "$image" "$release_image"
+
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 docker push "$release_image"
 
 mkdir -p ~/ComfyUI
