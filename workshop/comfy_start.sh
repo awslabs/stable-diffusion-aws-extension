@@ -18,20 +18,21 @@ set_conda(){
 start_process(){
   init_port=8188
   for i in $(seq 1 "$PROCESS_NUMBER"); do
+
       if [ "$i" -eq "$PROCESS_NUMBER" ]; then
           python3 main.py --listen 0.0.0.0 \
                           --port "$init_port" \
                           --cuda-malloc \
-                          --output-directory "/home/ubuntu/ComfyUI/output/$PROCESS_NUMBER" \
-                          --temp-directory "/home/ubuntu/ComfyUI/temp/$PROCESS_NUMBER"
+                          --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
+                          --temp-directory "/home/ubuntu/ComfyUI/temp/$init_port"
           exit 1
       fi
 
       nohup python3 main.py --listen 0.0.0.0 \
-                                      --port "$init_port" \
-                                      --cuda-malloc \
-                                      --output-directory "/home/ubuntu/ComfyUI/output/$PROCESS_NUMBER" \
-                                      --temp-directory "/home/ubuntu/ComfyUI/temp/$PROCESS_NUMBER" &
+                            --port "$init_port" \
+                            --cuda-malloc \
+                            --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
+                            --temp-directory "/home/ubuntu/ComfyUI/temp/$init_port" &
       init_port=$((init_port + i))
   done
 }
