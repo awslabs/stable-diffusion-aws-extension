@@ -15,7 +15,7 @@ import { SCHEMA_204, SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 
 import { ESD_VERSION } from './version';
 import { ApiValidators } from './validator';
 import {AnyPrincipal, PolicyDocument, PolicyStatement} from "aws-cdk-lib/aws-iam";
-import {CfnCondition, CfnParameter, Fn} from "aws-cdk-lib";
+import {CfnParameter} from "aws-cdk-lib";
 
 export class RestApiGateway {
   public apiGateway: RestApi;
@@ -46,9 +46,9 @@ export class RestApiGateway {
       'aigc-api-logs',
     );
 
-    const isPrivateApiCondition = new CfnCondition(this.scope, 'IsPrivateApi', {
-      expression: Fn.conditionEquals(this.apiEndpointType.valueAsString, 'PRIVATE')
-    });
+    // const isPrivateApiCondition = new CfnCondition(this.scope, 'IsPrivateApi', {
+    //   expression: Fn.conditionEquals(this.apiEndpointType.valueAsString, 'PRIVATE')
+    // });
 
     // Create an API Gateway, will merge with existing API Gateway
     const api = new RestApi(this.scope, 'sd-extension-deploy-api', {
@@ -70,19 +70,15 @@ export class RestApiGateway {
       },
     });
 
-    Fn.conditionIf(
-        isPrivateApiCondition.logicalId,
-        (api.node.defaultChild as CfnRestApi).policy = new PolicyDocument({
-          statements: [
-            new PolicyStatement({
-              actions: ['execute-api:Invoke'],
-              resources: [`*`],
-              principals: [new AnyPrincipal()],
-            }),
-          ],
+    (api.node.defaultChild as CfnRestApi).policy = new PolicyDocument({
+      statements: [
+        new PolicyStatement({
+          actions: ['execute-api:Invoke'],
+          resources: [`*`],
+          principals: [new AnyPrincipal()],
         }),
-        (api.node.defaultChild as CfnRestApi).policy = undefined
-    )
+      ],
+    });
 
     this.createResponses(api);
 
