@@ -44,6 +44,7 @@ release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$repository_name:$i
 docker tag "$image" "$release_image"
 
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+echo "docker push $release_image"
 docker push "$release_image"
 
 mkdir -p ~/ComfyUI

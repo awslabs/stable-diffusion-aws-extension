@@ -176,7 +176,7 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 1024
-            VolumeType: gp3
+            VolumeType: gp2
       KeyName: !Ref keyPairName
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
@@ -244,7 +244,6 @@ Resources:
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy --no-pager -n 200
-          # wget -O /ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true
 
   ComfyEIP:
     Type: AWS::EC2::EIP

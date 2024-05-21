@@ -34,17 +34,21 @@ cd /home/ubuntu/ComfyUI || exit 1
 mkdir -p models/vae/
 wget -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
 
-#mkdir -p models/checkpoints/
-#wget -O models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
-#
-#mkdir -p models/animatediff_models/
-#wget -O models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
+mkdir -p models/checkpoints/
+wget -O models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
+
+mkdir -p models/animatediff_models/
+wget -O models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
+
+wget -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true"
 
 chmod -R 777 /home/ubuntu/ComfyUI
 
 chmod -R +x venv
 source venv/bin/activate
+
 pip install dynamicprompts
+pip install ultralytics
 
 rm -rf web/extensions/ComfyLiterals
 
