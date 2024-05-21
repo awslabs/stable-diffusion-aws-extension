@@ -2,8 +2,6 @@
 
 set -euxo pipefail
 
-s5cmd ls
-
 printenv
 
 download_conda(){
@@ -28,6 +26,8 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     rm -rf web/extensions/ComfyLiterals
     chmod -R +x venv
     source venv/bin/activate
+    aws s3 ls
+    aws sts get-caller-identity
     python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
     exit 1
 fi
@@ -75,7 +75,6 @@ pip install ultralytics
 pip install awscli
 
 aws s3 ls
-
 aws sts get-caller-identity
 
 rm -rf web/extensions/ComfyLiterals
