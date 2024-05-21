@@ -124,7 +124,7 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 8188
-          ToPort: 8188
+          ToPort: 8288
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
