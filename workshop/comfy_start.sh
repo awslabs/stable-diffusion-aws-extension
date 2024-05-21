@@ -22,7 +22,7 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     rm -rf web/extensions/ComfyLiterals
     chmod -R +x venv
     source venv/bin/activate
-    python3 main.py --listen 0.0.0.0 --port 8189 --cuda-malloc
+    python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
     exit 1
 fi
 
