@@ -50,6 +50,7 @@ echo "docker pushed $release_image"
 
 mkdir -p ComfyUI
 
+echo "Starting container..."
 docker run -v ~/.aws:/root/.aws \
            -v ./:/home/ubuntu/ComfyUI \
            --gpus all \
