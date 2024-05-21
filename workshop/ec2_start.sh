@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 export ESD_VERSION='dev'
 export CONTAINER_NAME='comfy_ec2'
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
@@ -31,12 +33,10 @@ docker build -f Dockerfile.comfy \
              --build-arg COMFY_API_URL="$COMFY_API_URL" \
              --build-arg COMFY_API_TOKEN="$COMFY_API_TOKEN" \
              --build-arg COMFY_ENDPOINT="$COMFY_ENDPOINT" \
-             --build-arg COMFY_NEED_SYNC="$COMFY_NEED_SYNC" \
              --build-arg COMFY_BUCKET_NAME="$COMFY_BUCKET_NAME" \
              -t "$image" .
 
-
-image_hash=$(docker inspect --format='{{index .RepoDigests 0}}' "$image" | cut -d@ -f2)
+image_hash=$(docker inspect "$image"  | jq -r ".[0].Id")
 image_hash=${image_hash:7}
 
 release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$repository_name:$image_hash"

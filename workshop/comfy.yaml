@@ -205,13 +205,13 @@ Resources:
           
           cd /home/ubuntu
           
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/Dockerfile.comfy
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/ec2_start.sh
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/docker/workshop/comfy_start.sh
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/Dockerfile.comfy
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/ec2_start.sh
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_start.sh
 
           sudo apt-get update
           
-          sudo apt install nginx -y
+          sudo apt install nginx jq -y
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
           sudo ufw allow 'Nginx HTTP'
@@ -230,7 +230,7 @@ Resources:
           Type=simple
           Restart=always
           RestartSec=3
-          User=ubuntu
+          User=root
           StartLimitAction=reboot
 
           [Install]
@@ -244,7 +244,6 @@ Resources:
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
-          # sudo journalctl -u comfy_upload -f
           # sudo journalctl -u comfy --no-pager -n 200
           # wget -O /ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt?download=true
 
