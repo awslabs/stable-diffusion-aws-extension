@@ -15,7 +15,7 @@ ARG PROCESS_NUMBER
 
 # TODO BYOC
 RUN apt-get update -y && \
-    apt-get install ffmpeg -y && \
+    apt-get install ffmpeg awscli -y && \
     rm -rf /var/lib/apt/lists/*
 
 ENV ESD_VERSION $ESD_VERSION
