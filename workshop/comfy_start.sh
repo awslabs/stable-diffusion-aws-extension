@@ -14,7 +14,7 @@ download_conda(){
 
 set_conda(){
     echo "set conda environment..."
-    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_PRELOAD
 }
 
 download_conda
