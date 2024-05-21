@@ -57,9 +57,6 @@ source venv/bin/activate
 pip install dynamicprompts
 pip install ultralytics
 
-aws s3 ls
-aws sts get-caller-identity
-
 #mkdir -p models/vae/
 #wget -O --quiet models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
 
