@@ -28,8 +28,8 @@ if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
     exit 1
 fi
 
-echo "downloading comfy file..."
 export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar"
+echo "downloading comfy file $CACHE_PUBLIC_COMFY ..."
 
 start_at=$(date +%s)
 s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
