@@ -655,6 +655,7 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: s
             return f"{url} is not a valid url."
 
     data = {'checkpoint_type': model_type, 'urls': unique_urls, 'params': params_dict}
+    api.set_username(pr.username)
     response = api.create_checkpoint(data=data)
     return response.json()['message']
 
