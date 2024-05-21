@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -euxo pipefail
+
 source /etc/environment
 
 export CONTAINER_NAME='comfy_ec2'

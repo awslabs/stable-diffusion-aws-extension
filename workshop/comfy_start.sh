@@ -77,7 +77,7 @@ for i in $(seq 1 "$PROCESS_NUMBER"); do
         exit 1
     fi
 
-    nohup python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc
+    nohup python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc &
     init_port=$((init_port + i))
 done
 
