@@ -19,11 +19,19 @@ start_process(){
   init_port=8188
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       if [ "$i" -eq "$PROCESS_NUMBER" ]; then
-          python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc
+          python3 main.py --listen 0.0.0.0 \
+                          --port "$init_port" \
+                          --cuda-malloc \
+                          --output-directory "/home/ubuntu/ComfyUI/output/$PROCESS_NUMBER" \
+                          --temp-directory "/home/ubuntu/ComfyUI/temp/$PROCESS_NUMBER"
           exit 1
       fi
 
-      nohup python3 main.py --listen 0.0.0.0 --port "$init_port" --cuda-malloc &
+      nohup python3 main.py --listen 0.0.0.0 \
+                                      --port "$init_port" \
+                                      --cuda-malloc \
+                                      --output-directory "/home/ubuntu/ComfyUI/output/$PROCESS_NUMBER" \
+                                      --temp-directory "/home/ubuntu/ComfyUI/temp/$PROCESS_NUMBER" &
       init_port=$((init_port + i))
   done
 }
