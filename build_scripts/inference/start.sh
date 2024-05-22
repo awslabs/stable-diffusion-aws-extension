@@ -456,7 +456,7 @@ if [ -n "$APP_SOURCE" ]; then
 
     source venv/bin/activate
 
-    python3 /serve.py
+    python3 serve.py
 
     exit 1
   fi
