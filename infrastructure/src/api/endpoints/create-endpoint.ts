@@ -346,6 +346,9 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
+          workflow_name: {
+            type: JsonSchemaType.STRING,
+          }
         },
         required: [
           'endpoint_type',

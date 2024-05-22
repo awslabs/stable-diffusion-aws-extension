@@ -447,7 +447,17 @@ if [ -n "$APP_SOURCE" ]; then
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
 
-    bash "$APP_CWD/start.sh"
+    cd "$APP_CWD" || exit 1
+
+    rm -rf web/extensions/ComfyLiterals
+
+    chmod -R 777 "$APP_CWD"
+    chmod -R +x venv
+
+    source venv/bin/activate
+
+    python3 /serve.py
+
     exit 1
   fi
 fi
