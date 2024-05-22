@@ -44,25 +44,25 @@ def check_file_exists(key):
 @tracer.capture_method
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
+    dynamodb = boto3.client('dynamodb')
 
-    table = ddb.Table(os.environ.get('WORKFLOWS_TABLE'))
+    table_name = os.environ.get('WORKFLOWS_TABLE')
 
-    scan_kwargs = {
-        'KeyConditionExpression': Key('workflow_name').eq(workflow_name),
-    }
-
-    logger.info(scan_kwargs)
-
-    response = table.query(**scan_kwargs)
+    response = dynamodb.get_item(
+        TableName=table_name,
+        Key={
+            'name': {'S': workflow_name}
+        }
+    )
 
     tracer.put_metadata(key="workflow_name", value=response)
 
-    items = response.get('Items', [])
+    item = response.get('Item', None)
 
-    if len(items) == 0:
+    if item is None:
         raise NotFoundException(f'workflow with name {workflow_name} not found')
 
-    return Workflow(**items[0])
+    return Workflow(**item)
 
 
 @tracer.capture_method

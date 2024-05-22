@@ -40,10 +40,12 @@ def handler(raw_event, ctx):
         logger.info(json.dumps(raw_event))
         event = CreateWorkflowEvent(**json.loads(raw_event['body']))
 
-        workflow = get_workflow_by_name(event.name)
-
-        if workflow:
-            raise BadRequestException(f"workflow {event.name} already exists")
+        try:
+            workflow = get_workflow_by_name(event.name)
+            if workflow:
+                raise BadRequestException(f"workflow {event.name} already exists")
+        except Exception as e:
+            raise e
 
         s3_location = f"comfy/workflows/{event.name}/"
 
