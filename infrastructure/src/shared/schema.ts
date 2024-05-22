@@ -261,6 +261,7 @@ export const SCHEMA_CHECKPOINT_TYPE: JsonSchema = {
     'hypernetworks',
     'ControlNet',
     'VAE',
+    'Comfy',
   ],
 };
 
