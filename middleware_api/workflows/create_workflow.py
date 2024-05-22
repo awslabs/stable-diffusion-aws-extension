@@ -48,7 +48,7 @@ def handler(raw_event, ctx):
             }
         )
         if response.get('Item', None) is not None:
-            raise BadRequestException(f"workflow {event.name} already exists")
+            raise BadRequestException(f"{event.name} already exists")
 
         s3_location = f"comfy/workflows/{event.name}/"
 

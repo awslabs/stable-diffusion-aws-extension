@@ -102,7 +102,7 @@ def create_from_workflow(event: CreateEndpointEvent):
     if event.workflow_name:
         event.workflow = get_workflow_by_name(event.workflow_name)
         if event.workflow.status != 'Enabled':
-            raise BadRequestException(f"workflow {event.workflow_name} is {event.workflow.status}")
+            raise BadRequestException(f"{event.workflow_name} is {event.workflow.status}")
 
     return event
 
