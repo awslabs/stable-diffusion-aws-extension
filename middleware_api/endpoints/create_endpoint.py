@@ -245,13 +245,13 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
         'ESD_VERSION': esd_version,
         'ESD_COMMIT_ID': esd_commit_id,
         'SERVICE_TYPE': event.service_type,
-        'ON_DOCKER': 'true',
+        'ON_SAGEMAKER': 'true',
         'AWS_REGION': aws_region,
         'AWS_DEFAULT_REGION': aws_region,
     }
 
     if event.workflow:
-        environment['APP_SOURCE'] = event.workflow.s3_location
+        environment['WORKFLOW_NAME'] = event.workflow.name
         environment['APP_CWD'] = '/home/ubuntu/ComfyUI'
 
     primary_container = {

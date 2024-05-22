@@ -56,6 +56,9 @@ Parameters:
       - latest
       - dev
     Default: latest
+  WorkflowName:
+    Description: Bind Workflow Name
+    Type: String
 
 Mappings:
   RegionToAmiId:
@@ -218,6 +221,7 @@ Resources:
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
           echo "export ESD_VERSION=${EsdVersion}" >> /etc/environment
+          echo "export WORKFLOW_NAME=${WorkflowName}" >> /etc/environment
           
           source /etc/environment
           
@@ -243,7 +247,7 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/root/stable-diffusion-aws-extension/workshop/
+          WorkingDirectory=/root/stable-diffusion-aws-extension/
           ExecStart=bash comfy_start.sh
           Type=simple
           Restart=always

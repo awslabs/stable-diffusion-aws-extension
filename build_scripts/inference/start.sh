@@ -280,7 +280,6 @@ comfy_launch(){
   chmod -R +x venv/bin
 
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
-  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
 
@@ -331,29 +330,12 @@ comfy_launch_from_public_s3(){
 
 # -------------------- startup --------------------
 
-# if pipeline finished, it will be executed
-#if [[ $IMAGE_URL == *"dev"* ]]; then
-#  download_conda
-#  if [ "$SERVICE_TYPE" == "sd" ]; then
-#      sd_install_build
-#      /serve trim_sd.sh
-#      sd_cache_endpoint
-#      sd_launch
-#      exit 1
-#  else
-#      comfy_install_build
-#      /serve trim_comfy
-#      comfy_cache_endpoint
-#      comfy_launch
-#      exit 1
-#  fi
-#fi
-
 ec2_start_process(){
   set -euxo pipefail
   echo "---------------------------------------------------------------------------------"
   export LD_LIBRARY_PATH=$LD_PRELOAD
   download_conda
+
   init_port=8187
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       init_port=$((init_port + 1))
@@ -381,7 +363,38 @@ ec2_start_process(){
   done
 }
 
-if [ -n "$COMFY_EC2" ]; then
+if [ -n "$WORKFLOW_NAME" ]; then
+  start_at=$(date +%s)
+  s5cmd --log=error sync "s3://$S3_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "/home/ubuntu/ComfyUI/"
+  end_at=$(date +%s)
+  export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+  echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+  cd "/home/ubuntu/ComfyUI" || exit 1
+
+  rm -rf web/extensions/ComfyLiterals
+
+  chmod -R 777 "/home/ubuntu/ComfyUI"
+  chmod -R +x venv
+  source venv/bin/activate
+
+  # on EC2
+  if [ -n "$ON_EC2" ]; then
+    ec2_start_process
+    exit 1
+  fi
+
+  if [ -n "$ON_SAGEMAKER" ]; then
+    python3 serve.py
+    exit 1
+  fi
+
+  # on SageMaker
+  python3 serve.py
+  exit 1
+fi
+
+if [ -n "$ON_EC2" ]; then
   set -euxo pipefail
   cd /home/ubuntu || exit 1
 
@@ -408,8 +421,6 @@ if [ -n "$COMFY_EC2" ]; then
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   echo "decompress file: $DECOMPRESS_SECONDS seconds"
-
-  ls -la
 
   rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
@@ -439,28 +450,6 @@ if [ -n "$COMFY_EC2" ]; then
   exit 1
 fi
 
-if [ -n "$APP_SOURCE" ]; then
-  if [ -n "$APP_CWD" ]; then
-    start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/${APP_SOURCE}*" "$APP_CWD"
-    end_at=$(date +%s)
-    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
-
-    cd "$APP_CWD" || exit 1
-
-    rm -rf web/extensions/ComfyLiterals
-
-    chmod -R 777 "$APP_CWD"
-    chmod -R +x venv
-
-    source venv/bin/activate
-
-    python3 serve.py
-
-    exit 1
-  fi
-fi
 
 if [ -f "/initiated_lock" ]; then
     echo "already initiated, start service directly..."
