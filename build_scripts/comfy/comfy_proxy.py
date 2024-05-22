@@ -825,13 +825,15 @@ if is_on_ec2:
 
             s5cmd_syn_model_command = (f's5cmd sync '
                                        f'--delete=true '
+                                       f'--exclude="*comfy.tar" '
                                        f'--exclude="*.log" '
                                        f'--exclude="*__pycache__*" '
                                        f'--exclude="*.cache*" '
                                        f'"/home/ubuntu/*" '
                                        f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
-            logger.info(f"sync models files start {s5cmd_syn_model_command}")
+            logger.info(f"sync workflows files start {s5cmd_syn_model_command}")
             os.system(s5cmd_syn_model_command)
+            os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
 
             end_time = time.time()
             cost_time = end_time - start_time
@@ -843,9 +845,6 @@ if is_on_ec2:
             get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             response = get_response.json()
             logger.info(f"release workflow response is {response}")
-
-            if get_response.status_code == 200:
-                os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
@@ -860,7 +859,6 @@ if is_on_ec2:
             s3.head_object(Bucket=bucket_name, Key=key)
             return True
         except Exception as e:
-            logger.error(e, exc_info=True)
             if e.response['Error']['Code'] == '404':
                 return False
             else:
