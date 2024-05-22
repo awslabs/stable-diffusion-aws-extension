@@ -23,7 +23,7 @@ import {
   SCHEMA_ENDPOINT_START_TIME,
   SCHEMA_ENDPOINT_STATUS,
   SCHEMA_ENDPOINT_TYPE,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_NAME,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
@@ -319,6 +319,7 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
           },
           endpoint_type: SCHEMA_ENDPOINT_TYPE,
+          workflow_name: SCHEMA_WORKFLOW_NAME,
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
@@ -350,9 +351,6 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
-          workflow_name: {
-            type: JsonSchemaType.STRING,
-          }
         },
         required: [
           'endpoint_type',

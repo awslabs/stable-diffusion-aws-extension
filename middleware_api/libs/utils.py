@@ -64,11 +64,11 @@ def get_workflow_by_name(workflow_name: str):
         raise NotFoundException(f'workflow with name {workflow_name} not found')
 
     return Workflow(
-        name=item['S']['name'],
-        s3_location=item['S']['s3_location'],
-        image_uri=item['S']['image_uri'],
-        payload_json=item['S']['payload_json'],
-        create_time=item['S']['create_time'],
+        name=item['name']['S'],
+        s3_location=item['s3_location']['S'],
+        image_uri=item['image_uri']['S'],
+        payload_json=item['payload_json']['S'],
+        create_time=item['create_time']['S'],
     )
 
 
