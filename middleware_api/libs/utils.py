@@ -11,20 +11,58 @@ from botocore.exceptions import ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
 from common.response import unauthorized, forbidden, not_found, bad_request
-from libs.data_types import PARTITION_KEYS, User, Role, Endpoint
+from libs.data_types import PARTITION_KEYS, User, Role, Endpoint, Workflow
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 user_table = os.environ.get('MULTI_USER_TABLE')
-
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 encode_type = "utf-8"
-
+s3 = boto3.client('s3')
 ddb = boto3.resource('dynamodb')
 endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
+
+
+@tracer.capture_method
+def check_file_exists(key):
+
+    try:
+        s3.head_object(Bucket=s3_bucket_name, Key=key)
+        return True
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise e
+
+
+@tracer.capture_method
+def get_workflow_by_name(workflow_name: str):
+    tracer.put_annotation(key="workflow_name", value=workflow_name)
+
+    table = ddb.Table(os.environ.get('WORKFLOWS_TABLE'))
+
+    scan_kwargs = {
+        'KeyConditionExpression': Key('workflow_name').eq(workflow_name),
+    }
+
+    logger.info(scan_kwargs)
+
+    response = table.query(**scan_kwargs)
+
+    tracer.put_metadata(key="workflow_name", value=response)
+
+    items = response.get('Items', [])
+
+    if len(items) == 0:
+        raise NotFoundException(f'workflow with name {workflow_name} not found')
+
+    return Workflow(**items[0])
 
 
 @tracer.capture_method

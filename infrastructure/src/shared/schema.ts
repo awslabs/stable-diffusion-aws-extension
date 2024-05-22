@@ -560,3 +560,18 @@ export const SCHEMA_INFERENCE_REAL_TIME_MODEL: Record<string, JsonSchema> = {
   },
 };
 
+
+export const SCHEMA_WORKFLOW_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  minLength: 1,
+  maxLength: 20,
+  pattern: '^[A-Za-z][A-Za-z0-9_]*$',
+};
+
+export const SCHEMA_WORKFLOW_IMAGE_URI: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_WORKFLOW_PAYLOAD_JSON: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};

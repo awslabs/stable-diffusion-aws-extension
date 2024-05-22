@@ -185,6 +185,15 @@ class Endpoint:
     service_type: str = ""
 
 
+@dataclass
+class Workflow:
+    name: str
+    s3_location: str
+    image_uri: str
+    payload_json: str = ""
+    create_time: Optional[Any] = None
+
+
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
 class InvocationRequest:
