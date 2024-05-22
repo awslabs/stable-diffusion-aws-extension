@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+from datetime import datetime
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -44,7 +45,6 @@ def check_file_exists(key):
 @tracer.capture_method
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
-    dynamodb = boto3.client('dynamodb')
 
     table_name = os.environ.get('WORKFLOWS_TABLE')
 
@@ -54,6 +54,7 @@ def get_workflow_by_name(workflow_name: str):
             'name': {'S': workflow_name}
         }
     )
+    logger.info(response)
 
     tracer.put_metadata(key="workflow_name", value=response)
 
@@ -62,7 +63,13 @@ def get_workflow_by_name(workflow_name: str):
     if item is None:
         raise NotFoundException(f'workflow with name {workflow_name} not found')
 
-    return Workflow(**item)
+    return Workflow(
+        name=item['S']['name'],
+        s3_location=item['S']['s3_location'],
+        image_uri=item['S']['image_uri'],
+        payload_json=item['S']['payload_json'],
+        create_time=item['S']['create_time'],
+    )
 
 
 @tracer.capture_method

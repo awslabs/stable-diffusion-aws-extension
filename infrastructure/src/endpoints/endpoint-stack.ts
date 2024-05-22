@@ -30,6 +30,7 @@ export interface EndpointStackProps extends StackProps {
   snsTopic: aws_sns.Topic;
   EndpointDeploymentJobTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
+  workflowsTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   queue: aws_sqs.Queue;
@@ -84,6 +85,7 @@ export class EndpointStack {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        workflowsTable: props.workflowsTable,
         syncTable: props.syncTable,
         instanceMonitorTable: props.instanceMonitorTable,
         httpMethod: 'POST',

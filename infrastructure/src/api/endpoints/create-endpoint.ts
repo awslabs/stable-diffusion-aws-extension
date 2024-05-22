@@ -34,6 +34,7 @@ export interface CreateEndpointApiProps {
   multiUserTable: Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
+  workflowsTable: aws_dynamodb.Table;
   commonLayer: LayerVersion;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
@@ -51,6 +52,7 @@ export class CreateEndpointApi {
   private readonly multiUserTable: Table;
   private readonly syncTable: Table;
   private readonly instanceMonitorTable: Table;
+  private readonly workflowsTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly userNotifySNS: Topic;
@@ -68,6 +70,7 @@ export class CreateEndpointApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
     this.syncTable = props.syncTable;
+    this.workflowsTable = props.workflowsTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
     this.userNotifySNS = props.userNotifySNS;
@@ -250,6 +253,7 @@ export class CreateEndpointApi {
         this.multiUserTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
+        this.workflowsTable.tableArn,
         `arn:${Aws.PARTITION}:dynamodb:${Aws.REGION}:${Aws.ACCOUNT_ID}:table/ComfyExecuteTable`,
       ],
     });
@@ -381,6 +385,7 @@ export class CreateEndpointApi {
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
         COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
+        WORKFLOWS_TABLE: this.workflowsTable.tableName,
         EXECUTION_ROLE_ARN: endpoint_role.roleArn,
       },
       layers: [this.layer],
