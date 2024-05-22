@@ -828,7 +828,7 @@ if is_on_ec2:
                                        f'--exclude="*.log" '
                                        f'--exclude="*__pycache__*" '
                                        f'--exclude="*.cache*" '
-                                       f'"/home/ubuntu/ComfyUI/*" '
+                                       f'"/home/ubuntu/*" '
                                        f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
             logger.info(f"sync models files start {s5cmd_syn_model_command}")
             os.system(s5cmd_syn_model_command)

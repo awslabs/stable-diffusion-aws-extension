@@ -6,7 +6,9 @@ if [ -f "/etc/environment" ]; then
     source /etc/environment
 fi
 
-export CONTAINER_NAME='esd_comfy'
+SERVICE_TYPE="comfy"
+
+export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
@@ -41,23 +43,24 @@ echo "docker push $release_image"
 docker push "$release_image"
 echo "docker pushed $release_image"
 
-mkdir -p ./ComfyUI
-
 echo "Starting container..."
-local_volume="./ComfyUI"
 # local vol can be replace with your local directory
+local_volume="./container/$SERVICE_TYPE"
+mkdir -p $local_volume
 
-#  -v ./build_scripts/comfy/comfy_local_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py \
+if [ -z "$WORKFLOW_NAME" ]; then
+    export WORKFLOW_NAME=""
+fi
 
-WORKFLOW_NAME=""
-
+#  -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
 docker run -v ~/.aws:/root/.aws \
            -v "$local_volume":/home/ubuntu \
            -v ./build_scripts/inference/start.sh:/start.sh \
+           -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \
            -e "ESD_VERSION=$ESD_VERSION" \
-           -e "SERVICE_TYPE=comfy" \
+           -e "SERVICE_TYPE=$SERVICE_TYPE" \
            -e "ON_EC2=true" \
            -e "S3_BUCKET_NAME=$COMFY_BUCKET_NAME" \
            -e "AWS_REGION=$AWS_REGION" \
