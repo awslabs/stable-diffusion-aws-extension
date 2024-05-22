@@ -101,6 +101,8 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 def create_from_workflow(event: CreateEndpointEvent):
     if event.workflow_name:
         event.workflow = get_workflow_by_name(event.workflow_name)
+        if event.workflow.status != 'Enabled':
+            raise BadRequestException(f"workflow {event.workflow_name} is {event.workflow.status}")
 
     return event
 
@@ -138,6 +140,9 @@ def handler(raw_event, ctx):
 
         if event.endpoint_name:
             short_id = event.endpoint_name
+
+        if event.workflow:
+            short_id = event.workflow.name
 
         endpoint_type = event.endpoint_type.lower()
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"

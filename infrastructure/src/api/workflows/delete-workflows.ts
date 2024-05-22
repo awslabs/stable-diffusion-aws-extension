@@ -66,7 +66,6 @@ export class DeleteWorkflowsApi {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
         });
 
-
         newRole.addToPolicy(new PolicyStatement({
             actions: [
                 'dynamodb:Query',
@@ -74,13 +73,21 @@ export class DeleteWorkflowsApi {
                 'dynamodb:PutItem',
                 'dynamodb:DeleteItem',
                 'dynamodb:UpdateItem',
-                'dynamodb:Describe*',
-                'dynamodb:List*',
             ],
             resources: [
                 this.workflowsTable.tableArn,
                 `${this.workflowsTable.tableArn}/*`,
                 this.multiUserTable.tableArn,
+            ],
+        }));
+
+        newRole.addToPolicy(new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+                'sagemaker:DescribeEndpoint',
+            ],
+            resources: [
+                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`,
             ],
         }));
 
@@ -91,18 +98,6 @@ export class DeleteWorkflowsApi {
                 's3:PutObject',
                 's3:GetObject',
                 's3:DeleteObject',
-            ],
-            resources: [
-                '*',
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'cloudwatch:DeleteAlarms',
-                'cloudwatch:DescribeAlarms',
-                'cloudwatch:DeleteDashboards',
             ],
             resources: [
                 '*',

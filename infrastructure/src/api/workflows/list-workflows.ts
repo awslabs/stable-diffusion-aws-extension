@@ -9,7 +9,7 @@ import {
   SCHEMA_DEBUG,
   SCHEMA_LAST_KEY,
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON,
+  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON, SCHEMA_WORKFLOW_STATUS,
 } from '../../shared/schema';
 
 
@@ -93,6 +93,7 @@ export class ListWorkflowsApi {
                     name: SCHEMA_WORKFLOW_NAME,
                     image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
                     payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
+                    status: SCHEMA_WORKFLOW_STATUS,
                   },
                   required: [
                     'name',

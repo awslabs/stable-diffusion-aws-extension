@@ -2,7 +2,6 @@ import base64
 import json
 import logging
 import os
-from datetime import datetime
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -43,6 +42,27 @@ def check_file_exists(key):
 
 
 @tracer.capture_method
+def update_table_by_pk(table: str, pk_name: str, pk_value: str, key: str, value):
+    logger.info(f"Update {table} with {pk_name}: {id}, key: {key}, value: {value}")
+    try:
+        ddb_client = boto3.resource('dynamodb')
+        ddb_table = ddb_client.Table(table)
+        ddb_table.update_item(
+            Key={
+                pk_name: pk_value,
+            },
+            UpdateExpression=f"set #k = :v",
+            ExpressionAttributeNames={'#pk_name': pk_name, '#k': key},
+            ExpressionAttributeValues={':v': value},
+            ConditionExpression=f"attribute_exists(#pk_name)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update {table} error: {e}")
+        raise e
+
+
+@tracer.capture_method
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
 
@@ -65,6 +85,7 @@ def get_workflow_by_name(workflow_name: str):
 
     return Workflow(
         name=item['name']['S'],
+        status=item['status']['S'],
         s3_location=item['s3_location']['S'],
         image_uri=item['image_uri']['S'],
         payload_json=item['payload_json']['S'],

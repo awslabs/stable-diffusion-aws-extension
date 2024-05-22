@@ -60,6 +60,7 @@ def handler(raw_event, ctx):
             s3_location=s3_location,
             image_uri=event.image_uri,
             payload_json=event.payload_json,
+            status='Enabled',
             create_time=datetime.utcnow().isoformat(),
         ).__dict__
 

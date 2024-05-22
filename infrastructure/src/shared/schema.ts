@@ -577,3 +577,7 @@ export const SCHEMA_WORKFLOW_IMAGE_URI: JsonSchema = {
 export const SCHEMA_WORKFLOW_PAYLOAD_JSON: JsonSchema = {
   type: JsonSchemaType.STRING,
 };
+
+export const SCHEMA_WORKFLOW_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};

@@ -392,6 +392,7 @@ if [ -n "$WORKFLOW_NAME" ]; then
   fi
 
   # on SageMaker
+  python /metrics.py &
   python3 serve.py
   exit 1
 fi

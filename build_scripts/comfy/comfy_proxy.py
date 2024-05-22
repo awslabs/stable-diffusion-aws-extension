@@ -819,7 +819,7 @@ if is_on_ec2:
 
             if check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "workflow already exists"}))
+                                    body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
             start_time = time.time()
 
