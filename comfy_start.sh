@@ -49,8 +49,10 @@ local_volume="./ComfyUI"
 
 #  -v ./build_scripts/comfy/comfy_local_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py \
 
+WORKFLOW_NAME=""
+
 docker run -v ~/.aws:/root/.aws \
-           -v "$local_volume":/home/ubuntu/ComfyUI \
+           -v "$local_volume":/home/ubuntu \
            -v ./build_scripts/inference/start.sh:/start.sh \
            --gpus all \
            -e "IMAGE_HASH=$release_image" \

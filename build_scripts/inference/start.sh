@@ -364,6 +364,21 @@ ec2_start_process(){
 }
 
 if [ -n "$WORKFLOW_NAME" ]; then
+  set -euxo pipefail
+  cd /home/ubuntu || exit 1
+
+  if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
+      if [ -n "$ON_EC2" ]; then
+        cd /home/ubuntu/ComfyUI || exit 1
+        rm -rf web/extensions/ComfyLiterals
+        chmod -R +x venv
+        source venv/bin/activate
+        ec2_start_process
+        exit 1
+      fi
+  fi
+
+  echo "downloading comfy file $WORKFLOW_NAME ..."
   start_at=$(date +%s)
   s5cmd --log=error sync "s3://$S3_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "/home/ubuntu/ComfyUI/"
   end_at=$(date +%s)
@@ -417,12 +432,9 @@ if [ -n "$ON_EC2" ]; then
   echo "decompressing comfy file..."
   start_at=$(date +%s)
   tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
-  rm -rf "comfy.tar"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   echo "decompress file: $DECOMPRESS_SECONDS seconds"
-
-  rm ./ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
 
   cd /home/ubuntu/ComfyUI || exit 1
   rm -rf web/extensions/ComfyLiterals
