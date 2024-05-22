@@ -848,8 +848,8 @@ def check_file_exists(key):
 
 def restore_commands():
     subprocess.run(["sleep", "5"])
-    subprocess.run(["rm", "-rf", "/home/ubuntu/ComfyUI/*"])
-    subprocess.run(["reboot"])
+    os.system("rm -rf /home/ubuntu/ComfyUI")
+    subprocess.run(["pkill", "-f", "python3"])
 
 
 # RestoreEC2EnvironmentToDefault
@@ -860,6 +860,7 @@ async def release_rebuild_workflow(request):
                             body=json.dumps({"result": False, "message": "only master can restore comfy"}))
 
     logger.info(f"start to restore EC2 {request}")
+
     try:
         thread = threading.Thread(target=restore_commands)
         thread.start()
