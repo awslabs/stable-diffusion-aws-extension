@@ -48,5 +48,5 @@ test/aigc_webui_inference_images/.env
 test/**/.env
 *.iml
 .DS_Store
-/workshop/ComfyUI/
+/ComfyUI/
 /.env
