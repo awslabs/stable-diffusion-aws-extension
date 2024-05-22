@@ -61,7 +61,7 @@ def get_workflow_by_name(workflow_name: str):
     item = response.get('Item', None)
 
     if item is None:
-        raise NotFoundException(f'workflow with name {workflow_name} not found')
+        raise NotFoundException(f'workflow {workflow_name} not found')
 
     return Workflow(
         name=item['name']['S'],
