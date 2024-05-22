@@ -7,6 +7,7 @@ import sys
 import tarfile
 import threading
 
+import boto3
 import requests
 from aiohttp import web
 
@@ -780,3 +781,79 @@ async def change_env(request):
 async def get_env(request):
     env = os.environ.get(DISABLE_AWS_PROXY, 'False')
     return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
+
+
+@server.PromptServer.instance.routes.post("/workflows")
+async def release_workflow(request):
+    logger.info(f"start to release workflow {request}")
+    try:
+        json_data = await request.json()
+        if 'name' not in json_data or not json_data['name']:
+            raise ValueError("name is required")
+
+        workflow_name = json_data['name']
+
+        if check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "workflow already exists"}))
+
+        start_time = time.time()
+
+        s5cmd_syn_model_command = (f's5cmd sync '
+                                   f'--delete=true '
+                                   f'--exclude="*.log" '
+                                   f'--exclude="*__pycache__*" '
+                                   f'--exclude="*.cache*" '
+                                   f'"/home/ubuntu/ComfyUI/*" '
+                                   f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+        logger.info(f"sync models files start {s5cmd_syn_model_command}")
+        os.system(s5cmd_syn_model_command)
+        os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+        end_time = time.time()
+        cost_time = end_time - start_time
+        data = {
+            "payload_json": "",
+            "image_uri": os.getenv('IMAGE_HASH'),
+            "name": workflow_name,
+        }
+        get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+        response = get_response.json()
+        print(response)
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
+    except Exception as e:
+        return web.Response(status=500, content_type='application/json',
+                            body=json.dumps({"result": False, "message": e}))
+
+
+def check_file_exists(key):
+    try:
+        s3 = boto3.client('s3')
+        s3.head_object(Bucket=bucket_name, Key=key)
+        return True
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise e
+
+
+def restore_commands():
+    subprocess.run(["sleep", "5"])
+    subprocess.run(["rm", "-rf", "/home/ubuntu/ComfyUI/*"])
+    subprocess.run(["reboot"])
+
+
+# RestoreEC2EnvironmentToDefault
+@server.PromptServer.instance.routes.post("/restore")
+async def release_rebuild_workflow(request):
+    logger.info(f"start to restore EC2 {request}")
+    try:
+        thread = threading.Thread(target=restore_commands)
+        thread.start()
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "instance will be restored in 5 seconds"}))
+    except Exception as e:
+        return web.Response(status=500, content_type='application/json',
+                            body=json.dumps({"result": False, "message": e}))

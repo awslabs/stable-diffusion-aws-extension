@@ -136,7 +136,8 @@ tags = [
     Tag(name="Trainings", description="Manage Trainings").to_dict(),
     Tag(name="Prepare", description="Sync files to Endpoint").to_dict(),
     Tag(name="Sync", description="Sync Message from Endpoint").to_dict(),
-    Tag(name="Others", description="Others API").to_dict()
+    Tag(name="Workflows", description="Manage Workflows").to_dict(),
+    Tag(name="Others", description="Others API").to_dict(),
 ]
 
 operations = {
@@ -473,6 +474,16 @@ operations = {
         parameters=[
             header_user_name
         ]
+    ),
+    "CreateWorkflow": APISchema(
+        summary="Release newWorkflow",
+        tags=["Workflows"],
+        description="Create a new Workflow",
+    ),
+    "ListWorkflows": APISchema(
+        summary="List Workflows",
+        tags=["Workflows"],
+        description="List Workflows with Parameters",
     ),
 }
 

@@ -24,6 +24,7 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
+import {Workflow} from "./shared/workflow";
 const app = new App();
 
 export class Middleware extends Stack {
@@ -143,6 +144,7 @@ export class Middleware extends Stack {
       'prepare',
       'sync',
       'merge',
+      'workflows',
     ]);
 
     new MultiUsers(this, {
@@ -171,6 +173,16 @@ export class Middleware extends Stack {
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+
+    new Workflow(this, {
+      routers: restApi.routers,
+      s3_bucket: s3Bucket,
+      workflowsTable: ddbTables.workflowsTable,
+      multiUserTable: ddbTables.multiUserTable,
+      commonLayer: commonLayers.commonLayer,
+      synthesizer: props.synthesizer,
+      resourceProvider,
+    });
 
     new Inference(this, {
       routers: restApi.routers,
