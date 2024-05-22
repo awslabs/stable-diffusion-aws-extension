@@ -44,6 +44,7 @@ def check_file_exists(key):
 @tracer.capture_method
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
+    dynamodb = boto3.client('dynamodb')
 
     table_name = os.environ.get('WORKFLOWS_TABLE')
 
