@@ -442,7 +442,7 @@ fi
 if [ -n "$APP_SOURCE" ]; then
   if [ -n "$APP_CWD" ]; then
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$APP_SOURCE/*" "$APP_CWD"
+    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/${APP_SOURCE}*" "$APP_CWD"
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
