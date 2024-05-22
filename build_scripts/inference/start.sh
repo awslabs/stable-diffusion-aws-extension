@@ -358,8 +358,14 @@ ec2_start_process(){
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       init_port=$((init_port + 1))
 
+      if [ "$init_port" -eq "8188" ]; then
+          MASTER_PROCESS=true
+      else
+          MASTER_PROCESS=false
+      fi
+
       if [ "$i" -eq "$PROCESS_NUMBER" ]; then
-          export MASTER_PROCESS=true && python3 main.py --listen 0.0.0.0 \
+          export MASTER_PROCESS=$MASTER_PROCESS && python3 main.py --listen 0.0.0.0 \
                                                         --port "$init_port" \
                                                         --cuda-malloc \
                                                         --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
@@ -367,7 +373,7 @@ ec2_start_process(){
           exit 1
       fi
 
-      export MASTER_PROCESS=false && nohup python3 main.py --listen 0.0.0.0 \
+      export MASTER_PROCESS=$MASTER_PROCESS && nohup python3 main.py --listen 0.0.0.0 \
                                             --port "$init_port" \
                                             --cuda-malloc \
                                             --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \

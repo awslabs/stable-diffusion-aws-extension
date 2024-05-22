@@ -73,7 +73,7 @@ bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 thread_max_wait_time = os.environ.get('THREAD_MAX_WAIT_TIME', 60)
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 86400)
 msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 86400)
-
+is_master_process = os.getenv('MASTER_PROCESS') == 'true'
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
 need_resend_msg_result = []
@@ -788,6 +788,10 @@ async def get_env(request):
 
 @server.PromptServer.instance.routes.post("/workflows")
 async def release_workflow(request):
+    if not is_master_process:
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": False, "message": "only master can release workflow"}))
+
     logger.info(f"start to release workflow {request}")
     try:
         json_data = await request.json()
@@ -851,12 +855,16 @@ def restore_commands():
 # RestoreEC2EnvironmentToDefault
 @server.PromptServer.instance.routes.post("/restore")
 async def release_rebuild_workflow(request):
+    if not is_master_process:
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": False, "message": "only master can restore comfy"}))
+
     logger.info(f"start to restore EC2 {request}")
     try:
         thread = threading.Thread(target=restore_commands)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "instance will be restored in 5 seconds"}))
+                            body=json.dumps({"result": True, "message": "comfy will be restored in 5 seconds"}))
     except Exception as e:
         return web.Response(status=500, content_type='application/json',
                             body=json.dumps({"result": False, "message": e}))
