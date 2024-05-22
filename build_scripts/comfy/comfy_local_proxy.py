@@ -796,6 +796,10 @@ async def release_workflow(request):
             raise ValueError("name is required")
 
         workflow_name = json_data['name']
+        payload_json = ''
+
+        if 'payload_json' in json_data:
+            payload_json = json_data['payload_json']
 
         if check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
             return web.Response(status=200, content_type='application/json',
@@ -812,17 +816,21 @@ async def release_workflow(request):
                                    f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
         logger.info(f"sync models files start {s5cmd_syn_model_command}")
         os.system(s5cmd_syn_model_command)
-        os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
         end_time = time.time()
         cost_time = end_time - start_time
         data = {
-            "payload_json": "",
+            "payload_json": payload_json,
             "image_uri": os.getenv('IMAGE_HASH'),
             "name": workflow_name,
         }
         get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
         response = get_response.json()
-        print(response)
+        logger.info(f"release workflow response is {response}")
+
+        if get_response.status_code == 200:
+            os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
         return web.Response(status=200, content_type='application/json',
                             body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
     except Exception as e:
