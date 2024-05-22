@@ -4,13 +4,14 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 
+import boto3
 from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok
 from libs.data_types import Workflow
-from libs.utils import response_error, get_workflow_by_name, check_file_exists
+from libs.utils import response_error, check_file_exists
 
 tracer = Tracer()
 workflows_table = os.environ.get('WORKFLOWS_TABLE')
@@ -20,7 +21,7 @@ s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 
 esd_version = os.environ.get("ESD_VERSION")
 esd_commit_id = os.environ.get("ESD_COMMIT_ID")
-
+dynamodb = boto3.client('dynamodb')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -40,9 +41,13 @@ def handler(raw_event, ctx):
         logger.info(json.dumps(raw_event))
         event = CreateWorkflowEvent(**json.loads(raw_event['body']))
 
-        workflow = get_workflow_by_name(event.name)
-
-        if workflow:
+        response = dynamodb.get_item(
+            TableName=workflows_table,
+            Key={
+                'name': {'S': event.name}
+            }
+        )
+        if response.get('Item', None) is not None:
             raise BadRequestException(f"workflow {event.name} already exists")
 
         s3_location = f"comfy/workflows/{event.name}/"

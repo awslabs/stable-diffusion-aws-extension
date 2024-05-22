@@ -25,11 +25,11 @@ encode_type = "utf-8"
 s3 = boto3.client('s3')
 ddb = boto3.resource('dynamodb')
 endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
+dynamodb = boto3.client('dynamodb')
 
 
 @tracer.capture_method
 def check_file_exists(key):
-
     try:
         s3.head_object(Bucket=s3_bucket_name, Key=key)
         return True
@@ -45,24 +45,23 @@ def check_file_exists(key):
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
 
-    table = ddb.Table(os.environ.get('WORKFLOWS_TABLE'))
+    table_name = os.environ.get('WORKFLOWS_TABLE')
 
-    scan_kwargs = {
-        'KeyConditionExpression': Key('workflow_name').eq(workflow_name),
-    }
-
-    logger.info(scan_kwargs)
-
-    response = table.query(**scan_kwargs)
+    response = dynamodb.get_item(
+        TableName=table_name,
+        Key={
+            'name': {'S': workflow_name}
+        }
+    )
 
     tracer.put_metadata(key="workflow_name", value=response)
 
-    items = response.get('Items', [])
+    item = response.get('Item', None)
 
-    if len(items) == 0:
+    if item is None:
         raise NotFoundException(f'workflow with name {workflow_name} not found')
 
-    return Workflow(**items[0])
+    return Workflow(**item)
 
 
 @tracer.capture_method
