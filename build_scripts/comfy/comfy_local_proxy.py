@@ -843,8 +843,8 @@ def check_file_exists(key):
 
 
 def restore_commands():
-    subprocess.run(["rm", "-rf", "/home/ubuntu/ComfyUI/*"])
     subprocess.run(["sleep", "5"])
+    subprocess.run(["rm", "-rf", "/home/ubuntu/ComfyUI/*"])
     subprocess.run(["reboot"])
 
 
@@ -856,7 +856,7 @@ async def release_rebuild_workflow(request):
         thread = threading.Thread(target=restore_commands)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "success"}))
+                            body=json.dumps({"result": True, "message": "instance will be restored in 5 seconds"}))
     except Exception as e:
         return web.Response(status=500, content_type='application/json',
                             body=json.dumps({"result": False, "message": e}))
