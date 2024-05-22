@@ -358,8 +358,14 @@ ec2_start_process(){
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       init_port=$((init_port + 1))
 
+      if [ "$init_port" -eq "8188" ]; then
+          MASTER_PROCESS=true
+      else
+          MASTER_PROCESS=false
+      fi
+
       if [ "$i" -eq "$PROCESS_NUMBER" ]; then
-          export MASTER_PROCESS=true && python3 main.py --listen 0.0.0.0 \
+          export MASTER_PROCESS=$MASTER_PROCESS && python3 main.py --listen 0.0.0.0 \
                                                         --port "$init_port" \
                                                         --cuda-malloc \
                                                         --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
@@ -367,7 +373,7 @@ ec2_start_process(){
           exit 1
       fi
 
-      export MASTER_PROCESS=false && nohup python3 main.py --listen 0.0.0.0 \
+      export MASTER_PROCESS=$MASTER_PROCESS && nohup python3 main.py --listen 0.0.0.0 \
                                             --port "$init_port" \
                                             --cuda-malloc \
                                             --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
@@ -436,12 +442,22 @@ fi
 if [ -n "$APP_SOURCE" ]; then
   if [ -n "$APP_CWD" ]; then
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$APP_SOURCE/*" "$APP_CWD"
+    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/${APP_SOURCE}*" "$APP_CWD"
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
 
-    bash "$APP_CWD/start.sh"
+    cd "$APP_CWD" || exit 1
+
+    rm -rf web/extensions/ComfyLiterals
+
+    chmod -R 777 "$APP_CWD"
+    chmod -R +x venv
+
+    source venv/bin/activate
+
+    python3 /serve.py
+
     exit 1
   fi
 fi

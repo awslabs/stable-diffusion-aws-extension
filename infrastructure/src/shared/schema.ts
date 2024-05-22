@@ -567,10 +567,12 @@ export const SCHEMA_WORKFLOW_NAME: JsonSchema = {
   minLength: 1,
   maxLength: 20,
   pattern: '^[A-Za-z][A-Za-z0-9_]*$',
+  description: 'Name of workflow',
 };
 
 export const SCHEMA_WORKFLOW_IMAGE_URI: JsonSchema = {
   type: JsonSchemaType.STRING,
+  minLength: 1,
 };
 
 export const SCHEMA_WORKFLOW_PAYLOAD_JSON: JsonSchema = {

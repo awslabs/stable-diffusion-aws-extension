@@ -251,6 +251,7 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       multiUserTable: ddbTables.multiUserTable,
+      workflowsTable: ddbTables.workflowsTable,
       snsTopic: snsTopics.snsTopic,
       EndpointDeploymentJobTable: ddbTables.sDEndpointDeploymentJobTable,
       syncTable: ddbComfyTables.syncTable,

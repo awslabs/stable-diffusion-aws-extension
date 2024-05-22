@@ -280,3 +280,25 @@ class TestEndpointsApi:
 
         resp = self.api.delete_endpoints(headers=headers, data=data)
         assert resp.status_code == 204, resp.dumps()
+
+    def test_17_create_endpoint_with_bad_workflow(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        workflow_name = 'bad_workflow'
+
+        data = {
+            "endpoint_name": "dev-test",
+            "instance_type": 'ml.g5.2xlarge',
+            "endpoint_type": "Async",
+            "initial_instance_count": 1,
+            "autoscaling_enabled": True,
+            "assign_to_roles": ["IT Operator"],
+            "creator": config.username,
+            'workflow_name': workflow_name
+        }
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert f"workflow with name {workflow_name} not found" in resp.json()["message"]

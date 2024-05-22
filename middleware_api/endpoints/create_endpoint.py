@@ -1,3 +1,4 @@
+from typing import Optional
 import json
 import logging
 import os
@@ -14,9 +15,9 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted
 from common.util import resolve_instance_invocations_num
-from libs.data_types import Endpoint
+from libs.data_types import Endpoint, Workflow
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error, permissions_check, get_workflow_by_name
 
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
@@ -57,8 +58,8 @@ class CreateEndpointEvent:
     custom_extensions: str = ""
     # service for: sd / comfy
     service_type: str = "sd"
-    app_source: str = ""
-    app_cwd: str = ""
+    workflow: Optional[Workflow] = None
+    workflow_name: str = ""
     # todo will be removed
     creator: str = ""
 
@@ -97,6 +98,13 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     return f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-inference:{esd_version}"
 
 
+def create_from_workflow(event: CreateEndpointEvent):
+    if event.workflow_name:
+        event.workflow = get_workflow_by_name(event.workflow_name)
+
+    return event
+
+
 # POST /endpoints
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
@@ -120,6 +128,8 @@ def handler(raw_event, ctx):
             if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
                 raise BadRequestException(
                     f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
+
+        event = create_from_workflow(event)
 
         event = check_custom_extensions(event)
 
@@ -217,6 +227,9 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
     tracer.put_annotation('endpoint_name', endpoint_name)
     image_url = get_docker_image_uri(event)
 
+    if event.workflow:
+        image_url = event.workflow.image_uri
+
     environment = {
         'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
         'S3_BUCKET_NAME': s3_bucket_name,
@@ -237,9 +250,9 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
         'AWS_DEFAULT_REGION': aws_region,
     }
 
-    if event.app_cwd:
-        environment['APP_SOURCE'] = event.app_source
-        environment['APP_CWD'] = event.app_cwd
+    if event.workflow:
+        environment['APP_SOURCE'] = event.workflow.s3_location
+        environment['APP_CWD'] = '/home/ubuntu/ComfyUI'
 
     primary_container = {
         'Image': image_url,

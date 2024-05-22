@@ -236,12 +236,30 @@ class Api:
             params=params
         )
 
+    def list_workflows(self, headers=None, params=None):
+        return self.req(
+            "GET",
+            "workflows",
+            headers=headers,
+            operation_id='ListWorkflows',
+            params=params
+        )
+
     def create_endpoint(self, headers=None, data=None):
         return self.req(
             "POST",
             "endpoints",
             headers=headers,
             operation_id='CreateEndpoint',
+            data=data
+        )
+
+    def create_workflow(self, headers=None, data=None):
+        return self.req(
+            "POST",
+            "workflows",
+            headers=headers,
+            operation_id='CreateWorkflow',
             data=data
         )
 
