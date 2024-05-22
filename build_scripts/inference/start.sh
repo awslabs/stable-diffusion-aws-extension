@@ -356,11 +356,11 @@ ec2_start_process(){
 }
 
 if [ -n "$WORKFLOW_NAME" ]; then
-  set -euxo pipefail
   cd /home/ubuntu || exit 1
 
   if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
       if [ -n "$ON_EC2" ]; then
+        set -euxo pipefail
         cd /home/ubuntu/ComfyUI || exit 1
         rm -rf web/extensions/ComfyLiterals
         chmod -R +x venv
