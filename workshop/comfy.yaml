@@ -284,3 +284,6 @@ Outputs:
   Dockerfile:
     Description: Dockerfile for EC2 and SageMaker
     Value: /root/stable-diffusion-aws-extension/workshop/Dockerfile.comfy
+  ComfyProcessStart:
+    Description: Process Port Start Number
+    Value: 8188
