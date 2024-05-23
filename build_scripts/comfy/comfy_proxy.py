@@ -713,6 +713,9 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/reboot")
     async def restart(self):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can restart"}))
         logger.info(f"start to reboot {self}")
         try:
             from xmlrpc.client import ServerProxy
