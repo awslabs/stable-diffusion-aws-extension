@@ -366,8 +366,8 @@ logfile=/dev/stdout
       echo "[program:$PROGRAM_NAME]" >> /etc/supervisord.conf
       echo "command=/home/ubuntu/ComfyUI/venv/bin/python3 main.py --listen 0.0.0.0 --port $init_port --cuda-malloc --output-directory /home/ubuntu/ComfyUI/output/$init_port --temp-directory /home/ubuntu/ComfyUI/temp/$init_port" >> /etc/supervisord.conf
       echo "startretries=3" >> /etc/supervisord.conf
-      echo "stdout_logfile=/dev/stdout" >> /etc/supervisord.conf
-      echo "stderr_logfile=/dev/stderr" >> /etc/supervisord.conf
+      echo "stdout_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
+      echo "stderr_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
       echo "environment=MASTER_PROCESS=$MASTER_PROCESS,PROGRAM_NAME=$PROGRAM_NAME" >> /etc/supervisord.conf
       echo "" >> /etc/supervisord.conf
   done
