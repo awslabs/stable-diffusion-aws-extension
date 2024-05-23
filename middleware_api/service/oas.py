@@ -476,7 +476,7 @@ operations = {
         ]
     ),
     "CreateWorkflow": APISchema(
-        summary="Release newWorkflow",
+        summary="Release new Workflow",
         tags=["Workflows"],
         description="Create a new Workflow",
     ),
