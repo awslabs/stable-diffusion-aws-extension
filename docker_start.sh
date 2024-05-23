@@ -55,6 +55,12 @@ else
    export WORKFLOW_NAME=""
 fi
 
+total_memory=$(cat /proc/meminfo | grep 'MemTotal' | awk '{print $2}')
+total_memory_mb=$((total_memory / 1024))
+echo "total_memory_mb: $total_memory_mb"
+limit_memory_mb=$((total_memory_mb - 2048))
+echo "limit_memory_mb: $limit_memory_mb"
+
 #  -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
 docker run -v ~/.aws:/root/.aws \
            -v "$local_volume":/home/ubuntu \
@@ -76,4 +82,5 @@ docker run -v ~/.aws:/root/.aws \
            -e "WORKFLOW_NAME=$WORKFLOW_NAME" \
            --name "$CONTAINER_NAME" \
            -p 8188-8288:8188-8288 \
+           --memory "${limit_memory_mb}mb" \
            "$image"

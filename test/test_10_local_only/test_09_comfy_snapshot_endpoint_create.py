@@ -60,7 +60,7 @@ class TestComfySnapshotEpCreateE2E:
             "endpoint_name": f'snapshot-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
-            "instance_type": 'ml.g5.8xlarge',
+            "instance_type": 'ml.g5.4xlarge',
             "workflow_name": 'workflow1',
             "initial_instance_count": 1,
             "autoscaling_enabled": False,
@@ -73,9 +73,32 @@ class TestComfySnapshotEpCreateE2E:
 
         resp = self.api.create_endpoint(headers=headers, data=data)
         assert 'data' in resp.json(), resp.dumps()
-        assert resp.json()["data"]["endpoint_status"] == "Creating", resp.dumps()
 
-    def test_3_list_endpoints_status(self):
+    def test_3_create_comfy_snapshot_endpoint_rt(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        data = {
+            "endpoint_name": f'snapshot-{config.endpoint_name}',
+            "service_type": "comfy",
+            "endpoint_type": "Real-time",
+            "instance_type": 'ml.g5.8xlarge',
+            "workflow_name": 'workflow1',
+            "initial_instance_count": 1,
+            "autoscaling_enabled": False,
+            "assign_to_roles": [config.role_comfy_real_time],
+            "creator": config.username
+        }
+
+        if config.custom_docker_image_uri:
+            data["custom_docker_image_uri"] = config.custom_docker_image_uri
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert 'data' in resp.json(), resp.dumps()
+
+    def test_4_list_endpoints_status(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username

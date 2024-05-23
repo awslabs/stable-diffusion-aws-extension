@@ -328,31 +328,56 @@ ec2_start_process(){
   export LD_LIBRARY_PATH=$LD_PRELOAD
   set_conda
 
+  pip install supervisor
+  chown -R root:root "/home/ubuntu/ComfyUI"
+  chmod -R +x venv
+
+  SUPERVISOR_CONF="[supervisord]
+nodaemon=true
+directory=/home/ubuntu/ComfyUI
+autostart=true
+autorestart=true
+
+[inet_http_server]
+port = 127.0.0.1:9001
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+logfile=/dev/stdout
+
+"
+
+  echo "$SUPERVISOR_CONF" > /etc/supervisord.conf
+
   init_port=8187
   for i in $(seq 1 "$PROCESS_NUMBER"); do
       init_port=$((init_port + 1))
 
+      MASTER_PROCESS=false
       if [ "$init_port" -eq "8188" ]; then
           MASTER_PROCESS=true
-      else
-          MASTER_PROCESS=false
       fi
 
-      if [ "$i" -eq "$PROCESS_NUMBER" ]; then
-          export MASTER_PROCESS=$MASTER_PROCESS && python3 main.py --listen 0.0.0.0 \
-                                                        --port "$init_port" \
-                                                        --cuda-malloc \
-                                                        --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
-                                                        --temp-directory "/home/ubuntu/ComfyUI/temp/$init_port"
-          exit 1
-      fi
+      PROGRAM_NAME="comfy_$init_port"
 
-      export MASTER_PROCESS=$MASTER_PROCESS && nohup python3 main.py --listen 0.0.0.0 \
-                                            --port "$init_port" \
-                                            --cuda-malloc \
-                                            --output-directory "/home/ubuntu/ComfyUI/output/$init_port" \
-                                            --temp-directory "/home/ubuntu/ComfyUI/temp/$init_port" &
+      # shellcheck disable=SC2129
+      echo "[program:$PROGRAM_NAME]" >> /etc/supervisord.conf
+      echo "command=/home/ubuntu/ComfyUI/venv/bin/python3 main.py --listen 0.0.0.0 --port $init_port --cuda-malloc --output-directory /home/ubuntu/ComfyUI/output/$init_port --temp-directory /home/ubuntu/ComfyUI/temp/$init_port" >> /etc/supervisord.conf
+      echo "startretries=3" >> /etc/supervisord.conf
+      echo "stdout_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
+      echo "stderr_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
+      echo "environment=MASTER_PROCESS=$MASTER_PROCESS,PROGRAM_NAME=$PROGRAM_NAME" >> /etc/supervisord.conf
+      echo "" >> /etc/supervisord.conf
   done
+
+  echo "---------------------------------------------------------------------------------"
+  cat /etc/supervisord.conf
+  echo "---------------------------------------------------------------------------------"
+
+  supervisord -c /etc/supervisord.conf | grep -v 'uncaptured python exception'
+  exit 1
 }
 
 if [ -n "$WORKFLOW_NAME" ]; then
@@ -407,7 +432,7 @@ if [ -n "$ON_EC2" ]; then
         cd /home/ubuntu/stable-diffusion-webui || exit 1
         chmod -R +x venv
         source venv/bin/activate
-        chmod -R 777 /home/ubuntu/stable-diffusion-webui
+        chmod -R 777 /home/ubuntu
         python3 launch.py --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
         exit 1
     fi

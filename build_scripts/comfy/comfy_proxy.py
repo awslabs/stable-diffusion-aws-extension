@@ -87,6 +87,7 @@ if is_on_ec2:
     max_wait_time = os.environ.get('MAX_WAIT_TIME', 86400)
     msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 86400)
     is_master_process = os.getenv('MASTER_PROCESS') == 'true'
+    program_name = os.getenv('PROGRAM_NAME')
     no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
     need_resend_msg_result = []
@@ -712,9 +713,16 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/reboot")
     async def restart(self):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can restart"}))
         logger.info(f"start to reboot {self}")
         try:
-            subprocess.run(["sudo", "reboot"])
+            from xmlrpc.client import ServerProxy
+            server = ServerProxy('http://localhost:9001/RPC2')
+            server.supervisor.restart()
+            # server.supervisor.shutdown()
+            return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
         except Exception as e:
             logger.info(f"error reboot  {e}")
             pass
