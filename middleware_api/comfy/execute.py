@@ -66,6 +66,7 @@ class ExecuteEvent:
     need_prepare: Optional[bool] = False
     prepare_props: Optional[PrepareProps] = None
     multi_async: Optional[bool] = False
+    workflow_version: Optional[str] = None
 
 
 def sen_sqs_msg(message_body, endpoint_name):
@@ -97,9 +98,18 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 
 @tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
-    endpoint_name = event.endpoint_name
+    if not event.endpoint_name and not event.workflow_version:
+        raise Exception(f"Cannot match an available environment，please check your EndpointName or your WorkflowVersion.")
+    if event.endpoint_name:
+        endpoint_name = event.endpoint_name
+    else:
+        # TODO
+        endpoint_name = event.workflow_version
 
-    ep = get_endpoint_by_name(endpoint_name)
+    try:
+        ep = get_endpoint_by_name(endpoint_name)
+    except Exception as e:
+        raise Exception(f"Please create an endpoint first, then try again.")
 
     if ep.endpoint_status not in [EndpointStatus.IN_SERVICE.value, EndpointStatus.UPDATING.value]:
         raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService or Updating.")

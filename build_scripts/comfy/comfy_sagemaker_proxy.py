@@ -559,11 +559,8 @@ async def sync_instance(request):
 
 def validate_prompt_proxy(func):
     def wrapper(*args, **kwargs):
-        # 在这里添加您的代理逻辑
         logger.info("validate_prompt_proxy start...")
-        # 调用原始函数
         result = func(*args, **kwargs)
-        # 在这里添加执行后的操作
         logger.info("validate_prompt_proxy end...")
         return result
 

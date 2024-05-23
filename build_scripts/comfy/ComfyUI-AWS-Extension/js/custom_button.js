@@ -69,14 +69,14 @@ export async function syncEnv() {
 export async function syncEnvNoAlert() {
     try {
         var target = {}
-        const FETCH_TIMEOUT = 1800000; // 30 seconds in milliseconds
+        const FETCH_TIMEOUT = 18000000; // 30 minutes in milliseconds
         const response = await Promise.race([
             api.fetchApi("/sync_env"),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT))
         ]);
         const result = await response.json();
         if (response.ok) {
-            const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
+            const TIMEOUT_DURATION = 18000000; // 30 minutes in milliseconds
                 const RETRY_INTERVAL = 5000; // 5 seconds in milliseconds
                 let responseCheck;
                 let resultCheck;

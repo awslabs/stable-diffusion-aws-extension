@@ -122,15 +122,12 @@ def save_images_locally(response_json, local_folder):
 
 
 def calculate_file_hash(file_path):
-    # 创建一个哈希对象
     hasher = hashlib.sha256()
-    # 打开文件并逐块更新哈希对象
     with open(file_path, 'rb') as file:
-        buffer = file.read(65536)  # 64KB 的缓冲区大小
+        buffer = file.read(65536)
         while len(buffer) > 0:
             hasher.update(buffer)
             buffer = file.read(65536)
-    # 返回哈希值的十六进制表示
     return hasher.hexdigest()
 
 

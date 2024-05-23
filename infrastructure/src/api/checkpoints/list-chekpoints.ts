@@ -117,6 +117,12 @@ export class ListCheckPointsApi {
                         type: JsonSchemaType.STRING,
                       },
                     },
+                    target_path: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    source_path: {
+                      type: JsonSchemaType.STRING,
+                    },
                   },
                   required: [
                     'allowed_roles_or_users',

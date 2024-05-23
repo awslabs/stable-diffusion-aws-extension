@@ -164,6 +164,12 @@ export class CreateCheckPointApi {
                       'multipart_upload',
                     ],
                   },
+                  source_path: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  target_path: {
+                    type: JsonSchemaType.STRING,
+                  },
                 },
                 required: [
                   'id',
@@ -349,6 +355,12 @@ export class CreateCheckPointApi {
                 type: JsonSchemaType.STRING,
               },
             },
+          },
+          target_path: {
+            type: JsonSchemaType.STRING,
+          },
+          source_path: {
+            type: JsonSchemaType.STRING,
           },
         },
         required: [

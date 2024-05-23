@@ -768,6 +768,8 @@ def model_upload_tab():
                 return default_list, show_page_info, 'No data'
 
             for model in resp.json()['data']['checkpoints']:
+                if model['type'] == 'Comfy':
+                    continue
                 allowed = ''
                 if model['allowed_roles_or_users']:
                     allowed = ', '.join(model['allowed_roles_or_users'])
