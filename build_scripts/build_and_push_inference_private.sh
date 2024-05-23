@@ -61,3 +61,4 @@ docker images
 echo "docker push $fullname"
 docker push "$fullname"
 echo "docker push $fullname Completed"
+docker tag "$fullname" "esd:$region"

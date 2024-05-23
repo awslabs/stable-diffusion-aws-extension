@@ -92,6 +92,15 @@ class Api:
             data=data
         )
 
+    def delete_workflows(self, headers=None, data=None):
+        return self.req(
+            "DELETE",
+            "workflows",
+            headers=headers,
+            operation_id='DeleteWorkflows',
+            data=data
+        )
+
     def delete_users(self, headers=None, data=None):
         return self.req(
             "DELETE",

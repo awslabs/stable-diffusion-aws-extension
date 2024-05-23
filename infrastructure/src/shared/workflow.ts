@@ -6,6 +6,7 @@ import {Construct} from 'constructs';
 import {ResourceProvider} from './resource-provider';
 import {CreateWorkflowApi} from "../api/workflows/create-workflow";
 import {ListWorkflowsApi} from "../api/workflows/list-workflows";
+import {DeleteWorkflowsApi} from "../api/workflows/delete-workflows";
 
 export interface WorkflowProps extends StackProps {
     routers: { [key: string]: Resource };
@@ -41,6 +42,17 @@ export class Workflow {
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
+                router: props.routers.workflows,
+            },
+        );
+
+        new DeleteWorkflowsApi(
+            scope, 'DeleteWorkflows',
+            {
+                workflowsTable: props.workflowsTable,
+                commonLayer: props.commonLayer,
+                multiUserTable: props.multiUserTable,
+                httpMethod: 'DELETE',
                 router: props.routers.workflows,
             },
         );

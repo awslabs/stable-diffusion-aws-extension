@@ -22,8 +22,7 @@ if [ -n "$ESD_COMMIT_ID" ]; then
 fi
 
 cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
-cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
-cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
+cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_proxy.py ComfyUI/custom_nodes/
 cp -R stable-diffusion-aws-extension/build_scripts/comfy/ComfyUI-AWS-Extension ComfyUI/custom_nodes/ComfyUI-AWS-Extension
 
 rm -rf stable-diffusion-aws-extension
@@ -40,7 +39,7 @@ git clone https://github.com/AIGODLIKE/AIGODLIKE-ComfyUI-Translation.git custom_
 git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git custom_nodes/ComfyUI-VideoHelperSuite
 git clone https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved.git custom_nodes/ComfyUI-AnimateDiff-Evolved
 
-if [ "$ON_DOCKER" == "true" ]; then
+if [ "$ON_SAGEMAKER" == "true" ]; then
   python3 -m venv venv
   source venv/bin/activate
   pip install --upgrade pip

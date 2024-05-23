@@ -855,8 +855,8 @@ class SageMakerUI(scripts.Script):
         return sagemaker_inputs_components
 
     def before_process(self, p, *args):
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
+        on_sagemaker = os.environ.get('ON_SAGEMAKER', "false")
+        if on_sagemaker == "true":
             return
 
         # check if endpoint is InService
@@ -1055,7 +1055,7 @@ def fetch_user_data():
         time.sleep(30)
 
 
-if os.environ.get('ON_DOCKER', "false") != "true":
+if os.environ.get('ON_SAGEMAKER', "false") != "true":
     from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
     if cloud_auth_manager.enableAuth:
         cmd_opts.gradio_auth = cloud_auth_manager.create_config()

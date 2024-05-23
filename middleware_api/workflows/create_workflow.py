@@ -48,18 +48,19 @@ def handler(raw_event, ctx):
             }
         )
         if response.get('Item', None) is not None:
-            raise BadRequestException(f"workflow {event.name} already exists")
+            raise BadRequestException(f"{event.name} already exists")
 
         s3_location = f"comfy/workflows/{event.name}/"
 
         if not check_file_exists(f"{s3_location}lock"):
-            raise BadRequestException(f"workflow {event.name} files not ready")
+            raise BadRequestException(f"{event.name} files not ready")
 
         data = Workflow(
             name=event.name,
             s3_location=s3_location,
             image_uri=event.image_uri,
             payload_json=event.payload_json,
+            status='Enabled',
             create_time=datetime.utcnow().isoformat(),
         ).__dict__
 

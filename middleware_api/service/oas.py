@@ -485,6 +485,11 @@ operations = {
         tags=["Workflows"],
         description="List Workflows with Parameters",
     ),
+    "DeleteWorkflows": APISchema(
+        summary="Delete Workflows",
+        tags=["Workflows"],
+        description="Delete specify Workflows",
+    ),
 }
 
 

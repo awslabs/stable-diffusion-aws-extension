@@ -55,6 +55,31 @@ export const SCHEMA_MESSAGE: JsonSchema = {
 };
 
 // API Gateway Validator or Lambda Response
+export const SCHEMA_202: JsonSchema = {
+      type: JsonSchemaType.OBJECT,
+      schema: JsonSchemaVersion.DRAFT7,
+      title: 'Response Model 202',
+      description: 'Schema for an API response with a 202 Accepted status. Since the 202 status indicates that the request has been accepted for processing, this schema does not define any properties for the response body.',
+      properties: {
+        statusCode: {
+          type: JsonSchemaType.INTEGER,
+          enum: [
+            202,
+          ],
+        },
+        debug: SCHEMA_DEBUG,
+        message: {
+          type: JsonSchemaType.STRING,
+        },
+      },
+      required: [
+        'statusCode',
+        'debug',
+        'message',
+      ],
+    }
+;
+
 export const SCHEMA_204: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   schema: JsonSchemaVersion.DRAFT7,
@@ -576,5 +601,9 @@ export const SCHEMA_WORKFLOW_IMAGE_URI: JsonSchema = {
 };
 
 export const SCHEMA_WORKFLOW_PAYLOAD_JSON: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_WORKFLOW_STATUS: JsonSchema = {
   type: JsonSchemaType.STRING,
 };

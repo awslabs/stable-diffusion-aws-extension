@@ -301,4 +301,4 @@ class TestEndpointsApi:
         }
 
         resp = self.api.create_endpoint(headers=headers, data=data)
-        assert f"workflow with name {workflow_name} not found" in resp.json()["message"]
+        assert f"workflow {workflow_name} not found" in resp.json()["message"]

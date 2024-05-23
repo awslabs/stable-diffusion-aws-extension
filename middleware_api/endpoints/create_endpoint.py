@@ -101,6 +101,8 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 def create_from_workflow(event: CreateEndpointEvent):
     if event.workflow_name:
         event.workflow = get_workflow_by_name(event.workflow_name)
+        if event.workflow.status != 'Enabled':
+            raise BadRequestException(f"{event.workflow_name} is {event.workflow.status}")
 
     return event
 
@@ -138,6 +140,9 @@ def handler(raw_event, ctx):
 
         if event.endpoint_name:
             short_id = event.endpoint_name
+
+        if event.workflow:
+            short_id = event.workflow.name
 
         endpoint_type = event.endpoint_type.lower()
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
@@ -245,13 +250,13 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
         'ESD_VERSION': esd_version,
         'ESD_COMMIT_ID': esd_commit_id,
         'SERVICE_TYPE': event.service_type,
-        'ON_DOCKER': 'true',
+        'ON_SAGEMAKER': 'true',
         'AWS_REGION': aws_region,
         'AWS_DEFAULT_REGION': aws_region,
     }
 
     if event.workflow:
-        environment['APP_SOURCE'] = event.workflow.s3_location
+        environment['WORKFLOW_NAME'] = event.workflow.name
         environment['APP_CWD'] = '/home/ubuntu/ComfyUI'
 
     primary_container = {

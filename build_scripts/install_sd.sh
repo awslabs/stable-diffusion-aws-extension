@@ -32,7 +32,7 @@ if [ -n "$ESD_COMMIT_ID" ]; then
 fi
 
 # remove unused files for docker layer reuse
-if [ "$ON_DOCKER" == "true" ]; then
+if [ "$ON_SAGEMAKER" == "true" ]; then
   rm -rf docs
   rm -rf infrastructure
   rm -rf middleware_api

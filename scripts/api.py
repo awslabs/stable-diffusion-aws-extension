@@ -526,8 +526,8 @@ try:
     import modules.script_callbacks as script_callbacks
 
     script_callbacks.on_app_started(sagemaker_api)
-    on_docker = os.environ.get('ON_DOCKER', "false")
-    if on_docker == "true":
+    on_sagemaker = os.environ.get('ON_SAGEMAKER', "false")
+    if on_sagemaker == "true":
         from modules import shared
         shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)
