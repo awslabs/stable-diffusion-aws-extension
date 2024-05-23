@@ -35,14 +35,21 @@ MAX_WORKERS = 10
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict,
                                cannot_download: list):
     logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
-    response = requests.get(url, allow_redirects=False, stream=True)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+        # Add more headers if needed
+    }
+    response = requests.get(url, headers=headers, allow_redirects=False, stream=True)
+    logger.info( response.status_code)
     if response and response.status_code == 307:
+        logger.info(f"response:{response}, statuscode:{response} headers:{response.headers}")
         if response.headers and 'Location' in response.headers:
+            logger.info(f"response ok:{response.headers.get('Location')}")
             url = response.headers.get('Location')
     parsed_url = urllib.parse.urlparse(url)
     filename = os.path.basename(parsed_url.path)
     if os.path.splitext(filename)[1] not in CN_MODEL_EXTS:
-        logger.info(f"download_and_upload_models file error url:{url}, filename:{filename}")
+        logger.info(f"download_and_upload_models file error url:{url}, parsed_url:{parsed_url} filename:{filename}")
         cannot_download.append(url)
         return
     logger.info(f"file name is :{filename}")
