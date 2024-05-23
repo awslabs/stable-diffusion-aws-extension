@@ -62,4 +62,26 @@ class TestComfyWorkflowApiBase:
             ],
         }
         resp = self.api.delete_workflows(headers=headers, data=data)
-        assert resp.status_code == 204, resp.dumps()
+        assert resp.status_code == 202, resp.dumps()
+
+    def test_10_create_workflow_file_not_ready(self):
+        headers = {'x-api-key': config.api_key}
+        data = {
+            "name": "workflow_not_ready",
+            "image_uri": "uri",
+            "payload_json": ""
+        }
+        resp = self.api.create_workflow(headers=headers, data=data)
+        assert resp.status_code == 400, resp.dumps()
+        assert 'files not ready' in resp.json()['message'], resp.dumps()
+
+    def test_11_create_workflow_bad_name(self):
+        headers = {'x-api-key': config.api_key}
+        data = {
+            "name": "workflow-bad-name",
+            "image_uri": "uri",
+            "payload_json": ""
+        }
+        resp = self.api.create_workflow(headers=headers, data=data)
+        assert resp.status_code == 400, resp.dumps()
+        assert 'does not match input string' in resp.json()['message'], resp.dumps()

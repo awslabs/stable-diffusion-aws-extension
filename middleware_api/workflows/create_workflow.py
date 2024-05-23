@@ -53,7 +53,7 @@ def handler(raw_event, ctx):
         s3_location = f"comfy/workflows/{event.name}/"
 
         if not check_file_exists(f"{s3_location}lock"):
-            raise BadRequestException(f"workflow {event.name} files not ready")
+            raise BadRequestException(f"{event.name} files not ready")
 
         data = Workflow(
             name=event.name,

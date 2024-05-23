@@ -1,5 +1,6 @@
 ARG AWS_REGION
-FROM 366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:dev
+ARG ESD_VERSION
+FROM 366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION
 
 # TODO BYOC
 #RUN apt-get update -y && \

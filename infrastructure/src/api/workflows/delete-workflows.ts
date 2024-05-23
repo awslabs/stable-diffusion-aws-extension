@@ -1,5 +1,5 @@
 import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import {Aws, aws_iam, aws_lambda, Duration} from 'aws-cdk-lib';
 import {JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource} from 'aws-cdk-lib/aws-apigateway';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
 import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
@@ -52,7 +52,7 @@ export class DeleteWorkflowsApi {
             },
             operationName: 'DeleteWorkflows',
             methodResponses: [
-                ApiModels.methodResponses204(),
+                ApiModels.methodResponses202(),
                 ApiModels.methodResponses400(),
                 ApiModels.methodResponses401(),
                 ApiModels.methodResponses403(),
@@ -88,6 +88,16 @@ export class DeleteWorkflowsApi {
             ],
             resources: [
                 `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`,
+            ],
+        }));
+
+        newRole.addToPolicy(new aws_iam.PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [
+                'lambda:invokeFunction',
+            ],
+            resources: [
+                `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
             ],
         }));
 
@@ -144,6 +154,21 @@ export class DeleteWorkflowsApi {
     }
 
     private apiLambda() {
+        const role = this.iamRole();
+
+        const deleteHandle = new PythonFunction(this.scope, `${this.baseId}-handler-lambda`, {
+            entry: '../middleware_api/workflows',
+            architecture: Architecture.X86_64,
+            runtime: Runtime.PYTHON_3_10,
+            index: 'delete_workflow_handler.py',
+            handler: 'handler',
+            timeout: Duration.seconds(900),
+            role: role,
+            memorySize: 2048,
+            tracing: aws_lambda.Tracing.ACTIVE,
+            layers: [this.layer],
+        });
+
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
             entry: '../middleware_api/workflows',
             architecture: Architecture.X86_64,
@@ -151,12 +176,13 @@ export class DeleteWorkflowsApi {
             index: 'delete_workflows.py',
             handler: 'handler',
             timeout: Duration.seconds(900),
-            role: this.iamRole(),
+            role: role,
             memorySize: 2048,
             tracing: aws_lambda.Tracing.ACTIVE,
             layers: [this.layer],
             environment:{
                 WORKFLOWS_TABLE: this.workflowsTable.tableName,
+                HANDLER_NAME: deleteHandle.functionName,
             }
         });
     }

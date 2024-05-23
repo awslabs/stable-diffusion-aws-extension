@@ -30,6 +30,7 @@ aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS 
 docker pull "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
 docker build -f Dockerfile \
              --build-arg AWS_REGION="$AWS_REGION" \
+             --build-arg ESD_VERSION="$ESD_VERSION" \
              -t "$image" .
 
 image_hash=$(docker inspect "$image"  | jq -r ".[0].Id")
@@ -48,8 +49,10 @@ echo "Starting container..."
 local_volume="./container/$SERVICE_TYPE"
 mkdir -p $local_volume
 
-if [ -z "$WORKFLOW_NAME" ]; then
-    export WORKFLOW_NAME=""
+if [ -n "${WORKFLOW_NAME-}" ]; then
+    echo "WORKFLOW_NAME is $WORKFLOW_NAME"
+else
+   export WORKFLOW_NAME=""
 fi
 
 #  -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
