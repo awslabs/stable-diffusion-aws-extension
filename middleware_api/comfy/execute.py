@@ -98,7 +98,7 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 
 @tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
-    if not event.endpoint_name or not event.workflow_version:
+    if not event.endpoint_name and not event.workflow_version:
         raise Exception(f"Cannot match an available environment，please check your EndpointName or your WorkflowVersion.")
     if event.endpoint_name:
         endpoint_name = event.endpoint_name
