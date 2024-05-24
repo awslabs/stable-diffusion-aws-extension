@@ -43,7 +43,6 @@ Parameters:
       - 5
       - 10
       - 15
-      - 20
     Default: 10
   EsdVersion:
     Description: Version of the ESD
