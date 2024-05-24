@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: (SO8032) - Extension for Comfy on AWS - EC2 Instance
 Parameters:
   Branch:
-    Description: Branch of the Comfy to deploy
+    Description: Branch of the ESD
     Type: String
     AllowedValues:
       - main
@@ -48,9 +48,8 @@ Parameters:
     Description: Version of the ESD
     Type: String
     AllowedValues:
-      - {{latest}}
-      - dev
-    Default: {{latest}}
+      - "dev"
+    Default: "dev"
 
 Mappings:
   RegionToAmiId:
