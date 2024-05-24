@@ -851,9 +851,14 @@ if is_on_ec2:
         try:
             json_data = await request.json()
             if 'name' not in json_data or not json_data['name']:
-                raise ValueError("name is required")
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"name is required"}))
 
             workflow_name = json_data['name']
+            if workflow_name == 'default':
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"{workflow_name} is not allowed"}))
+
             payload_json = ''
 
             if 'payload_json' in json_data:
@@ -865,20 +870,23 @@ if is_on_ec2:
 
             start_time = time.time()
 
-            s5cmd_syn_model_command = (f's5cmd sync '
+            s5cmd_sync_command = (f's5cmd sync '
                                        f'--delete=true '
                                        f'--exclude="*comfy.tar" '
                                        f'--exclude="*.log" '
                                        f'--exclude="*__pycache__*" '
-                                       f'--exclude="*.cache*" '
                                        f'--exclude="*/ComfyUI/input/*" '
                                        f'--exclude="*/ComfyUI/output/*" '
                                        f'"/home/ubuntu/*" '
                                        f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
-            logger.info(f"sync workflows files start {s5cmd_syn_model_command}")
-            os.system(s5cmd_syn_model_command)
-            os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
-            action_unlock('release')
+
+            s5cmd_lock_command = (f'echo "lock" > lock && '
+                                  f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
+            logger.info(f"sync workflows files start {s5cmd_sync_command}")
+
+            subprocess.check_output(s5cmd_sync_command, shell=True)
+            subprocess.check_output(s5cmd_lock_command, shell=True)
 
             end_time = time.time()
             cost_time = end_time - start_time
@@ -891,12 +899,54 @@ if is_on_ec2:
             response = get_response.json()
             logger.info(f"release workflow response is {response}")
 
+            action_unlock('release')
+
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
         except Exception as e:
             action_unlock('release')
+            logger.info(e)
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": e}))
+                                body=json.dumps({"result": False, "message": 'Release workflow failed'}))
+
+
+    @server.PromptServer.instance.routes.put("/workflows")
+    async def switch_workflow(request):
+        if is_action_lock('release'):
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "release is not allowed during release workflow"}))
+
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                raise ValueError("name is required")
+
+            workflow_name = json_data['name']
+
+            if workflow_name == os.getenv('WORKFLOW_NAME'):
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": "workflow is already in use"}))
+
+            if workflow_name == 'default' and not is_master_process:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": "slave can not use default workflow"}))
+
+            if workflow_name != 'default':
+                if not check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
+                    return web.Response(status=200, content_type='application/json',
+                                        body=json.dumps({"result": False, "message": f"{workflow_name} not exists"}))
+
+            name_file = os.getenv('WORKFLOW_NAME_FILE')
+            subprocess.check_output(f"echo {workflow_name} > {name_file}", shell=True)
+            subprocess.run(["pkill", "-f", "python3"])
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Please wait to restart"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
 
 
     def check_file_exists(key):

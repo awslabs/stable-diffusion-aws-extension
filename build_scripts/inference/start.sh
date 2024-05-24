@@ -320,65 +320,66 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
-# -------------------- startup --------------------
-
-ec2_start_process(){
+if [ -n "$ON_EC2" ]; then
   set -euxo pipefail
-  echo "---------------------------------------------------------------------------------"
-  export LD_LIBRARY_PATH=$LD_PRELOAD
-  set_conda
 
-  pip install supervisor
-  chown -R root:root "/home/ubuntu/ComfyUI"
-  chmod -R +x venv
+  WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
+  export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
 
-  SUPERVISOR_CONF="[supervisord]
-nodaemon=true
-directory=/home/ubuntu/ComfyUI
-autostart=true
-autorestart=true
+  if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
+    mkdir -p "$WORKFLOW_DIR"
 
-[inet_http_server]
-port = 127.0.0.1:9001
-
-[rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-[supervisorctl]
-logfile=/dev/stdout
-
-"
-
-  echo "$SUPERVISOR_CONF" > /etc/supervisord.conf
-
-  init_port=8187
-  for i in $(seq 1 "$PROCESS_NUMBER"); do
-      init_port=$((init_port + 1))
-
-      MASTER_PROCESS=false
-      if [ "$init_port" -eq "8188" ]; then
-          MASTER_PROCESS=true
+    if [ "$WORKFLOW_NAME" = "default" ]; then
+      if [ ! -f "/container/$WORKFLOW_NAME.tar" ]; then
+        start_at=$(date +%s)
+        s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
+        end_at=$(date +%s)
+        export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
       fi
 
-      PROGRAM_NAME="comfy_$init_port"
+      start_at=$(date +%s)
+      tar --overwrite -xf "/container/$WORKFLOW_NAME.tar" -C "$WORKFLOW_DIR"
+      end_at=$(date +%s)
+      export DECOMPRESS_SECONDS=$((end_at-start_at))
 
-      # shellcheck disable=SC2129
-      echo "[program:$PROGRAM_NAME]" >> /etc/supervisord.conf
-      echo "command=/home/ubuntu/ComfyUI/venv/bin/python3 main.py --listen 0.0.0.0 --port $init_port --cuda-malloc --output-directory /home/ubuntu/ComfyUI/output/$init_port --temp-directory /home/ubuntu/ComfyUI/temp/$init_port" >> /etc/supervisord.conf
-      echo "startretries=3" >> /etc/supervisord.conf
-      echo "stdout_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
-      echo "stderr_logfile=/home/ubuntu/ComfyUI/$PROGRAM_NAME.log" >> /etc/supervisord.conf
-      echo "environment=MASTER_PROCESS=$MASTER_PROCESS,PROGRAM_NAME=$PROGRAM_NAME" >> /etc/supervisord.conf
-      echo "" >> /etc/supervisord.conf
-  done
+      cd "$WORKFLOW_DIR/ComfyUI"
+      mkdir -p models/vae/
+      wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
+      mkdir -p models/checkpoints/
+      wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
+      mkdir -p models/animatediff_models/
+      wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
+      wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
+    else
+      start_at=$(date +%s)
+      s5cmd --log=error sync "s3://$COMFY_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "$WORKFLOW_DIR/"
+      end_at=$(date +%s)
+      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+      echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+      cd "$WORKFLOW_DIR/ComfyUI"
+    fi
+  fi
 
-  echo "---------------------------------------------------------------------------------"
-  cat /etc/supervisord.conf
-  echo "---------------------------------------------------------------------------------"
+  rm -rf /home/ubuntu/ComfyUI
 
-  supervisord -c /etc/supervisord.conf | grep -v 'uncaptured python exception'
+  ln -s "$WORKFLOW_DIR/ComfyUI" /home/ubuntu/ComfyUI
+
+  cd /home/ubuntu/ComfyUI || exit 1
+
+  # if /comfy_proxy.py exists
+  if [ -f "/comfy_proxy.py" ]; then
+    cp /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
+  fi
+
+  rm -rf web/extensions/ComfyLiterals
+  chmod -R +x venv
+  source venv/bin/activate
+
+  chmod -R 777 /home/ubuntu/ComfyUI
+
+  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
   exit 1
-}
+fi
 
 if [ -n "$WORKFLOW_NAME" ]; then
   cd /home/ubuntu || exit 1
@@ -410,113 +411,11 @@ if [ -n "$WORKFLOW_NAME" ]; then
   chmod -R +x venv
   source venv/bin/activate
 
-  # on EC2
-  if [ -n "$ON_EC2" ]; then
-    ec2_start_process
-    exit 1
-  fi
-
   # on SageMaker
   python /metrics.py &
   python3 serve.py
   exit 1
 fi
-
-if [ -n "$ON_EC2" ]; then
-  set -euxo pipefail
-
-  if [ "$SERVICE_TYPE" == "sd" ]; then
-    cd /home/ubuntu || exit 1
-
-    if [ -d "/home/ubuntu/stable-diffusion-webui/venv" ]; then
-        cd /home/ubuntu/stable-diffusion-webui || exit 1
-        chmod -R +x venv
-        source venv/bin/activate
-        chmod -R 777 /home/ubuntu
-        python3 launch.py --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
-        exit 1
-    fi
-
-    echo "downloading comfy file $CACHE_PUBLIC_SD ..."
-    start_at=$(date +%s)
-    s5cmd cp "s3://$CACHE_PUBLIC_SD" /home/ubuntu/
-    end_at=$(date +%s)
-    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
-
-    echo "decompressing sd file..."
-    start_at=$(date +%s)
-    tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
-    end_at=$(date +%s)
-    export DECOMPRESS_SECONDS=$((end_at-start_at))
-    echo "decompress file: $DECOMPRESS_SECONDS seconds"
-
-    cd /home/ubuntu/stable-diffusion-webui/extensions || exit 1
-    git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
-    cd ../
-
-    export AWS_REGION=us-east-1
-    wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_models.txt
-    s5cmd run sd_models.txt
-
-    chmod -R +x venv
-    source venv/bin/activate
-
-    chmod -R 777 /home/ubuntu/stable-diffusion-webui
-    python3 launch.py --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
-  else
-    cd /home/ubuntu || exit 1
-
-    if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
-        cd /home/ubuntu/ComfyUI || exit 1
-        rm -rf web/extensions/ComfyLiterals
-        chmod -R +x venv
-        source venv/bin/activate
-        ec2_start_process
-        exit 1
-    fi
-
-    echo "downloading comfy file $CACHE_PUBLIC_COMFY ..."
-    start_at=$(date +%s)
-    s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
-    end_at=$(date +%s)
-    export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-    echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
-
-    echo "decompressing comfy file..."
-    start_at=$(date +%s)
-    tar --overwrite -xf "$SERVICE_TYPE.tar" -C /home/ubuntu/
-    end_at=$(date +%s)
-    export DECOMPRESS_SECONDS=$((end_at-start_at))
-    echo "decompress file: $DECOMPRESS_SECONDS seconds"
-
-    cd /home/ubuntu/ComfyUI || exit 1
-    rm -rf web/extensions/ComfyLiterals
-    chmod -R +x venv
-    source venv/bin/activate
-
-    pip install dynamicprompts
-    pip install ultralytics
-
-    mkdir -p models/vae/
-    wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
-
-    mkdir -p models/checkpoints/
-    wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
-
-    mkdir -p models/animatediff_models/
-    wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
-
-    wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
-
-    chmod -R 777 /home/ubuntu/ComfyUI
-
-    ec2_start_process
-  fi
-
-  exit 1
-fi
-
 
 if [ -f "/initiated_lock" ]; then
     echo "already initiated, start service directly..."
