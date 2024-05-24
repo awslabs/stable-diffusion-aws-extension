@@ -949,6 +949,31 @@ if is_on_ec2:
                                 body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
 
 
+    @server.PromptServer.instance.routes.get("/workflows")
+    async def get_workflows(request):
+        try:
+
+            workflow_name = os.getenv('WORKFLOW_NAME')
+            directory = '/container/workflows/'
+            subdirs = [f.path for f in os.scandir(directory) if f.is_dir()]
+
+            workflows = []
+
+            for subdir in subdirs:
+                workflow = subdir.replace(directory, '')
+                workflows.append({
+                    "name": workflow,
+                    "inUse": workflow == workflow_name,
+                })
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "workflows": workflows}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
+
+
     def check_file_exists(key):
         try:
             s3 = boto3.client('s3')

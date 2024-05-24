@@ -325,19 +325,17 @@ comfy_launch_from_public_s3(){
 if [ -n "$ON_EC2" ]; then
   set -euxo pipefail
 
-  WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
+  export WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
   export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
 
     if [ "$WORKFLOW_NAME" = "default" ]; then
-      if [ ! -f "/container/$WORKFLOW_NAME.tar" ]; then
-        start_at=$(date +%s)
-        s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
-        end_at=$(date +%s)
-        export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-      fi
+      start_at=$(date +%s)
+      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
+      end_at=$(date +%s)
+      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
 
       start_at=$(date +%s)
       tar --overwrite -xf "/container/$WORKFLOW_NAME.tar" -C "$WORKFLOW_DIR"
