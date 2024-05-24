@@ -7,8 +7,9 @@
 开始训练lora之前需要设置三部分内容：基础模型准备，数据集准备，设置训练参数，下面分别进行介绍。
 
 ![Kohya Training](../images/training_model.png)
+
 ### 准备基础模型
-请刷新并查看**Model**下拉列表，确认本次训练所需的基础模型已经存在。否则，可以通过[云上资源管理](./CloudAssetsManage.md)中的**上传模型**功能，将基础模型上传至*SD Checkpoints*类别下。
+请刷新并查看**Model**下拉列表，确认本次训练所需的基础模型已经存在。否则，可以通过[云上资源管理](./webUI/CloudAssetsManage.md)中的**上传模型**功能，将基础模型上传至*SD Checkpoints*类别下。
 
 同时，您也可以通过以下命令将本地SD模型上传到S3存储桶：
 ```
@@ -26,9 +27,9 @@ aws s3 cp *safetensors s3://<bucket_path>/<model_path>
 
 预处理结束后，需要针对该图片集进行图片标注工作，即对每张训练图片加以文字描述，并保存为与图片同名的txt格式文本。图片标注可以通过SD WebUI中自带的图像标注功能，或者可以通过多模态大模型来完成。模型的标注也许不够完美，建议人工进行审核调整，以保证最终效果。
 下图给出一个示例，每个图片有一个对应的txt文件，txt文件内容为图片的英文描述。
-![Kohya Training](../images/training_data1.png)
+![Kohya Training](../images/training_data.png)
 
-数据集准备完成后，请参考[云上资源管理](./CloudAssetsManage.md)中的数据集上传来完成。
+数据集准备完成后，请参考[云上资源管理](./webUI/CloudAssetsManage.md)中的数据集上传来完成。
 ![Kohya Training](../images/training_data2.png)
 
 1. 点击**Click to Upload a File**，在弹出的本地文件列表中，确认选中一次模型微调所需的所有图片。
@@ -59,7 +60,7 @@ aws s3 sync local_folder_name s3://<bucket_name>/<folder_name>
 2. 通过**config_params**调整基础训练参数，点击**Format Config Params**来检查并修改更新后的训练参数文件格式
 3. 点击**Create Training Job**来提交模型训练作业
 4. 后续训练状态可以通过刷新右侧**Tranings List**来跟进训练任务状态。
-5. 成功训练完成的LoRa模型，可以直接在txt2img, img2img对应的云上LoRa模型选择列表直接选取，并参考[txt2img指南](./txt2img-guide.md)或[img2img指南](./img2img-guide.md)进行推理工作。
+5. 成功训练完成的LoRa模型，可以直接在txt2img, img2img对应的云上LoRa模型选择列表直接选取，并参考[txt2img指南](./webUI/txt2img-guide.md)或[img2img指南](./webUI/img2img-guide.md)进行推理工作。
 
 
 
