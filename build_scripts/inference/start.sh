@@ -366,7 +366,6 @@ if [ -n "$ON_EC2" ]; then
 
   cd /home/ubuntu/ComfyUI || exit 1
 
-  # if /comfy_proxy.py exists
   if [ -f "/comfy_proxy.py" ]; then
     cp /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
   fi
@@ -377,7 +376,10 @@ if [ -n "$ON_EC2" ]; then
 
   chmod -R 777 /home/ubuntu/ComfyUI
 
-  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 --cuda-malloc
+  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 \
+                           --cuda-malloc \
+                           --output-directory "/container/output/$PROGRAM_NAME/" \
+                           --temp-directory "/container/temp/$PROGRAM_NAME/"
   exit 1
 fi
 

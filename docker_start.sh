@@ -11,11 +11,6 @@ export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
-export image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:latest"
-
-docker stop "$CONTAINER_NAME" || true
-docker rm "$CONTAINER_NAME" || true
-
 # Check if the repository already exists
 if aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$CONTAINER_NAME" >/dev/null 2>&1; then
     echo "ECR repository '$CONTAINER_NAME' already exists."
@@ -26,22 +21,10 @@ else
 fi
 
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com"
-docker pull "366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
-docker build -f Dockerfile \
-             --build-arg AWS_REGION="$AWS_REGION" \
-             --build-arg ESD_VERSION="$ESD_VERSION" \
-             -t "$image" .
+PUBLIC_BASE_IMAGE="366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
+docker pull "$PUBLIC_BASE_IMAGE"
 
-image_hash=$(docker inspect "$image"  | jq -r ".[0].Id")
-image_hash=${image_hash:7}
-
-export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:$image_hash"
-docker tag "$image" "$release_image"
-
-aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-echo "docker push $release_image"
-docker push "$release_image"
-echo "docker pushed $release_image"
+export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME"
 
 echo "Starting container..."
 # local vol can be replace with your local directory
@@ -86,12 +69,37 @@ generate_process(){
       export MASTER_PROCESS=true
   fi
 
+  DOCKER_FILE="ARG BASE_IMAGE
+FROM \$BASE_IMAGE
+
+#RUN apt-get update -y && \
+#    apt-get install ffmpeg -y && \
+#    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /home/ubuntu/ComfyUI"
+
+  if [ ! -f "./container/$PROGRAM_NAME.Dockerfile" ]; then
+    echo "$DOCKER_FILE" > "./container/$PROGRAM_NAME.Dockerfile"
+  fi
+
   CONTAINER_PATH=$(realpath ./container)
   START_SH=$(realpath ./build_scripts/inference/start.sh)
   COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
   AWS_PATH=$(realpath ~/.aws)
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
+
+WORKFLOW_NAME=\$(cat ./container/$PROGRAM_NAME)
+
+BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
+
+if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
+  BASE_IMAGE=$PUBLIC_BASE_IMAGE
+fi
+
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\"\$WORKFLOW_NAME\"
+docker build -f ./container/$PROGRAM_NAME.Dockerfile --build-arg BASE_IMAGE=\"\$BASE_IMAGE\" -t $PROGRAM_NAME .
 docker stop $PROGRAM_NAME || true
 docker rm $PROGRAM_NAME || true
 docker run -v $AWS_PATH:/root/.aws \\
@@ -116,8 +124,7 @@ docker run -v $AWS_PATH:/root/.aws \\
            --name $PROGRAM_NAME \\
            -p $init_port:8188 \\
            --memory ${limit_memory_mb}mb \\
-           $image
-"
+           $PROGRAM_NAME"
 
   echo "$START_HANDLER" > "./container/$PROGRAM_NAME.sh"
   chmod +x "./container/$PROGRAM_NAME.sh"
@@ -151,8 +158,15 @@ logfile=/dev/stdout
 
 echo "$SUPERVISOR_CONF" > /tmp/supervisord.conf
 
-init_port=8187
+echo "[program:image]" >> /tmp/supervisord.conf
+echo "command=./docker_image.sh" >> /tmp/supervisord.conf
+echo "startretries=1" >> /tmp/supervisord.conf
+echo "stdout_logfile=/dev/stdout" >> /tmp/supervisord.conf
+echo "stderr_logfile=/dev/stderr" >> /tmp/supervisord.conf
+echo "" >> /tmp/supervisord.conf
 
+init_port=8187
+PROCESS_NUMBER=3
 for i in $(seq 1 "$PROCESS_NUMBER"); do
     init_port=$((init_port + 1))
     generate_process $init_port
@@ -162,7 +176,9 @@ echo "--------------------------------------------------------------------------
 cat /tmp/supervisord.conf
 echo "---------------------------------------------------------------------------------"
 
+killall supervisord || true
+
 supervisorctl -c /tmp/supervisord.conf shutdown || true
-sudo systemctl restart supervisor.service
+
 supervisord -c /tmp/supervisord.conf | grep -v 'uncaptured python exception'
 exit 1

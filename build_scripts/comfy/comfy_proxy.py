@@ -865,6 +865,8 @@ if is_on_ec2:
 
             start_time = time.time()
 
+            subprocess.check_output(f"echo {workflow_name} > /container/image", shell=True)
+
             s5cmd_sync_command = (f's5cmd sync '
                                        f'--delete=true '
                                        f'--exclude="*comfy.tar" '
@@ -885,9 +887,12 @@ if is_on_ec2:
 
             end_time = time.time()
             cost_time = end_time - start_time
+            image_hash = os.getenv('IMAGE_HASH')
+            image_uri = f"{image_hash}:{workflow_name}"
+
             data = {
                 "payload_json": payload_json,
-                "image_uri": os.getenv('IMAGE_HASH'),
+                "image_uri": image_uri,
                 "name": workflow_name,
             }
             get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
