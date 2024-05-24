@@ -147,10 +147,10 @@ autostart=true
 autorestart=true
 
 [inet_http_server]
-port = 127.0.0.1:9001
+port=127.0.0.1:9001
 
 [rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface
 
 [supervisorctl]
 logfile=/dev/stdout
@@ -166,7 +166,7 @@ echo "stderr_logfile=/dev/stderr" >> /tmp/supervisord.conf
 echo "" >> /tmp/supervisord.conf
 
 init_port=8187
-PROCESS_NUMBER=3
+PROCESS_NUMBER=2
 for i in $(seq 1 "$PROCESS_NUMBER"); do
     init_port=$((init_port + 1))
     generate_process $init_port
@@ -176,9 +176,8 @@ echo "--------------------------------------------------------------------------
 cat /tmp/supervisord.conf
 echo "---------------------------------------------------------------------------------"
 
-killall supervisord || true
-
 supervisorctl -c /tmp/supervisord.conf shutdown || true
 
 supervisord -c /tmp/supervisord.conf | grep -v 'uncaptured python exception'
+
 exit 1
