@@ -12,6 +12,7 @@ export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
 CONTAINER_PATH=$(realpath ./container)
+SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 
 # Check if the repository already exists
 if aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$CONTAINER_NAME" >/dev/null 2>&1; then
@@ -131,12 +132,12 @@ docker run -v $AWS_PATH:/root/.aws \\
   chmod +x "$CONTAINER_PATH/$PROGRAM_NAME.sh"
 
   # shellcheck disable=SC2129
-  echo "[program:$PROGRAM_NAME]" >> /tmp/supervisord.conf
-  echo "command=$CONTAINER_PATH/$PROGRAM_NAME.sh" >> /tmp/supervisord.conf
-  echo "startretries=1" >> /tmp/supervisord.conf
-  echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stdout.log" >> /tmp/supervisord.conf
-  echo "stderr_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stderr.log" >> /tmp/supervisord.conf
-  echo "" >> /tmp/supervisord.conf
+  echo "[program:$PROGRAM_NAME]" >> "$SUPERVISORD_FILE"
+  echo "command=$CONTAINER_PATH/$PROGRAM_NAME.sh" >> "$SUPERVISORD_FILE"
+  echo "startretries=2" >> "$SUPERVISORD_FILE"
+  echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stdout.log" >> "$SUPERVISORD_FILE"
+  echo "stderr_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stderr.log" >> "$SUPERVISORD_FILE"
+  echo "" >> "$SUPERVISORD_FILE"
 }
 
 
@@ -157,14 +158,14 @@ supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface
 logfile=/dev/stdout
 "
 
-echo "$SUPERVISOR_CONF" > /tmp/supervisord.conf
+echo "$SUPERVISOR_CONF" > "$SUPERVISORD_FILE"
 
-echo "[program:image]" >> /tmp/supervisord.conf
-echo "command=./docker_image.sh" >> /tmp/supervisord.conf
-echo "startretries=1" >> /tmp/supervisord.conf
-echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> /tmp/supervisord.conf
-echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> /tmp/supervisord.conf
-echo "" >> /tmp/supervisord.conf
+echo "[program:image]" >> "$SUPERVISORD_FILE"
+echo "command=./docker_image.sh" >> "$SUPERVISORD_FILE"
+echo "startretries=1" >> "$SUPERVISORD_FILE"
+echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> "$SUPERVISORD_FILE"
+echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"
+echo "" >> "$SUPERVISORD_FILE"
 
 init_port=8187
 PROCESS_NUMBER=2
@@ -173,12 +174,8 @@ for i in $(seq 1 "$PROCESS_NUMBER"); do
     generate_process $init_port
 done
 
-echo "---------------------------------------------------------------------------------"
-cat /tmp/supervisord.conf
-echo "---------------------------------------------------------------------------------"
+supervisorctl -c "$SUPERVISORD_FILE" shutdown || true
 
-supervisorctl -c /tmp/supervisord.conf shutdown || true
-
-supervisord -c /tmp/supervisord.conf | grep -v 'uncaptured python exception'
+supervisord -c "$SUPERVISORD_FILE" | grep -v 'uncaptured python exception'
 
 exit 1
