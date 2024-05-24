@@ -3,6 +3,7 @@ import signal
 import threading
 
 import boto3
+import psutil
 import requests
 from aiohttp import web
 
@@ -712,7 +713,7 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/reboot")
     async def restart(self):
-        if is_action_lock('release'):
+        if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
                                     {"result": False, "message": "reboot is not allowed during release workflow"}))
@@ -770,27 +771,23 @@ if is_on_ec2:
         return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-    def get_action_lock(action_name: str):
-        return f"/tmp/{action_name}.lock"
+    def is_program_running(name: str):
+        for proc in psutil.process_iter(['pid', 'name']):
+            try:
+                if name in proc.info['name'].lower():
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+        return False
 
 
-    def is_action_lock(action_name: str):
-        return os.path.exists(get_action_lock(action_name))
-
-
-    def action_lock(action_name: str):
-        with open(get_action_lock(action_name), 'w') as f:
-            f.write('lock')
-
-
-    def action_unlock(action_name: str):
-        if os.path.exists(get_action_lock(action_name)):
-            os.remove(get_action_lock(action_name))
+    def is_action_lock():
+        return is_program_running('s5cmd')
 
 
     @server.PromptServer.instance.routes.get("/restart")
     async def restart(self):
-        if is_action_lock('release'):
+        if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
                                     {"result": False, "message": "restart is not allowed during release workflow"}))
@@ -836,7 +833,7 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
-        if is_action_lock('release'):
+        if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
                                     {"result": False, "message": "release is not allowed during release workflow"}))
@@ -844,8 +841,6 @@ if is_on_ec2:
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only master can release workflow"}))
-
-        action_lock('release')
 
         logger.info(f"start to release workflow {request}")
         try:
@@ -899,12 +894,9 @@ if is_on_ec2:
             response = get_response.json()
             logger.info(f"release workflow response is {response}")
 
-            action_unlock('release')
-
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
         except Exception as e:
-            action_unlock('release')
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": 'Release workflow failed'}))
@@ -912,10 +904,10 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.put("/workflows")
     async def switch_workflow(request):
-        if is_action_lock('release'):
+        if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "release is not allowed during release workflow"}))
+                                    {"result": False, "message": "switch is not allowed during release workflow"}))
 
         try:
             json_data = await request.json()
@@ -995,7 +987,7 @@ if is_on_ec2:
     # RestoreEC2EnvironmentToDefault
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
-        if is_action_lock('release'):
+        if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
                                     {"result": False, "message": "restore is not allowed during release workflow"}))
