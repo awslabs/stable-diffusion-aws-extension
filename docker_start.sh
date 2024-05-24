@@ -11,6 +11,8 @@ export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
+CONTAINER_PATH=$(realpath ./container)
+
 # Check if the repository already exists
 if aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$CONTAINER_NAME" >/dev/null 2>&1; then
     echo "ECR repository '$CONTAINER_NAME' already exists."
@@ -82,7 +84,6 @@ WORKDIR /home/ubuntu/ComfyUI"
     echo "$DOCKER_FILE" > "./container/$PROGRAM_NAME.Dockerfile"
   fi
 
-  CONTAINER_PATH=$(realpath ./container)
   START_SH=$(realpath ./build_scripts/inference/start.sh)
   COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
   AWS_PATH=$(realpath ~/.aws)
@@ -126,15 +127,15 @@ docker run -v $AWS_PATH:/root/.aws \\
            --memory ${limit_memory_mb}mb \\
            $PROGRAM_NAME"
 
-  echo "$START_HANDLER" > "./container/$PROGRAM_NAME.sh"
-  chmod +x "./container/$PROGRAM_NAME.sh"
+  echo "$START_HANDLER" > "$CONTAINER_PATH/$PROGRAM_NAME.sh"
+  chmod +x "$CONTAINER_PATH/$PROGRAM_NAME.sh"
 
   # shellcheck disable=SC2129
   echo "[program:$PROGRAM_NAME]" >> /tmp/supervisord.conf
-  echo "command=./container/$PROGRAM_NAME.sh" >> /tmp/supervisord.conf
+  echo "command=$CONTAINER_PATH/$PROGRAM_NAME.sh" >> /tmp/supervisord.conf
   echo "startretries=1" >> /tmp/supervisord.conf
-  echo "stdout_logfile=/dev/stdout" >> /tmp/supervisord.conf
-  echo "stderr_logfile=/dev/stderr" >> /tmp/supervisord.conf
+  echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stdout.log" >> /tmp/supervisord.conf
+  echo "stderr_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stderr.log" >> /tmp/supervisord.conf
   echo "" >> /tmp/supervisord.conf
 }
 
@@ -161,8 +162,8 @@ echo "$SUPERVISOR_CONF" > /tmp/supervisord.conf
 echo "[program:image]" >> /tmp/supervisord.conf
 echo "command=./docker_image.sh" >> /tmp/supervisord.conf
 echo "startretries=1" >> /tmp/supervisord.conf
-echo "stdout_logfile=/dev/stdout" >> /tmp/supervisord.conf
-echo "stderr_logfile=/dev/stderr" >> /tmp/supervisord.conf
+echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> /tmp/supervisord.conf
+echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> /tmp/supervisord.conf
 echo "" >> /tmp/supervisord.conf
 
 init_port=8187
