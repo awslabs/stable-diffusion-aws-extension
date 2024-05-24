@@ -20,10 +20,6 @@ Parameters:
     Description: Bucket Name
     Type: String
     MinLength: "1"
-  EndpointName:
-    Description: Endpoint Name
-    Type: String
-    MinLength: "1"
   keyPairName:
     Description: Name of the key pair to use for the EC2 instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -212,7 +208,6 @@ Resources:
           echo "export COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
-          echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
           echo "export DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
@@ -259,7 +254,8 @@ Resources:
           sudo mv comfy.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
-          sudo systemctl start comfy.service
+          
+          sudo reboot
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
@@ -279,12 +275,12 @@ Outputs:
   ComfyNginxURL:
     Description: URL for Comfy WebUI
     Value: !Sub http://${ComfyEIP}
-  ComfyRealURL:
+  ComfyMasterURL:
     Description: URL for Comfy WebUI
     Value: !Sub http://${ComfyEIP}:8188
   Dockerfile:
     Description: Dockerfile for EC2 and SageMaker
-    Value: /root/stable-diffusion-aws-extension/Dockerfile
+    Value: /root/stable-diffusion-aws-extension/container/comfy_8188.Dockerfile
   ComfyProcessStart:
     Description: Process Port Start Number
     Value: 8188
