@@ -272,8 +272,8 @@ comfy_launch(){
   chmod -R +x venv/bin
 
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
-#  TODO 6.14 delete
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
+  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
 
