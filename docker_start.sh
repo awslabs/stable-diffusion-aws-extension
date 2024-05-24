@@ -117,7 +117,6 @@ docker run -v $AWS_PATH:/root/.aws \\
            -e COMFY_API_URL=$COMFY_API_URL \\
            -e COMFY_API_TOKEN=$COMFY_API_TOKEN \\
            -e ESD_VERSION=$ESD_VERSION \\
-           -e COMFY_ENDPOINT=$COMFY_ENDPOINT \\
            -e COMFY_BUCKET_NAME=$COMFY_BUCKET_NAME \\
            -e MASTER_PROCESS=$MASTER_PROCESS \\
            -e PROGRAM_NAME=$PROGRAM_NAME \\

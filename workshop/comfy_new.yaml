@@ -231,6 +231,9 @@ Resources:
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
+          aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
+          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:${EsdVersion}
+          
           cat > comfy.service <<EOF
           [Unit]
           Description=Comfy Service
