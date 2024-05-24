@@ -6,13 +6,12 @@ if [ -f "/etc/environment" ]; then
     source /etc/environment
 fi
 
-SERVICE_TYPE="comfy"
-
+export SERVICE_TYPE="comfy"
 export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
-image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:latest"
+export image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:latest"
 
 docker stop "$CONTAINER_NAME" || true
 docker rm "$CONTAINER_NAME" || true
@@ -36,7 +35,7 @@ docker build -f Dockerfile \
 image_hash=$(docker inspect "$image"  | jq -r ".[0].Id")
 image_hash=${image_hash:7}
 
-release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:$image_hash"
+export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:$image_hash"
 docker tag "$image" "$release_image"
 
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
@@ -58,29 +57,112 @@ fi
 total_memory=$(cat /proc/meminfo | grep 'MemTotal' | awk '{print $2}')
 total_memory_mb=$((total_memory / 1024))
 echo "total_memory_mb: $total_memory_mb"
-limit_memory_mb=$((total_memory_mb - 2048))
+export limit_memory_mb=$((total_memory_mb - 2048))
 echo "limit_memory_mb: $limit_memory_mb"
 
-#  -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
-docker run -v ~/.aws:/root/.aws \
-           -v "$local_volume":/home/ubuntu \
-           -v ./build_scripts/inference/start.sh:/start.sh \
-           -v ./build_scripts/comfy/comfy_proxy.py:/home/ubuntu/ComfyUI/custom_nodes/comfy_proxy.py \
-           --gpus all \
-           -e "IMAGE_HASH=$release_image" \
-           -e "ESD_VERSION=$ESD_VERSION" \
-           -e "SERVICE_TYPE=$SERVICE_TYPE" \
-           -e "ON_EC2=true" \
-           -e "S3_BUCKET_NAME=$COMFY_BUCKET_NAME" \
-           -e "AWS_REGION=$AWS_REGION" \
-           -e "AWS_DEFAULT_REGION=$AWS_REGION" \
-           -e "COMFY_API_URL=$COMFY_API_URL" \
-           -e "COMFY_API_TOKEN=$COMFY_API_TOKEN" \
-           -e "COMFY_ENDPOINT=$COMFY_ENDPOINT" \
-           -e "COMFY_BUCKET_NAME=$COMFY_BUCKET_NAME" \
-           -e "PROCESS_NUMBER=$PROCESS_NUMBER" \
-           -e "WORKFLOW_NAME=$WORKFLOW_NAME" \
-           --name "$CONTAINER_NAME" \
-           -p 8188-8288:8188-8288 \
-           --memory "${limit_memory_mb}mb" \
-           "$image"
+generate_process(){
+  init_port=$1
+  export PROGRAM_NAME="comfy_$init_port"
+  comfy_workflow_file="./container/$PROGRAM_NAME"
+
+  WORKFLOW_NAME_TMP=""
+
+  if [ -f "$comfy_workflow_file" ]; then
+    WORKFLOW_NAME_TMP=$(cat "$comfy_workflow_file")
+  fi
+
+  if [ -z "$WORKFLOW_NAME_TMP" ]; then
+    WORKFLOW_NAME_TMP="$WORKFLOW_NAME"
+  fi
+
+  if [ -z "$WORKFLOW_NAME_TMP" ]; then
+    WORKFLOW_NAME_TMP="default"
+  fi
+
+  echo "$WORKFLOW_NAME_TMP" > "$comfy_workflow_file"
+
+  export MASTER_PROCESS=false
+  if [ "$init_port" -eq "8188" ]; then
+      export MASTER_PROCESS=true
+  fi
+
+  CONTAINER_PATH=$(realpath ./container)
+  START_SH=$(realpath ./build_scripts/inference/start.sh)
+  COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
+  AWS_PATH=$(realpath ~/.aws)
+  START_HANDLER="#!/bin/bash
+set -euxo pipefail
+docker stop $PROGRAM_NAME || true
+docker rm $PROGRAM_NAME || true
+docker run -v $AWS_PATH:/root/.aws \\
+           -v $CONTAINER_PATH:/container \\
+           -v $START_SH:/start.sh \\
+           -v $COMFY_PROXY:/comfy_proxy.py \\
+           --gpus all \\
+           -e IMAGE_HASH=$release_image \\
+           -e SERVICE_TYPE=$SERVICE_TYPE \\
+           -e ON_EC2=true \\
+           -e S3_BUCKET_NAME=$COMFY_BUCKET_NAME \\
+           -e AWS_REGION=$AWS_REGION \\
+           -e AWS_DEFAULT_REGION=$AWS_REGION \\
+           -e COMFY_API_URL=$COMFY_API_URL \\
+           -e COMFY_API_TOKEN=$COMFY_API_TOKEN \\
+           -e ESD_VERSION=$ESD_VERSION \\
+           -e COMFY_ENDPOINT=$COMFY_ENDPOINT \\
+           -e COMFY_BUCKET_NAME=$COMFY_BUCKET_NAME \\
+           -e MASTER_PROCESS=$MASTER_PROCESS \\
+           -e PROGRAM_NAME=$PROGRAM_NAME \\
+           -e WORKFLOW_NAME_FILE=/container/$PROGRAM_NAME \\
+           --name $PROGRAM_NAME \\
+           -p $init_port:8188 \\
+           --memory ${limit_memory_mb}mb \\
+           $image
+"
+
+  echo "$START_HANDLER" > "./container/$PROGRAM_NAME.sh"
+  chmod +x "./container/$PROGRAM_NAME.sh"
+
+  # shellcheck disable=SC2129
+  echo "[program:$PROGRAM_NAME]" >> /tmp/supervisord.conf
+  echo "command=./container/$PROGRAM_NAME.sh" >> /tmp/supervisord.conf
+  echo "startretries=1" >> /tmp/supervisord.conf
+  echo "stdout_logfile=/dev/stdout" >> /tmp/supervisord.conf
+  echo "stderr_logfile=/dev/stderr" >> /tmp/supervisord.conf
+  echo "" >> /tmp/supervisord.conf
+}
+
+
+echo "---------------------------------------------------------------------------------"
+
+SUPERVISOR_CONF="[supervisord]
+nodaemon=true
+autostart=true
+autorestart=true
+
+[inet_http_server]
+port = 127.0.0.1:9001
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+logfile=/dev/stdout
+"
+
+echo "$SUPERVISOR_CONF" > /tmp/supervisord.conf
+
+init_port=8187
+
+for i in $(seq 1 "$PROCESS_NUMBER"); do
+    init_port=$((init_port + 1))
+    generate_process $init_port
+done
+
+echo "---------------------------------------------------------------------------------"
+cat /tmp/supervisord.conf
+echo "---------------------------------------------------------------------------------"
+
+supervisorctl -c /tmp/supervisord.conf shutdown || true
+sudo systemctl restart supervisor.service
+supervisord -c /tmp/supervisord.conf | grep -v 'uncaptured python exception'
+exit 1

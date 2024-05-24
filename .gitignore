@@ -50,3 +50,4 @@ test/**/.env
 .DS_Store
 /container/
 /.env
+supervisord.*
