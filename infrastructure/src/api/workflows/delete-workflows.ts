@@ -167,6 +167,9 @@ export class DeleteWorkflowsApi {
             memorySize: 2048,
             tracing: aws_lambda.Tracing.ACTIVE,
             layers: [this.layer],
+            environment:{
+                WORKFLOWS_TABLE: this.workflowsTable.tableName,
+            }
         });
 
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
