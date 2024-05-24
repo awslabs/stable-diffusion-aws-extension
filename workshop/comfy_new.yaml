@@ -179,7 +179,6 @@ Resources:
   ComfyEC2Instance:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
-    DependsOn: ComfyInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -260,6 +259,7 @@ Resources:
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy --no-pager -n 200
+          # docker images -q | xargs docker rmi -f
 
   ComfyEIP:
     Type: AWS::EC2::EIP
