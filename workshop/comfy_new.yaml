@@ -56,9 +56,6 @@ Parameters:
       - latest
       - dev
     Default: latest
-  WorkflowName:
-    Description: Bind Workflow Name
-    Type: String
 
 Mappings:
   RegionToAmiId:
@@ -221,7 +218,6 @@ Resources:
           echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
           echo "export ESD_VERSION=${EsdVersion}" >> /etc/environment
-          echo "export WORKFLOW_NAME=${WorkflowName}" >> /etc/environment
           echo "export SERVICE_TYPE=comfy" >> /etc/environment
           
           source /etc/environment
