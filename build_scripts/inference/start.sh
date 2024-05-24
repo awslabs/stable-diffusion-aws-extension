@@ -332,10 +332,12 @@ if [ -n "$ON_EC2" ]; then
     mkdir -p "$WORKFLOW_DIR"
 
     if [ "$WORKFLOW_NAME" = "default" ]; then
-      start_at=$(date +%s)
-      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
-      end_at=$(date +%s)
-      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+      if [ -f "/container/$WORKFLOW_NAME.tar" ]; then
+        start_at=$(date +%s)
+        s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
+        end_at=$(date +%s)
+        export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+      fi
 
       start_at=$(date +%s)
       tar --overwrite -xf "/container/$WORKFLOW_NAME.tar" -C "$WORKFLOW_DIR"

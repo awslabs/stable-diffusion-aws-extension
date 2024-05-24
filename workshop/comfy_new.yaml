@@ -223,7 +223,6 @@ Resources:
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
 
           sudo apt-get update
-          
           sudo apt install nginx jq supervisor -y
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
@@ -233,6 +232,12 @@ Resources:
           
           aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
           docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:${EsdVersion}
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
+          
+          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/${EsdVersion}/comfy.tar" /root/stable-diffusion-aws-extension/container/default.tar
           
           cat > comfy.service <<EOF
           [Unit]
