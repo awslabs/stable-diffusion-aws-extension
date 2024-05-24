@@ -67,14 +67,17 @@ phases:
       - echo "checking the updated image name"
       - cat ../infrastructure/src/shared/version.ts
       - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
-      - echo "upload esd ec2 template to s3"
+      - echo ""
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/sd_dev.yaml
       - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/sd_dev.yaml" --acl public-read
-      - echo "upload comfy ec2 template to s3"
+      - echo ""
       - aws s3 cp --region us-east-1 ../workshop/comfy.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/comfy.yaml
       - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/comfy.yaml" --acl public-read
+      - echo ""
+      - sed -i "s/{{latest}}/$TAG_NUMBER/" ../workshop/comfy_new.yaml
       - aws s3 cp --region us-east-1 ../workshop/comfy_new.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/comfy_dev.yaml
       - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/comfy_dev.yaml" --acl public-read
+      - echo ""
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"

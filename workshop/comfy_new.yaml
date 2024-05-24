@@ -49,9 +49,9 @@ Parameters:
     Description: Version of the ESD
     Type: String
     AllowedValues:
-      - latest
+      - {{latest}}
       - dev
-    Default: latest
+    Default: {{latest}}
 
 Mappings:
   RegionToAmiId:
