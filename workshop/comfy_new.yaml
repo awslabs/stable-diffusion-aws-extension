@@ -41,10 +41,11 @@ Parameters:
     AllowedValues:
       - "dev"
     Default: "dev"
-  ProcessNumber:
-    Description: Number of the Comfy Processes
+  UserNumber:
+    Description: Number of the User
     Type: String
     AllowedValues:
+      - 0
       - 1
       - 5
       - 10
@@ -174,7 +175,7 @@ Resources:
       SubnetId: !Ref ComfySubnet
       RouteTableId: !Ref ComfyRouteTable
 
-  ComfyEC2Instance:
+  ComfyEC2Dev:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
     DependsOn: ComfyInstanceProfile
@@ -191,9 +192,9 @@ Resources:
       KeyName: !Ref keyPairName
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
-      Tags: [
-        { "Key": "Name", "Value": !Sub "comfy-on-aws-${Branch}" },
-      ]
+      Tags:
+        - Key: Name
+          Value: !Sub "comfy-on-aws-${EsdVersion}"
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
@@ -203,17 +204,19 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
 
-          echo "export COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
-          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
-          echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
-          echo "export DISABLE_AUTO_SYNC=false" >> /etc/environment
-          echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
-          echo "export AWS_REGION=${AWS::Region}" >> /etc/environment
-          echo "export PROCESS_NUMBER=${ProcessNumber}" >> /etc/environment
-          echo "export ESD_VERSION=${EsdVersion}" >> /etc/environment
-          echo "export SERVICE_TYPE=comfy" >> /etc/environment
+          echo "COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
+          echo "COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
+          echo "COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
+          echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
+          echo "DISABLE_AWS_PROXY=false" >> /etc/environment
+          echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "PROCESS_NUMBER=${UserNumber}" >> /etc/environment
+          echo "ESD_VERSION=${EsdVersion}" >> /etc/environment
+          echo "SERVICE_TYPE=comfy" >> /etc/environment
           
           source /etc/environment
+          
+          sudo rm -rf /root/stable-diffusion-aws-extension
           
           sudo systemctl enable docker
           
@@ -269,12 +272,17 @@ Resources:
   ComfyEIP:
     Type: AWS::EC2::EIP
     DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "comfy-on-aws-${EsdVersion}"
+
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
     DeletionPolicy: Delete
     Properties:
       AllocationId: !GetAtt ComfyEIP.AllocationId
-      InstanceId: !Ref ComfyEC2Instance
+      InstanceId: !Ref ComfyEC2Dev
 
 Outputs:
   ComfyDesignerURL:
@@ -285,7 +293,7 @@ Outputs:
     Value: /root/stable-diffusion-aws-extension/container/comfy_8190.Dockerfile
   ComfyUserNumber:
     Description: The number of users
-    Value: !Sub ${ProcessNumber}
+    Value: !Sub ${UserNumber}
   ComfyUser01URL:
     Description: URL for User01
     Value: !Sub http://${ComfyEIP}:8001
