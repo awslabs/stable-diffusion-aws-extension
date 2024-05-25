@@ -139,7 +139,7 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
 
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
-if [ ! -f "/container/$WORKFLOW_NAME.tar" ]; then
+if [ ! -f "$CONTAINER_PATH/$WORKFLOW_NAME.tar" ]; then
   mkdir -p "$CONTAINER_PATH/workflows"
   start_at=$(date +%s)
   s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
