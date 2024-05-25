@@ -182,7 +182,8 @@ echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"
 echo "" >> "$SUPERVISORD_FILE"
 
 init_port=7999
-for i in $(seq 1 "$PROCESS_NUMBER"); do
+USER_TOTAL=$((PROCESS_NUMBER + 1))
+for i in $(seq 1 "$USER_TOTAL"); do
     init_port=$((init_port + 1))
     generate_process $init_port
 done

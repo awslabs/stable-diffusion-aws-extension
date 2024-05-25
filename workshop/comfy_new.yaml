@@ -278,41 +278,41 @@ Resources:
 
 Outputs:
   ComfyDesignerURL:
-    Description: URL for Master Comfy WebUI
+    Description: URL for Designer
     Value: !Sub http://${ComfyEIP}:8000
   ComfyDesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
     Value: /root/stable-diffusion-aws-extension/container/comfy_8190.Dockerfile
-  ComfyNumber:
-    Description: Process Number
+  ComfyUserNumber:
+    Description: The number of users
     Value: !Sub ${ProcessNumber}
   ComfyUser01URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User01
     Value: !Sub http://${ComfyEIP}:8001
   ComfyUser02URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User02
     Value: !Sub http://${ComfyEIP}:8002
   ComfyUser03URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User03
     Value: !Sub http://${ComfyEIP}:8003
   ComfyUser04URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User04
     Value: !Sub http://${ComfyEIP}:8004
   ComfyUser05URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User05
     Value: !Sub http://${ComfyEIP}:8005
   ComfyUser06URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User06
     Value: !Sub http://${ComfyEIP}:8006
   ComfyUser07URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User07
     Value: !Sub http://${ComfyEIP}:8007
   ComfyUser08URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User08
     Value: !Sub http://${ComfyEIP}:8008
   ComfyUser09URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User09
     Value: !Sub http://${ComfyEIP}:8009
   ComfyUser10URL:
-    Description: URL for Slave Comfy WebUI
+    Description: URL for User10
     Value: !Sub http://${ComfyEIP}:8010
