@@ -87,3 +87,17 @@ class TestComfyWorkflowApiBase:
         resp = self.api.create_workflow(headers=headers, data=data)
         assert resp.status_code == 400, resp.dumps()
         assert 'does not match input string' in resp.json()['message'], resp.dumps()
+
+    def test_12_get_workflow_without_key(self):
+        resp = self.api.get_workflow(name='name')
+        assert resp.status_code == 403, resp.dumps()
+
+    def test_13_get_workflow_with_bad_key(self):
+        headers = {'x-api-key': "bad_key"}
+        resp = self.api.get_workflow(name='name', headers=headers)
+        assert resp.status_code == 403, resp.dumps()
+
+    def test_14_get_workflow_with_404(self):
+        headers = {'x-api-key': config.api_key}
+        resp = self.api.get_workflow(name='name', headers=headers)
+        assert resp.status_code == 404, resp.dumps()

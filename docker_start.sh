@@ -79,6 +79,8 @@ WORKDIR /home/ubuntu/ComfyUI"
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
 
+rm -rf /container/sync_lock
+
 ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
@@ -124,8 +126,8 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
   echo "[program:$PROGRAM_NAME]" >> "$SUPERVISORD_FILE"
   echo "command=$CONTAINER_PATH/$PROGRAM_NAME.sh" >> "$SUPERVISORD_FILE"
   echo "startretries=2" >> "$SUPERVISORD_FILE"
-  echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stdout.log" >> "$SUPERVISORD_FILE"
-  echo "stderr_logfile=$CONTAINER_PATH/$PROGRAM_NAME.stderr.log" >> "$SUPERVISORD_FILE"
+  echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.log" >> "$SUPERVISORD_FILE"
+  echo "stderr_logfile=$CONTAINER_PATH/$PROGRAM_NAME.log" >> "$SUPERVISORD_FILE"
   echo "" >> "$SUPERVISORD_FILE"
 }
 
@@ -177,8 +179,8 @@ echo "$SUPERVISOR_CONF" > "$SUPERVISORD_FILE"
 echo "[program:image]" >> "$SUPERVISORD_FILE"
 echo "command=$IMAGE_SH" >> "$SUPERVISORD_FILE"
 echo "startretries=1" >> "$SUPERVISORD_FILE"
-echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> "$SUPERVISORD_FILE"
-echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"
+echo "stdout_logfile=$CONTAINER_PATH/image.log" >> "$SUPERVISORD_FILE"
+echo "stderr_logfile=$CONTAINER_PATH/image.log" >> "$SUPERVISORD_FILE"
 echo "" >> "$SUPERVISORD_FILE"
 
 init_port=7999

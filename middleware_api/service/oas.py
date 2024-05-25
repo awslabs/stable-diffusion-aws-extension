@@ -105,6 +105,7 @@ header_user_name = Parameter(
 )
 
 path_id = Parameter(name="id", description="ID", location="path", required=True)
+path_name = Parameter(name="name", description="Name", location="path", required=True)
 path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
 
 query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
@@ -489,6 +490,14 @@ operations = {
         summary="Delete Workflows",
         tags=["Workflows"],
         description="Delete specify Workflows",
+    ),
+    'GetWorkflow': APISchema(
+        summary="Get Workflow",
+        tags=["Workflows"],
+        description="Get Workflow by Name",
+        parameters=[
+            path_name
+        ]
     ),
 }
 

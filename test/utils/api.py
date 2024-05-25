@@ -254,6 +254,14 @@ class Api:
             params=params
         )
 
+    def get_workflow(self, name: str, headers=None):
+        return self.req(
+            "GET",
+            f"workflows/{name}",
+            headers=headers,
+            operation_id='GetWorkflow',
+        )
+
     def create_endpoint(self, headers=None, data=None):
         return self.req(
             "POST",

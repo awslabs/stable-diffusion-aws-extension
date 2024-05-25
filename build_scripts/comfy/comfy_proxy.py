@@ -3,7 +3,6 @@ import signal
 import threading
 
 import boto3
-import psutil
 import requests
 from aiohttp import web
 
@@ -716,7 +715,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "reboot is not allowed during release workflow"}))
+                                    {"result": False, "message": "reboot is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -771,18 +770,26 @@ if is_on_ec2:
         return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-    def is_program_running(name: str):
-        for proc in psutil.process_iter(['pid', 'name']):
-            try:
-                if name in proc.info['name'].lower():
+    def is_action_lock():
+        lock_file = f'/container/sync_lock'
+        if os.path.exists(lock_file):
+            with open(lock_file, 'r') as f:
+                content = f.read()
+                if content and not check_workflow_exists(content):
                     return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                pass
         return False
 
 
-    def is_action_lock():
-        return is_program_running('s5cmd')
+    def action_lock(name: str):
+        lock_file = f'/container/sync_lock'
+        with open(lock_file, 'w') as f:
+            f.write(name)
+
+
+    def action_unlock():
+        lock_file = f'/container/sync_lock'
+        with open(lock_file, 'w') as f:
+            f.write("")
 
 
     @server.PromptServer.instance.routes.get("/restart")
@@ -790,7 +797,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "restart is not allowed during release workflow"}))
+                                    {"result": False, "message": "restart is not allowed during sync workflow"}))
 
         logger.info(f"start to restart {self}")
         try:
@@ -844,7 +851,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "release is not allowed during release workflow"}))
+                                    {"result": False, "message": "release is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -867,11 +874,13 @@ if is_on_ec2:
             if 'payload_json' in json_data:
                 payload_json = json_data['payload_json']
 
-            if check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
+            if check_workflow_exists(workflow_name):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
             start_time = time.time()
+
+            action_lock(workflow_name)
 
             base_image = os.getenv('BASE_IMAGE')
             subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
@@ -916,11 +925,13 @@ if is_on_ec2:
             get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             response = get_response.json()
             logger.info(f"release workflow response is {response}")
+            action_unlock()
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
         except Exception as e:
             logger.info(e)
+            action_unlock()
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": 'Release workflow failed'}))
 
@@ -930,7 +941,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during release workflow"}))
+                                    {"result": False, "message": "switch is not allowed during sync workflow"}))
 
         try:
             json_data = await request.json()
@@ -948,7 +959,7 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": "slave can not use default workflow"}))
 
             if workflow_name != 'default':
-                if not check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
+                if not check_workflow_exists(workflow_name):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"{workflow_name} not exists"}))
 
@@ -989,16 +1000,9 @@ if is_on_ec2:
                                 body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
 
 
-    def check_file_exists(key):
-        try:
-            s3 = boto3.client('s3')
-            s3.head_object(Bucket=bucket_name, Key=key)
-            return True
-        except Exception as e:
-            if e.response['Error']['Code'] == '404':
-                return False
-            else:
-                raise e
+    def check_workflow_exists(name: str):
+        get_response = requests.get(f"{api_url}/workflows/{name}", headers=headers)
+        return get_response.status_code == 200
 
 
     def restore_commands():
@@ -1014,7 +1018,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "restore is not allowed during release workflow"}))
+                                    {"result": False, "message": "restore is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',

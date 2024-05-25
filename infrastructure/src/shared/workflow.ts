@@ -7,6 +7,7 @@ import {ResourceProvider} from './resource-provider';
 import {CreateWorkflowApi} from "../api/workflows/create-workflow";
 import {ListWorkflowsApi} from "../api/workflows/list-workflows";
 import {DeleteWorkflowsApi} from "../api/workflows/delete-workflows";
+import {GetWorkflowApi} from "../api/workflows/get-workflow";
 
 export interface WorkflowProps extends StackProps {
     routers: { [key: string]: Resource };
@@ -56,6 +57,18 @@ export class Workflow {
                 router: props.routers.workflows,
             },
         );
+
+        new GetWorkflowApi(
+            scope, 'GetWorkflow',
+            {
+                workflowsTable: props.workflowsTable,
+                commonLayer: props.commonLayer,
+                multiUserTable: props.multiUserTable,
+                httpMethod: 'GET',
+                router: props.routers.workflows,
+            },
+        );
+
 
     }
 
