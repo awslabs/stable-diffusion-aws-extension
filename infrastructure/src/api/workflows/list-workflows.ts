@@ -73,7 +73,7 @@ export class ListWorkflowsApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
-        title: 'ListEndpointsResponse',
+        title: 'ListWorkflowsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
