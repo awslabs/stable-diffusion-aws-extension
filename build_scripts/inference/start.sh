@@ -330,28 +330,9 @@ if [ -n "$ON_EC2" ]; then
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
-
     if [ "$WORKFLOW_NAME" = "default" ]; then
-      if [ -f "/container/$WORKFLOW_NAME.tar" ]; then
-        start_at=$(date +%s)
-        s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/$SERVICE_TYPE.tar" "/container/$WORKFLOW_NAME.tar"
-        end_at=$(date +%s)
-        export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-      fi
-
-      start_at=$(date +%s)
-      tar --overwrite -xf "/container/$WORKFLOW_NAME.tar" -C "$WORKFLOW_DIR"
-      end_at=$(date +%s)
-      export DECOMPRESS_SECONDS=$((end_at-start_at))
-
-      cd "$WORKFLOW_DIR/ComfyUI"
-      mkdir -p models/vae/
-      wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
-      mkdir -p models/checkpoints/
-      wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
-      mkdir -p models/animatediff_models/
-      wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
-      wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
+      echo "default workflow init must be in create EC2"
+      exit 1
     else
       start_at=$(date +%s)
       s5cmd --log=error sync "s3://$COMFY_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "$WORKFLOW_DIR/"
