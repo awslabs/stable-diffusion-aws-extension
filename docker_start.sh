@@ -11,10 +11,12 @@ export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
+CUR_PATH=$(realpath ./)
 CONTAINER_PATH=$(realpath ./container)
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 START_SH=$(realpath ./build_scripts/inference/start.sh)
 COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
+IMAGE_SH=$(realpath ./docker_image.sh)
 
 # Check if the repository already exists
 if aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$CONTAINER_NAME" >/dev/null 2>&1; then
@@ -164,6 +166,7 @@ SUPERVISOR_CONF="[supervisord]
 nodaemon=true
 autostart=true
 autorestart=true
+directory=$CUR_PATH
 
 [inet_http_server]
 port=127.0.0.1:9001
@@ -178,7 +181,7 @@ logfile=/dev/stdout
 echo "$SUPERVISOR_CONF" > "$SUPERVISORD_FILE"
 
 echo "[program:image]" >> "$SUPERVISORD_FILE"
-echo "command=./docker_image.sh" >> "$SUPERVISORD_FILE"
+echo "command=$IMAGE_SH" >> "$SUPERVISORD_FILE"
 echo "startretries=1" >> "$SUPERVISORD_FILE"
 echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> "$SUPERVISORD_FILE"
 echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"
