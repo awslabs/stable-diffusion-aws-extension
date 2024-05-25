@@ -259,7 +259,7 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           
-          sudo reboot
+          # sudo reboot
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
