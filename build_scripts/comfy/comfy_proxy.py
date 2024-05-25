@@ -830,6 +830,14 @@ if is_on_ec2:
         env = os.environ.get(DISABLE_AWS_PROXY, 'False')
         return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
 
+    def get_directory_size(directory):
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(directory):
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                if not os.path.islink(filepath):  # 检查文件是否不是符号链接
+                    total_size += os.path.getsize(filepath)
+        return total_size
 
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
@@ -865,17 +873,26 @@ if is_on_ec2:
 
             start_time = time.time()
 
-            subprocess.check_output(f"echo {workflow_name} > /container/image", shell=True)
+            base_image = os.getenv('BASE_IMAGE')
+            subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
+            subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
+
+            cur_workflow_name = os.getenv('WORKFLOW_NAME')
+            source_path = f"/container/workflows/{cur_workflow_name}"
+
+            print(f"source_path is {source_path}")
+            total_size_bytes = get_directory_size(source_path)
+            source_size = round(total_size_bytes / (1024 ** 3), 2)
 
             s5cmd_sync_command = (f's5cmd sync '
-                                       f'--delete=true '
-                                       f'--exclude="*comfy.tar" '
-                                       f'--exclude="*.log" '
-                                       f'--exclude="*__pycache__*" '
-                                       f'--exclude="*/ComfyUI/input/*" '
-                                       f'--exclude="*/ComfyUI/output/*" '
-                                       f'"/home/ubuntu/*" '
-                                       f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+                                  f'--delete=true '
+                                  f'--exclude="*comfy.tar" '
+                                  f'--exclude="*.log" '
+                                  f'--exclude="*__pycache__*" '
+                                  f'--exclude="*/ComfyUI/input/*" '
+                                  f'--exclude="*/ComfyUI/output/*" '
+                                  f'"{source_path}/*" '
+                                  f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
 
             s5cmd_lock_command = (f'echo "lock" > lock && '
                                   f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
@@ -894,6 +911,7 @@ if is_on_ec2:
                 "payload_json": payload_json,
                 "image_uri": image_uri,
                 "name": workflow_name,
+                "size": str(source_size),
             }
             get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             response = get_response.json()
@@ -985,13 +1003,14 @@ if is_on_ec2:
 
     def restore_commands():
         subprocess.run(["sleep", "5"])
-        os.system("rm -rf /home/ubuntu/ComfyUI")
         subprocess.run(["pkill", "-f", "python3"])
 
-
-    # RestoreEC2EnvironmentToDefault
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
+        if os.getenv('WORKFLOW_NAME') != 'default':
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only default workflow can be restored"}))
+
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
@@ -1004,6 +1023,15 @@ if is_on_ec2:
         logger.info(f"start to restore EC2 {request}")
 
         try:
+            os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
+            os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
+            os.system("rm -rf /container/workflows/default")
+            os.system("mkdir -p /container/workflows/default")
+            os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
+            os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
+            os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
+            os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
+            os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
             thread = threading.Thread(target=restore_commands)
             thread.start()
             return web.Response(status=200, content_type='application/json',

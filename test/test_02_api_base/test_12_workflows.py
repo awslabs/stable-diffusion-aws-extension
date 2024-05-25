@@ -69,6 +69,7 @@ class TestComfyWorkflowApiBase:
         data = {
             "name": "workflow_not_ready",
             "image_uri": "uri",
+            "size": "1",
             "payload_json": ""
         }
         resp = self.api.create_workflow(headers=headers, data=data)
@@ -80,6 +81,7 @@ class TestComfyWorkflowApiBase:
         data = {
             "name": "workflow-bad-name",
             "image_uri": "uri",
+            "size": "1",
             "payload_json": ""
         }
         resp = self.api.create_workflow(headers=headers, data=data)

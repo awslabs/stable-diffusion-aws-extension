@@ -9,7 +9,7 @@ import {
   SCHEMA_DEBUG,
   SCHEMA_LAST_KEY,
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON, SCHEMA_WORKFLOW_STATUS,
+  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON, SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS,
 } from '../../shared/schema';
 
 
@@ -73,7 +73,7 @@ export class ListWorkflowsApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
-        title: 'ListEndpointsResponse',
+        title: 'ListWorkflowsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -91,12 +91,15 @@ export class ListWorkflowsApi {
                   type: JsonSchemaType.OBJECT,
                   properties: {
                     name: SCHEMA_WORKFLOW_NAME,
+                    size: SCHEMA_WORKFLOW_SIZE,
+                    status: SCHEMA_WORKFLOW_STATUS,
                     image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
                     payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
-                    status: SCHEMA_WORKFLOW_STATUS,
                   },
                   required: [
                     'name',
+                    'size',
+                    'status',
                     'image_uri',
                     'payload_json',
                   ],

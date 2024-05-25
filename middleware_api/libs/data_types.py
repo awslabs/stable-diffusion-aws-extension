@@ -194,6 +194,7 @@ class Workflow:
     image_uri: str
     status: str
     payload_json: str = ""
+    size: str = ""
     create_time: Optional[Any] = None
 
 

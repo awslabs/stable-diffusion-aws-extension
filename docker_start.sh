@@ -11,8 +11,12 @@ export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
+CUR_PATH=$(realpath ./)
 CONTAINER_PATH=$(realpath ./container)
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
+START_SH=$(realpath ./build_scripts/inference/start.sh)
+COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
+IMAGE_SH=$(realpath ./docker_image.sh)
 
 # Check if the repository already exists
 if aws ecr describe-repositories --region "$AWS_REGION" --repository-names "$CONTAINER_NAME" >/dev/null 2>&1; then
@@ -30,15 +34,6 @@ docker pull "$PUBLIC_BASE_IMAGE"
 export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME"
 
 echo "Starting container..."
-# local vol can be replace with your local directory
-local_volume="./container/$SERVICE_TYPE"
-mkdir -p $local_volume
-
-if [ -n "${WORKFLOW_NAME-}" ]; then
-    echo "WORKFLOW_NAME is $WORKFLOW_NAME"
-else
-   export WORKFLOW_NAME=""
-fi
 
 total_memory=$(cat /proc/meminfo | grep 'MemTotal' | awk '{print $2}')
 total_memory_mb=$((total_memory / 1024))
@@ -49,23 +44,19 @@ echo "limit_memory_mb: $limit_memory_mb"
 generate_process(){
   init_port=$1
   export PROGRAM_NAME="comfy_$init_port"
-  comfy_workflow_file="./container/$PROGRAM_NAME"
+  COMFY_WORKFLOW_FILE="$CONTAINER_PATH/$PROGRAM_NAME"
 
   WORKFLOW_NAME_TMP=""
 
-  if [ -f "$comfy_workflow_file" ]; then
-    WORKFLOW_NAME_TMP=$(cat "$comfy_workflow_file")
-  fi
-
-  if [ -z "$WORKFLOW_NAME_TMP" ]; then
-    WORKFLOW_NAME_TMP="$WORKFLOW_NAME"
+  if [ -f "$COMFY_WORKFLOW_FILE" ]; then
+    WORKFLOW_NAME_TMP=$(cat "$COMFY_WORKFLOW_FILE")
   fi
 
   if [ -z "$WORKFLOW_NAME_TMP" ]; then
     WORKFLOW_NAME_TMP="default"
   fi
 
-  echo "$WORKFLOW_NAME_TMP" > "$comfy_workflow_file"
+  echo "$WORKFLOW_NAME_TMP" > "$COMFY_WORKFLOW_FILE"
 
   export MASTER_PROCESS=false
   if [ "$init_port" -eq "8188" ]; then
@@ -81,17 +72,14 @@ FROM \$BASE_IMAGE
 
 WORKDIR /home/ubuntu/ComfyUI"
 
-  if [ ! -f "./container/$PROGRAM_NAME.Dockerfile" ]; then
-    echo "$DOCKER_FILE" > "./container/$PROGRAM_NAME.Dockerfile"
+  if [ ! -f "$CONTAINER_PATH/$PROGRAM_NAME.Dockerfile" ]; then
+    echo "$DOCKER_FILE" > "$CONTAINER_PATH/$PROGRAM_NAME.Dockerfile"
   fi
 
-  START_SH=$(realpath ./build_scripts/inference/start.sh)
-  COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
-  AWS_PATH=$(realpath ~/.aws)
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
 
-WORKFLOW_NAME=\$(cat ./container/$PROGRAM_NAME)
+WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
 BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
 
@@ -102,15 +90,16 @@ else
   docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\"\$WORKFLOW_NAME\"
 fi
 
-docker build -f ./container/$PROGRAM_NAME.Dockerfile --build-arg BASE_IMAGE=\"\$BASE_IMAGE\" -t $PROGRAM_NAME .
+docker build -f $CONTAINER_PATH/$PROGRAM_NAME.Dockerfile --build-arg BASE_IMAGE=\"\$BASE_IMAGE\" -t $PROGRAM_NAME .
 docker stop $PROGRAM_NAME || true
 docker rm $PROGRAM_NAME || true
-docker run -v $AWS_PATH:/root/.aws \\
+docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $CONTAINER_PATH:/container \\
            -v $START_SH:/start.sh \\
            -v $COMFY_PROXY:/comfy_proxy.py \\
            --gpus all \\
-           -e IMAGE_HASH=$release_image \\
+           -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
+           -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
            -e S3_BUCKET_NAME=$COMFY_BUCKET_NAME \\
@@ -142,11 +131,36 @@ docker run -v $AWS_PATH:/root/.aws \\
 
 
 echo "---------------------------------------------------------------------------------"
+# init default workflow for all users
+if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
+  if [ ! -f "$CONTAINER_PATH/default.tar" ]; then
+      mkdir -p "$CONTAINER_PATH/workflows"
+      start_at=$(date +%s)
+      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
+      end_at=$(date +%s)
+      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+  fi
+  start_at=$(date +%s)
+  rm -rf "$CONTAINER_PATH/workflows/default"
+  mkdir -p "$CONTAINER_PATH/workflows/default"
+  tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default/"
+  end_at=$(date +%s)
+  export DECOMPRESS_SECONDS=$((end_at-start_at))
+  cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+  mkdir -p models/vae/
+  wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
+  mkdir -p models/checkpoints/
+  wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
+  mkdir -p models/animatediff_models/
+  wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
+  wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
+fi
 
 SUPERVISOR_CONF="[supervisord]
 nodaemon=true
 autostart=true
 autorestart=true
+directory=$CUR_PATH
 
 [inet_http_server]
 port=127.0.0.1:9001
@@ -161,7 +175,7 @@ logfile=/dev/stdout
 echo "$SUPERVISOR_CONF" > "$SUPERVISORD_FILE"
 
 echo "[program:image]" >> "$SUPERVISORD_FILE"
-echo "command=./docker_image.sh" >> "$SUPERVISORD_FILE"
+echo "command=$IMAGE_SH" >> "$SUPERVISORD_FILE"
 echo "startretries=1" >> "$SUPERVISORD_FILE"
 echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> "$SUPERVISORD_FILE"
 echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"

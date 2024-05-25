@@ -8,20 +8,12 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
-  SCHEMA_ENDPOINT_AUTOSCALING,
-  SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
-  SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
-  SCHEMA_ENDPOINT_ID,
-  SCHEMA_ENDPOINT_INSTANCE_TYPE,
-  SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
-  SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
-  SCHEMA_ENDPOINT_NAME,
-  SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
-  SCHEMA_ENDPOINT_SERVICE_TYPE,
-  SCHEMA_ENDPOINT_START_TIME,
-  SCHEMA_ENDPOINT_STATUS,
-  SCHEMA_ENDPOINT_TYPE,
-  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI, SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON, SCHEMA_WORKFLOW_STATUS,
+  SCHEMA_MESSAGE,
+  SCHEMA_WORKFLOW_IMAGE_URI,
+  SCHEMA_WORKFLOW_NAME,
+  SCHEMA_WORKFLOW_PAYLOAD_JSON,
+  SCHEMA_WORKFLOW_SIZE,
+  SCHEMA_WORKFLOW_STATUS,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
 
@@ -85,7 +77,7 @@ export class CreateWorkflowApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
-        title: 'CreateEndpointResponse',
+        title: 'CreateWorkflowResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -98,34 +90,18 @@ export class CreateWorkflowApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              EndpointDeploymentJobId: SCHEMA_ENDPOINT_ID,
-              autoscaling: SCHEMA_ENDPOINT_AUTOSCALING,
-              max_instance_number: SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
-              startTime: SCHEMA_ENDPOINT_START_TIME,
-              instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
-              current_instance_count: SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
-              endpoint_status: SCHEMA_ENDPOINT_STATUS,
-              endpoint_name: SCHEMA_ENDPOINT_NAME,
-              endpoint_type: SCHEMA_ENDPOINT_TYPE,
-              service_type: SCHEMA_ENDPOINT_SERVICE_TYPE,
-              owner_group_or_role: SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
-              min_instance_number: SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
-              custom_extensions: SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
+              name: SCHEMA_WORKFLOW_NAME,
+              size: SCHEMA_WORKFLOW_SIZE,
+              status: SCHEMA_WORKFLOW_STATUS,
+              image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
+              payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
             },
             required: [
-              'EndpointDeploymentJobId',
-              'autoscaling',
-              'max_instance_number',
-              'startTime',
-              'instance_type',
-              'current_instance_count',
-              'endpoint_status',
-              'endpoint_name',
-              'endpoint_type',
-              'owner_group_or_role',
-              'min_instance_number',
-              'custom_extensions',
-              'service_type',
+              'name',
+              'size',
+              'status',
+              'image_uri',
+              'payload_json',
             ],
           },
         },
@@ -142,7 +118,6 @@ export class CreateWorkflowApi {
   }
 
   private iamRole(): Role {
-
 
     const s3Statement = new PolicyStatement({
       actions: [
@@ -218,12 +193,13 @@ export class CreateWorkflowApi {
         type: JsonSchemaType.OBJECT,
         properties: {
           name: SCHEMA_WORKFLOW_NAME,
+          size: SCHEMA_WORKFLOW_SIZE,
           image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
           payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
-          status: SCHEMA_WORKFLOW_STATUS,
         },
         required: [
           'name',
+          'size',
           'image_uri',
           'payload_json',
         ],

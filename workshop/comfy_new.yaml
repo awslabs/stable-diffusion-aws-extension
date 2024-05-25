@@ -236,8 +236,6 @@ Resources:
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
           cp s5cmd /usr/local/bin/
           
-          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/${EsdVersion}/comfy.tar" /root/stable-diffusion-aws-extension/container/default.tar
-          
           cat > comfy.service <<EOF
           [Unit]
           Description=Comfy Service
@@ -261,7 +259,7 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           
-          sudo reboot
+          # sudo reboot
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
