@@ -978,22 +978,31 @@ if is_on_ec2:
     @server.PromptServer.instance.routes.get("/workflows")
     async def get_workflows(request):
         try:
-
             workflow_name = os.getenv('WORKFLOW_NAME')
-            directory = '/container/workflows/'
-            subdirs = [f.path for f in os.scandir(directory) if f.is_dir()]
 
-            workflows = []
+            response = requests.get(f"{api_url}/workflows", headers=headers, params={"limit": 1000})
+            if response.status_code != 200:
+                return web.Response(status=500, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": 'Get workflows failed'}))
 
-            for subdir in subdirs:
-                workflow = subdir.replace(directory, '')
-                workflows.append({
-                    "name": workflow,
-                    "inUse": workflow == workflow_name,
+            data = response.json()['data']
+            workflows = data['workflows']
+            list = []
+            for workflow in workflows:
+                if workflow['status'] != 'Enabled':
+                    continue
+                list.append({
+                    "name": workflow['name'],
+                    "size": workflow['size'],
+                    "payload_json": workflow['payload_json'],
+                    "in_use": workflow['name'] == workflow_name
                 })
 
+            data['current_workflow'] = workflow_name
+            data['workflows'] = list
+
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "workflows": workflows}))
+                                body=json.dumps({"result": True, "data": data}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
