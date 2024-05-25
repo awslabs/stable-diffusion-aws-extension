@@ -35,12 +35,6 @@ export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_N
 
 echo "Starting container..."
 
-if [ -n "${WORKFLOW_NAME-}" ]; then
-    echo "WORKFLOW_NAME is $WORKFLOW_NAME"
-else
-   export WORKFLOW_NAME=""
-fi
-
 total_memory=$(cat /proc/meminfo | grep 'MemTotal' | awk '{print $2}')
 total_memory_mb=$((total_memory / 1024))
 echo "total_memory_mb: $total_memory_mb"
@@ -56,10 +50,6 @@ generate_process(){
 
   if [ -f "$COMFY_WORKFLOW_FILE" ]; then
     WORKFLOW_NAME_TMP=$(cat "$COMFY_WORKFLOW_FILE")
-  fi
-
-  if [ -z "$WORKFLOW_NAME_TMP" ]; then
-    WORKFLOW_NAME_TMP="$WORKFLOW_NAME"
   fi
 
   if [ -z "$WORKFLOW_NAME_TMP" ]; then
@@ -108,7 +98,8 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $START_SH:/start.sh \\
            -v $COMFY_PROXY:/comfy_proxy.py \\
            --gpus all \\
-           -e IMAGE_HASH=$release_image \\
+           -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
+           -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
            -e S3_BUCKET_NAME=$COMFY_BUCKET_NAME \\
@@ -142,13 +133,16 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
 if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
-  mkdir -p "$CONTAINER_PATH/workflows"
+  if [ ! -f "$CONTAINER_PATH/default.tar" ]; then
+      mkdir -p "$CONTAINER_PATH/workflows"
+      start_at=$(date +%s)
+      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
+      end_at=$(date +%s)
+      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+  fi
   start_at=$(date +%s)
-  s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
-  end_at=$(date +%s)
-  export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-  start_at=$(date +%s)
-  mkdir -p "$CONTAINER_PATH/workflows/default/"
+  rm -rf "$CONTAINER_PATH/workflows/default"
+  mkdir -p "$CONTAINER_PATH/workflows/default"
   tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
