@@ -146,7 +146,8 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   end_at=$(date +%s)
   export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
   start_at=$(date +%s)
-  tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default"
+  mkdir -p "$CONTAINER_PATH/workflows/default/"
+  tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
