@@ -290,7 +290,7 @@ Outputs:
     Value: !Sub http://${ComfyEIP}:8000
   DesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
-    Value: /root/stable-diffusion-aws-extension/container/comfy_8190.Dockerfile
+    Value: /root/stable-diffusion-aws-extension/container/comfy_8000.Dockerfile
   UserNumber:
     Description: The number of users
     Value: !Sub ${UserNumber}
