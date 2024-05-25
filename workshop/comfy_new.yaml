@@ -134,8 +134,8 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 8188
-          ToPort: 8288
+          FromPort: 8000
+          ToPort: 8100
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -279,40 +279,40 @@ Resources:
 Outputs:
   ComfyDesignerURL:
     Description: URL for Master Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8190
+    Value: !Sub http://${ComfyEIP}:8000
   ComfyDesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
     Value: /root/stable-diffusion-aws-extension/container/comfy_8190.Dockerfile
   ComfyNumber:
     Description: Process Number
     Value: !Sub ${ProcessNumber}
-  ComfyUser1URL:
+  ComfyUser01URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8191
-  ComfyUser2URL:
+    Value: !Sub http://${ComfyEIP}:8001
+  ComfyUser02URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8192
-  ComfyUser3URL:
+    Value: !Sub http://${ComfyEIP}:8002
+  ComfyUser03URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8193
-  ComfyUser4URL:
+    Value: !Sub http://${ComfyEIP}:8003
+  ComfyUser04URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8194
-  ComfyUser5URL:
+    Value: !Sub http://${ComfyEIP}:8004
+  ComfyUser05URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8195
-  ComfyUser6URL:
+    Value: !Sub http://${ComfyEIP}:8005
+  ComfyUser06URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8196
-  ComfyUser7URL:
+    Value: !Sub http://${ComfyEIP}:8006
+  ComfyUser07URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8197
-  ComfyUser8URL:
+    Value: !Sub http://${ComfyEIP}:8007
+  ComfyUser08URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8198
-  ComfyUser9URL:
+    Value: !Sub http://${ComfyEIP}:8008
+  ComfyUser09URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8199
+    Value: !Sub http://${ComfyEIP}:8009
   ComfyUser10URL:
     Description: URL for Slave Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8200
+    Value: !Sub http://${ComfyEIP}:8010
