@@ -59,7 +59,7 @@ generate_process(){
   echo "$WORKFLOW_NAME_TMP" > "$COMFY_WORKFLOW_FILE"
 
   export MASTER_PROCESS=false
-  if [ "$init_port" -eq "8188" ]; then
+  if [ "$init_port" -eq "8190" ]; then
       export MASTER_PROCESS=true
   fi
 
@@ -181,7 +181,7 @@ echo "stdout_logfile=$CONTAINER_PATH/image.stdout.log" >> "$SUPERVISORD_FILE"
 echo "stderr_logfile=$CONTAINER_PATH/image.stderr.log" >> "$SUPERVISORD_FILE"
 echo "" >> "$SUPERVISORD_FILE"
 
-init_port=8187
+init_port=8189
 for i in $(seq 1 "$PROCESS_NUMBER"); do
     init_port=$((init_port + 1))
     generate_process $init_port

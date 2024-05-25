@@ -35,6 +35,12 @@ Parameters:
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
+  EsdVersion:
+    Description: Version of the ESD
+    Type: String
+    AllowedValues:
+      - "dev"
+    Default: "dev"
   ProcessNumber:
     Description: Number of the Comfy Processes
     Type: String
@@ -44,12 +50,6 @@ Parameters:
       - 10
       - 15
     Default: 10
-  EsdVersion:
-    Description: Version of the ESD
-    Type: String
-    AllowedValues:
-      - "dev"
-    Default: "dev"
 
 Mappings:
   RegionToAmiId:
@@ -258,10 +258,10 @@ Resources:
           sudo mv comfy.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
+          sudo systemctl start comfy.service
           
-          # sudo reboot
-
           # tail -f /var/log/cloud-init-output.log
+          # tail -f /root/stable-diffusion-aws-extension/container/*.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy --no-pager -n 200
           # docker images -q | xargs docker rmi -f
@@ -277,15 +277,42 @@ Resources:
       InstanceId: !Ref ComfyEC2Instance
 
 Outputs:
-  ComfyNginxURL:
-    Description: URL for Comfy WebUI
-    Value: !Sub http://${ComfyEIP}
   ComfyMasterURL:
-    Description: URL for Comfy WebUI
-    Value: !Sub http://${ComfyEIP}:8188
-  Dockerfile:
+    Description: URL for Master Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8190
+  ComfyMasterDockerfile:
     Description: Dockerfile for EC2 and SageMaker
-    Value: /root/stable-diffusion-aws-extension/container/comfy_8188.Dockerfile
-  ComfyProcessStart:
-    Description: Process Port Start Number
-    Value: 8188
+    Value: /root/stable-diffusion-aws-extension/container/comfy_8190.Dockerfile
+  ComfyNumber:
+    Description: Process Number
+    Value: !Sub ${ProcessNumber}
+  ComfySlave1URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8191
+  ComfySlave2URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8192
+  ComfySlave3URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8193
+  ComfySlave4URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8194
+  ComfySlave5URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8195
+  ComfySlave6URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8196
+  ComfySlave7URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8197
+  ComfySlave8URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8198
+  ComfySlave9URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8199
+  ComfySlave10URL:
+    Description: URL for Slave Comfy WebUI
+    Value: !Sub http://${ComfyEIP}:8200
