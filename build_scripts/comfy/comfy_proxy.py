@@ -207,6 +207,20 @@ if is_on_ec2:
 
     def execute_proxy(func):
         def wrapper(*args, **kwargs):
+            def send_error_msg(executor, prompt_id, msg):
+                mes = {
+                    "prompt_id": prompt_id,
+                    "node_id": "",
+                    "node_type": "on cloud",
+                    "executed": [],
+                    "exception_message": msg,
+                    "exception_type": "",
+                    "traceback": [],
+                    "current_inputs": "",
+                    "current_outputs": "",
+                }
+                executor.add_message("execution_error", mes, broadcast=True)
+
             if 'True' == os.environ.get(DISABLE_AWS_PROXY):
                 logger.info("disabled aws proxy, use local")
                 return func(*args, **kwargs)
@@ -217,9 +231,16 @@ if is_on_ec2:
             prompt_id = args[2]
             extra_data = args[3]
 
-            client_id = server_use.instance.client_id
+            client_id = extra_data['client_id'] if 'client_id' in extra_data else None
+            if not client_id:
+                send_error_msg(executor, prompt_id, f"Something went wrong when execute,please check your client_id and try again")
+                return web.Response()
             global client_release_map
             workflow_name = client_release_map.get(client_id)
+            if not workflow_name and not is_master_process:
+                send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
+                return web.Response()
+
             payload = {
                 "number": str(server.PromptServer.instance.number),
                 "prompt": prompt,
@@ -252,19 +273,6 @@ if is_on_ec2:
                     logger.info(f"no sync available for {url} response {prepare_response}")
                     return False
 
-            def send_error_msg(executor, prompt_id, msg):
-                mes = {
-                    "prompt_id": prompt_id,
-                    "node_id": "",
-                    "node_type": "on cloud",
-                    "executed": [],
-                    "exception_message": msg,
-                    "exception_type": "",
-                    "traceback": [],
-                    "current_inputs": "",
-                    "current_outputs": "",
-                }
-                executor.add_message("execution_error", mes, broadcast=True)
 
             logger.debug(f"payload is: {payload}")
             is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
@@ -279,7 +287,7 @@ if is_on_ec2:
                 save_already = False
                 if comfy_need_sync:
                     msg_future = executorThread.submit(send_get_request,
-                                                 f"{api_url}/sync/{prompt_id}")
+                                                       f"{api_url}/sync/{prompt_id}")
                     done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                       return_when=concurrent.futures.ALL_COMPLETED)
                     already_synced = False
@@ -330,7 +338,7 @@ if is_on_ec2:
                                         if ('temp_files' in images_response.json()['data'] and len(
                                                 images_response.json()['data']['temp_files']) > 0) or ((
                                                 'output_files' in images_response.json()['data'] and len(
-                                                images_response.json()['data']['output_files']) > 0)):
+                                            images_response.json()['data']['output_files']) > 0)):
                                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                                             save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                                         else:

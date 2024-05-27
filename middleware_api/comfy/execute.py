@@ -102,7 +102,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     if not event.endpoint_name and not event.workflow_name:
         raise Exception(f"Cannot match an available environment，please check your EndpointName or your WorkflowVersion.")
     if event.workflow_name:
-        endpoint_name = get_endpoint_name_by_workflow_name(event.workflow_name)
+        endpoint_name = get_endpoint_name_by_workflow_name(name=event.workflow_name)
     else:
         endpoint_name = event.endpoint_name
 
