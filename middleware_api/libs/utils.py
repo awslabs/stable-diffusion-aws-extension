@@ -62,6 +62,10 @@ def update_table_by_pk(table: str, pk_name: str, pk_value: str, key: str, value)
         raise e
 
 
+def get_endpoint_name_by_workflow_name(endpoint_type: str, name: str):
+    return f"comfy-{endpoint_type}-{name}"
+
+
 @tracer.capture_method
 def get_workflow_by_name(workflow_name: str):
     tracer.put_annotation(key="workflow_name", value=workflow_name)
