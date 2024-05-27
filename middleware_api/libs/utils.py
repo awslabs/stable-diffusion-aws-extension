@@ -62,7 +62,7 @@ def update_table_by_pk(table: str, pk_name: str, pk_value: str, key: str, value)
         raise e
 
 
-def get_endpoint_name_by_workflow_name(endpoint_type: str, name: str):
+def get_endpoint_name_by_workflow_name(name: str, endpoint_type: str = 'async'):
     return f"comfy-{endpoint_type}-{name}"
 
 

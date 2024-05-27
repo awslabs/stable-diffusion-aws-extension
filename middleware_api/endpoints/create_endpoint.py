@@ -1,4 +1,3 @@
-from typing import Optional
 import json
 import logging
 import os
@@ -6,6 +5,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -137,14 +137,16 @@ def handler(raw_event, ctx):
 
         endpoint_id = str(uuid.uuid4())
         short_id = endpoint_id[:7]
+        endpoint_type = event.endpoint_type.lower()
 
         if event.endpoint_name:
             short_id = event.endpoint_name
 
         if event.workflow:
+            if endpoint_type != 'async':
+                raise BadRequestException(message=f"Your cant create Async endpoint only for workflow currently")
             short_id = event.workflow.name
 
-        endpoint_type = event.endpoint_type.lower()
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
         model_name = f"{endpoint_name}"
         endpoint_config_name = f"{endpoint_name}"
