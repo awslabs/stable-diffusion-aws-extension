@@ -14,6 +14,7 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
+import utils
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
@@ -21,7 +22,7 @@ from common.util import s3_scan_files, generate_presigned_url_for_keys, \
     record_latency_metrics, record_count_metrics, get_workflow_name
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType, EndpointStatus, ServiceType
-from libs.utils import get_endpoint_by_name, response_error
+from libs.utils import get_endpoint_by_name, response_error, get_endpoint_name_by_workflow_name
 
 tracer = Tracer()
 region = os.environ.get('AWS_REGION')
@@ -66,7 +67,7 @@ class ExecuteEvent:
     need_prepare: Optional[bool] = False
     prepare_props: Optional[PrepareProps] = None
     multi_async: Optional[bool] = False
-    workflow_version: Optional[str] = None
+    workflow_name: Optional[str] = None
 
 
 def sen_sqs_msg(message_body, endpoint_name):
@@ -98,13 +99,12 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 
 @tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
-    if not event.endpoint_name and not event.workflow_version:
+    if not event.endpoint_name and not event.workflow_name:
         raise Exception(f"Cannot match an available environment，please check your EndpointName or your WorkflowVersion.")
-    if event.endpoint_name:
-        endpoint_name = event.endpoint_name
+    if event.workflow_name:
+        endpoint_name = get_endpoint_name_by_workflow_name(event.workflow_name)
     else:
-        # TODO
-        endpoint_name = event.workflow_version
+        endpoint_name = event.endpoint_name
 
     try:
         ep = get_endpoint_by_name(endpoint_name)

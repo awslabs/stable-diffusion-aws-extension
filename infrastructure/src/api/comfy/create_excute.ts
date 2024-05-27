@@ -321,6 +321,9 @@ export class CreateExecuteApi {
             type: JsonSchemaType.BOOLEAN,
             minLength: 1,
           },
+          workflow_name: {
+            type: JsonSchemaType.STRING,
+          },
         },
         required: [
           'prompt_id',

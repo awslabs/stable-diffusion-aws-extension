@@ -39,6 +39,7 @@ from boto3.dynamodb.conditions import Key
 
 DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
 sync_msg_list = []
+client_release_map = {}
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ if is_on_ec2:
 
     api_url = os.environ.get('COMFY_API_URL')
     api_token = os.environ.get('COMFY_API_TOKEN')
-    comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
+    comfy_endpoint = os.environ.get('COMFY_ENDPOINT')
     comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
     comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
     bucket_name = os.environ.get('COMFY_BUCKET_NAME')
@@ -216,6 +217,9 @@ if is_on_ec2:
             prompt_id = args[2]
             extra_data = args[3]
 
+            client_id = server_use.instance.client_id
+            global client_release_map
+            workflow_name = client_release_map.get(client_id)
             payload = {
                 "number": str(server.PromptServer.instance.number),
                 "prompt": prompt,
@@ -224,7 +228,8 @@ if is_on_ec2:
                 "endpoint_name": comfy_endpoint,
                 "need_prepare": comfy_need_prepare,
                 "need_sync": comfy_need_sync,
-                "multi_async": False
+                "multi_async": False,
+                "workflow_name": workflow_name,
             }
 
             def send_post_request(url, params):
@@ -708,6 +713,18 @@ if is_on_ec2:
 
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
+
+    @server.PromptServer.instance.routes.post('/map_release')
+    async def map_release(request):
+        logger.info(f"start to map_release {request}")
+        json_data = await request.json()
+        if (not json_data or 'clientId' not in json_data or not json_data.get('clientId')
+                or 'releaseVersion' not in json_data or not json_data.get('releaseVersion')):
+            return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
+        global client_release_map
+        client_release_map[json_data.get('clientId')] = json_data.get('releaseVersion')
+        logger.info(f"client_release_map :{client_release_map}")
+        return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
 
 
     @server.PromptServer.instance.routes.get("/reboot")
