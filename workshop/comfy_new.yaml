@@ -1,0 +1,326 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: (SO8032) - Extension for Comfy on AWS - EC2 Instance
+Parameters:
+  Branch:
+    Description: Branch of the ESD
+    Type: String
+    AllowedValues:
+      - main
+      - dev
+    Default: dev
+  ApiGatewayUrl:
+    Description: API URL
+    Type: String
+    MinLength: "1"
+  ApiGatewayUrlToken:
+    Description: API Key
+    Type: String
+    MinLength: "1"
+  BucketName:
+    Description: Bucket Name
+    Type: String
+    MinLength: "1"
+  keyPairName:
+    Description: Name of the key pair to use for the EC2 instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: EC2 Instance Type of the Comfy to deploy
+    Type: String
+    AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
+      - g5.2xlarge
+      - g5.4xlarge
+      - g5.8xlarge
+    Default: g5.2xlarge
+  EsdVersion:
+    Description: Version of the ESD
+    Type: String
+    AllowedValues:
+      - "dev"
+    Default: "dev"
+  UserNumber:
+    Description: Number of the User
+    Type: String
+    AllowedValues:
+      - 0
+      - 1
+      - 5
+      - 10
+      - 15
+    Default: 10
+
+Mappings:
+  RegionToAmiId:
+    us-east-1:
+      AMI: ami-02a07d31009cc8717
+    us-east-2:
+      AMI: ami-02a912b010cf774bd
+    ap-southeast-1:
+      AMI: ami-06f0228bde7a6dac2
+    ap-northeast-1:
+      AMI: ami-0f9b45ca95cee6386
+    ap-northeast-2:
+      AMI: ami-0aba6dcbc1be4e85e
+    us-west-1:
+      AMI: ami-0ea5aefd1471f67b2
+    us-west-2:
+      AMI: ami-09d4fb52761c3d78d
+
+Resources:
+  ComfyVPC:
+    Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  ComfySubnet:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref ComfyVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+
+  ComfyInstanceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: [ 'sts:AssumeRole' ]
+      Path: "/"
+      Policies:
+        - PolicyName: PutObjectToSpecificBucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket', 's3:HeadObject' ]
+                Resource: [ '*' ]
+        - PolicyName: EcrPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:*' ]
+                Resource: [ '*' ]
+
+  ComfyInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Delete
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref ComfyInstanceRole
+
+  ComfySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref ComfyVPC
+      GroupName: !Sub ${AWS::StackName}-sg
+      GroupDescription: Security group for SD WebUI EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8100
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ComfyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
+
+  ComfyVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref ComfyVPC
+      InternetGatewayId: !Ref ComfyInternetGateway
+
+  ComfyRouteTable:
+    Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref ComfyVPC
+
+  ComfyRoute:
+    Type: AWS::EC2::Route
+    DeletionPolicy: Delete
+    Properties:
+      RouteTableId: !Ref ComfyRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ComfyInternetGateway
+
+  ComfySubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
+    Properties:
+      SubnetId: !Ref ComfySubnet
+      RouteTableId: !Ref ComfyRouteTable
+
+  ComfyEC2Dev:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    DependsOn: ComfyInstanceProfile
+    Properties:
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref ComfyInstanceProfile
+      SubnetId: !Ref ComfySubnet
+      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 1024
+            VolumeType: gp2
+      KeyName: !Ref keyPairName
+      SecurityGroupIds:
+        - !GetAtt ComfySecurityGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: !Sub "comfy-on-aws-${EsdVersion}"
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          
+          mkdir -p ~/.aws
+          echo "[default]
+          region = ${AWS::Region}" > ~/.aws/config
+
+          echo "COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
+          echo "COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
+          echo "COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
+          echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
+          echo "DISABLE_AWS_PROXY=false" >> /etc/environment
+          echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "PROCESS_NUMBER=${UserNumber}" >> /etc/environment
+          echo "ESD_VERSION=${EsdVersion}" >> /etc/environment
+          echo "SERVICE_TYPE=comfy" >> /etc/environment
+          
+          source /etc/environment
+          
+          sudo rm -rf /root/stable-diffusion-aws-extension
+          
+          sudo systemctl enable docker
+          
+          cd /root
+          
+          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
+
+          sudo apt-get update
+          sudo apt install nginx jq supervisor -y
+          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
+          sudo ufw allow 'Nginx HTTP'
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
+          
+          aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
+          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:${EsdVersion}
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
+          
+          cat > comfy.service <<EOF
+          [Unit]
+          Description=Comfy Service
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          WorkingDirectory=/root/stable-diffusion-aws-extension/
+          ExecStart=bash docker_start.sh
+          Type=simple
+          Restart=always
+          RestartSec=5
+          User=root
+          StartLimitAction=reboot
+
+          [Install]
+          WantedBy=default.target
+
+          EOF
+          sudo mv comfy.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/comfy.service
+          sudo systemctl enable comfy.service
+          sudo systemctl start comfy.service
+          
+          # tail -f /var/log/cloud-init-output.log
+          # tail -f /root/stable-diffusion-aws-extension/container/*.log
+          # sudo journalctl -u comfy -f
+          # sudo journalctl -u comfy --no-pager -n 200
+          # docker images -q | xargs docker rmi -f
+
+  ComfyEIP:
+    Type: AWS::EC2::EIP
+    DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "comfy-on-aws-${EsdVersion}"
+
+  ComfyEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    DeletionPolicy: Delete
+    Properties:
+      AllocationId: !GetAtt ComfyEIP.AllocationId
+      InstanceId: !Ref ComfyEC2Dev
+
+Outputs:
+  Designer:
+    Description: URL for Designer
+    Value: !Sub http://${ComfyEIP}:8000
+  DesignerDockerfile:
+    Description: Dockerfile for EC2 and SageMaker
+    Value: /root/stable-diffusion-aws-extension/container/comfy_8000.Dockerfile
+  UserNumber:
+    Description: The number of users
+    Value: !Sub ${UserNumber}
+  User01:
+    Description: URL for User01
+    Value: !Sub http://${ComfyEIP}:8001
+  User02:
+    Description: URL for User02
+    Value: !Sub http://${ComfyEIP}:8002
+  User03:
+    Description: URL for User03
+    Value: !Sub http://${ComfyEIP}:8003
+  User04:
+    Description: URL for User04
+    Value: !Sub http://${ComfyEIP}:8004
+  User05:
+    Description: URL for User05
+    Value: !Sub http://${ComfyEIP}:8005
+  User06:
+    Description: URL for User06
+    Value: !Sub http://${ComfyEIP}:8006
+  User07:
+    Description: URL for User07
+    Value: !Sub http://${ComfyEIP}:8007
+  User08:
+    Description: URL for User08
+    Value: !Sub http://${ComfyEIP}:8008
+  User09:
+    Description: URL for User09
+    Value: !Sub http://${ComfyEIP}:8009
+  User10:
+    Description: URL for User10
+    Value: !Sub http://${ComfyEIP}:8010

@@ -62,6 +62,11 @@ aws s3 sync local_folder_name s3://<bucket_name>/<folder_name>
 4. 后续训练状态可以通过刷新右侧**Tranings List**来跟进训练任务状态。
 5. 成功训练完成的LoRa模型，可以直接在txt2img, img2img对应的云上LoRa模型选择列表直接选取，并参考[txt2img指南](./webUI/txt2img-guide.md)或[img2img指南](./webUI/img2img-guide.md)进行推理工作。
 
+### Training Loss Visualization
+在 **Train Management** 页面, 所有训练完的任务都展示在**Training List**, 点击训练id, 下面会出现日志链接. 
+![Training List](../images/traininglist.jpg)
+点击该链接，则会跳转到新的网页，即loss可视化的界面。
+![Training Loss](../images/trainingloss.jpg)
 
 
 ### 调用训练API

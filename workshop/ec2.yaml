@@ -20,42 +20,60 @@ Parameters:
 
 Mappings:
   RegionToAmiId:
+    ap-south-2:
+      AMI: ami-063b634d62a631728
     ap-south-1:
-      AMI: ami-03f4878755434977f
-    eu-north-1:
-      AMI: ami-0014ce3e52359afbd
-    eu-west-3:
-      AMI: ami-01d21b7be69801c2f
-    eu-west-2:
-      AMI: ami-0e5f882be1900e43b
-    eu-west-1:
-      AMI: ami-0905a3c97561e0b69
-    ap-northeast-3:
-      AMI: ami-05ff0b3a7128cd6f8
-    ap-northeast-2:
-      AMI: ami-0f3a440bbcff3d043
-    ap-northeast-1:
-      AMI: ami-07c589821f2b353aa
+      AMI: ami-007020fd9c84e18c7
+    eu-south-1:
+      AMI: ami-0fdd5958b81f36e68
+    eu-south-2:
+      AMI: ami-0ee19dcf57f09e938
+    me-central-1:
+      AMI: ami-04be4fee4051bf815
     ca-central-1:
-      AMI: ami-0a2e7efb4257c0907
-    sa-east-1:
-      AMI: ami-0fb4cf3a99aa89f72
-    ap-east-1:
-      AMI: ami-0d96ec8a788679eb2
-    ap-southeast-1:
-      AMI: ami-0fa377108253bf620
-    ap-southeast-2:
-      AMI: ami-04f5097681773b989
+      AMI: ami-036149658febd9fd6
     eu-central-1:
-      AMI: ami-0faab6bdbac9486fb
-    us-east-1:
-      AMI: ami-0c7217cdde317cfec
-    us-east-2:
-      AMI: ami-05fb0b8c1424f266b
+      AMI: ami-0b584e86060d6e0f6
+    eu-central-2:
+      AMI: ami-059f62f210ee212db
     us-west-1:
-      AMI: ami-0ce2cb35386fc22e9
+      AMI: ami-036cafe742923b3d9
     us-west-2:
-      AMI: ami-008fe2fc65df48dac
+      AMI: ami-073ff6027d02b1312
+    af-south-1:
+      AMI: ami-0a7945c9f7659f25f
+    eu-north-1:
+      AMI: ami-0a1df6b0891ee52a7
+    eu-west-3:
+      AMI: ami-09e513e9eacab10c1
+    eu-west-2:
+      AMI: ami-09627c82937ccdd6d
+    eu-west-1:
+      AMI: ami-0d0fa503c811361ab
+    ap-northeast-3:
+      AMI: ami-08466eb240ce14dfe
+    ap-northeast-2:
+      AMI: ami-0fb936d7ba52ec375
+    me-south-1:
+      AMI: ami-0e0aab5c81dcbb143
+    ap-northeast-1:
+      AMI: ami-09a81b370b76de6a2
+    sa-east-1:
+      AMI: ami-07871d79cd57217f5
+    ap-east-1:
+      AMI: ami-04e13bca8e679e5ce
+    ap-southeast-1:
+      AMI: ami-02ee763250491e04a
+    ap-southeast-2:
+      AMI: ami-076fe60835f136dc9
+    ap-southeast-3:
+      AMI: ami-0913922d1289852b6
+    ap-southeast-4:
+      AMI: ami-03959cf65827f9f43
+    us-east-1:
+      AMI: ami-051dcca84f1edfff1
+    us-east-2:
+      AMI: ami-065d315e052507855
 
 Resources:
   WebUiVPC:
@@ -88,6 +106,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
 
   WebUiInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -116,6 +135,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 7860
           ToPort: 7860
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 6006
+          ToPort: 6006
           CidrIp: 0.0.0.0/0
 
   WebUiInternetGateway:
@@ -153,6 +176,7 @@ Resources:
   WebUiEC2Instance:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
+    DependsOn: WebUiInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref WebUiInstanceProfile
@@ -177,6 +201,11 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
           
+          echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
+          echo "ESD_EC2=true" >> /etc/environment
+          source /etc/environment
+          
           sudo apt-get update
           
           sudo apt install nginx -y
@@ -198,6 +227,10 @@ Resources:
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
           
           cd stable-diffusion-aws-extension
+
+          source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
+          pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
+          pip install boto3
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz

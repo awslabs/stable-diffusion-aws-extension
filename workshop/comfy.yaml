@@ -39,19 +39,43 @@ Parameters:
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
+  ProcessNumber:
+    Description: Number of the Comfy Processes
+    Type: String
+    AllowedValues:
+      - 1
+      - 5
+      - 10
+      - 15
+      - 20
+    Default: 10
+  EsdVersion:
+    Description: Version of the ESD
+    Type: String
+    AllowedValues:
+      - latest
+      - dev
+    Default: latest
+  WorkflowName:
+    Description: Bind Workflow Name
+    Type: String
 
 Mappings:
   RegionToAmiId:
     us-east-1:
-      AMI: ami-0e4cc88070dfcf17b
+      AMI: ami-02a07d31009cc8717
     us-east-2:
-      AMI: ami-0a48cc2a4a0988c70
+      AMI: ami-02a912b010cf774bd
     ap-southeast-1:
-      AMI: ami-09a7fb29eb7375468
+      AMI: ami-06f0228bde7a6dac2
     ap-northeast-1:
-      AMI: ami-0a1f6795aeb907a68
+      AMI: ami-0f9b45ca95cee6386
+    ap-northeast-2:
+      AMI: ami-0aba6dcbc1be4e85e
     us-west-1:
       AMI: ami-0ea5aefd1471f67b2
+    us-west-2:
+      AMI: ami-09d4fb52761c3d78d
 
 Resources:
   ComfyVPC:
@@ -88,8 +112,15 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
-                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
+                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket', 's3:HeadObject' ]
+                Resource: [ '*' ]
+        - PolicyName: EcrPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:*' ]
+                Resource: [ '*' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -113,7 +144,7 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 8188
-          ToPort: 8188
+          ToPort: 8288
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -155,6 +186,7 @@ Resources:
   ComfyEC2Instance:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
+    DependsOn: ComfyInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -164,7 +196,7 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 1024
-            VolumeType: gp3
+            VolumeType: gp2
       KeyName: !Ref keyPairName
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
@@ -187,6 +219,8 @@ Resources:
           echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
           echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           source /etc/environment
+          
+          sudo systemctl enable docker
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -245,30 +279,6 @@ Resources:
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
-
-#          cat > comfy_upload.service <<EOF
-#          [Unit]
-#          Description=Comfy Upload Service
-#          After=network.target
-#          StartLimitIntervalSec=0
-#
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
-#
-#          [Install]
-#          WantedBy=default.target
-#
-#          EOF
-#          sudo mv comfy_upload.service /etc/systemd/system
-#          sudo chown root:root /etc/systemd/system/comfy_upload.service
-#          sudo systemctl enable comfy_upload.service
-#          sudo systemctl start comfy_upload.service
 
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f

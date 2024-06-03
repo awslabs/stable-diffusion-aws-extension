@@ -5,8 +5,9 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-import config as config
 import pytest
+
+import config as config
 from utils.api import Api
 from utils.helper import endpoints_wait_for_in_service
 
@@ -56,12 +57,12 @@ class TestComfySingleGpuEpCreateE2E:
         }
 
         data = {
-            "endpoint_name": 'single-gpu',
+            "endpoint_name": f'single-gpu-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
-            "instance_type": 'ml.g5.2xlarge',
+            "instance_type": 'ml.g5.8xlarge',
             "initial_instance_count": 1,
-            "autoscaling_enabled": False,
+            "autoscaling_enabled": True,
             "assign_to_roles": [config.role_comfy_async],
             "creator": config.username
         }

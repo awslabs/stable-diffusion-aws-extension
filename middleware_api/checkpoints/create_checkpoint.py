@@ -4,13 +4,13 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import boto3
 import requests
 from aws_lambda_powertools import Tracer
 
-from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE, COMFY_TYPE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, accepted
 from libs.common_tools import get_base_checkpoint_s3_key, \
@@ -39,6 +39,8 @@ class CreateCheckPointEvent:
     params: dict[str, Any]
     filenames: [MultipartFileReq] = None
     urls: [str] = None
+    target_path: Optional[str] = None
+    source_path: Optional[str] = None
 
 
 @tracer.capture_lambda_handler
@@ -58,7 +60,14 @@ def handler(raw_event, context):
 
         _type = event.checkpoint_type
 
-        base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
+        if _type == COMFY_TYPE:
+            if not event.source_path or not event.target_path:
+                return bad_request(message='Please check your source_path or target_path of the checkpoints')
+            #such as source_path :"comfy/{comfy_endpoint}/{prepare_version}/models/"  target_path:"models/checkpoints"
+            base_key = event.source_path
+        else:
+            base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
+
         presign_url_map = batch_get_s3_multipart_signed_urls(
             bucket_name=bucket_name,
             base_key=base_key,
@@ -101,7 +110,9 @@ def handler(raw_event, context):
             checkpoint_status=CheckPointStatus.Initial,
             params=checkpoint_params,
             timestamp=datetime.datetime.now().timestamp(),
-            allowed_roles_or_users=user_roles
+            allowed_roles_or_users=user_roles,
+            source_path=event.source_path,
+            target_path=event.target_path
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         data = {
@@ -110,7 +121,9 @@ def handler(raw_event, context):
                 'type': _type,
                 's3_location': checkpoint.s3_location,
                 'status': checkpoint.checkpoint_status.value,
-                'params': checkpoint.params
+                'params': checkpoint.params,
+                'source_path': checkpoint.source_path,
+                'target_path': checkpoint.target_path,
             },
             's3PresignUrl': multiparts_resp
         }
@@ -130,6 +143,8 @@ def invoke_url_lambda(event: CreateCheckPointEvent):
                 'checkpoint_type': event.checkpoint_type,
                 'params': event.params,
                 'url': url,
+                'source_path': event.source_path,
+                'target_path': event.target_path,
             })
         )
         logger.info(resp)

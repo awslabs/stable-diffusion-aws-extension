@@ -53,20 +53,14 @@ printenv
 echo "---------------------------------------------------------------------------------"
 nvidia-smi
 echo "---------------------------------------------------------------------------------"
+df -h
+echo "---------------------------------------------------------------------------------"
 
 # -------------------- common functions --------------------
 
 set_conda(){
     echo "set conda environment..."
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
-}
-
-download_conda(){
-  echo "---------------------------------------------------------------------------------"
-  mkdir -p /home/ubuntu/conda/lib/
-  wget -qO /home/ubuntu/conda/lib/libcufft.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcufft.so.10
-  wget -qO /home/ubuntu/conda/lib/libcurand.so.10 https://huggingface.co/elonniu/esd/resolve/main/libcurand.so.10
-  set_conda
 }
 
 # -------------------- sd functions --------------------
@@ -128,6 +122,8 @@ sd_launch(){
   echo "initiated_lock" > /initiated_lock
 
   cd /home/ubuntu/stable-diffusion-webui || exit 1
+  chmod -R +x venv/bin
+
   source venv/bin/activate
   python /metrics.py &
 
@@ -135,9 +131,8 @@ sd_launch(){
 }
 
 sd_launch_from_private_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
+    s5cmd sync "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -161,9 +156,8 @@ sd_launch_from_private_s3(){
 }
 
 sd_launch_from_public_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
+    s5cmd cp "s3://$CACHE_PUBLIC_SD" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -275,7 +269,10 @@ comfy_launch(){
   set_conda
 
   cd /home/ubuntu/ComfyUI || exit 1
+  chmod -R +x venv/bin
+
   rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
+  rm /home/ubuntu/ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
   rm /home/ubuntu/ComfyUI/custom_nodes/comfy_local_proxy.py
   source venv/bin/activate
   python /metrics.py &
@@ -286,9 +283,8 @@ comfy_launch(){
 }
 
 comfy_launch_from_private_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$CACHE_PATH/*" /home/ubuntu/
+    s5cmd sync "s3://$S3_BUCKET_NAME/$CACHE_ENDPOINT/*" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -306,9 +302,8 @@ comfy_launch_from_private_s3(){
 }
 
 comfy_launch_from_public_s3(){
-    CACHE_PATH=$1
     start_at=$(date +%s)
-    s5cmd --log=error cp "s3://$CACHE_PATH" /home/ubuntu/
+    s5cmd cp "s3://$CACHE_PUBLIC_COMFY" /home/ubuntu/
     end_at=$(date +%s)
     export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
     echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
@@ -327,35 +322,97 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
-# -------------------- startup --------------------
+if [ -n "$ON_EC2" ]; then
+  set -euxo pipefail
 
-# if pipeline finished, it will be executed
-#if [[ $IMAGE_URL == *"dev"* ]]; then
-#  download_conda
-#  if [ "$SERVICE_TYPE" == "sd" ]; then
-#      sd_install_build
-#      /serve trim_sd.sh
-#      sd_cache_endpoint
-#      sd_launch
-#      exit 1
-#  else
-#      comfy_install_build
-#      /serve trim_comfy
-#      comfy_cache_endpoint
-#      comfy_launch
-#      exit 1
-#  fi
-#fi
+  export WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
+  export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
+
+  if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
+    mkdir -p "$WORKFLOW_DIR"
+    if [ "$WORKFLOW_NAME" = "default" ]; then
+      echo "default workflow init must be in create EC2"
+      exit 1
+    else
+      start_at=$(date +%s)
+      s5cmd --log=error sync "s3://$COMFY_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "$WORKFLOW_DIR/"
+      end_at=$(date +%s)
+      export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+      echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+      cd "$WORKFLOW_DIR/ComfyUI"
+    fi
+  fi
+
+  rm -rf /home/ubuntu/ComfyUI
+
+  ln -s "$WORKFLOW_DIR/ComfyUI" /home/ubuntu/ComfyUI
+
+  cd /home/ubuntu/ComfyUI || exit 1
+
+  if [ -f "/comfy_proxy.py" ]; then
+    cp /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
+  fi
+
+  rm -rf web/extensions/ComfyLiterals
+  chmod -R +x venv
+  source venv/bin/activate
+
+  chmod -R 777 /home/ubuntu/ComfyUI
+
+  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 \
+                           --cuda-malloc \
+                           --output-directory "/container/output/$PROGRAM_NAME/" \
+                           --temp-directory "/container/temp/$PROGRAM_NAME/"
+  exit 1
+fi
+
+if [ -n "$WORKFLOW_NAME" ]; then
+  cd /home/ubuntu || exit 1
+
+  if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
+      if [ -n "$ON_EC2" ]; then
+        set -euxo pipefail
+        cd /home/ubuntu/ComfyUI || exit 1
+        rm -rf web/extensions/ComfyLiterals
+        chmod -R +x venv
+        source venv/bin/activate
+        ec2_start_process
+        exit 1
+      fi
+  fi
+
+  echo "downloading comfy file $WORKFLOW_NAME ..."
+  start_at=$(date +%s)
+  s5cmd --log=error sync "s3://$S3_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "/home/ubuntu/"
+  end_at=$(date +%s)
+  export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+  echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
+
+  cd "/home/ubuntu/ComfyUI" || exit 1
+
+  rm -rf web/extensions/ComfyLiterals
+
+  chmod -R 777 "/home/ubuntu/ComfyUI"
+  chmod -R +x venv
+  source venv/bin/activate
+
+  # on SageMaker
+  python /metrics.py &
+  python3 serve.py
+  exit 1
+fi
 
 if [ -f "/initiated_lock" ]; then
     echo "already initiated, start service directly..."
     if [ "$SERVICE_TYPE" == "sd" ]; then
       cd /home/ubuntu/stable-diffusion-webui || exit 1
+      chmod -R +x venv/bin
       source venv/bin/activate
       sd_launch_cmd
       exit 1
     else
       cd /home/ubuntu/ComfyUI || exit 1
+      chmod -R +x venv/bin
       source venv/bin/activate
       python serve.py
       exit 1
@@ -365,18 +422,18 @@ fi
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$CACHE_ENDPOINT"; then
   if [ "$SERVICE_TYPE" == "sd" ]; then
-    sd_launch_from_private_s3 "$CACHE_ENDPOINT"
+    sd_launch_from_private_s3
     exit 1
   else
-    comfy_launch_from_private_s3 "$CACHE_ENDPOINT"
+    comfy_launch_from_private_s3
     exit 1
   fi
 fi
 
 if [ "$SERVICE_TYPE" == "sd" ]; then
-  sd_launch_from_public_s3 "$CACHE_PUBLIC_SD"
+  sd_launch_from_public_s3
   exit 1
 else
-  comfy_launch_from_public_s3 "$CACHE_PUBLIC_COMFY"
+  comfy_launch_from_public_s3
   exit 1
 fi

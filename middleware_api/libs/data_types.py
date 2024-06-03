@@ -46,6 +46,8 @@ class CheckPoint:
     version: str = 'v1.0'  # todo: this is for the future
     checkpoint_names: Optional[list[str]] = None  # the actual checkpoint file names
     params: Optional[dict[str, Any]] = None
+    source_path: Optional[str] = None
+    target_path: Optional[str] = None
 
     def __post_init__(self):
         if type(self.checkpoint_status) == str:
@@ -162,6 +164,7 @@ class InferenceJob:
     params: Optional[dict[str, Any]] = None
     inference_type: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
 
 
 @dataclass
@@ -184,6 +187,17 @@ class Endpoint:
     service_type: str = ""
 
 
+@dataclass
+class Workflow:
+    name: str
+    s3_location: str
+    image_uri: str
+    status: str
+    payload_json: str = ""
+    size: str = ""
+    create_time: Optional[Any] = None
+
+
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
 class InvocationRequest:
@@ -193,3 +207,4 @@ class InvocationRequest:
     models: Optional[dict]
     param_s3: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None

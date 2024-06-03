@@ -75,9 +75,8 @@ You can open the **img2img tab** and use the original region along with the **Am
 2. Interrogate only need to upload image to **img2img** tab.
 ![img2img tab](../images/clip_tab.png)
 
-3. Select inference endpoint. Click refresh button on the right of **Select Cloud SageMaker Endpoint**, select one inference endpoint in **InService** state.
-4. Click **Interrogate CLIP on cloud** or **Interrogate DeepBooru on cloud**.
-5. Check inference result. Refresh the dropdown list of **Inference Job JDs**, check the topmost **Inference Job ID** that match the inference submission timestamp to review the inference result.
+3. Click **Interrogate CLIP on cloud** or **Interrogate DeepBooru on cloud**.
+4. Check inference result. Refresh the dropdown list of **Inference Job JDs**, check the topmost **Inference Job ID** that match the inference submission timestamp to review the inference result.
 ![interrogate generate results](../images/clip.png)
 
 ### Continuous Inference Scenario

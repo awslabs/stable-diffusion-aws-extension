@@ -105,6 +105,7 @@ header_user_name = Parameter(
 )
 
 path_id = Parameter(name="id", description="ID", location="path", required=True)
+path_name = Parameter(name="name", description="Name", location="path", required=True)
 path_dataset_name = Parameter(name="id", description="Dataset Name", location="path", required=True)
 
 query_limit = Parameter(name="limit", description="Limit Per Page", location="query")
@@ -136,7 +137,8 @@ tags = [
     Tag(name="Trainings", description="Manage Trainings").to_dict(),
     Tag(name="Prepare", description="Sync files to Endpoint").to_dict(),
     Tag(name="Sync", description="Sync Message from Endpoint").to_dict(),
-    Tag(name="Others", description="Others API").to_dict()
+    Tag(name="Workflows", description="Manage Workflows").to_dict(),
+    Tag(name="Others", description="Others API").to_dict(),
 ]
 
 operations = {
@@ -472,6 +474,29 @@ operations = {
         description="Get Prepare by ID",
         parameters=[
             header_user_name
+        ]
+    ),
+    "CreateWorkflow": APISchema(
+        summary="Release new Workflow",
+        tags=["Workflows"],
+        description="Create a new Workflow",
+    ),
+    "ListWorkflows": APISchema(
+        summary="List Workflows",
+        tags=["Workflows"],
+        description="List Workflows with Parameters",
+    ),
+    "DeleteWorkflows": APISchema(
+        summary="Delete Workflows",
+        tags=["Workflows"],
+        description="Delete specify Workflows",
+    ),
+    'GetWorkflow': APISchema(
+        summary="Get Workflow",
+        tags=["Workflows"],
+        description="Get Workflow by Name",
+        parameters=[
+            path_name
         ]
     ),
 }

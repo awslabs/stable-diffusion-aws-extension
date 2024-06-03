@@ -56,14 +56,13 @@
 
 4. デフォルトのエンドポイント設定を選択するか、高度なエンドポイント設定を設定した後、**Deploy**をクリックします。**Label**の下に**Endpoint deployment started**というメッセージが表示されます。
 ![新しいエンドポイントをデプロイ](../images/Deploy-new-endpoint.png)
-5. **txt2img**タブ、**Amazon SageMaker Inference**セッションに移動し、ドロップダウンリスト**Select Cloud SageMaker Endpoint**を更新すると、すべてのエンドポイントのデプロイ状況を確認できます。
+5. **Amazon SageMaker**セッションに移動し、ドロップダウンリスト**Inference Endpoint Management**を更新すると、すべてのエンドポイントのデプロイ状況を確認できます。
 > **注意:** ドロップダウンリストの形式は：エンドポイント名+ デプロイメントステータス(Creating/Failed/InService など)+デプロイ完了時間です。
 6. エンドポイントのデプロイ状況が*InService*に変わるまでには約3分かかります。これはエンドポイントが正常にデプロイされたことを示します。
 
 ### デプロイされたエンドポイントを削除
 
-1. **Select Cloud SageMaker Endpoint**ドロップダウンリストを更新し、削除するエンドポイントを選択します。
-2. **Delete**をクリックすると、**Endpoint delete completed**というメッセージが左側に表示され、選択したエンドポイントが正常に削除されたことを示します。
+1. **Delete**をクリックすると、**Endpoint delete completed**というメッセージが左側に表示され、選択したエンドポイントが正常に削除されたことを示します。
 
 
 # AWS データセット管理

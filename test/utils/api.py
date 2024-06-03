@@ -92,6 +92,15 @@ class Api:
             data=data
         )
 
+    def delete_workflows(self, headers=None, data=None):
+        return self.req(
+            "DELETE",
+            "workflows",
+            headers=headers,
+            operation_id='DeleteWorkflows',
+            data=data
+        )
+
     def delete_users(self, headers=None, data=None):
         return self.req(
             "DELETE",
@@ -236,12 +245,38 @@ class Api:
             params=params
         )
 
+    def list_workflows(self, headers=None, params=None):
+        return self.req(
+            "GET",
+            "workflows",
+            headers=headers,
+            operation_id='ListWorkflows',
+            params=params
+        )
+
+    def get_workflow(self, name: str, headers=None):
+        return self.req(
+            "GET",
+            f"workflows/{name}",
+            headers=headers,
+            operation_id='GetWorkflow',
+        )
+
     def create_endpoint(self, headers=None, data=None):
         return self.req(
             "POST",
             "endpoints",
             headers=headers,
             operation_id='CreateEndpoint',
+            data=data
+        )
+
+    def create_workflow(self, headers=None, data=None):
+        return self.req(
+            "POST",
+            "workflows",
+            headers=headers,
+            operation_id='CreateWorkflow',
             data=data
         )
 

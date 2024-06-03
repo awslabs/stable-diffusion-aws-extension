@@ -12,7 +12,7 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
-from common.util import generate_presign_url, record_count_metrics
+from common.util import generate_presign_url, record_count_metrics, get_workflow_name
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, Endpoint
 from libs.enums import EndpointStatus
@@ -42,6 +42,7 @@ class CreateInferenceEvent:
     filters: dict[str, Any] = None
     user_id: Optional[str] = ""
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
 
 
 # POST /inferences
@@ -75,6 +76,9 @@ def handler(raw_event: dict, context: LambdaContext):
                                           event.inference_type,
                                           username)
 
+        if event.workflow:
+            event.workflow = get_workflow_name(event.workflow, ep.instance_type)
+
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
@@ -87,6 +91,7 @@ def handler(raw_event: dict, context: LambdaContext):
             status='created',
             taskType=_type,
             inference_type=event.inference_type,
+            workflow=event.workflow,
             owner_group_or_role=[username],
             payload_string=event.payload_string,
             params={
@@ -148,7 +153,10 @@ def handler(raw_event: dict, context: LambdaContext):
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
-        record_count_metrics(ep_name=ep.endpoint_name, metric_name='InferenceTotal')
+        record_count_metrics(ep_name=ep.endpoint_name,
+                             metric_name='InferenceTotal',
+                             workflow=event.workflow,
+                             )
 
         if event.payload_string:
             return inference_start(inference_job, username)

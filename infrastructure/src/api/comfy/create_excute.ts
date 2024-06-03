@@ -12,7 +12,7 @@ import {
   SCHEMA_EXECUTE_NEED_SYNC,
   SCHEMA_EXECUTE_PROMPT_ID,
   SCHEMA_INFER_TYPE,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW,
 } from '../../shared/schema';
 
 
@@ -290,6 +290,7 @@ export class CreateExecuteApi {
           },
           endpoint_name: SCHEMA_ENDPOINT_NAME,
           need_sync: SCHEMA_EXECUTE_NEED_SYNC,
+          workflow: SCHEMA_WORKFLOW,
           number: {
             type: JsonSchemaType.STRING,
             minLength: 1,
@@ -319,6 +320,9 @@ export class CreateExecuteApi {
           multi_async: {
             type: JsonSchemaType.BOOLEAN,
             minLength: 1,
+          },
+          workflow_name: {
+            type: JsonSchemaType.STRING,
           },
         },
         required: [

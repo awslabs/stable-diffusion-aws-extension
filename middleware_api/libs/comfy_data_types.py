@@ -34,6 +34,7 @@ class InferenceResult:
     temp_path: Optional[str] = None
     temp_files: Optional[List[str]] = None
     endpoint_instance_id: Optional[str] = None
+    workflow: Optional[str] = None
     endpoint_name: Optional[str] = None
     device_id: Optional[int] = None
 
@@ -61,6 +62,7 @@ class ComfyExecuteTable:
     batch_id: Optional[str] = None
     endpoint_name: Optional[str] = None
     inference_type: Optional[str] = None
+    workflow: Optional[str] = None
     need_sync: Optional[bool] = None
     prompt_params: Optional[dict[str, Any]] = None
 

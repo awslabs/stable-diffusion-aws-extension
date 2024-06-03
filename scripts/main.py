@@ -1,3 +1,4 @@
+import subprocess
 from queue import Queue
 import importlib
 import logging
@@ -15,7 +16,7 @@ from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
-
+from dotenv import load_dotenv
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
@@ -854,8 +855,8 @@ class SageMakerUI(scripts.Script):
         return sagemaker_inputs_components
 
     def before_process(self, p, *args):
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
+        on_sagemaker = os.environ.get('ON_SAGEMAKER', "false")
+        if on_sagemaker == "true":
             return
 
         # check if endpoint is InService
@@ -1054,7 +1055,7 @@ def fetch_user_data():
         time.sleep(30)
 
 
-if os.environ.get('ON_DOCKER', "false") != "true":
+if os.environ.get('ON_SAGEMAKER', "false") != "true":
     from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
     if cloud_auth_manager.enableAuth:
         cmd_opts.gradio_auth = cloud_auth_manager.create_config()
@@ -1062,6 +1063,21 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     thread = threading.Thread(target=fetch_user_data)
     thread.daemon = True
     thread.start()
+
+    if os.path.exists('/etc/environment'):
+        load_dotenv('/etc/environment')
+
+    if os.getenv("ESD_EC2") == "true":
+        log_dir = f"/tmp/trains_logs/"
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        subprocess.Popen(["tensorboard",
+                          f"--logdir={log_dir}",
+                          f"--window_title=ESD Train Logs",
+                          "--host=0.0.0.0",
+                          "--port=6006",
+                          "--load_fast=false"
+                          ])
 
     from modules import call_queue, fifo_lock
 

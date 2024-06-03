@@ -37,6 +37,7 @@ endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
 ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table('SDInferenceJobTable')
 
+
 def update_execute_job_table(prompt_id, key, value):
     logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
     try:
@@ -54,65 +55,83 @@ def update_execute_job_table(prompt_id, key, value):
         logger.error(f"Update execute job table error: {e}")
         raise e
 
-def record_metric():
+
+def record_metric(req: InvocationsRequest):
+    data = [
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': 'Stable-Diffusion'
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if req.workflow:
+        data.append({
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': req.workflow
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
     response = cloudwatch.put_metric_data(
         Namespace='ESD',
-        MetricData=[
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceTotal',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                    {
-                        'Name': 'Instance',
-                        'Value': endpoint_instance_id
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Service',
-                        'Value': 'Stable-Diffusion'
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-            {
-                'MetricName': 'InferenceEndpointReceived',
-                'Dimensions': [
-                    {
-                        'Name': 'Endpoint',
-                        'Value': endpoint_name
-                    },
-                ],
-                'Timestamp': datetime.datetime.utcnow(),
-                'Value': 1,
-                'Unit': 'Count'
-            },
-        ]
+        MetricData=data
     )
+
     logger.info(f"record_metric response: {response}")
 
 
@@ -277,7 +296,7 @@ def sagemaker_api(_, app: FastAPI):
 
         update_execute_job_table(req.id, 'startTime', start_time)
 
-        record_metric()
+        record_metric(req)
 
         with condition:
             try:
@@ -507,8 +526,8 @@ try:
     import modules.script_callbacks as script_callbacks
 
     script_callbacks.on_app_started(sagemaker_api)
-    on_docker = os.environ.get('ON_DOCKER', "false")
-    if on_docker == "true":
+    on_sagemaker = os.environ.get('ON_SAGEMAKER', "false")
+    if on_sagemaker == "true":
         from modules import shared
         shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)

@@ -12,13 +12,17 @@ import time
 import uuid
 from datetime import datetime, timedelta
 
+import boto3
 import requests
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
 
 logger = logging.getLogger(__name__)
+
+s3 = boto3.client('s3')
 
 
 def get_parts_number(local_path: str):
@@ -239,6 +243,7 @@ def comfy_execute_create(n, api, endpoint_name, wait_succeed=True,
         prompt_id = str(uuid.uuid4())
         workflow = json.load(f)
         workflow['prompt_id'] = prompt_id
+        workflow['workflow'] = 'latency_compare_comfy'
         workflow['endpoint_name'] = endpoint_name
 
         resp = api.create_execute(headers=headers, data=workflow)
@@ -288,6 +293,7 @@ def sd_inference_create(n, api, endpoint_name: str, workflow: str = './data/api_
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.TXT2IMG.value,
+        "workflow": 'latency_compare_sd',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []
@@ -348,6 +354,7 @@ def sd_inference_esi(api, workflow: str = './data/api_params/extra-single-image-
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.ESI.value,
+        "workflow": 'esi',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []
@@ -407,6 +414,7 @@ def sd_inference_rembg(api, workflow: str = './data/api_params/rembg-api-params.
     data = {
         "inference_type": "Async",
         "task_type": InferenceType.REMBG.value,
+        "workflow": 'rembg',
         "models": {
             "Stable-diffusion": [config.default_model_id],
             "embeddings": []
@@ -510,3 +518,23 @@ def endpoints_wait_for_in_service(api, endpoint_name: str = None):
             return True
 
     return False
+
+
+def check_s3_directory(directory):
+    try:
+        time.sleep(10)
+        paginator = s3.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=config.bucket, Delimiter='/')
+
+        for page in pages:
+            if 'CommonPrefixes' in page:
+                for prefix in page['CommonPrefixes']:
+                    if prefix['Prefix'].endswith(directory):
+                        raise Exception(f"cache *-{directory} still exists in {prefix['Prefix']}")
+        return False
+    except (NoCredentialsError, PartialCredentialsError):
+        print("Credentials not available.")
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False

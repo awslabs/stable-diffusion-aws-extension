@@ -66,9 +66,8 @@
 2. Interrogate を行うには、画像を **img2img** タブにアップロードするだけです。
 ![img2img tab](../images/clip_tab.png) 
 
-3. 推論エンドポイントを選択します。**Select Cloud SageMaker Endpoint** の右側の更新ボタンをクリックし、**InService** 状態の推論エンドポイントを選択します。
-4. **Interrogate CLIP on cloud** または **Interrogate DeepBooru on cloud** をクリックします。
-5. 推論結果を確認します。**Inference Job JDs** のドロップダウンリストを更新し、推論の提出タイムスタンプに一致する最上位の **Inference Job ID** を確認して、推論結果を確認します。
+3. **Interrogate CLIP on cloud** または **Interrogate DeepBooru on cloud** をクリックします。
+4. 推論結果を確認します。**Inference Job JDs** のドロップダウンリストを更新し、推論の提出タイムスタンプに一致する最上位の **Inference Job ID** を確認して、推論結果を確認します。
 ![interrogate generate results](../images/clip.png) 
 
 ### 連続推論シナリオ

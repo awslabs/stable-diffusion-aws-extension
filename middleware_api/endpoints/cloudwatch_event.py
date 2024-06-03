@@ -31,6 +31,8 @@ period = 300
 def handler(event, context):
     logger.info(json.dumps(event))
 
+    gen_workflow_ds()
+
     if 'detail' in event and 'EndpointStatus' in event['detail']:
         endpoint_name = event['detail']['EndpointName']
         endpoint_status = event['detail']['EndpointStatus']
@@ -58,6 +60,93 @@ def handler(event, context):
 
     clean_ds()
     return {}
+
+
+def gen_workflow_ds():
+    dimensions = [{'Name': 'Workflow'}]
+    metrics = cloudwatch.list_metrics(Namespace='ESD', MetricName='InferenceTotal', Dimensions=dimensions)['Metrics']
+
+    workflow_name = []
+    for m in metrics:
+        workflow = m['Dimensions'][0]['Value']
+        workflow_name.append(workflow)
+
+    workflow_name.sort()
+
+    logger.info(f"Workflow Names: {workflow_name}")
+
+    y = 0
+    widgets = []
+    for workflow in workflow_name:
+        widgets.append({
+            "height": 4,
+            "width": 24,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [
+                        "ESD",
+                        "InferenceTotal",
+                        "Workflow",
+                        workflow,
+                        {
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        ".",
+                        "InferenceSucceed",
+                        ".",
+                        ".",
+                        {
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        ".",
+                        "InferenceLatency",
+                        ".",
+                        ".",
+                        {
+                            "stat": "Minimum",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "Average",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "p99",
+                            "region": aws_region
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "region": aws_region
+                        }
+                    ]
+                ],
+                "sparkline": True,
+                "view": "singleValue",
+                "region": aws_region,
+                "stat": "Maximum",
+                "period": 300,
+                "title": f"{workflow}"
+            }
+        })
+        y = y + 1
+
+    if len(widgets) > 0:
+        cloudwatch.put_dashboard(DashboardName='ESD-Workflow', DashboardBody=json.dumps({"widgets": widgets}))
 
 
 def clean_ds():
@@ -451,6 +540,23 @@ def ds_body(ep: Endpoint, custom_metrics):
                     "stat": "Maximum"
                 }
             },
+            {
+                "type": "log",
+                "x": 0,
+                "y": 20,
+                "width": 24,
+                "height": 8,
+                "properties": {
+                    "query": f"SOURCE '/aws/sagemaker/Endpoints/{ep_name}' "
+                             f"| fields @timestamp, @logStream, @message\r\n"
+                             f"| filter @message like /error/\r\n"
+                             f"| sort @timestamp desc\r\n| limit 500",
+                    "region": aws_region,
+                    "stacked": False,
+                    "view": "table",
+                    "title": "Endpoint Error Log"
+                }
+            }
         ]
     }
 
@@ -522,7 +628,7 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
     ids = sorted(ids, key=custom_sort)
 
     x = 0
-    y = 10
+    y = 30
 
     colors = ["#9467bd", "#ff7f0e", "#2ca02c", "#8c564b", "#e377c2", "#7f7f7f", "#1f77b4"]
     color_index = 0
@@ -544,18 +650,67 @@ def resolve_gpu_ds(ep: Endpoint, custom_metrics):
             list.append({
                 "type": "text",
                 "x": 0,
-                "y": y,
+                "y": y + 1,
                 "width": 24,
                 "height": 3,
                 "properties": {
                     "markdown": f"# Endpoint Instance - {item['instance_id']} \n"
                                 f"- InferenceTotal: Inference Job Count (Comfy Only)\n"
-                                f"- GPUUtilization: The percentage of GPU units that are used on a GPU in an instance.\n"
-                                f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU in an instance."
+                                f"- GPUUtilization: The percentage of GPU units that are used on a GPU.\n"
+                                f"- GPUMemoryUtilization: The percentage of GPU memory that are used on a GPU."
 
                 }
             })
-            y = y + 2
+            list.append({
+                "type": "metric",
+                "x": 0,
+                "y": y + 2,
+                "width": 24,
+                "height": 4,
+                "properties": {
+                    "metrics": [
+                        [
+                            "ESD",
+                            "DiskTotal",
+                            "Endpoint",
+                            ep_name,
+                            "Instance",
+                            item['instance_id'],
+                        ],
+                        [
+                            ".",
+                            "DiskUsed",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ],
+                        [
+                            ".",
+                            "DiskFree",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ],
+                        [
+                            ".",
+                            "DiskPercentage",
+                            ".",
+                            ".",
+                            ".",
+                            "."
+                        ]
+                    ],
+                    "sparkline": True,
+                    "view": "singleValue",
+                    "region": aws_region,
+                    "stat": "Maximum",
+                    "period": period,
+                    "title": "Disk"
+                }
+            })
+            y = y + 3
 
         list.append({
             "height": 4,

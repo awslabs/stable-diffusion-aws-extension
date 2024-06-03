@@ -57,7 +57,7 @@ class TestComfyMutilGpusEndpointCreateE2E:
         }
 
         data = {
-            "endpoint_name": 'gpus',
+            "endpoint_name": f'gpus-{config.endpoint_name}',
             "service_type": "comfy",
             "endpoint_type": "Async",
             "instance_type": 'ml.g5.12xlarge',

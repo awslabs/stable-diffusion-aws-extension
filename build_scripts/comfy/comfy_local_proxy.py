@@ -7,12 +7,15 @@ import sys
 import tarfile
 import threading
 
+import boto3
 import requests
 from aiohttp import web
 
 import folder_paths
 import server
 from execution import PromptExecutor
+import execution
+import comfy
 
 import time
 import json
@@ -70,11 +73,13 @@ bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 thread_max_wait_time = os.environ.get('THREAD_MAX_WAIT_TIME', 60)
 max_wait_time = os.environ.get('MAX_WAIT_TIME', 86400)
 msg_max_wait_time = os.environ.get('MSG_MAX_WAIT_TIME', 86400)
-
+is_master_process = os.getenv('MASTER_PROCESS') == 'true'
 no_need_sync_files = ['.autosave', '.cache', '.autosave1', '~', '.swp']
 
 need_resend_msg_result = []
-
+PREPARE_ID = 'default'
+# additional
+PREPARE_MODE = 'additional'
 
 if not api_url:
     raise ValueError("API_URL environment variables must be set.")
@@ -117,15 +122,12 @@ def save_images_locally(response_json, local_folder):
 
 
 def calculate_file_hash(file_path):
-    # 创建一个哈希对象
     hasher = hashlib.sha256()
-    # 打开文件并逐块更新哈希对象
     with open(file_path, 'rb') as file:
-        buffer = file.read(65536)  # 64KB 的缓冲区大小
+        buffer = file.read(65536)
         while len(buffer) > 0:
             hasher.update(buffer)
             buffer = file.read(65536)
-    # 返回哈希值的十六进制表示
     return hasher.hexdigest()
 
 
@@ -247,7 +249,7 @@ def execute_proxy(func):
         is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
         if not is_synced:
             logger.debug(f"is_synced is {is_synced} stop cloud prompt")
-            send_error_msg(executor, prompt_id, "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'sync' button .")
+            send_error_msg(executor, prompt_id, "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'Synchronize' button .")
             return
 
         with concurrent.futures.ThreadPoolExecutor() as executorThread:
@@ -365,9 +367,15 @@ def execute_proxy(func):
                         elif response['data']['status'] == 'failed':
                             logger.error(
                                 f"there is no response on sagemaker from execute result !!!!!!!! ")
-                            send_error_msg(executor, prompt_id,
-                                           f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
-                            break
+                            if 'message' in response['data'] and response['data']['message']:
+                                send_error_msg(executor, prompt_id,
+                                               f"There may be some errors when valid or execute the prompt on the cloud. Please check the SageMaker logs. errors: {response['data']['message']}")
+                                break
+                            else:
+                                logger.error(f"valid error on sagemaker :{response['data']}")
+                                send_error_msg(executor, prompt_id,
+                                               f"There may be some errors when valid or execute the prompt on the cloud. errors")
+                                break
                         elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
                             logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
                             i = i - 1
@@ -415,7 +423,7 @@ def send_sync_proxy(func):
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
-def compress_and_upload(folder_path, timestamp):
+def compress_and_upload(folder_path, prepare_version):
     for subdir in next(os.walk(folder_path))[1]:
         subdir_path = os.path.join(folder_path, subdir)
         tar_filename = f"{subdir}.tar.gz"
@@ -424,7 +432,7 @@ def compress_and_upload(folder_path, timestamp):
         # 创建 tar 压缩文件
         with tarfile.open(tar_filename, "w:gz") as tar:
             tar.add(subdir_path, arcname=os.path.basename(subdir_path))
-        s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/custom_nodes/"'
         logger.info(s5cmd_syn_node_command)
         os.system(s5cmd_syn_node_command)
         logger.info(f"rm {tar_filename}")
@@ -448,26 +456,27 @@ def compress_and_upload(folder_path, timestamp):
 def sync_default_files():
     try:
         timestamp = str(int(time.time() * 1000))
+        prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
         need_prepare = True
         prepare_type = 'default'
         need_reboot = True
         logger.info(f" sync custom nodes files")
-        # s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+        # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
         # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
         # os.system(s5cmd_syn_node_command)
-        compress_and_upload(f"{DIR2}", timestamp)
+        compress_and_upload(f"{DIR2}", prepare_version)
         logger.info(f" sync input files")
-        s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+        s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
         logger.info(f"sync input files start {s5cmd_syn_input_command}")
         os.system(s5cmd_syn_input_command)
         logger.info(f" sync models files")
-        s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+        s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
         logger.info(f"sync models files start {s5cmd_syn_model_command}")
         os.system(s5cmd_syn_model_command)
         logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
         url = api_url + "prepare"
         logger.info(f"URL:{url}")
-        data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": timestamp,
+        data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": prepare_version,
                 "prepare_type": prepare_type}
         logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
         result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
@@ -496,10 +505,11 @@ def sync_files(filepath, is_folder, is_auto):
             if filepath.endswith(ignore_item):
                 logger.info(f"no need to sync files by ignore files {filepath} ends by {ignore_item}")
                 return None
+        prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
         if (str(directory).endswith(f"{DIR2}" if DIR2.startswith("/") else f"/{DIR2}")
                 or str(filepath) == DIR2 or str(filepath) == f'./{DIR2}' or f"{DIR2}/" in filepath):
             logger.info(f" sync custom nodes files: {filepath}")
-            s5cmd_syn_node_command = f's5cmd --log=error sync --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+            s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/custom_nodes/"'
             # s5cmd_syn_node_command = f'aws s3 sync {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
 
@@ -516,7 +526,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
               or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
             logger.info(f" sync input files: {filepath}")
-            s5cmd_syn_input_command = f's5cmd --log=error sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+            s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
             # 判断文件写完后再同步
             if is_auto:
@@ -535,7 +545,7 @@ def sync_files(filepath, is_folder, is_auto):
         elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
               or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
             logger.info(f" sync models files: {filepath}")
-            s5cmd_syn_model_command = f's5cmd --log=error sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+            s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
             # 判断文件写完后再同步
             if is_auto:
@@ -557,7 +567,7 @@ def sync_files(filepath, is_folder, is_auto):
         if need_prepare:
             url = api_url + "prepare"
             logger.info(f"URL:{url}")
-            data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": timestamp,
+            data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id":  prepare_version,
                     "prepare_type": prepare_type}
             logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
             result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
@@ -713,6 +723,25 @@ async def check_prepare(self):
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
+@server.PromptServer.instance.routes.get("/gc")
+async def gc(self):
+    logger.info(f"start to gc {self}")
+    try:
+        logger.info(f"gc start: {time.time()}")
+        server_instance = server.PromptServer.instance
+        e = execution.PromptExecutor(server_instance)
+        e.reset()
+        comfy.model_management.cleanup_models()
+        gc.collect()
+        comfy.model_management.soft_empty_cache()
+        gc_triggered = True
+        logger.info(f"gc end: {time.time()}")
+    except Exception as e:
+        logger.info(f"error restart  {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
 @server.PromptServer.instance.routes.get("/restart")
 async def restart(self):
     logger.info(f"start to restart {self}")
@@ -724,7 +753,7 @@ async def restart(self):
     return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-@server.PromptServer.instance.routes.post("/sync_env")
+@server.PromptServer.instance.routes.get("/sync_env")
 async def sync_env(request):
     logger.info(f"start to sync_env {request}")
     try:
@@ -752,3 +781,96 @@ async def change_env(request):
 async def get_env(request):
     env = os.environ.get(DISABLE_AWS_PROXY, 'False')
     return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
+
+
+@server.PromptServer.instance.routes.post("/workflows")
+async def release_workflow(request):
+    if not is_master_process:
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": False, "message": "only master can release workflow"}))
+
+    logger.info(f"start to release workflow {request}")
+    try:
+        json_data = await request.json()
+        if 'name' not in json_data or not json_data['name']:
+            raise ValueError("name is required")
+
+        workflow_name = json_data['name']
+        payload_json = ''
+
+        if 'payload_json' in json_data:
+            payload_json = json_data['payload_json']
+
+        if check_file_exists(f"comfy/workflows/{workflow_name}/lock"):
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "workflow already exists"}))
+
+        start_time = time.time()
+
+        s5cmd_syn_model_command = (f's5cmd sync '
+                                   f'--delete=true '
+                                   f'--exclude="*.log" '
+                                   f'--exclude="*__pycache__*" '
+                                   f'--exclude="*.cache*" '
+                                   f'"/home/ubuntu/ComfyUI/*" '
+                                   f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+        logger.info(f"sync models files start {s5cmd_syn_model_command}")
+        os.system(s5cmd_syn_model_command)
+
+        end_time = time.time()
+        cost_time = end_time - start_time
+        data = {
+            "payload_json": payload_json,
+            "image_uri": os.getenv('IMAGE_HASH'),
+            "name": workflow_name,
+        }
+        get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+        response = get_response.json()
+        logger.info(f"release workflow response is {response}")
+
+        if get_response.status_code == 200:
+            os.system(f'echo "lock" > lock && s5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
+    except Exception as e:
+        return web.Response(status=500, content_type='application/json',
+                            body=json.dumps({"result": False, "message": e}))
+
+
+def check_file_exists(key):
+    try:
+        s3 = boto3.client('s3')
+        s3.head_object(Bucket=bucket_name, Key=key)
+        return True
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise e
+
+
+def restore_commands():
+    subprocess.run(["sleep", "5"])
+    os.system("rm -rf /home/ubuntu/ComfyUI")
+    subprocess.run(["pkill", "-f", "python3"])
+
+
+# RestoreEC2EnvironmentToDefault
+@server.PromptServer.instance.routes.post("/restore")
+async def release_rebuild_workflow(request):
+    if not is_master_process:
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": False, "message": "only master can restore comfy"}))
+
+    logger.info(f"start to restore EC2 {request}")
+
+    try:
+        thread = threading.Thread(target=restore_commands)
+        thread.start()
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "comfy will be restored in 5 seconds"}))
+    except Exception as e:
+        return web.Response(status=500, content_type='application/json',
+                            body=json.dumps({"result": False, "message": e}))

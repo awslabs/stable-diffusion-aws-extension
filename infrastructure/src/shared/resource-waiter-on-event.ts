@@ -11,6 +11,7 @@ interface Event {
     apiUrl: string;
     apiKey: string;
     name: string;
+    apiEndpointType: string;
   };
 }
 
@@ -36,6 +37,11 @@ export async function handler(event: Event, context: Object) {
 
 
 async function waitApiReady(event: Event, path: string) {
+  if (event.ResourceProperties.apiEndpointType === 'PRIVATE') {
+      console.log(`${event.ResourceProperties.name} Skipping /${path} readiness check for private API`);
+      return;
+  }
+
   const lambdaStartTime = Date.now();
   const startCheckTime = Date.now();
 
