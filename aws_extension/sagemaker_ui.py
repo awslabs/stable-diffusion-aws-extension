@@ -1036,7 +1036,9 @@ def load_model_list(username):
 
 
 def load_lora_models(username):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='Lora')]))
+    data = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='Lora')]))
+    data.sort()
+    return data
 
 
 def load_hypernetworks_models(username):
