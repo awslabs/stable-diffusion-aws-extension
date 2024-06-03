@@ -223,6 +223,11 @@ Resources:
           cd /root
           
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
+          
+          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
 
           sudo apt-get update
           sudo apt install nginx jq supervisor -y

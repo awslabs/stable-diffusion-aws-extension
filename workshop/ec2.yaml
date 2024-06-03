@@ -206,8 +206,12 @@ Resources:
           echo "ESD_EC2=true" >> /etc/environment
           source /etc/environment
           
-          sudo apt-get update
+          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
           
+          sudo apt-get update
           sudo apt install nginx -y
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
