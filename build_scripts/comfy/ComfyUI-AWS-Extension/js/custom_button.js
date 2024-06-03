@@ -27,7 +27,7 @@ export function rebootAPI() {
 }
 
 export async function restore() {
-    if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
+    if (confirm("Are you sure you'd like to restore your local environment?")) {
         try {
             var target = {};
             const response = await api.fetchApi("/restore", {
