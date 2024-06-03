@@ -26,6 +26,32 @@ export function rebootAPI() {
     return false;
 }
 
+export async function restore() {
+    if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
+        try {
+            var target = {};
+            const response = await api.fetchApi("/restore", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(target)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('Restore success!');
+            } else {
+                // 如果请求失败，显示错误消息
+                alert('Restore failed. Please try again later.');
+            }
+        } catch (exception) {
+            console.error('Error occurred during restore:', exception);
+            alert('An error occurred during restore. Please try again later.');
+        }
+        return true;
+    }
+    return false;
+}
+
+
 export async function syncEnv() {
     if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
         try {
@@ -225,8 +251,10 @@ const customButton = {
         app.ui.menuContainer.appendChild(restartButton);
         const rebootButton = createButton('Reboot EC2', rebootAPI);
         app.ui.menuContainer.appendChild(rebootButton);
-        const syncButton = createButton('Synchronize', syncEnv);
-        app.ui.menuContainer.appendChild(syncButton);
+        // const syncButton = createButton('Synchronize', syncEnv);
+        // app.ui.menuContainer.appendChild(syncButton);
+        const restoreButton = createButton('Restore', restore);
+        app.ui.menuContainer.appendChild(restoreButton);
     },
 };
 
