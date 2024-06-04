@@ -282,13 +282,13 @@ if is_on_ec2:
                     logger.info(f"no sync available for {url} response {prepare_response}")
                     return False
 
-            logger.debug(f"payload is: {payload}")
-            is_synced = check_if_sync_is_already(f"{api_url}/prepare/{get_endpoint_name_by_workflow_name(workflow_name)}")
-            if not is_synced:
-                logger.debug(f"is_synced is {is_synced} stop cloud prompt")
-                send_error_msg(executor, prompt_id,
-                               "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'Synchronize' button .")
-                return
+            logger.info(f"payload is: {payload}")
+            # is_synced = check_if_sync_is_already(f"{api_url}/prepare/{get_endpoint_name_by_workflow_name(workflow_name)}")
+            # if not is_synced:
+            #     logger.debug(f"is_synced is {is_synced} stop cloud prompt")
+            #     send_error_msg(executor, prompt_id,
+            #                    "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'Synchronize' button .")
+            #     return
 
             with concurrent.futures.ThreadPoolExecutor() as executorThread:
                 execute_future = executorThread.submit(send_post_request, f"{api_url}/executes", payload)
