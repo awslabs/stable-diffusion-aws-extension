@@ -845,13 +845,7 @@ if is_on_ec2:
                                 body=json.dumps(
                                     {"result": False, "message": "restart is not allowed during sync workflow"}))
 
-        logger.info(f"start to restart {self}")
-        try:
-            sys.stdout.close_log()
-        except Exception as e:
-            logger.info(f"error restart  {e}")
-            pass
-        return os.execv(sys.executable, [sys.executable] + sys.argv)
+        return restart_response()
 
 
     @server.PromptServer.instance.routes.get("/sync_env")
@@ -1063,10 +1057,15 @@ if is_on_ec2:
         return get_response.status_code == 200
 
 
-    def restore_commands():
+    def restart_docker_commands():
         subprocess.run(["sleep", "5"])
         subprocess.run(["pkill", "-f", "python3"])
 
+    def restart_response():
+        thread = threading.Thread(target=restart_docker_commands)
+        thread.start()
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds"}))
 
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
@@ -1095,10 +1094,7 @@ if is_on_ec2:
             os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
             os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
             os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
-            thread = threading.Thread(target=restore_commands)
-            thread.start()
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "comfy will be restored in 5 seconds"}))
+            return restart_response()
         except Exception as e:
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": e}))
