@@ -268,9 +268,15 @@ Resources:
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
           
+          # Step1: EC2 init
           # tail -f /var/log/cloud-init-output.log
-          # tail -f /root/stable-diffusion-aws-extension/container/*.log
+          #
+          # Step2: Comfy init
           # sudo journalctl -u comfy -f
+          #
+          # Step3: Comfy start
+          # tail -f /root/stable-diffusion-aws-extension/container/*.log
+          # 
           # sudo journalctl -u comfy --no-pager -n 200
           # docker images -q | xargs docker rmi -f
 
