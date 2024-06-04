@@ -1044,14 +1044,8 @@ if is_on_ec2:
 
 
     def restart_docker_commands():
-        try:
-            sys.stdout.close_log()
-        except Exception as e:
-            logger.info(f"error restart  {e}")
-            pass
-        return os.execv(sys.executable, [sys.executable] + sys.argv)
-        # subprocess.run(["sleep", "5"])
-        # subprocess.run(["pkill", "-f", "python3"])
+        subprocess.run(["sleep", "5"])
+        subprocess.run(["pkill", "-f", "python3"])
 
     def restart_response():
         thread = threading.Thread(target=restart_docker_commands)
