@@ -237,24 +237,28 @@ const customButton = {
         // radioContainer.appendChild(radioOption2);
         // app.ui.menuContainer.appendChild(radioContainer);
 
-        const response = await api.fetchApi("/get_env");
-        const data = await response.json();
-        const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
-        // const checkboxOption2 = createCheckboxOption('Local', 'options', false, handleCheckboxChange);
-        const checkboxContainer = document.createElement('div');
-        checkboxContainer.style.display = 'flex';
-        checkboxContainer.appendChild(checkboxOption1);
-        // checkboxContainer.appendChild(checkboxOption2);
-        app.ui.menuContainer.appendChild(checkboxContainer);
-
+        const check_response = await api.fetchApi("/check_is_master");
+        const check_data = await check_response.json();
+        if (check_data.master.toUpperCase() === 'TRUE'){
+            const response = await api.fetchApi("/get_env");
+            const data = await response.json();
+            const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
+            // const checkboxOption2 = createCheckboxOption('Local', 'options', false, handleCheckboxChange);
+            const checkboxContainer = document.createElement('div');
+            checkboxContainer.style.display = 'flex';
+            checkboxContainer.appendChild(checkboxOption1);
+            // checkboxContainer.appendChild(checkboxOption2);
+            app.ui.menuContainer.appendChild(checkboxContainer);
+            const rebootButton = createButton('Reboot EC2', rebootAPI);
+            app.ui.menuContainer.appendChild(rebootButton);
+            // const syncButton = createButton('Synchronize', syncEnv);
+            // app.ui.menuContainer.appendChild(syncButton);
+            const restoreButton = createButton('Restore', restore);
+            app.ui.menuContainer.appendChild(restoreButton);
+        }
         const restartButton = createButton('Restart ComfyUI', restartAPI);
         app.ui.menuContainer.appendChild(restartButton);
-        const rebootButton = createButton('Reboot EC2', rebootAPI);
-        app.ui.menuContainer.appendChild(rebootButton);
-        // const syncButton = createButton('Synchronize', syncEnv);
-        // app.ui.menuContainer.appendChild(syncButton);
-        const restoreButton = createButton('Restore', restore);
-        app.ui.menuContainer.appendChild(restoreButton);
+
     },
 };
 
