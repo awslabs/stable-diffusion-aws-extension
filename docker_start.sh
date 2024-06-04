@@ -104,6 +104,7 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
+           -e COMFY_ENDPOINT=name \\
            -e S3_BUCKET_NAME=$COMFY_BUCKET_NAME \\
            -e AWS_REGION=$AWS_REGION \\
            -e AWS_DEFAULT_REGION=$AWS_REGION \\
