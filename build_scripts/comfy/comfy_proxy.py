@@ -479,8 +479,6 @@ if is_on_ec2:
             subdir_path = os.path.join(folder_path, subdir)
             tar_filename = f"{subdir}.tar.gz"
             logger.info(f"Compressing the {tar_filename}")
-
-            # 创建 tar 压缩文件
             with tarfile.open(tar_filename, "w:gz") as tar:
                 tar.add(subdir_path, arcname=os.path.basename(subdir_path))
             s5cmd_syn_node_command = f's5cmd --log=error cp {tar_filename} "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/custom_nodes/"'
