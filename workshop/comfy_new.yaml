@@ -299,33 +299,6 @@ Outputs:
   UserNumber:
     Description: The number of users
     Value: !Sub ${UserNumber}
-  User01:
-    Description: URL for User01
+  UserNumberPortStart:
+    Description: URL for First User Start Port
     Value: !Sub http://${ComfyEIP}:8001
-  User02:
-    Description: URL for User02
-    Value: !Sub http://${ComfyEIP}:8002
-  User03:
-    Description: URL for User03
-    Value: !Sub http://${ComfyEIP}:8003
-  User04:
-    Description: URL for User04
-    Value: !Sub http://${ComfyEIP}:8004
-  User05:
-    Description: URL for User05
-    Value: !Sub http://${ComfyEIP}:8005
-  User06:
-    Description: URL for User06
-    Value: !Sub http://${ComfyEIP}:8006
-  User07:
-    Description: URL for User07
-    Value: !Sub http://${ComfyEIP}:8007
-  User08:
-    Description: URL for User08
-    Value: !Sub http://${ComfyEIP}:8008
-  User09:
-    Description: URL for User09
-    Value: !Sub http://${ComfyEIP}:8009
-  User10:
-    Description: URL for User10
-    Value: !Sub http://${ComfyEIP}:8010
