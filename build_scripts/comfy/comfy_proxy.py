@@ -33,9 +33,7 @@ import gc
 from dataclasses import dataclass
 from typing import Optional
 
-
 from boto3.dynamodb.conditions import Key
-
 
 DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
 sync_msg_list = []
@@ -76,7 +74,6 @@ if is_on_ec2:
     if 'COMFY_NODE_PATH' in os.environ and os.environ.get('COMFY_NODE_PATH'):
         DIR2 = os.environ.get('COMFY_NODE_PATH')
 
-
     api_url = os.environ.get('COMFY_API_URL')
     api_token = os.environ.get('COMFY_API_TOKEN')
     comfy_endpoint = os.environ.get('COMFY_ENDPOINT')
@@ -105,6 +102,10 @@ if is_on_ec2:
         raise ValueError("COMFY_ENDPOINT environment variables must be set.")
 
     headers = {"x-api-key": api_token, "Content-Type": "application/json"}
+
+
+    def get_endpoint_name_by_workflow_name(name: str, endpoint_type: str = 'async'):
+        return f"comfy-{endpoint_type}-{name}"
 
 
     def save_images_locally(response_json, local_folder):
@@ -233,20 +234,28 @@ if is_on_ec2:
 
             client_id = extra_data['client_id'] if 'client_id' in extra_data else None
             if not client_id:
-                send_error_msg(executor, prompt_id, f"Something went wrong when execute,please check your client_id and try again")
+                send_error_msg(executor, prompt_id,
+                               f"Something went wrong when execute,please check your client_id and try again")
                 return web.Response()
             global client_release_map
             workflow_name = client_release_map.get(client_id)
-            if not workflow_name and not is_master_process:
-                send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
-                return web.Response()
+            if not workflow_name :
+                if not is_master_process:
+                    send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
+                    return web.Response()
+                elif not get_endpoint_name_by_workflow_name(workflow_name):
+                    send_error_msg(executor, prompt_id, f"Please check your endpoint:{get_endpoint_name_by_workflow_name(workflow_name)} before you execute prompt")
+                    return web.Response()
+            # else:
+                # comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
+            logger.info(f"use endpoint:{get_endpoint_name_by_workflow_name(workflow_name)} workflow:{workflow_name} to generate")
 
             payload = {
                 "number": str(server.PromptServer.instance.number),
                 "prompt": prompt,
                 "prompt_id": prompt_id,
                 "extra_data": extra_data,
-                "endpoint_name": comfy_endpoint,
+                "endpoint_name": get_endpoint_name_by_workflow_name(workflow_name),
                 "need_prepare": comfy_need_prepare,
                 "need_sync": comfy_need_sync,
                 "multi_async": False,
@@ -273,12 +282,12 @@ if is_on_ec2:
                     logger.info(f"no sync available for {url} response {prepare_response}")
                     return False
 
-
             logger.debug(f"payload is: {payload}")
-            is_synced = check_if_sync_is_already(f"{api_url}/prepare/{comfy_endpoint}")
+            is_synced = check_if_sync_is_already(f"{api_url}/prepare/{get_endpoint_name_by_workflow_name(workflow_name)}")
             if not is_synced:
                 logger.debug(f"is_synced is {is_synced} stop cloud prompt")
-                send_error_msg(executor, prompt_id, "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'Synchronize' button .")
+                send_error_msg(executor, prompt_id,
+                               "Your local environment has not compleated to synchronized on cloud already. Please wait for a moment or click the 'Synchronize' button .")
                 return
 
             with concurrent.futures.ThreadPoolExecutor() as executorThread:
@@ -318,18 +327,23 @@ if is_on_ec2:
                                         time.sleep(3)
                                         i = i - 2
                                     elif response['data']['status'] == 'failed':
-                                        logger.error(f"there is no response on sagemaker from execute thread result !!!!!!!! ")
+                                        logger.error(
+                                            f"there is no response on sagemaker from execute thread result !!!!!!!! ")
                                         # send_error_msg(executor, prompt_id,
                                         #                f"There may be some errors when valid and execute the prompt on the cloud. Please check the SageMaker logs. error info: {response['data']['message']}")
                                         # no need to send msg anymore
                                         already_synced = True
                                         break
-                                    elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                                        logger.info(f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
+                                    elif response['data']['status'] != 'Completed' and response['data'][
+                                        'status'] != 'success':
+                                        logger.info(
+                                            f"no images found already ,waiting sagemaker thread result, current status is {response['data']['status']}")
                                         time.sleep(2)
                                         i = i - 1
-                                    elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
-                                        logger.error(f"there is no response from execute thread result !!!!!!!! {response}")
+                                    elif 'data' not in response or not response['data'] or 'status' not in response[
+                                        'data'] or not response['data']['status']:
+                                        logger.error(
+                                            f"there is no response from execute thread result !!!!!!!! {response}")
                                         # no need to send msg anymore
                                         already_synced = True
                                         # send_error_msg(executor, prompt_id,"There may be some errors when executing the prompt on cloud. No images or videos generated.")
@@ -340,7 +354,8 @@ if is_on_ec2:
                                                 'output_files' in images_response.json()['data'] and len(
                                             images_response.json()['data']['output_files']) > 0)):
                                             save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                                            save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                            save_files(prompt_id, images_response.json(), 'output_files', 'output',
+                                                       True)
                                         else:
                                             send_error_msg(executor, prompt_id,
                                                            "There may be some errors when executing the prompt on the cloud. Please check the SageMaker logs.")
@@ -406,15 +421,21 @@ if is_on_ec2:
                                                    f"There may be some errors when valid or execute the prompt on the cloud. errors")
                                     break
                             elif response['data']['status'] != 'Completed' and response['data']['status'] != 'success':
-                                logger.info(f"{i} images not already ,waiting sagemaker result .....{response['data']['status'] }")
+                                logger.info(
+                                    f"{i} images not already ,waiting sagemaker result .....{response['data']['status']}")
                                 i = i - 1
                                 time.sleep(3)
-                            elif 'data' not in response or not response['data'] or 'status' not in response['data'] or not response['data']['status']:
+                            elif 'data' not in response or not response['data'] or 'status' not in response[
+                                'data'] or not response['data']['status']:
                                 logger.info(f"{i} there is no response from sync executes {response}")
-                                send_error_msg(executor, prompt_id, f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
+                                send_error_msg(executor, prompt_id,
+                                               f"There may be some errors when executing the prompt on the cloud. No images or videos generated. {response['message']}")
                                 break
                             elif response['data']['status'] == 'Completed' or response['data']['status'] == 'success':
-                                if ('temp_files' in images_response.json()['data'] and len(images_response.json()['data']['temp_files']) > 0) or (('output_files' in images_response.json()['data'] and len(images_response.json()['data']['output_files']) > 0)):
+                                if ('temp_files' in images_response.json()['data'] and len(
+                                        images_response.json()['data']['temp_files']) > 0) or ((
+                                        'output_files' in images_response.json()['data'] and len(
+                                        images_response.json()['data']['output_files']) > 0)):
                                     save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
                                     save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                                     break
@@ -446,6 +467,7 @@ if is_on_ec2:
         def wrapper(*args, **kwargs):
             logger.info(f"Sending sync request----- {args}")
             return func(*args, **kwargs)
+
         return wrapper
 
 
@@ -596,7 +618,7 @@ if is_on_ec2:
             if need_prepare:
                 url = api_url + "prepare"
                 logger.info(f"URL:{url}")
-                data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id":  prepare_version,
+                data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": prepare_version,
                         "prepare_type": prepare_type}
                 logger.info(f"prepare params Data: {json.dumps(data, indent=4)}")
                 result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
@@ -721,6 +743,7 @@ if is_on_ec2:
 
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
+
 
     @server.PromptServer.instance.routes.post('/map_release')
     async def map_release(request):
@@ -851,7 +874,8 @@ if is_on_ec2:
         logger.info(f"start to change_env {request}")
         json_data = await request.json()
         if DISABLE_AWS_PROXY in json_data and json_data[DISABLE_AWS_PROXY] is not None:
-            logger.info(f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)} {str(json_data[DISABLE_AWS_PROXY])}")
+            logger.info(
+                f"origin evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)} {str(json_data[DISABLE_AWS_PROXY])}")
             os.environ[DISABLE_AWS_PROXY] = str(json_data[DISABLE_AWS_PROXY])
             logger.info(f"now evn key DISABLE_AWS_PROXY is :{os.environ.get(DISABLE_AWS_PROXY)}")
         return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
@@ -862,6 +886,7 @@ if is_on_ec2:
         env = os.environ.get(DISABLE_AWS_PROXY, 'False')
         return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
 
+
     def get_directory_size(directory):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(directory):
@@ -870,6 +895,7 @@ if is_on_ec2:
                 if not os.path.islink(filepath):  # 检查文件是否不是符号链接
                     total_size += os.path.getsize(filepath)
         return total_size
+
 
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
@@ -1043,6 +1069,7 @@ if is_on_ec2:
         subprocess.run(["sleep", "5"])
         subprocess.run(["pkill", "-f", "python3"])
 
+
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
         if os.getenv('WORKFLOW_NAME') != 'default':
@@ -1078,7 +1105,6 @@ if is_on_ec2:
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": e}))
 
-
 if is_on_sagemaker:
 
     global need_sync
@@ -1098,7 +1124,8 @@ if is_on_sagemaker:
     BUCKET = os.environ.get('S3_BUCKET_NAME')
     QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
 
-    GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID') if 'ENDPOINT_INSTANCE_ID' in os.environ and os.environ.get('ENDPOINT_INSTANCE_ID') else str(uuid.uuid4())
+    GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID') if 'ENDPOINT_INSTANCE_ID' in os.environ and os.environ.get(
+        'ENDPOINT_INSTANCE_ID') else str(uuid.uuid4())
     ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
     ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
@@ -1153,7 +1180,8 @@ if is_on_sagemaker:
         global need_sync
         # logger.info(f"sen_finish_sqs_msg start... {need_sync},{prompt_id_key}")
         if need_sync and QUEUE_URL and REGION:
-            message_body = {'prompt_id': prompt_id_key, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id_key},
+            message_body = {'prompt_id': prompt_id_key, 'event': 'finish',
+                            'data': {"node": None, "prompt_id": prompt_id_key},
                             'sid': None}
             message_id = sen_sqs_msg(message_body, prompt_id_key)
             logger.info(f"finish message sent {message_id}")
@@ -1166,11 +1194,13 @@ if is_on_sagemaker:
             prepare_type = sync_item['prepare_type']
             rlt = True
             if prepare_type in ['default', 'models']:
-                sync_models_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/models/*', f'{ROOT_PATH}/models', False)
+                sync_models_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/models/*', f'{ROOT_PATH}/models',
+                                                                    False)
                 if not sync_models_rlt:
                     rlt = False
             if prepare_type in ['default', 'inputs']:
-                sync_inputs_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/input/*', f'{ROOT_PATH}/input', False)
+                sync_inputs_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/input/*', f'{ROOT_PATH}/input',
+                                                                    False)
                 if not sync_inputs_rlt:
                     rlt = False
             if prepare_type in ['default', 'nodes']:
@@ -1193,14 +1223,15 @@ if is_on_sagemaker:
                 logger.info("sync_script")
                 # sync_script.startswith('s5cmd') 不允许
                 try:
-                    if sync_script and (sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
-                                        or sync_script.startswith("pip install") or sync_script.startswith("apt")
-                                        or sync_script.startswith("os.environ") or sync_script.startswith("ls")
-                                        or sync_script.startswith("env") or sync_script.startswith("source")
-                                        or sync_script.startswith("curl") or sync_script.startswith("wget")
-                                        or sync_script.startswith("print") or sync_script.startswith("cat")
-                                        or sync_script.startswith("sudo chmod") or sync_script.startswith("chmod")
-                                        or sync_script.startswith("/home/ubuntu/ComfyUI/venv/bin/python")):
+                    if sync_script and (
+                            sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
+                            or sync_script.startswith("pip install") or sync_script.startswith("apt")
+                            or sync_script.startswith("os.environ") or sync_script.startswith("ls")
+                            or sync_script.startswith("env") or sync_script.startswith("source")
+                            or sync_script.startswith("curl") or sync_script.startswith("wget")
+                            or sync_script.startswith("print") or sync_script.startswith("cat")
+                            or sync_script.startswith("sudo chmod") or sync_script.startswith("chmod")
+                            or sync_script.startswith("/home/ubuntu/ComfyUI/venv/bin/python")):
                         os.system(sync_script)
                     elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
                         sync_script_key = sync_script.split(" ")[1]
@@ -1211,7 +1242,7 @@ if is_on_sagemaker:
                     logger.error(f"Exception while execute sync_scripts : {sync_script}")
                     rlt = False
             need_reboot = True if ('need_reboot' in sync_item and sync_item['need_reboot']
-                                   and str(sync_item['need_reboot']).lower() == 'true')else False
+                                   and str(sync_item['need_reboot']).lower() == 'true') else False
             global reboot
             reboot = need_reboot
             if need_reboot:
@@ -1371,7 +1402,8 @@ if is_on_sagemaker:
             local_out_path = f'{ROOT_PATH}/output/{out_path}' if out_path is not None else f'{ROOT_PATH}/output'
             local_temp_path = f'{ROOT_PATH}/temp/{out_path}' if out_path is not None else f'{ROOT_PATH}/temp'
 
-            logger.info(f"s3_out_path is {s3_out_path} and s3_temp_path is {s3_temp_path} and local_out_path is {local_out_path} and local_temp_path is {local_temp_path}")
+            logger.info(
+                f"s3_out_path is {s3_out_path} and s3_temp_path is {s3_temp_path} and local_out_path is {local_out_path} and local_temp_path is {local_temp_path}")
 
             sync_local_outputs_to_s3(s3_out_path, local_out_path)
             sync_local_outputs_to_s3(s3_temp_path, local_temp_path)
