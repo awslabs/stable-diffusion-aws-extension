@@ -223,6 +223,11 @@ Resources:
           cd /root
           
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
+          
+          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
 
           sudo apt-get update
           sudo apt install nginx jq supervisor -y
@@ -263,9 +268,15 @@ Resources:
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
           
+          # Step1: EC2 init
           # tail -f /var/log/cloud-init-output.log
-          # tail -f /root/stable-diffusion-aws-extension/container/*.log
+          #
+          # Step2: Comfy init
           # sudo journalctl -u comfy -f
+          #
+          # Step3: Comfy start
+          # tail -f /root/stable-diffusion-aws-extension/container/*.log
+          # 
           # sudo journalctl -u comfy --no-pager -n 200
           # docker images -q | xargs docker rmi -f
 
@@ -294,33 +305,6 @@ Outputs:
   UserNumber:
     Description: The number of users
     Value: !Sub ${UserNumber}
-  User01:
-    Description: URL for User01
+  UserNumberPortStart:
+    Description: URL for First User Start Port
     Value: !Sub http://${ComfyEIP}:8001
-  User02:
-    Description: URL for User02
-    Value: !Sub http://${ComfyEIP}:8002
-  User03:
-    Description: URL for User03
-    Value: !Sub http://${ComfyEIP}:8003
-  User04:
-    Description: URL for User04
-    Value: !Sub http://${ComfyEIP}:8004
-  User05:
-    Description: URL for User05
-    Value: !Sub http://${ComfyEIP}:8005
-  User06:
-    Description: URL for User06
-    Value: !Sub http://${ComfyEIP}:8006
-  User07:
-    Description: URL for User07
-    Value: !Sub http://${ComfyEIP}:8007
-  User08:
-    Description: URL for User08
-    Value: !Sub http://${ComfyEIP}:8008
-  User09:
-    Description: URL for User09
-    Value: !Sub http://${ComfyEIP}:8009
-  User10:
-    Description: URL for User10
-    Value: !Sub http://${ComfyEIP}:8010
