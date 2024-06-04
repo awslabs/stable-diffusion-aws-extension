@@ -758,11 +758,6 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/reboot")
     async def restart(self):
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "reboot is not allowed during sync workflow"}))
-
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only master can restart"}))
@@ -840,11 +835,6 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/restart")
     async def restart(self):
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "restart is not allowed during sync workflow"}))
-
         return restart_response()
 
 
@@ -891,10 +881,6 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "release is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -1072,11 +1058,6 @@ if is_on_ec2:
         if os.getenv('WORKFLOW_NAME') != 'default':
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only default workflow can be restored"}))
-
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "restore is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
