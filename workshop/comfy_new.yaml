@@ -213,7 +213,6 @@ Resources:
           echo "PROCESS_NUMBER=${UserNumber}" >> /etc/environment
           echo "ESD_VERSION=${EsdVersion}" >> /etc/environment
           echo "SERVICE_TYPE=comfy" >> /etc/environment
-          echo "ON_EC2=true" >> /etc/environment
           
           source /etc/environment
           
