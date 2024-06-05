@@ -319,6 +319,8 @@ function createConfigDiv() {
     return div;
 }
 
+let selectedItem = null;
+
 function createScrollList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
@@ -334,8 +336,20 @@ function createScrollList() {
     container.style.height = '100%';
     container.style.overflow = 'auto';
     container.style.border = '1px solid #949494';
+    container.style.position = 'relative'; // Add this line to position the background text
 
-    let selectedItem = null;
+    // Add the background text
+    const backgroundText = document.createElement('div');
+    backgroundText.textContent = 'Please create workflow';
+    backgroundText.style.position = 'absolute';
+    backgroundText.style.top = '50%';
+    backgroundText.style.left = '50%';
+    backgroundText.style.transform = 'translate(-50%, -50%)';
+    backgroundText.style.color = '#949494';
+    backgroundText.style.fontSize = '16px';
+    backgroundText.style.fontWeight = '600';
+    backgroundText.style.pointerEvents = 'none'; // Ensure the text doesn't interfere with click events
+    container.appendChild(backgroundText);
 
     for (let i = 0; i < 10; i++) {
         const itemContainer = createListItem(i, () => {
@@ -354,12 +368,13 @@ function createScrollList() {
     return outerContainer;
 }
 
+
 function createToolbarContainer() {
     const toolbarContainer = document.createElement('div');
     toolbarContainer.style.display = 'flex';
     toolbarContainer.style.justifyContent = 'space-between';
     toolbarContainer.style.backgroundColor = '#232f3e'; // Dark background color
-    toolbarContainer.style.padding = '5px';
+    toolbarContainer.style.padding = '3px';
     toolbarContainer.style.position = 'sticky';
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
@@ -389,12 +404,20 @@ function createToolbarContainer() {
 
     toolbarContainer.appendChild(createButtonSeparator());
 
-    toolbarContainer.appendChild(createToolbarButton('&#10005;', () => {
+    const deleteButton = createToolbarButton('&#10005;', () => {
         if (selectedItem) {
             selectedItem.remove();
             selectedItem = null;
         }
-    }));
+    });
+
+    deleteButton.addEventListener('click', () => {
+        if (selectedItem) {
+            selectedItem.remove();
+            selectedItem = null;
+        }
+    });
+    toolbarContainer.appendChild(deleteButton);
 
     return toolbarContainer;
 }
@@ -446,16 +469,19 @@ function createListItem(index, onClick) {
     itemContainer.style.padding = '6px';
     itemContainer.style.borderBottom = '1px solid #949494';
     itemContainer.style.backgroundColor = '#f8f9fa'; // Default background color
+    itemContainer.style.position = 'relative'; // Add this line to position the label
     itemContainer.addEventListener('click', onClick);
 
     const label = document.createElement('label');
     label.textContent = `Item_${String.fromCharCode(97 + index)}`;
     label.style.fontWeight = '300';
     label.style.color = '#212529';
+    label.style.zIndex = '1'; // Add this line to ensure the label is on top of the background text
 
     itemContainer.appendChild(label);
     return itemContainer;
 }
+
 
 
 
