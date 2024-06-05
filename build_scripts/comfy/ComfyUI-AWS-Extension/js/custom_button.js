@@ -1,6 +1,7 @@
 import {app} from '../../scripts/app.js'
 import {api} from '../../scripts/api.js';
-
+import { ComfyDialog } from "../../scripts/ui/dialog.js";
+import { $el } from "../../scripts/ui.js";
 
 export function restartAPI() {
     if (confirm("Are you sure you'd like to restart the ComfyUI?")) {
@@ -164,25 +165,114 @@ export async function changeOnAWS(disableAWS) {
 function createButton(text, onClick) {
     const button = document.createElement('button');
     button.textContent = text;
-    button.style.padding = '5px 10px';
-    button.style.margin = '5px';
+    button.style.padding = '6px 12px'; // Increased padding for a more modern look
+    button.style.borderRadius = '4px'; // Rounded corners for a modern look
+    button.style.border = 'none'; // Remove the default border
+    button.style.backgroundColor = '#ff9900'; // AWS orange color
+    button.style.color = 'white'; // Text color for contrast
+    button.style.fontWeight = '600'; // Semibold font weight
+    button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
+    button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
+    button.style.width = '90%';
+    button.style.marginTop = '5px';
+    button.style.whiteSpace = 'nowrap';
+    button.style.overflow = 'hidden'; // Hide overflowing text
+    button.style.textOverflow = 'ellipsis'; // Add an ellipsis (...) for overflowing text
+    button.style.fontSize = '14px';
+
+    // Add hover effect
+    button.addEventListener('mouseenter', () => {
+        button.style.backgroundColor = '#cc7a00'; // Darker orange on hover
+    });
+
+    button.addEventListener('mouseleave', () => {
+        button.style.backgroundColor = '#ff9900'; // Reset to original orange
+    });
+
     button.addEventListener('click', onClick);
     return button;
 }
 
+
+function addHr() {
+    const hr = document.createElement('hr');
+    hr.style.width = '100%';
+    return hr;
+}
+function createList(text, onClick) {
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.marginTop = '5px';
+    container.style.marginLeft = '10px';
+    container.style.width = '90%';
+
+    const label = document.createElement('label');
+    label.textContent = 'Workflow';
+    label.style.fontWeight = '700';
+    label.style.marginRight = '10px';
+    label.style.fontSize = '14px';
+    label.style.color = '#212529';
+
+    const select = document.createElement('select');
+    select.style.padding = '5px 10px';
+    select.style.borderRadius = '4px';
+    select.style.border = '1px solid #949494';
+    select.style.backgroundColor = '#ffffff';
+    select.style.color = '#212529';
+    select.style.fontSize = '14px';
+    // select.addEventListener('click', onClick);
+
+    const localOption = document.createElement('option');
+    localOption.value = 'local';
+    localOption.textContent = 'Local';
+    select.appendChild(localOption);
+
+    const localOption2 = document.createElement('option');
+    localOption2.value = 'local';
+    localOption2.textContent = 'Local';
+    select.appendChild(localOption2);
+
+    container.appendChild(label);
+    container.appendChild(select);
+
+    return container;
+}
+
+
 function createCheckboxOption(labelText, name, checked, onChange) {
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.marginTop = '5px';
+    container.style.marginLeft = '10px';
+    container.style.width = '90%';
+
     const label = document.createElement('label');
     label.textContent = labelText;
+    label.style.fontWeight = '700';
+    label.style.marginRight = '10px';
+    label.style.fontSize = '14px';
+    label.style.color = '#212529';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.name = name;
     checkbox.checked = checked;
+    checkbox.style.padding = '5px 10px';
+    checkbox.style.borderRadius = '4px';
+    checkbox.style.border = '1px solid #949494';
+    checkbox.style.backgroundColor = '#ffffff';
+    checkbox.style.color = '#212529';
+    checkbox.style.fontSize = '14px';
     checkbox.addEventListener('change', onChange);
 
-    label.appendChild(checkbox);
-    return label;
+    container.appendChild(label);
+    container.appendChild(checkbox);
+
+    return container;
 }
+
 
 function createRadioOption(labelText, name, value, onChange, checked = false) {
     const label = document.createElement('label');
@@ -198,6 +288,37 @@ function createRadioOption(labelText, name, value, onChange, checked = false) {
     label.appendChild(radio);
     return label;
 }
+
+function createConfigDiv() {
+    const div = document.createElement('div');
+    div.style.border = '1px solid #d9d9d9'; // Use a light gray border
+    div.style.width = '100%';
+    div.style.position = 'relative';
+    div.style.paddingTop = '10px'; // Increase padding for better spacing
+    div.style.paddingBottom = '10px'; // Increase padding for better spacing
+    div.style.marginTop = '20px'; // Increase margin for better spacing
+    div.style.borderRadius = '4px'; // Add rounded corners
+    div.style.backgroundColor = '#ffffff'; // Set a white background color
+
+    const label = document.createElement('label');
+    label.textContent = 'AWS Config';
+    label.style.position = 'absolute';
+    label.style.borderRadius = '4px'; // Add rounded corners
+
+    label.style.top = '-8px'; // Adjust the top position
+    label.style.left = '40px'; // Move the label to the left
+    label.style.backgroundColor = '#ffffff'; // Set a white background color
+    label.style.padding = '4px 4px 0px 4px'; // Adjust padding
+    label.style.fontSize = '14px'; // Set a font size similar to AWS console
+    label.style.fontWeight = '700'; // Make the label text bold
+    label.style.color = '#212529'; // Use a dark gray color for the label text
+
+    div.appendChild(label);
+
+    return div;
+}
+
+
 
 function handleButtonClick() {
     // Call the backend Python function here
@@ -224,42 +345,68 @@ function handleRadioChange(event) {
 const customButton = {
     name: 'CustomButton',
     async setup(app) {
-        // const radioOption1 = createRadioOption('AWS', 'options', false, handleRadioChange, true);
-        // app.ui.menuContainer.appendChild(radioOption1);
-        //
-        // const radioOption2 = createRadioOption('Local', 'options', true, handleRadioChange);
-        // app.ui.menuContainer.appendChild(radioOption2);
-
-        // Create a container for radio buttons
-        // const radioContainer = document.createElement('div');
-        // radioContainer.style.display = 'inline-flex';
-        // radioContainer.appendChild(radioOption1);
-        // radioContainer.appendChild(radioOption2);
-        // app.ui.menuContainer.appendChild(radioContainer);
-
-        const check_response = await api.fetchApi("/check_is_master");
-        const check_data = await check_response.json();
-        if (check_data.master){
+//        const check_response = await api.fetchApi("/check_is_master");
+//        const check_data = await check_response.json();
+        if (true){
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
-            const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
-            // const checkboxOption2 = createCheckboxOption('Local', 'options', false, handleCheckboxChange);
-            const checkboxContainer = document.createElement('div');
-            checkboxContainer.style.display = 'flex';
-            checkboxContainer.appendChild(checkboxOption1);
-            // checkboxContainer.appendChild(checkboxOption2);
-            app.ui.menuContainer.appendChild(checkboxContainer);
-            const rebootButton = createButton('Reboot EC2', rebootAPI);
-            app.ui.menuContainer.appendChild(rebootButton);
-            // const syncButton = createButton('Synchronize', syncEnv);
-            // app.ui.menuContainer.appendChild(syncButton);
+            const widgetsContainer = createConfigDiv();
+            const checkboxSageMaker = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
+            widgetsContainer.appendChild(checkboxSageMaker);
+            app.ui.menuContainer.appendChild(widgetsContainer);
+            const restartButton = createButton('Restart ComfyUI', restartAPI);
+            widgetsContainer.appendChild(restartButton);
+
             const restoreButton = createButton('Restore', restore);
-            app.ui.menuContainer.appendChild(restoreButton);
+            widgetsContainer.appendChild(restoreButton);
+
+            const rebootButton = createButton('Reboot EC2', rebootAPI);
+            widgetsContainer.appendChild(rebootButton);
+
+            const syncButton = createButton('Release Workflow', syncEnv);
+            widgetsContainer.appendChild(syncButton);
+
+            const workflowList = createList('Release Workflow', syncEnv);
+            widgetsContainer.appendChild(workflowList);
         }
-        const restartButton = createButton('Restart ComfyUI', restartAPI);
-        app.ui.menuContainer.appendChild(restartButton);
+    }
+}
 
-    },
-};
+// Blank modal dialog
+export class ComfyBlankModalDialog extends ComfyDialog {
+	constructor(app) {
+		super();
+		this.app = app;
+		this.settingsValues = {};
+		this.settingsLookup = {};
+		this.element = $el(
+			"dialog",
+			{
+				id: "comfy-settings-dialog",
+				parent: document.body,
+			},
+			[
+				$el("table.comfy-modal-content.comfy-table", [
+					$el(
+						"caption",
+						{ textContent: "Please wait..." },
+					),
+				]),
+			]
+		);
+	}
 
+	show() {
+		this.textElement.replaceChildren(
+			$el(
+				"tr",
+				{
+					style: { display: "none" },
+				},
+				[$el("th"), $el("th", { style: { width: "33%" } })]
+			)
+		);
+		this.element.showModal();
+	}
+}
 app.registerExtension(customButton);
