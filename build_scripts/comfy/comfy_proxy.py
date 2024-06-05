@@ -222,7 +222,7 @@ if is_on_ec2:
                 }
                 executor.add_message("execution_error", mes, broadcast=True)
 
-            if 'True' == os.environ.get(DISABLE_AWS_PROXY):
+            if is_master_process and 'True' == os.environ.get(DISABLE_AWS_PROXY):
                 logger.info("disabled aws proxy, use local")
                 return func(*args, **kwargs)
             logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
@@ -1052,15 +1052,15 @@ if is_on_ec2:
 
 
     def restart_docker_commands():
-        subprocess.run(["sleep", "5"])
-        subprocess.run(["pkill", "-f", "python3"])
+        # subprocess.run(["sleep", "5"])
+        # subprocess.run(["pkill", "-f", "python3"])
         # just for test in docker
-        # try:
-        #     sys.stdout.close_log()
-        # except Exception as e:
-        #     logger.info(f"error restart  {e}")
-        #     pass
-        # return os.execv(sys.executable, [sys.executable] + sys.argv)
+        try:
+            sys.stdout.close_log()
+        except Exception as e:
+            logger.info(f"error restart  {e}")
+            pass
+        return os.execv(sys.executable, [sys.executable] + sys.argv)
 
     def restart_response():
         thread = threading.Thread(target=restart_docker_commands)
@@ -1497,7 +1497,6 @@ if is_on_sagemaker:
 
 
     def update_sync_instance_monitor(instance_monitor_record):
-        # 更新记录
         update_expression = ("SET sync_status = :new_sync_status, last_sync_request_id = :sync_request_id, "
                              "sync_list = :sync_list, last_sync_time = :sync_time, last_heartbeat_time = :heartbeat_time")
         expression_attribute_values = {
@@ -1643,11 +1642,8 @@ if is_on_sagemaker:
 
     def validate_prompt_proxy(func):
         def wrapper(*args, **kwargs):
-            # 在这里添加您的代理逻辑
             logger.info("validate_prompt_proxy start...")
-            # 调用原始函数
             result = func(*args, **kwargs)
-            # 在这里添加执行后的操作
             logger.info("validate_prompt_proxy end...")
             return result
 

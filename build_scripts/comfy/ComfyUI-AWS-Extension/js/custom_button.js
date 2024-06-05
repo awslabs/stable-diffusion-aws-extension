@@ -239,7 +239,7 @@ const customButton = {
 
         const check_response = await api.fetchApi("/check_is_master");
         const check_data = await check_response.json();
-        if (check_data.master.toUpperCase() === 'TRUE'){
+        if (check_data.master){
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
             const checkboxOption1 = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
