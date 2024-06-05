@@ -168,8 +168,8 @@ function createButton(text, onClick) {
     button.style.padding = '6px 12px'; // Increased padding for a more modern look
     button.style.borderRadius = '4px'; // Rounded corners for a modern look
     button.style.border = 'none'; // Remove the default border
-    button.style.backgroundColor = '#ff9900'; // AWS orange color
-    button.style.color = 'white'; // Text color for contrast
+    button.style.backgroundColor = '#232f3e'; // Dark background color
+    button.style.color = '#fff'; // Light white color
     button.style.fontWeight = '600'; // Semibold font weight
     button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
     button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
@@ -182,16 +182,17 @@ function createButton(text, onClick) {
 
     // Add hover effect
     button.addEventListener('mouseenter', () => {
-        button.style.backgroundColor = '#cc7a00'; // Darker orange on hover
+        button.style.backgroundColor = '#cbd3da'; // Lighter background color on hover
     });
 
     button.addEventListener('mouseleave', () => {
-        button.style.backgroundColor = '#ff9900'; // Reset to original orange
+        button.style.backgroundColor = '#232f3e'; // Reset to original dark background color
     });
 
     button.addEventListener('click', onClick);
     return button;
 }
+
 
 
 function addHr() {
@@ -318,6 +319,145 @@ function createConfigDiv() {
     return div;
 }
 
+function createScrollList() {
+    const outerContainer = document.createElement('div');
+    outerContainer.style.display = 'flex';
+    outerContainer.style.flexDirection = 'column';
+    outerContainer.style.height = '160px';
+    outerContainer.style.marginTop = '8px';
+    outerContainer.style.marginLeft = '8px';
+    outerContainer.style.width = '90%';
+
+    const toolbarContainer = createToolbarContainer();
+
+    const container = document.createElement('div');
+    container.style.height = '100%';
+    container.style.overflow = 'auto';
+    container.style.border = '1px solid #949494';
+
+    let selectedItem = null;
+
+    for (let i = 0; i < 10; i++) {
+        const itemContainer = createListItem(i, () => {
+            if (selectedItem) {
+                selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
+            }
+            itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
+            selectedItem = itemContainer;
+        });
+        container.appendChild(itemContainer);
+    }
+
+    outerContainer.appendChild(toolbarContainer);
+    outerContainer.appendChild(container);
+
+    return outerContainer;
+}
+
+function createToolbarContainer() {
+    const toolbarContainer = document.createElement('div');
+    toolbarContainer.style.display = 'flex';
+    toolbarContainer.style.justifyContent = 'space-between';
+    toolbarContainer.style.backgroundColor = '#232f3e'; // Dark background color
+    toolbarContainer.style.padding = '5px';
+    toolbarContainer.style.position = 'sticky';
+    toolbarContainer.style.top = '0';
+    toolbarContainer.style.zIndex = '1';
+
+    const buttonWidth = '40px'; // Set the fixed width for the buttons
+
+    toolbarContainer.appendChild(createToolbarButton('&#10010;', () => {
+        if (selectedItem) {
+            selectedItem.remove();
+            selectedItem = null;
+        }
+    }));
+
+    toolbarContainer.appendChild(createButtonSeparator());
+
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', () => {
+        // Add logic to handle the "Refresh" button click
+        console.log('Refreshing the list...');
+    }));
+
+    toolbarContainer.appendChild(createButtonSeparator());
+
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', () => {
+        // Add logic to handle the "Choose" button click
+        console.log(`Chosen: ${selectedItem.querySelector('label').textContent}`);
+    }));
+
+    toolbarContainer.appendChild(createButtonSeparator());
+
+    toolbarContainer.appendChild(createToolbarButton('&#10005;', () => {
+        if (selectedItem) {
+            selectedItem.remove();
+            selectedItem = null;
+        }
+    }));
+
+    return toolbarContainer;
+}
+
+function createToolbarButton(icon, onClick) {
+    const button = document.createElement('button');
+    button.innerHTML = icon;
+    button.style.padding = '6px 12px'; // Increased padding for a more modern look
+    button.style.borderRadius = '4px'; // Rounded corners for a modern look
+    button.style.border = 'none'; // Remove the default border
+    button.style.backgroundColor = '#232f3e'; // Dark background color
+    button.style.color = '#fff'; // Light white color
+    button.style.fontWeight = '600'; // Semibold font weight
+    button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
+    button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
+    button.style.width = '40px'; // Set the fixed width
+    button.style.display = 'flex';
+    button.style.justifyContent = 'center';
+    button.style.alignItems = 'center';
+    button.style.fontSize = '14px';
+
+    // Add hover effect
+    button.addEventListener('mouseenter', () => {
+        button.style.backgroundColor = '#cbd3da'; // Lighter background color on hover
+    });
+
+    button.addEventListener('mouseleave', () => {
+        button.style.backgroundColor = '#232f3e'; // Reset to original dark background color
+    });
+
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+
+function createButtonSeparator() {
+    const buttonSeparator = document.createElement('div');
+    buttonSeparator.style.width = '1px';
+    buttonSeparator.style.height = '24px';
+    buttonSeparator.style.backgroundColor = '#949494'; // Light gray color
+    return buttonSeparator;
+}
+
+function createListItem(index, onClick) {
+    const itemContainer = document.createElement('div');
+    itemContainer.style.display = 'flex';
+    itemContainer.style.alignItems = 'center';
+    itemContainer.style.justifyContent = 'space-between';
+    itemContainer.style.padding = '6px';
+    itemContainer.style.borderBottom = '1px solid #949494';
+    itemContainer.style.backgroundColor = '#f8f9fa'; // Default background color
+    itemContainer.addEventListener('click', onClick);
+
+    const label = document.createElement('label');
+    label.textContent = `Item_${String.fromCharCode(97 + index)}`;
+    label.style.fontWeight = '300';
+    label.style.color = '#212529';
+
+    itemContainer.appendChild(label);
+    return itemContainer;
+}
+
+
 
 
 function handleButtonClick() {
@@ -345,31 +485,38 @@ function handleRadioChange(event) {
 const customButton = {
     name: 'CustomButton',
     async setup(app) {
-       const check_response = await api.fetchApi("/check_is_master");
-       const check_data = await check_response.json();
-       const widgetsContainer = createConfigDiv();
-        if (check_data.master){
+//       const check_response = await api.fetchApi("/check_is_master");
+//       const check_data = await check_response.json();
+        const widgetsContainer = createConfigDiv();
+
+        if (true){
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
-            const checkboxSageMaker = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
+            const checkboxSageMaker = createCheckboxOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
             widgetsContainer.appendChild(checkboxSageMaker);
-            app.ui.menuContainer.appendChild(widgetsContainer);
+        }
 
-            const restoreButton = createButton('Restore', restore);
-            widgetsContainer.appendChild(restoreButton);
 
-            // const rebootButton = createButton('Reboot EC2', rebootAPI);
-            // widgetsContainer.appendChild(rebootButton);
-
-            const syncButton = createButton('Release Workflow', syncEnv);
-            widgetsContainer.appendChild(syncButton);
-
-            const workflowList = createList('Release Workflow', syncEnv);
-            widgetsContainer.appendChild(workflowList);
+        if (true){
+            const scrollList = createScrollList();
+            widgetsContainer.appendChild(scrollList);
         }
         const restartButton = createButton('Restart ComfyUI', restartAPI);
         widgetsContainer.appendChild(restartButton);
+        if (true){
+            // const syncButton = createButton('Release Workflow', syncEnv);
+            // widgetsContainer.appendChild(syncButton);
+
+            const restoreButton = createButton('Reset to default', restore);
+            widgetsContainer.appendChild(restoreButton);
+        }
+
+        
+
+
+        app.ui.menuContainer.appendChild(widgetsContainer);
+
     }
 }
 
