@@ -844,8 +844,10 @@ if is_on_ec2:
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
-            result = sync_default_files()
-            logger.debug(f"sync result is :{result}")
+            thread = threading.Thread(target=sync_default_files)
+            thread.start()
+            # result = sync_default_files()
+            # logger.debug(f"sync result is :{result}")
             return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
         except Exception as e:
             logger.info(f"error sync_env {e}")
