@@ -184,6 +184,11 @@ echo "stdout_logfile=$CONTAINER_PATH/image.log" >> "$SUPERVISORD_FILE"
 echo "stderr_logfile=$CONTAINER_PATH/image.log" >> "$SUPERVISORD_FILE"
 echo "" >> "$SUPERVISORD_FILE"
 
+if [ -z "$PROCESS_NUMBER" ]; then
+  echo "PROCESS_NUMBER not set"
+  exit 1
+fi
+
 init_port=7999
 USER_TOTAL=$((PROCESS_NUMBER + 1))
 for i in $(seq 1 "$USER_TOTAL"); do
