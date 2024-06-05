@@ -345,23 +345,22 @@ function handleRadioChange(event) {
 const customButton = {
     name: 'CustomButton',
     async setup(app) {
-//        const check_response = await api.fetchApi("/check_is_master");
-//        const check_data = await check_response.json();
-        if (true){
+       const check_response = await api.fetchApi("/check_is_master");
+       const check_data = await check_response.json();
+       const widgetsContainer = createConfigDiv();
+        if (check_data.master){
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
-            const widgetsContainer = createConfigDiv();
+
             const checkboxSageMaker = createCheckboxOption('On SageMaker', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
             widgetsContainer.appendChild(checkboxSageMaker);
             app.ui.menuContainer.appendChild(widgetsContainer);
-            const restartButton = createButton('Restart ComfyUI', restartAPI);
-            widgetsContainer.appendChild(restartButton);
 
             const restoreButton = createButton('Restore', restore);
             widgetsContainer.appendChild(restoreButton);
 
-            const rebootButton = createButton('Reboot EC2', rebootAPI);
-            widgetsContainer.appendChild(rebootButton);
+            // const rebootButton = createButton('Reboot EC2', rebootAPI);
+            // widgetsContainer.appendChild(rebootButton);
 
             const syncButton = createButton('Release Workflow', syncEnv);
             widgetsContainer.appendChild(syncButton);
@@ -369,6 +368,8 @@ const customButton = {
             const workflowList = createList('Release Workflow', syncEnv);
             widgetsContainer.appendChild(workflowList);
         }
+        const restartButton = createButton('Restart ComfyUI', restartAPI);
+        widgetsContainer.appendChild(restartButton);
     }
 }
 
