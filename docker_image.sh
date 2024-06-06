@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#set -euxo pipefail
-
 current_image=""
 
 while true; do
@@ -31,8 +29,9 @@ while true; do
             docker rmi -f "$image_id"
         done
     fi
-    echo "Waiting for image_target_name file $(realpath ./container/image_target_name) ..."
-    sleep 10
+    echo "Waiting for ./container/image_target_name ..."
+    sleep 5
+    exit 1
 done
 
 exit 1
