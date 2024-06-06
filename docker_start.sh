@@ -59,7 +59,7 @@ generate_process(){
   echo "$WORKFLOW_NAME_TMP" > "$COMFY_WORKFLOW_FILE"
 
   export MASTER_PROCESS=false
-  if [ "$init_port" -eq "8000" ]; then
+  if [ "$init_port" -eq "9000" ]; then
       export MASTER_PROCESS=true
   fi
 
@@ -189,7 +189,7 @@ if [ -z "$PROCESS_NUMBER" ]; then
   exit 1
 fi
 
-init_port=7999
+init_port=8999
 USER_TOTAL=$((PROCESS_NUMBER + 1))
 for i in $(seq 1 "$USER_TOTAL"); do
     init_port=$((init_port + 1))
