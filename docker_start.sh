@@ -125,6 +125,7 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
 
   # shellcheck disable=SC2129
   echo "[program:$PROGRAM_NAME]" >> "$SUPERVISORD_FILE"
+  echo "directory=$CUR_PATH" >> "$SUPERVISORD_FILE"
   echo "command=$CONTAINER_PATH/$PROGRAM_NAME.sh" >> "$SUPERVISORD_FILE"
   echo "startretries=2" >> "$SUPERVISORD_FILE"
   echo "stdout_logfile=$CONTAINER_PATH/$PROGRAM_NAME.log" >> "$SUPERVISORD_FILE"
@@ -178,6 +179,7 @@ logfile=/dev/stdout
 echo "$SUPERVISOR_CONF" > "$SUPERVISORD_FILE"
 
 echo "[program:image]" >> "$SUPERVISORD_FILE"
+echo "directory=$CUR_PATH" >> "$SUPERVISORD_FILE"
 echo "command=$IMAGE_SH" >> "$SUPERVISORD_FILE"
 echo "startretries=1" >> "$SUPERVISORD_FILE"
 echo "stdout_logfile=$CONTAINER_PATH/image.log" >> "$SUPERVISORD_FILE"
