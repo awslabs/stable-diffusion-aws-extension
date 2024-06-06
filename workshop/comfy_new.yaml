@@ -209,8 +209,8 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 9000
-          ToPort: 9100
+          FromPort: 10000
+          ToPort: 11000
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -381,13 +381,13 @@ Resources:
 Outputs:
   Designer:
     Description: URL for Designer
-    Value: !Sub http://${ComfyEIP}:9000
+    Value: !Sub http://${ComfyEIP}:10000
   DesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
-    Value: /root/stable-diffusion-aws-extension/container/comfy_9000.Dockerfile
+    Value: /root/stable-diffusion-aws-extension/container/comfy_10000.Dockerfile
   NumberOfInferencePorts:
     Description: The number of inference ports
     Value: !Sub ${NumberOfInferencePorts}
   NumberOfInferencePortsStart:
     Description: The first inference start port
-    Value: !Sub http://${ComfyEIP}:9001
+    Value: !Sub http://${ComfyEIP}:10001
