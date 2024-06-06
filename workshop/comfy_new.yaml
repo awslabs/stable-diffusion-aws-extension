@@ -19,12 +19,12 @@ Parameters:
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
-  UserNumber:
-    Description: Number of the User
+  NumberOfInferencePorts:
+    Description: The number of inference ports
     Type: Number
-    MinValue: 0
+    MinValue: 1
     MaxValue: 15
-    Default: 0
+    Default: 1
 
 Mappings:
   RegionToAmiId:
@@ -287,7 +287,7 @@ Resources:
           echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "AWS_REGION=${AWS::Region}" >> /etc/environment
-          echo "PROCESS_NUMBER=${UserNumber}" >> /etc/environment
+          echo "PROCESS_NUMBER=${NumberOfInferencePorts}" >> /etc/environment
           echo "ESD_VERSION=dev" >> /etc/environment
           echo "SERVICE_TYPE=comfy" >> /etc/environment
           
@@ -381,7 +381,7 @@ Outputs:
     Value: /root/stable-diffusion-aws-extension/container/comfy_9000.Dockerfile
   NumberOfInferencePorts:
     Description: The number of inference ports
-    Value: !Sub ${UserNumber}
+    Value: !Sub ${NumberOfInferencePorts}
   NumberOfInferencePortsStart:
     Description: The first inference start port
-    Value: !Sub http://${ComfyEIP}:8001
+    Value: !Sub http://${ComfyEIP}:9001
