@@ -2,17 +2,19 @@
 
 #set -euxo pipefail
 
-export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-export AWS_REGION=$(aws configure get region)
-repository_url="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container"
 current_image=""
 
 while true; do
     if [ -f "./container/image_target_name" ]; then
+        export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+        export AWS_REGION=$(aws configure get region)
+        repository_url="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container"
+
         image_target_name=$(cat "./container/image_target_name")
         base_image_name=$(cat "./container/image_base")
 
         if [ "$current_image" = "$image_target_name" ]; then
+            echo "$current_image already pushed"
             sleep 10
             continue
         fi
