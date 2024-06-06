@@ -33,7 +33,6 @@ while true; do
     else
         echo "Waiting for ./container/image_target_name ..."
         sleep 5
-        exit 1
     fi
 done
 
