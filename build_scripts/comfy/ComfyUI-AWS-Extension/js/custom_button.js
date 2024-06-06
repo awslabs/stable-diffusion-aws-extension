@@ -195,52 +195,6 @@ function createButton(text, onClick) {
 
 
 
-function addHr() {
-    const hr = document.createElement('hr');
-    hr.style.width = '100%';
-    return hr;
-}
-function createList(text, onClick) {
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.marginTop = '5px';
-    container.style.marginLeft = '10px';
-    container.style.width = '90%';
-
-    const label = document.createElement('label');
-    label.textContent = 'Workflow';
-    label.style.fontWeight = '700';
-    label.style.marginRight = '10px';
-    label.style.fontSize = '14px';
-    label.style.color = '#212529';
-
-    const select = document.createElement('select');
-    select.style.padding = '5px 10px';
-    select.style.borderRadius = '4px';
-    select.style.border = '1px solid #949494';
-    select.style.backgroundColor = '#ffffff';
-    select.style.color = '#212529';
-    select.style.fontSize = '14px';
-    // select.addEventListener('click', onClick);
-
-    const localOption = document.createElement('option');
-    localOption.value = 'local';
-    localOption.textContent = 'Local';
-    select.appendChild(localOption);
-
-    const localOption2 = document.createElement('option');
-    localOption2.value = 'local';
-    localOption2.textContent = 'Local';
-    select.appendChild(localOption2);
-
-    container.appendChild(label);
-    container.appendChild(select);
-
-    return container;
-}
-
-
 function createCheckboxOption(labelText, name, checked, onChange) {
     const container = document.createElement('div');
     container.style.display = 'flex';
@@ -274,22 +228,6 @@ function createCheckboxOption(labelText, name, checked, onChange) {
     return container;
 }
 
-
-function createRadioOption(labelText, name, value, onChange, checked = false) {
-    const label = document.createElement('label');
-    label.textContent = labelText;
-
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = name;
-    radio.value = value;
-    radio.checked = checked;
-    radio.addEventListener('change', onChange);
-
-    label.appendChild(radio);
-    return label;
-}
-
 function createConfigDiv() {
     const div = document.createElement('div');
     div.style.border = '1px solid #d9d9d9'; // Use a light gray border
@@ -321,6 +259,8 @@ function createConfigDiv() {
 
 let selectedItem = null;
 
+let container = null;
+
 function createScrollList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
@@ -330,9 +270,9 @@ function createScrollList() {
     outerContainer.style.marginLeft = '8px';
     outerContainer.style.width = '90%';
 
-    const toolbarContainer = createToolbarContainer();
+    const toolbarContainer = createToolbar();
 
-    const container = document.createElement('div');
+    container = document.createElement('div');
     container.style.height = '100%';
     container.style.overflow = 'auto';
     container.style.border = '1px solid #949494';
@@ -351,17 +291,6 @@ function createScrollList() {
     backgroundText.style.pointerEvents = 'none'; // Ensure the text doesn't interfere with click events
     container.appendChild(backgroundText);
 
-    for (let i = 0; i < 10; i++) {
-        const itemContainer = createListItem(i, () => {
-            if (selectedItem) {
-                selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
-            }
-            itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
-            selectedItem = itemContainer;
-        });
-        container.appendChild(itemContainer);
-    }
-
     outerContainer.appendChild(toolbarContainer);
     outerContainer.appendChild(container);
 
@@ -369,7 +298,7 @@ function createScrollList() {
 }
 
 
-function createToolbarContainer() {
+function createToolbar() {
     const toolbarContainer = document.createElement('div');
     toolbarContainer.style.display = 'flex';
     toolbarContainer.style.justifyContent = 'space-between';
@@ -379,50 +308,53 @@ function createToolbarContainer() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
 
-    const buttonWidth = '40px'; // Set the fixed width for the buttons
-
-    toolbarContainer.appendChild(createToolbarButton('&#10010;', () => {
-        if (selectedItem) {
-            selectedItem.remove();
-            selectedItem = null;
-        }
-    }));
-
+    // toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButtonClick));
+    // toolbarContainer.appendChild(createButtonSeparator());
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
-
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', () => {
-        // Add logic to handle the "Refresh" button click
-        console.log('Refreshing the list...');
-    }));
-
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
-
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', () => {
-        // Add logic to handle the "Choose" button click
-        console.log(`Chosen: ${selectedItem.querySelector('label').textContent}`);
-    }));
-
-    toolbarContainer.appendChild(createButtonSeparator());
-
-    const deleteButton = createToolbarButton('&#10005;', () => {
-        if (selectedItem) {
-            selectedItem.remove();
-            selectedItem = null;
-        }
-    });
-
-    deleteButton.addEventListener('click', () => {
-        if (selectedItem) {
-            selectedItem.remove();
-            selectedItem = null;
-        }
-    });
-    toolbarContainer.appendChild(deleteButton);
+    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
 
     return toolbarContainer;
 }
 
-function createToolbarButton(icon, onClick) {
+function handleReleaseButtonClick() {
+    var dialog = new ReleaseWorkflowModalDialog(app);
+    dialog.show();
+}
+
+async function handleRefreshButtonClick() {
+    container.innerHTML = '';
+    const response = await api.fetchApi("/workflows");
+    const data = await response.json();
+    data.workflows.forEach(workflow => {
+        const itemContainer = createWorkflowItem(workflow, () => {
+            if (selectedItem) {
+                selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
+            }
+            itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
+            selectedItem = itemContainer;
+        });
+        container.appendChild(itemContainer);
+    });
+}
+
+async function handleChooseButtonClick() {
+    if (selectedItem) {
+        console.log(`Chosen: ${selectedItem.querySelector('label').textContent}`);
+    }
+}
+
+async function handleDeleteButtonClick() {
+    if (selectedItem) {
+        selectedItem.remove();
+        selectedItem = null;
+    }
+}
+
+
+function createToolbarButton(icon, onClick, altText) {
     const button = document.createElement('button');
     button.innerHTML = icon;
     button.style.padding = '6px 12px'; // Increased padding for a more modern look
@@ -438,6 +370,7 @@ function createToolbarButton(icon, onClick) {
     button.style.justifyContent = 'center';
     button.style.alignItems = 'center';
     button.style.fontSize = '14px';
+    button.setAttribute('alt', altText); // Add the alt attribute
 
     // Add hover effect
     button.addEventListener('mouseenter', () => {
@@ -461,36 +394,55 @@ function createButtonSeparator() {
     return buttonSeparator;
 }
 
-function createListItem(index, onClick) {
+function createWorkflowItem(workflow, onClick) {
     const itemContainer = document.createElement('div');
     itemContainer.style.display = 'flex';
-    itemContainer.style.alignItems = 'center';
+    itemContainer.style.alignItems = 'flex-start'; // Align items to the top
     itemContainer.style.justifyContent = 'space-between';
-    itemContainer.style.padding = '6px';
+    itemContainer.style.padding = '2px';
     itemContainer.style.borderBottom = '1px solid #949494';
     itemContainer.style.backgroundColor = '#f8f9fa'; // Default background color
     itemContainer.style.position = 'relative'; // Add this line to position the label
     itemContainer.addEventListener('click', onClick);
 
-    const label = document.createElement('label');
-    label.textContent = `Item_${String.fromCharCode(97 + index)}`;
-    label.style.fontWeight = '300';
-    label.style.color = '#212529';
-    label.style.zIndex = '1'; // Add this line to ensure the label is on top of the background text
+    const labelContainer = document.createElement('div');
+    labelContainer.style.display = 'flex';
+    labelContainer.style.flexDirection = 'column';
+    labelContainer.style.alignItems = 'flex-start'; // Align labels to the left
+    labelContainer.style.zIndex = '1'; // Add this line to ensure the label is on top of the background text
 
-    itemContainer.appendChild(label);
+    const nameLabel = document.createElement('span');
+    nameLabel.textContent = `${workflow.name}`;
+    if (workflow.status == 'Enabled') {
+        nameLabel.style.fontWeight = '600';
+    }else{
+        nameLabel.style.fontWeight = '200';
+    }
+    nameLabel.style.color = '#212529';
+    nameLabel.style.marginBottom = '2px';
+
+    const sizeLabel = document.createElement('span');
+    sizeLabel.textContent = `${workflow.size} MB`;
+    sizeLabel.style.fontWeight = '300';
+    sizeLabel.style.color = '#6c757d';
+    sizeLabel.style.fontSize = '12px';
+    sizeLabel.style.marginBottom = '2px';
+
+    const createTimeLabel = document.createElement('span');
+    const createTime = new Date(workflow.create_time);
+    const formattedCreateTime = `${createTime.toISOString().slice(0, 19).replace('T', ' ')}`;
+    createTimeLabel.textContent = formattedCreateTime;
+    createTimeLabel.style.fontWeight = '300';
+    createTimeLabel.style.color = '#6c757d';
+    createTimeLabel.style.fontSize = '12px';
+    createTimeLabel.style.marginBottom = '2px';
+
+
+    labelContainer.appendChild(nameLabel);
+    labelContainer.appendChild(sizeLabel);
+    labelContainer.appendChild(createTimeLabel);
+    itemContainer.appendChild(labelContainer);
     return itemContainer;
-}
-
-
-
-
-
-function handleButtonClick() {
-    // Call the backend Python function here
-    // You can use the `api` module to make a request to the backend
-    console.log('Button clicked! Calling backend function...');
-    // Reboot system
 }
 
 async function handleCheckboxChange(event) {
@@ -502,49 +454,41 @@ async function handleCheckboxChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
-function handleRadioChange(event) {
-    console.log(`Selected option: ${event.target.value}`);
-    // Handle radio option change
-    changeOnAWS(event.target.value);
-}
 
-const customButton = {
-    name: 'CustomButton',
+const awsConfig = {
+    name: 'awsConfig',
     async setup(app) {
-//       const check_response = await api.fetchApi("/check_is_master");
-//       const check_data = await check_response.json();
+        //       const check_response = await api.fetchApi("/check_is_master");
+        //       const check_data = await check_response.json();
         const widgetsContainer = createConfigDiv();
 
-        if (true){
+        if (true) {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
             const checkboxSageMaker = createCheckboxOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
-
-
-        if (true){
+        if (true) {
             const scrollList = createScrollList();
             widgetsContainer.appendChild(scrollList);
         }
+        if (true) {
+            const syncButton = createButton('Release Workflow', handleReleaseButtonClick);
+            widgetsContainer.appendChild(syncButton);
+        }
         const restartButton = createButton('Restart ComfyUI', restartAPI);
         widgetsContainer.appendChild(restartButton);
-        if (true){
-            // const syncButton = createButton('Release Workflow', syncEnv);
-            // widgetsContainer.appendChild(syncButton);
-
+        if (true) {
             const restoreButton = createButton('Reset to default', restore);
             widgetsContainer.appendChild(restoreButton);
         }
-
-        
-
-
         app.ui.menuContainer.appendChild(widgetsContainer);
-
+        handleRefreshButtonClick();
     }
 }
+
+app.registerExtension(awsConfig);
 
 // Blank modal dialog
 export class ComfyBlankModalDialog extends ComfyDialog {
@@ -563,7 +507,7 @@ export class ComfyBlankModalDialog extends ComfyDialog {
 				$el("table.comfy-modal-content.comfy-table", [
 					$el(
 						"caption",
-						{ textContent: "Please wait..." },
+						{ textContent: "Please wait" },
 					),
 				]),
 			]
@@ -583,4 +527,86 @@ export class ComfyBlankModalDialog extends ComfyDialog {
 		this.element.showModal();
 	}
 }
-app.registerExtension(customButton);
+
+// inpiut field dialog
+export class ReleaseWorkflowModalDialog extends ComfyDialog {
+    constructor(app) {
+        super();
+        this.app = app;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: "Release Workflow" },
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("th", { textContent: "Workflow Name" }),
+                            $el("td", [
+                                $el("input", {
+                                    type: "text",
+                                    id: "input-field",
+                                    style: { width: "100%" },
+                                }),
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                                $el("button", {
+                                    id: "ok-button",
+                                    textContent: "OK",
+                                    style: { marginRight: "10px" },
+                                    onclick: () => this.handleOkClick(),
+                                }),
+                                $el("button", {
+                                    id: "cancel-button",
+                                    textContent: "Cancel",
+                                    onclick: () => this.handleCancelClick(),
+                                }),
+                            ]),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+    }
+
+    show() {
+        this.textElement.replaceChildren(
+            $el(
+                "tr",
+                {
+                    style: { display: "none" },
+                },
+                [$el("th"), $el("th", { style: { width: "33%" } })]
+            )
+        );
+        this.element.showModal();
+    }
+
+    getInputValue() {
+        return document.getElementById("input-field").value;
+    }
+
+    handleOkClick() {
+        this.element.close();
+        var dialog = new ComfyBlankModalDialog(app);
+        dialog.show();
+    }
+
+    handleCancelClick() {
+        this.element.close();
+    }
+}
