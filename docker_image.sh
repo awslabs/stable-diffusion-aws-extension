@@ -7,15 +7,13 @@ while true; do
     base_image_name=$(cat "./container/image_base")
 
     if [ -z "$image_target_name" ]; then
-        echo "image_target_name is empty..."
         sleep 5
-        continue
+        exit 1
     fi
 
     if [ -z "$base_image_name" ]; then
-        echo "base_image_name is empty..."
         sleep 5
-        continue
+        exit 1
     fi
 
     if [ "$current_image" = "$image_target_name" ]; then
