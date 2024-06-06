@@ -76,7 +76,6 @@ if is_on_ec2:
 
     api_url = os.environ.get('COMFY_API_URL')
     api_token = os.environ.get('COMFY_API_TOKEN')
-    comfy_endpoint = os.environ.get('COMFY_ENDPOINT')
     comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', True)
     comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
     bucket_name = os.environ.get('COMFY_BUCKET_NAME')
@@ -97,9 +96,6 @@ if is_on_ec2:
 
     if not api_token:
         raise ValueError("API_TOKEN environment variables must be set.")
-
-    if not comfy_endpoint:
-        raise ValueError("COMFY_ENDPOINT environment variables must be set.")
 
     headers = {"x-api-key": api_token, "Content-Type": "application/json"}
 
@@ -225,7 +221,7 @@ if is_on_ec2:
             if is_master_process and 'True' == os.environ.get(DISABLE_AWS_PROXY):
                 logger.info("disabled aws proxy, use local")
                 return func(*args, **kwargs)
-            logger.info(f"enable aws proxy, use aws {comfy_endpoint}")
+            logger.info(f"enable aws proxy, use aws")
             executor = args[0]
             server_use = executor.server
             prompt = args[1]
@@ -476,7 +472,7 @@ if is_on_ec2:
     server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
-    def compress_and_upload(folder_path, prepare_version):
+    def compress_and_upload(comfy_endpoint, folder_path, prepare_version):
         for subdir in next(os.walk(folder_path))[1]:
             subdir_path = os.path.join(folder_path, subdir)
             tar_filename = f"{subdir}.tar.gz"
@@ -504,7 +500,7 @@ if is_on_ec2:
         #         os.remove(tar_filepath)
 
 
-    def sync_default_files():
+    def sync_default_files(comfy_endpoint):
         try:
             timestamp = str(int(time.time() * 1000))
             prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
@@ -515,7 +511,7 @@ if is_on_ec2:
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
-            compress_and_upload(f"{DIR2}", prepare_version)
+            compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
             logger.info(f" sync input files")
             s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
             logger.info(f"sync input files start {s5cmd_syn_input_command}")
@@ -541,6 +537,7 @@ if is_on_ec2:
 
 
     def sync_files(filepath, is_folder, is_auto):
+        comfy_endpoint = os.getenv("COMFY_ENDPOINT")
         try:
             directory = os.path.dirname(filepath)
             logger.info(f"Directory changed in: {directory} {filepath}")
@@ -777,9 +774,12 @@ if is_on_ec2:
 
 
     @server.PromptServer.instance.routes.get("/check_prepare")
-    async def check_prepare(self):
-        logger.info(f"start to check_prepare {self}")
+    async def check_prepare(request):
+        logger.info(f"start to check_prepare {request}")
         try:
+            json_data = await request.json()
+            workflow_name = json_data['workflow_name']
+            comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             get_response = requests.get(f"{api_url}/prepare/{comfy_endpoint}", headers=headers)
             response = get_response.json()
             logger.info(f"check sync response is {response}")
@@ -844,7 +844,10 @@ if is_on_ec2:
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
-            thread = threading.Thread(target=sync_default_files)
+            json_data = await request.json()
+            workflow_name = json_data['workflow_name']
+            comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
+            thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
             thread.start()
             # result = sync_default_files()
             # logger.debug(f"sync result is :{result}")
