@@ -28,8 +28,8 @@ while true; do
         for image_id in $untagged_images; do
             docker rmi -f "$image_id"
         done
-
     fi
+    echo "Waiting for image_target_name file $(realpath ./container/image_target_name) ..."
     sleep 10
 done
 
