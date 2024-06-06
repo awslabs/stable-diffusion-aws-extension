@@ -3,8 +3,8 @@
 current_image=""
 
 while true; do
-    image_target_name=$(cat "./container/image_target_name")
-    base_image_name=$(cat "./container/image_base")
+    image_target_name=$(cat "$(pwd)/container/image_target_name")
+    base_image_name=$(cat "$(pwd)/container/image_base")
 
     if [ -z "$image_target_name" ]; then
         sleep 20
@@ -25,8 +25,6 @@ while true; do
 
     export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
     export AWS_REGION=$(aws configure get region)
-    repository_url="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container"
-
     release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:$image_target_name"
 
     aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
