@@ -295,8 +295,6 @@ Resources:
           
           sudo rm -rf /root/stable-diffusion-aws-extension
           
-          sudo systemctl enable docker
-          
           cd /root
           
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
@@ -305,15 +303,13 @@ Resources:
             echo "Waiting for other apt process to finish..."
             sleep 1
           done
-
-          sudo apt update
           
-          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
+          while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
             echo "Waiting for other apt process to finish..."
             sleep 1
           done
           
-          sudo apt install nginx jq supervisor -y
+          sudo apt update && sudo apt install nginx jq supervisor -y
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
           sudo ufw allow 'Nginx HTTP'
@@ -348,6 +344,10 @@ Resources:
           EOF
           sudo mv comfy.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/comfy.service
+          
+          sudo systemctl enable docker
+          sudo systemctl start docker
+          
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
           
