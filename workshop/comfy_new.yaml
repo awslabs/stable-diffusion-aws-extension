@@ -1,25 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: (SO8032) - Extension for Comfy on AWS - EC2 Instance
 Parameters:
-  Branch:
-    Description: Branch of the ESD
+  StackName:
     Type: String
-    AllowedValues:
-      - main
-      - dev
-    Default: dev
-  ApiGatewayUrl:
-    Description: API URL
-    Type: String
-    MinLength: "1"
-  ApiGatewayUrlToken:
-    Description: API Key
-    Type: String
-    MinLength: "1"
-  BucketName:
-    Description: Bucket Name
-    Type: String
-    MinLength: "1"
+    Description: "The Stack Name of the ESD API"
   keyPairName:
     Description: Name of the key pair to use for the EC2 instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -35,22 +19,12 @@ Parameters:
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
-  EsdVersion:
-    Description: Version of the ESD
-    Type: String
-    AllowedValues:
-      - "dev"
-    Default: "dev"
   UserNumber:
     Description: Number of the User
-    Type: String
-    AllowedValues:
-      - 0
-      - 1
-      - 5
-      - 10
-      - 15
-    Default: 10
+    Type: Number
+    MinValue: 0
+    MaxValue: 15
+    Default: 0
 
 Mappings:
   RegionToAmiId:
@@ -70,8 +44,104 @@ Mappings:
       AMI: ami-09d4fb52761c3d78d
 
 Resources:
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - cloudformation:DescribeStacks
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          # --- BEGIN PYTHON CODE ---
+          import boto3
+          import cfnresponse
+          
+          client = boto3.client('cloudformation')
+          
+          def handler(event, context):
+            try:
+              if event['RequestType'] == 'Delete':
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                return
+          
+              name = event['ResourceProperties']['StackName']
+              response = client.describe_stacks(StackName=name)
+              stacks = response.get('Stacks')
+          
+              if len(stacks) == 0:
+                raise Exception('StackName Not Found')
+          
+              S3BucketName = ''
+              ApiGatewayUrl = ''
+              ApiGatewayUrlToken = ''
+          
+              for stack in stacks:
+                stack_status = stack.get('StackStatus')
+                assert stack_status in ['CREATE_COMPLETE',
+                'UPDATE_COMPLETE'], 'stack is not CREATE_COMPLETE or UPDATE_COMPLETE'
+                outputs = stack.get('Outputs')
+                if outputs:
+                  for output in outputs:
+                    key = output.get('OutputKey')
+                    value = output.get('OutputValue')
+          
+                    if key == 'S3BucketName':
+                      S3BucketName = value
+          
+                    if key == 'ApiGatewayUrl':
+                      ApiGatewayUrl = value
+          
+                    if key == 'ApiGatewayUrlToken':
+                      ApiGatewayUrlToken = value
+          
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                'S3BucketName': S3BucketName,
+                'ApiGatewayUrl': ApiGatewayUrl,
+                'ApiGatewayUrlToken': ApiGatewayUrlToken,
+              })
+            except Exception as e:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, reason=str(e))
+          
+            # --- END PYTHON CODE ---
+      Runtime: python3.8
+      Timeout: 30
+
+  CustomResource:
+    Type: Custom::MyCustomResource
+    Properties:
+      ServiceToken: !GetAtt LambdaFunction.Arn
+      StackName: !Ref StackName
+
   ComfyVPC:
     Type: AWS::EC2::VPC
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       CidrBlock: 10.0.0.0/16
@@ -80,6 +150,7 @@ Resources:
 
   ComfySubnet:
     Type: AWS::EC2::Subnet
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -88,6 +159,7 @@ Resources:
 
   ComfyInstanceRole:
     Type: AWS::IAM::Role
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
@@ -116,6 +188,7 @@ Resources:
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       Path: "/"
@@ -124,6 +197,7 @@ Resources:
 
   ComfySecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -135,8 +209,8 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 8000
-          ToPort: 8100
+          FromPort: 9000
+          ToPort: 9100
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -145,10 +219,12 @@ Resources:
 
   ComfyInternetGateway:
     Type: AWS::EC2::InternetGateway
+    DependsOn: CustomResource
     DeletionPolicy: Delete
 
   ComfyVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -156,6 +232,7 @@ Resources:
 
   ComfyRouteTable:
     Type: AWS::EC2::RouteTable
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -170,6 +247,7 @@ Resources:
 
   ComfySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: CustomResource
     DeletionPolicy: Delete
     Properties:
       SubnetId: !Ref ComfySubnet
@@ -178,7 +256,6 @@ Resources:
   ComfyEC2Dev:
     Type: AWS::EC2::Instance
     DeletionPolicy: Delete
-    DependsOn: ComfyInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -194,7 +271,7 @@ Resources:
         - !GetAtt ComfySecurityGroup.GroupId
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-${EsdVersion}"
+          Value: !Sub "comfy-on-aws-dev"
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
@@ -204,14 +281,14 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
 
-          echo "COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
-          echo "COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
-          echo "COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
+          echo "COMFY_API_URL=${CustomResource.ApiGatewayUrl}" >> /etc/environment
+          echo "COMFY_API_TOKEN=${CustomResource.ApiGatewayUrlToken}" >> /etc/environment
+          echo "COMFY_BUCKET_NAME=${CustomResource.S3BucketName}" >> /etc/environment
           echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "AWS_REGION=${AWS::Region}" >> /etc/environment
           echo "PROCESS_NUMBER=${UserNumber}" >> /etc/environment
-          echo "ESD_VERSION=${EsdVersion}" >> /etc/environment
+          echo "ESD_VERSION=dev" >> /etc/environment
           echo "SERVICE_TYPE=comfy" >> /etc/environment
           
           source /etc/environment
@@ -238,7 +315,7 @@ Resources:
           sudo systemctl restart nginx
           
           aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
-          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:${EsdVersion}
+          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:dev
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -286,7 +363,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-${EsdVersion}"
+          Value: !Sub "comfy-on-aws-dev"
 
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
@@ -298,13 +375,13 @@ Resources:
 Outputs:
   Designer:
     Description: URL for Designer
-    Value: !Sub http://${ComfyEIP}:8000
+    Value: !Sub http://${ComfyEIP}:9000
   DesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
-    Value: /root/stable-diffusion-aws-extension/container/comfy_8000.Dockerfile
-  UserNumber:
-    Description: The number of users
+    Value: /root/stable-diffusion-aws-extension/container/comfy_9000.Dockerfile
+  NumberOfInferencePorts:
+    Description: The number of inference ports
     Value: !Sub ${UserNumber}
-  UserNumberPortStart:
-    Description: URL for First User Start Port
+  NumberOfInferencePortsStart:
+    Description: The first inference start port
     Value: !Sub http://${ComfyEIP}:8001
