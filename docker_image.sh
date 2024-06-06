@@ -6,9 +6,17 @@ while true; do
     image_target_name=$(cat "./container/image_target_name")
     base_image_name=$(cat "./container/image_base")
 
-    export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-    export AWS_REGION=$(aws configure get region)
-    repository_url="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container"
+    if [ -z "$image_target_name" ]; then
+        echo "image_target_name is empty..."
+        sleep 5
+        continue
+    fi
+
+    if [ -z "$base_image_name" ]; then
+        echo "base_image_name is empty..."
+        sleep 5
+        continue
+    fi
 
     if [ "$current_image" = "$image_target_name" ]; then
         echo "$current_image already pushed"
@@ -16,6 +24,10 @@ while true; do
         continue
     fi
     current_image=$image_target_name
+
+    export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+    export AWS_REGION=$(aws configure get region)
+    repository_url="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container"
 
     release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:$image_target_name"
 
