@@ -211,7 +211,6 @@ if is_on_ec2:
 
     def execute_proxy(func):
         def wrapper(*args, **kwargs):
-            send_msg_to_all_sockets("testtest", {"test", 'test'})
 
             def send_error_msg(executor, prompt_id, msg):
                 mes = {
@@ -833,12 +832,14 @@ if is_on_ec2:
 
 
     def action_lock(name: str):
+        send_msg_to_all_sockets("ui_lock", {"lock": True})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write(name)
 
 
     def action_unlock():
+        send_msg_to_all_sockets("ui_lock", {"lock": False})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write("")
