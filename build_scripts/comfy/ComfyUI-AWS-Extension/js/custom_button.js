@@ -618,10 +618,26 @@ export class ModalReleaseDialog extends ComfyDialog {
         return document.getElementById("input-field").value;
     }
 
-    handleOkClick() {
+    async handleOkClick() {
         this.element.close();
         var dialog = new ModalBlankDialog(app);
         dialog.show();
+
+        try {
+            var target = {
+                'name': this.getInputValue(),
+                'payload_json': "workflow test payload"
+            };
+            const response = await api.fetchApi("/workflows", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(target)
+            });
+            const result = await response.json();
+        } catch (exception) {
+            console.error('Error occurred during restore:', exception);
+            alert('An error occurred during restore. Please try again later.');
+        }
     }
 
     handleCancelClick() {
