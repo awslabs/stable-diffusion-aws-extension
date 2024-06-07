@@ -16,6 +16,7 @@ CONTAINER_PATH=$(realpath ./container)
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 START_SH=$(realpath ./build_scripts/inference/start.sh)
 COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
+COMFY_EXT=$(realpath ./build_scripts/comfy/ComfyUI-AWS-Extension)
 IMAGE_SH=$(realpath ./docker_image.sh)
 
 # Check if the repository already exists
@@ -104,7 +105,8 @@ docker rm $PROGRAM_NAME || true
 docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $CONTAINER_PATH:/container \\
            -v $START_SH:/start.sh \\
-           -v $COMFY_PROXY:/comfy_proxy.py \\
+           -v $COMFY_PROXY:/comfy_proxy.py:ro \\
+           -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
            --gpus all \\
            -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
