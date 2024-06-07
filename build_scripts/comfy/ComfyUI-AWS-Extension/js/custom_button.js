@@ -263,12 +263,11 @@ async function handleRefreshButtonClick() {
 
     try {
         const response = await api.fetchApi("/workflows");
+        console.log(response);
         const data = await response.json();
-
         // Clear the loading indicator
         container.innerHTML = '';
-
-        data.workflows.forEach(workflow => {
+        data.data.workflows.forEach(workflow => {
             const itemContainer = createWorkflowItem(workflow, () => {
                 if (selectedItem) {
                     selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
@@ -396,7 +395,7 @@ function createWorkflowItem(workflow, onClick) {
 
     const nameLabel = document.createElement('span');
     nameLabel.textContent = `${workflow.name}`;
-    if (workflow.status == 'Enabled') {
+    if (workflow.in_use) {
         nameLabel.style.fontWeight = '600';
     }else{
         nameLabel.style.fontWeight = '200';
@@ -405,25 +404,25 @@ function createWorkflowItem(workflow, onClick) {
     nameLabel.style.marginBottom = '2px';
 
     const sizeLabel = document.createElement('span');
-    sizeLabel.textContent = `${workflow.size} MB`;
+    sizeLabel.textContent = `${workflow.size} GB`;
     sizeLabel.style.fontWeight = '300';
     sizeLabel.style.color = '#6c757d';
     sizeLabel.style.fontSize = '12px';
     sizeLabel.style.marginBottom = '2px';
 
-    const createTimeLabel = document.createElement('span');
-    const createTime = new Date(workflow.create_time);
-    const formattedCreateTime = `${createTime.toISOString().slice(0, 19).replace('T', ' ')}`;
-    createTimeLabel.textContent = formattedCreateTime;
-    createTimeLabel.style.fontWeight = '300';
-    createTimeLabel.style.color = '#6c757d';
-    createTimeLabel.style.fontSize = '12px';
-    createTimeLabel.style.marginBottom = '2px';
+    // const createTimeLabel = document.createElement('span');
+    // const createTime = new Date(workflow.create_time);
+    // const formattedCreateTime = `${createTime.toISOString().slice(0, 19).replace('T', ' ')}`;
+    // createTimeLabel.textContent = formattedCreateTime;
+    // createTimeLabel.style.fontWeight = '300';
+    // createTimeLabel.style.color = '#6c757d';
+    // createTimeLabel.style.fontSize = '12px';
+    // createTimeLabel.style.marginBottom = '2px';
 
 
     labelContainer.appendChild(nameLabel);
     labelContainer.appendChild(sizeLabel);
-    labelContainer.appendChild(createTimeLabel);
+    // labelContainer.appendChild(createTimeLabel);
     itemContainer.appendChild(labelContainer);
     return itemContainer;
 }
