@@ -349,8 +349,15 @@ if [ -n "$ON_EC2" ]; then
 
   cd /home/ubuntu/ComfyUI || exit 1
 
-  if [ -f "/comfy_proxy.py" ]; then
-    cp /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
+  if [ "$WORKFLOW_NAME" = "default" ]; then
+    if [ -f "/comfy_proxy.py" ]; then
+      cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
+    fi
+
+    if [ -d "/ComfyUI-AWS-Extension" ]; then
+      rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
+      cp -r /ComfyUI-AWS-Extension /home/ubuntu/ComfyUI/custom_nodes/
+    fi
   fi
 
   rm -rf web/extensions/ComfyLiterals

@@ -7,12 +7,12 @@ while true; do
     base_image_name=$(cat "$(pwd)/container/image_base")
 
     if [ -z "$image_target_name" ]; then
-        sleep 20
+        sleep 30
         exit 1
     fi
 
     if [ -z "$base_image_name" ]; then
-        sleep 20
+        sleep 30
         exit 1
     fi
 
