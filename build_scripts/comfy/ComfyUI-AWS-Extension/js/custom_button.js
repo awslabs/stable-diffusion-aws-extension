@@ -3,6 +3,10 @@ import {api} from '../../scripts/api.js';
 import { ComfyDialog } from "../../scripts/ui/dialog.js";
 import { $el } from "../../scripts/ui.js";
 
+let container = null;
+let lockCanvas = null;
+let selectedItem = null;
+
 export function restartAPI() {
     if (confirm("Are you sure you'd like to restart the ComfyUI?")) {
         try {
@@ -257,10 +261,6 @@ function createConfigDiv() {
     return div;
 }
 
-let selectedItem = null;
-
-let container = null;
-
 function createScrollList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
@@ -314,7 +314,7 @@ function createToolbar() {
     toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
-    // toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
 
     return toolbarContainer;
 }
@@ -325,6 +325,10 @@ function handleReleaseButtonClick() {
 }
 
 async function handleRefreshButtonClick() {
+    if (lockCanvas == null) {
+        lockCanvas = new ModalBlankDialog(app, "Refreshing workflows...");
+    }
+    lockCanvas.show();
     // Clear the container
     container.innerHTML = '';
 
@@ -365,12 +369,13 @@ async function handleRefreshButtonClick() {
 
         console.error('Error occurred while fetching workflows:', error);
     }
+    lockCanvas.close();
 }
 
 
 async function handleChooseButtonClick() {
     if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to change the workflow?', () => {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to change current workflow?', () => {
             var dialog = new ModalBlankDialog(app);
             dialog.show();
         });
@@ -383,11 +388,22 @@ async function handleChooseButtonClick() {
 }
 
 async function handleDeleteButtonClick() {
-
     if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to delete the workflow?', () => {
-            var dialog = new ModalBlankDialog(app);
-            dialog.show();
+        var dialog = new ModalConfirmDialog(app, 'Do you want to delete the workflow?', async () => {
+            try {
+                var target = {
+                    'name': selectedItem.firstChild.firstChild.textContent
+                };
+                const response = await api.fetchApi("/workflows", {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(target)
+                });
+                const result = await response.json();
+            } catch (exception) {
+                console.error('Error occurred during restore:', exception);
+                alert('An error occurred during restore. Please try again later.');
+            }
         });
         dialog.show();
         selectedItem.remove();
@@ -536,24 +552,34 @@ const awsConfig = {
 
 app.registerExtension(awsConfig);
 
-let LockCanvas = null;
-
-// Add ui_lock listener
 api.addEventListener("ui_lock", ({ detail }) => {
     if (detail.lock) {
-        if (LockCanvas == null) {
-            LockCanvas = new ModalBlankDialog(app, "Processing workflows...");
+        if (lockCanvas == null) {
+            lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
         }
-        LockCanvas.show();
+        lockCanvas.show();
+        localStorage.setItem("ui_lock_status", "locked");
     }
 });
 
 // Close ui_lock listener
 api.addEventListener("ui_lock", ({ detail }) => {
     if (!detail.lock) {
-        if (LockCanvas != null) {
-            LockCanvas.close();
+        if (lockCanvas != null) {
+            lockCanvas.close();
+            localStorage.setItem("ui_lock_status", "unlocked");
         }
+    }
+});
+
+// Restore ui_lock status on page load
+window.addEventListener("load", () => {
+    const uiLockStatus = localStorage.getItem("ui_lock_status");
+    if (uiLockStatus === "locked") {
+        if (lockCanvas == null) {
+            lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
+        }
+        lockCanvas.show();
     }
 });
 
@@ -612,6 +638,10 @@ export class ModalBlankDialog extends ComfyDialog {
 
 	show() {
 		this.element.showModal();
+	}
+
+    close() {
+		this.element.close();
 	}
 }
 
