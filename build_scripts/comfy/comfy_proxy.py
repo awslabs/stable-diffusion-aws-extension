@@ -1,4 +1,5 @@
 import concurrent.futures
+import re
 import signal
 import threading
 
@@ -917,9 +918,13 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f"name is required"}))
 
             workflow_name = json_data['name']
-            if workflow_name == 'default':
+            if workflow_name == 'default' or workflow_name == 'local':
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} is not allowed"}))
+
+            if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', workflow_name):
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"{workflow_name} is invalid name"}))
 
             payload_json = ''
 
