@@ -8,31 +8,22 @@ let lockCanvas = null;
 let selectedItem = null;
 
 export function restartAPI() {
-    if (confirm("Are you sure you'd like to restart the ComfyUI?")) {
+
+    var dialog = new ModalConfirmDialog(app, 'Do you want to restare ComfyUI server?', async () => {
         try {
             api.fetchApi("/restart");
         } catch (exception) {
-
+            console.error('Error occurred during restore:', exception);
+            var messageDialog = new ModalMessageDialog(app, 'An error occurred during restore. Please try again later.');
+            messageDialog.show();
         }
-        return true;
-    }
-    return false;
-}
-
-export function rebootAPI() {
-    if (confirm("Are you sure you'd like to reboot the server?")) {
-        try {
-            api.fetchApi("/reboot");
-        } catch (exception) {
-
-        }
-        return true;
-    }
-    return false;
+    });
+    dialog.show();
 }
 
 export async function restore() {
-    if (confirm("Are you sure you'd like to restore your local environment?")) {
+
+    var dialog = new ModalConfirmDialog(app, 'Do you want to restore the local environment?', async () => {
         try {
             var target = {};
             const response = await api.fetchApi("/restore", {
@@ -42,18 +33,19 @@ export async function restore() {
             });
             const result = await response.json();
             if (response.ok) {
-                alert('Restore success!');
+                var messageDialog = new ModalMessageDialog(app, 'Restore success.');
+                messageDialog.show();
             } else {
-                // 如果请求失败，显示错误消息
-                alert('Restore failed. Please try again later.');
+                var messageDialog = new ModalMessageDialog(app, 'Restore failed. Please try again later.');
+                messageDialog.show();
             }
         } catch (exception) {
             console.error('Error occurred during restore:', exception);
-            alert('An error occurred during restore. Please try again later.');
+            var messageDialog = new ModalMessageDialog(app, 'An error occurred during restore. Please try again later.');
+            messageDialog.show();
         }
-        return true;
-    }
-    return false;
+    });
+    dialog.show();
 }
 
 export async function changeOnAWS(disableAWS) {
@@ -91,7 +83,7 @@ export async function changeOnAWS(disableAWS) {
 function createButton(text, onClick) {
     const button = document.createElement('button');
     button.textContent = text;
-    button.style.padding = '6px 12px'; // Increased padding for a more modern look
+    button.style.padding = '4px 12px'; // Increased padding for a more modern look
     button.style.borderRadius = '4px'; // Rounded corners for a modern look
     button.style.border = 'none'; // Remove the default border
     button.style.backgroundColor = '#232f3e'; // Dark background color
@@ -100,7 +92,7 @@ function createButton(text, onClick) {
     button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
     button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
     button.style.width = '90%';
-    button.style.marginTop = '5px';
+    button.style.marginTop = '4px';
     button.style.whiteSpace = 'nowrap';
     button.style.overflow = 'hidden'; // Hide overflowing text
     button.style.textOverflow = 'ellipsis'; // Add an ellipsis (...) for overflowing text
@@ -154,7 +146,7 @@ function createSageMakerOption(labelText, name, checked, onChange) {
     return container;
 }
 
-function createConfigDiv() {
+function createConfigPanel() {
     const div = document.createElement('div');
     div.style.border = '1px solid #d9d9d9'; // Use a light gray border
     div.style.width = '100%';
@@ -171,19 +163,42 @@ function createConfigDiv() {
     label.style.borderRadius = '4px'; // Add rounded corners
 
     label.style.top = '-8px'; // Adjust the top position
-    label.style.left = '40px'; // Move the label to the left
+    label.style.left = '32px'; // Move the label to the left
     label.style.backgroundColor = '#ffffff'; // Set a white background color
     label.style.padding = '4px 4px 0px 4px'; // Adjust padding
     label.style.fontSize = '14px'; // Set a font size similar to AWS console
     label.style.fontWeight = '700'; // Make the label text bold
     label.style.color = '#212529'; // Use a dark gray color for the label text
 
+    // Add the icon
+    const icon = document.createElement('span');
+    icon.innerHTML = '&#10064;'; // Use an icon or symbol as desired
+    icon.style.marginLeft = '8px';
+    icon.style.cursor = 'pointer';
+    icon.addEventListener('click', () => toggleConfigPanelPosition(div));
+    label.appendChild(icon);
+
     div.appendChild(label);
 
     return div;
 }
 
-function createScrollList() {
+function toggleConfigPanelPosition(div) {
+    const menu = document.getElementsByClassName('comfy-menu')[0];
+    const menuRect = menu.getBoundingClientRect();
+    const moveTop = menuRect.top -  div.getBoundingClientRect().top + 12;
+    const moveLeft = 0 - menuRect.width + 4;
+    if (div.style.transform === '') {
+        div.style.transform = `translate(${moveLeft}px, ${moveTop}px)`;
+    } else {
+        div.style.transform = '';
+    }
+}
+
+
+
+
+function createWorkflowList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
     outerContainer.style.flexDirection = 'column';
@@ -230,23 +245,23 @@ function createToolbar() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
 
-    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButton, 'Create New Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButton, 'Reload Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButton, 'Change Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow'));
 
     return toolbarContainer;
 }
 
-function handleReleaseButtonClick() {
+function handleReleaseButton() {
     var dialog = new ModalReleaseDialog(app);
     dialog.show();
 }
 
-async function handleRefreshButtonClick() {
+async function handleRefreshButton() {
     // Clear the container
     container.innerHTML = '';
 
@@ -289,7 +304,7 @@ async function handleRefreshButtonClick() {
 }
 
 
-async function handleChooseButtonClick() {
+async function handleChooseButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to change the current workflow?', async () => {
             try {
@@ -315,7 +330,7 @@ async function handleChooseButtonClick() {
 
 }
 
-async function handleDeleteButtonClick() {
+async function handleDeleteButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to delete the workflow?', async () => {
             try {
@@ -360,6 +375,7 @@ function createToolbarButton(icon, onClick, altText) {
     button.style.alignItems = 'center';
     button.style.fontSize = '14px';
     button.setAttribute('alt', altText); // Add the alt attribute
+    button.setAttribute('title', altText); // Add the alt attribute
 
     // Add hover effect
     button.addEventListener('mouseenter', () => {
@@ -445,26 +461,26 @@ async function handlePromptChange(event) {
 }
 
 
-const awsConfig = {
-    name: 'awsConfig',
+const awsConfigPanel = {
+    name: 'awsConfigPanel',
     async setup(app) {
         //       const check_response = await api.fetchApi("/check_is_master");
         //       const check_data = await check_response.json();
-        const widgetsContainer = createConfigDiv();
+        const widgetsContainer = createConfigPanel();
 
         if (true) {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
-            const checkboxSageMaker = createSageMakerOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
+            const checkboxSageMaker = createSageMakerOption('Prompt on AWS', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
         if (true) {
-            const scrollList = createScrollList();
+            const scrollList = createWorkflowList();
             widgetsContainer.appendChild(scrollList);
         }
         if (true) {
-            const syncButton = createButton('Release Workflow', handleReleaseButtonClick);
+            const syncButton = createButton('New Workflow', handleReleaseButton);
             widgetsContainer.appendChild(syncButton);
         }
         const restartButton = createButton('Restart ComfyUI', restartAPI);
@@ -474,11 +490,11 @@ const awsConfig = {
             widgetsContainer.appendChild(restoreButton);
         }
         app.ui.menuContainer.appendChild(widgetsContainer);
-        handleRefreshButtonClick();
+        handleRefreshButton();
     }
 }
 
-app.registerExtension(awsConfig);
+app.registerExtension(awsConfigPanel);
 
 api.addEventListener("ui_lock", ({ detail }) => {
     if (detail.lock) {
@@ -700,7 +716,7 @@ export class ModalConfirmDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "Confirmation" },
+                        { textContent: "AWS Config" },
                     ),
                     $el(
                         "tr",
@@ -767,7 +783,7 @@ export class ModalMessageDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "Information" },
+                        { textContent: "AWS Config" },
                     ),
                     $el(
                         "tr",
