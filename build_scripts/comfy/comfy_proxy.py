@@ -987,6 +987,33 @@ if is_on_ec2:
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": 'Release workflow failed'}))
 
+    @server.PromptServer.instance.routes.delete("/workflows")
+    async def delete_workflow(request):
+
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can delete workflows"}))
+
+        logger.info(f"start to delete workflows {request}")
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"name is required"}))
+            name = json_data['name']
+            data = {
+                "workflow_name_list": [name],
+            }
+            get_response = requests.delete(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+            response = get_response.json()
+            print(response)
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "success"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Delete workflow failed'}))
 
     @server.PromptServer.instance.routes.put("/workflows")
     async def switch_workflow(request):
@@ -1026,7 +1053,6 @@ if is_on_ec2:
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
 
-
     @server.PromptServer.instance.routes.get("/workflows")
     async def get_workflows(request):
         try:
@@ -1041,11 +1067,10 @@ if is_on_ec2:
             workflows = data['workflows']
             list = []
             for workflow in workflows:
-                if workflow['status'] != 'Enabled':
-                    continue
                 list.append({
                     "name": workflow['name'],
                     "size": workflow['size'],
+                    "status": workflow['status'],
                     "payload_json": workflow['payload_json'],
                     "in_use": workflow['name'] == workflow_name
                 })
