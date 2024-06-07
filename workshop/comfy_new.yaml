@@ -43,6 +43,7 @@ Mappings:
     us-west-2:
       AMI: ami-09d4fb52761c3d78d
 
+
 Resources:
 
   LambdaExecutionRole:
@@ -271,7 +272,7 @@ Resources:
         - !GetAtt ComfySecurityGroup.GroupId
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-dev"
+          Value: !Sub "comfy-on-aws"
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
@@ -293,12 +294,6 @@ Resources:
           
           source /etc/environment
           
-          sudo rm -rf /root/stable-diffusion-aws-extension
-          
-          cd /root
-          
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
-          
           while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
             echo "Waiting for other apt process to finish..."
             sleep 1
@@ -310,11 +305,6 @@ Resources:
           done
           
           sudo apt update && sudo apt install nginx jq supervisor -y
-          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
-          sudo ufw allow 'Nginx HTTP'
-          sudo systemctl enable nginx
-          sudo systemctl restart nginx
           
           aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
           docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:dev
@@ -322,9 +312,19 @@ Resources:
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
           cp s5cmd /usr/local/bin/
+          rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz
           
-          # s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
-          # tar --overwrite -xf "/tmp/src.tar" -C "/root/tar/"
+          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
+          sudo rm -rf /root/stable-diffusion-aws-extension
+          sudo mkdir -p /root/stable-diffusion-aws-extension/
+          tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
+          rm -rf /tmp/src.tar
+          
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy.conf /etc/nginx/sites-available/default
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/custom_502.html
+          sudo ufw allow 'Nginx HTTP'
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
           
           cat > comfy.service <<EOF
           [Unit]
@@ -372,7 +372,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-dev"
+          Value: !Sub "comfy-on-aws"
 
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
