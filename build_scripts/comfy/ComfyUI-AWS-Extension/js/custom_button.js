@@ -56,83 +56,6 @@ export async function restore() {
     return false;
 }
 
-
-export async function syncEnv() {
-    if (confirm("Are you sure you'd like to sync your local environment to AWS?")) {
-        try {
-            var target = {};
-            const FETCH_TIMEOUT = 1800000; // 30 seconds in milliseconds
-            const response = await Promise.race([
-                api.fetchApi("/sync_env"),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT))
-            ]);
-            const result = await response.json();
-            if (response.ok) {
-                const TIMEOUT_DURATION = 1800000; // 30 minutes in milliseconds
-                const RETRY_INTERVAL = 5000; // 5 seconds in milliseconds
-                let responseCheck;
-                let resultCheck;
-                const startTime = Date.now();
-                while (Date.now() - startTime < TIMEOUT_DURATION) {
-                    responseCheck = await api.fetchApi("/check_prepare");
-                    resultCheck = await responseCheck.json();
-                    if (responseCheck.ok) {
-                        alert('Sync success!');
-                        return true;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
-                }
-                alert('Sync timeout. Please try again later.');
-            } else {
-                // 如果请求失败，显示错误消息
-                alert('Sync failed. Please try again later.');
-            }
-        } catch (exception) {
-            console.error('Error occurred during sync:', exception);
-            alert('An error occurred during sync. Please try again later.');
-        }
-        return true;
-    }
-    return false;
-}
-
-
-export async function syncEnvNoAlert() {
-    try {
-        var target = {}
-        const FETCH_TIMEOUT = 18000000; // 30 minutes in milliseconds
-        const response = await Promise.race([
-            api.fetchApi("/sync_env"),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT))
-        ]);
-        const result = await response.json();
-        if (response.ok) {
-            const TIMEOUT_DURATION = 18000000; // 30 minutes in milliseconds
-                const RETRY_INTERVAL = 5000; // 5 seconds in milliseconds
-                let responseCheck;
-                let resultCheck;
-                const startTime = Date.now();
-                while (Date.now() - startTime < TIMEOUT_DURATION) {
-                    responseCheck = await api.fetchApi("/check_prepare");
-                    resultCheck = await responseCheck.json();
-                    if (responseCheck.ok) {
-                        alert('Sync success!');
-                        return true;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, RETRY_INTERVAL));
-                }
-                alert('Sync timeout. Please try again later.');
-        } else {
-            // 如果请求失败，显示错误消息
-            alert('Please click your synchronized button then execute prompt.');
-        }
-    } catch (exception) {
-        console.error('Error occurred during sync:', exception);
-        alert('Please click your synchronized button then try again later.');
-    }
-}
-
-
 export async function changeOnAWS(disableAWS) {
     var target
     if (disableAWS === false) {
@@ -159,7 +82,6 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
-            syncEnvNoAlert()
             return true;
         }
     }
@@ -415,7 +337,6 @@ async function handleDeleteButtonClick() {
 
 }
 
-
 function createToolbarButton(icon, onClick, altText) {
     const button = document.createElement('button');
     button.innerHTML = icon;
@@ -507,7 +428,7 @@ function createWorkflowItem(workflow, onClick) {
     return itemContainer;
 }
 
-async function handleCheckboxChange(event) {
+async function handlePromptChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
     changeOnAWS(event.target.checked);
@@ -528,7 +449,7 @@ const awsConfig = {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
-            const checkboxSageMaker = createCheckboxOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handleCheckboxChange);
+            const checkboxSageMaker = createCheckboxOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
         if (true) {
