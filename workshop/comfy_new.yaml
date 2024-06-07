@@ -28,20 +28,60 @@ Parameters:
 
 Mappings:
   RegionToAmiId:
-    us-east-1:
-      AMI: ami-02a07d31009cc8717
-    us-east-2:
-      AMI: ami-02a912b010cf774bd
-    ap-southeast-1:
-      AMI: ami-06f0228bde7a6dac2
-    ap-northeast-1:
-      AMI: ami-0f9b45ca95cee6386
-    ap-northeast-2:
-      AMI: ami-0aba6dcbc1be4e85e
+    ap-south-2:
+      AMI: ami-09dd17e8adf1fb52d
+    ap-south-1:
+      AMI: ami-0a303ebf909b46aea
+    eu-south-1:
+      AMI: ami-088d3d25a75944f99
+    eu-south-2:
+      AMI: ami-099efa28cc2f1fe1d
+    me-central-1:
+      AMI: ami-02ec54bc0a27faa40
+    ca-central-1:
+      AMI: ami-0e490ef27ed5c0f5d
+    eu-central-1:
+      AMI: ami-09490b9a3b284c6f0
+    eu-central-2:
+      AMI: ami-09105ea2bc53285e6
     us-west-1:
-      AMI: ami-0ea5aefd1471f67b2
+      AMI: ami-0ff832bdf91944651
     us-west-2:
-      AMI: ami-09d4fb52761c3d78d
+      AMI: ami-04a32162efe87cb4c
+    af-south-1:
+      AMI: ami-07ac148979be497a5
+    eu-north-1:
+      AMI: ami-0fd303abd14827300
+    eu-west-3:
+      AMI: ami-001368180587164c8
+    eu-west-2:
+      AMI: ami-0aad72a0b9d9baec1
+    eu-west-1:
+      AMI: ami-09b0d7d31ba756f46
+    ap-northeast-3:
+      AMI: ami-0d1fdff91da68b01c
+    ap-northeast-2:
+      AMI: ami-086cae3329a3f7d75
+    me-south-1:
+      AMI: ami-0515452e9b0f40e44
+    ap-northeast-1:
+      AMI: ami-0889fe01fe3d6b816
+    sa-east-1:
+      AMI: ami-0e2f00f1a5c710177
+    ap-east-1:
+      AMI: ami-0596fbc9bc165e0a6
+    ap-southeast-1:
+      AMI: ami-04d17ac01971b3b87
+    ap-southeast-2:
+      AMI: ami-04ba7a89b4f74783e
+    ap-southeast-3:
+      AMI: ami-0a854f2bba86de98f
+    ap-southeast-4:
+      AMI: ami-08ae3a79f5d03faa5
+    us-east-1:
+      AMI: ami-0e21465cede02fd1e
+    us-east-2:
+      AMI: ami-05fb0b8c1424f266b
 
 Resources:
 
@@ -271,7 +311,7 @@ Resources:
         - !GetAtt ComfySecurityGroup.GroupId
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-dev"
+          Value: !Sub "comfy-on-aws"
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
@@ -292,12 +332,6 @@ Resources:
           echo "SERVICE_TYPE=comfy" >> /etc/environment
           
           source /etc/environment
-          
-          sudo rm -rf /root/stable-diffusion-aws-extension
-          
-          cd /root
-          
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch dev
           
           while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
             echo "Waiting for other apt process to finish..."
@@ -322,9 +356,13 @@ Resources:
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
           cp s5cmd /usr/local/bin/
+          rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz
           
-          # s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
-          # tar --overwrite -xf "/tmp/src.tar" -C "/root/tar/"
+          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
+          sudo rm -rf /root/stable-diffusion-aws-extension
+          sudo mkdir -p /root/stable-diffusion-aws-extension/
+          tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
+          rm -rf /tmp/src.tar
           
           cat > comfy.service <<EOF
           [Unit]
@@ -372,7 +410,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub "comfy-on-aws-dev"
+          Value: !Sub "comfy-on-aws"
 
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
