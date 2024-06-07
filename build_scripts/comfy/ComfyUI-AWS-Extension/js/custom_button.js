@@ -121,7 +121,7 @@ function createButton(text, onClick) {
 
 
 
-function createCheckboxOption(labelText, name, checked, onChange) {
+function createSageMakerOption(labelText, name, checked, onChange) {
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.alignItems = 'center';
@@ -291,9 +291,21 @@ async function handleRefreshButtonClick() {
 
 async function handleChooseButtonClick() {
     if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to change current workflow?', () => {
-            var dialog = new ModalBlankDialog(app);
-            dialog.show();
+        var dialog = new ModalConfirmDialog(app, 'Do you want to change the current workflow?', async () => {
+            try {
+                var target = {
+                    'name': selectedItem.firstChild.firstChild.textContent
+                };
+                const response = await api.fetchApi("/workflows", {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(target)
+                });
+                const result = await response.json();
+            } catch (exception) {
+                console.error('Error occurred during restore:', exception);
+                alert('An error occurred during restore. Please try again later.');
+            }
         });
         dialog.show();
     } else {
@@ -444,7 +456,7 @@ const awsConfig = {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
-            const checkboxSageMaker = createCheckboxOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
+            const checkboxSageMaker = createSageMakerOption('Cloud Prompt', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
         if (true) {
