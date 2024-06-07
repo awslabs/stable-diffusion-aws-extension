@@ -1070,7 +1070,13 @@ if is_on_ec2:
 
             data = response.json()['data']
             workflows = data['workflows']
-            list = []
+            list = [{
+                "name": 'default',
+                "size": '',
+                "status": 'Enabled',
+                "payload_json": '',
+                "in_use": 'default' == workflow_name
+            }]
             for workflow in workflows:
                 list.append({
                     "name": workflow['name'],
@@ -1080,7 +1086,6 @@ if is_on_ec2:
                     "in_use": workflow['name'] == workflow_name
                 })
 
-            data['current_workflow'] = workflow_name
             data['workflows'] = list
 
             return web.Response(status=200, content_type='application/json',
