@@ -100,6 +100,13 @@ if is_on_ec2:
     headers = {"x-api-key": api_token, "Content-Type": "application/json"}
 
 
+    def send_msg_to_all_sockets(event: str, msg: dict):
+        sockets = server.PromptServer.instance.sockets
+        for socket in sockets.keys():
+            client_id = socket
+            server.PromptServer.instance.loop.call_soon_threadsafe(
+                server.PromptServer.instance.messages.put_nowait, (event, msg, client_id))
+
     def get_endpoint_name_by_workflow_name(name: str, endpoint_type: str = 'async'):
         return f"comfy-{endpoint_type}-{name}"
 
@@ -204,6 +211,8 @@ if is_on_ec2:
 
     def execute_proxy(func):
         def wrapper(*args, **kwargs):
+            send_msg_to_all_sockets("testtest", {"test", 'test'})
+
             def send_error_msg(executor, prompt_id, msg):
                 mes = {
                     "prompt_id": prompt_id,
