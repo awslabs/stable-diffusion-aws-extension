@@ -308,7 +308,7 @@ function createToolbar() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
 
-    // toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButtonClick));
+    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
@@ -325,20 +325,48 @@ function handleReleaseButtonClick() {
 }
 
 async function handleRefreshButtonClick() {
+    // Clear the container
     container.innerHTML = '';
-    const response = await api.fetchApi("/workflows");
-    const data = await response.json();
-    data.workflows.forEach(workflow => {
-        const itemContainer = createWorkflowItem(workflow, () => {
-            if (selectedItem) {
-                selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
-            }
-            itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
-            selectedItem = itemContainer;
+
+    // Add a loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.textContent = 'Loading...';
+    loadingIndicator.style.textAlign = 'center';
+    loadingIndicator.style.padding = '20px';
+    container.appendChild(loadingIndicator);
+
+    try {
+        const response = await api.fetchApi("/workflows");
+        const data = await response.json();
+
+        // Clear the loading indicator
+        container.innerHTML = '';
+
+        data.workflows.forEach(workflow => {
+            const itemContainer = createWorkflowItem(workflow, () => {
+                if (selectedItem) {
+                    selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
+                }
+                itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
+                selectedItem = itemContainer;
+            });
+            container.appendChild(itemContainer);
         });
-        container.appendChild(itemContainer);
-    });
+    } catch (error) {
+        // Clear the loading indicator
+        container.innerHTML = '';
+
+        // Display an error message
+        const errorMessage = document.createElement('div');
+        errorMessage.textContent = 'Error occurred while fetching workflows. Please try again later.';
+        errorMessage.style.textAlign = 'center';
+        errorMessage.style.padding = '20px';
+        container.appendChild(errorMessage);
+
+        console.error('Error occurred while fetching workflows:', error);
+    }
 }
+
 
 async function handleChooseButtonClick() {
     if (selectedItem) {
@@ -508,9 +536,30 @@ const awsConfig = {
 
 app.registerExtension(awsConfig);
 
-// Blank modal dialog
+let LockCanvas = null;
+
+// Add ui_lock listener
+api.addEventListener("ui_lock", ({ detail }) => {
+    if (detail.lock) {
+        if (LockCanvas == null) {
+            LockCanvas = new ModalBlankDialog(app, "Processing workflows...");
+        }
+        LockCanvas.show();
+    }
+});
+
+// Close ui_lock listener
+api.addEventListener("ui_lock", ({ detail }) => {
+    if (!detail.lock) {
+        if (LockCanvas != null) {
+            LockCanvas.close();
+        }
+    }
+});
+
+// Blank modal dialog, show a close button after 10 seconds
 export class ModalBlankDialog extends ComfyDialog {
-	constructor(app) {
+	constructor(app, message) {
 		super();
 		this.app = app;
 		this.settingsValues = {};
@@ -525,26 +574,48 @@ export class ModalBlankDialog extends ComfyDialog {
 				$el("table.comfy-modal-content.comfy-table", [
 					$el(
 						"caption",
-						{ textContent: "Please wait" },
+						{ textContent: message },
+					),
+					$el(
+						"tr",
+						{
+							style: { display: "none" },
+						},
+						[$el("th"), $el("th", { style: { width: "23%" } })]
 					),
 				]),
+				$el(
+					"div",
+					{
+						id: "close-button",
+						style: {
+							position: "fixed",
+							top: "10px",
+							right: "10px",
+							display: "none",
+						},
+					},
+					[
+						$el("button", {
+							textContent: "X",
+							onclick: () => this.element.close(),
+						}),
+					]
+				),
 			]
 		);
+
+		setTimeout(() => {
+			document.getElementById("close-button").style.display = "block";
+		}, 10000);
 	}
 
 	show() {
-		this.textElement.replaceChildren(
-			$el(
-				"tr",
-				{
-					style: { display: "none" },
-				},
-				[$el("th"), $el("th", { style: { width: "33%" } })]
-			)
-		);
 		this.element.showModal();
 	}
 }
+
+
 
 // input field dialog
 export class ModalReleaseDialog extends ComfyDialog {
@@ -620,9 +691,6 @@ export class ModalReleaseDialog extends ComfyDialog {
 
     async handleOkClick() {
         this.element.close();
-        var dialog = new ModalBlankDialog(app);
-        dialog.show();
-
         try {
             var target = {
                 'name': this.getInputValue(),
