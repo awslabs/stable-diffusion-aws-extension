@@ -320,7 +320,7 @@ function createToolbar() {
 }
 
 function handleReleaseButtonClick() {
-    var dialog = new ReleaseWorkflowModalDialog(app);
+    var dialog = new ModalReleaseDialog(app);
     dialog.show();
 }
 
@@ -342,15 +342,33 @@ async function handleRefreshButtonClick() {
 
 async function handleChooseButtonClick() {
     if (selectedItem) {
-        console.log(`Chosen: ${selectedItem.querySelector('label').textContent}`);
+        var dialog = new ModalConfirmDialog(app, 'Do you want to change the workflow?', () => {
+            var dialog = new ModalBlankDialog(app);
+            dialog.show();
+        });
+        dialog.show();
+    } else {
+        var dialog = new ModalMessageDialog(app, 'Please select a workflow in the list');
+        dialog.show();
     }
+
 }
 
 async function handleDeleteButtonClick() {
+
     if (selectedItem) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to delete the workflow?', () => {
+            var dialog = new ModalBlankDialog(app);
+            dialog.show();
+        });
+        dialog.show();
         selectedItem.remove();
         selectedItem = null;
+    } else {
+        var dialog = new ModalMessageDialog(app, 'Please select a workflow in the list');
+        dialog.show();
     }
+
 }
 
 
@@ -491,7 +509,7 @@ const awsConfig = {
 app.registerExtension(awsConfig);
 
 // Blank modal dialog
-export class ComfyBlankModalDialog extends ComfyDialog {
+export class ModalBlankDialog extends ComfyDialog {
 	constructor(app) {
 		super();
 		this.app = app;
@@ -528,8 +546,8 @@ export class ComfyBlankModalDialog extends ComfyDialog {
 	}
 }
 
-// inpiut field dialog
-export class ReleaseWorkflowModalDialog extends ComfyDialog {
+// input field dialog
+export class ModalReleaseDialog extends ComfyDialog {
     constructor(app) {
         super();
         this.app = app;
@@ -602,7 +620,7 @@ export class ReleaseWorkflowModalDialog extends ComfyDialog {
 
     handleOkClick() {
         this.element.close();
-        var dialog = new ComfyBlankModalDialog(app);
+        var dialog = new ModalBlankDialog(app);
         dialog.show();
     }
 
@@ -610,3 +628,126 @@ export class ReleaseWorkflowModalDialog extends ComfyDialog {
         this.element.close();
     }
 }
+
+
+export class ModalConfirmDialog extends ComfyDialog {
+    constructor(app, message, callback) {
+        super();
+        this.app = app;
+        this.message = message;
+        this.callback = callback;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: "Confirmation" },
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                                $el("p", { textContent: this.message, style: { textAlign: "center" } }),
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                                $el("button", {
+                                    id: "ok-button",
+                                    textContent: "Yes",
+                                    style: { marginRight: "10px" },
+                                    onclick: () => this.handleYesClick(),
+                                }),
+                                $el("button", {
+                                    id: "cancel-button",
+                                    textContent: "No",
+                                    onclick: () => this.handleNoClick(),
+                                }),
+                            ]),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+    }
+
+    show() {
+        this.element.showModal();
+    }
+
+    handleYesClick() {
+        // Add your logic for the Yes button here
+        this.callback();
+        this.element.close();
+    }
+
+    handleNoClick() {
+        this.element.close();
+    }
+}
+
+
+
+export class ModalMessageDialog extends ComfyDialog {
+    constructor(app, message) {
+        super();
+        this.app = app;
+        this.message = message;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: "Information" },
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                                $el("p", { textContent: this.message, style: { textAlign: "center" } }),
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                                $el("button", {
+                                    id: "ok-button",
+                                    textContent: "OK",
+                                    onclick: () => this.handleOkClick(),
+                                }),
+                            ]),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+    }
+
+    show() {
+        this.element.showModal();
+    }
+
+    handleOkClick() {
+        this.element.close();
+    }
+}
+
