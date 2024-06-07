@@ -309,12 +309,12 @@ function createToolbar() {
     toolbarContainer.style.zIndex = '1';
 
     // toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButtonClick));
-    // toolbarContainer.appendChild(createButtonSeparator());
+    toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButtonClick));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
+    // toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButtonClick));
 
     return toolbarContainer;
 }
