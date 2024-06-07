@@ -7,10 +7,8 @@ SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 
 supervisorctl -c "$SUPERVISORD_FILE" shutdown || true
 
-git pull
+docker stop $(docker ps -q) || true
 
-rm -rf container/
+sudo rm -rf container
 
-reboot
-
-exit 1
+./docker_start.sh
