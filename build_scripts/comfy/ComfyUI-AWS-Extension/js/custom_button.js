@@ -247,10 +247,6 @@ function handleReleaseButtonClick() {
 }
 
 async function handleRefreshButtonClick() {
-    if (lockCanvas == null) {
-        lockCanvas = new ModalBlankDialog(app, "Refreshing workflows...");
-    }
-    lockCanvas.show();
     // Clear the container
     container.innerHTML = '';
 
@@ -290,7 +286,6 @@ async function handleRefreshButtonClick() {
 
         console.error('Error occurred while fetching workflows:', error);
     }
-    lockCanvas.close();
 }
 
 
@@ -382,6 +377,7 @@ function createWorkflowItem(workflow, onClick) {
     itemContainer.style.alignItems = 'flex-start'; // Align items to the top
     itemContainer.style.justifyContent = 'space-between';
     itemContainer.style.padding = '2px';
+    itemContainer.style.paddingLeft = '4px';
     itemContainer.style.borderBottom = '1px solid #949494';
     itemContainer.style.backgroundColor = '#f8f9fa'; // Default background color
     itemContainer.style.position = 'relative'; // Add this line to position the label
@@ -404,7 +400,7 @@ function createWorkflowItem(workflow, onClick) {
     nameLabel.style.marginBottom = '2px';
 
     const sizeLabel = document.createElement('span');
-    sizeLabel.textContent = `${workflow.size} GB`;
+    sizeLabel.textContent = workflow.size ? `${workflow.size} GB` : "unknow";
     sizeLabel.style.fontWeight = '300';
     sizeLabel.style.color = '#6c757d';
     sizeLabel.style.fontSize = '12px';
@@ -607,7 +603,7 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     id: "ok-button",
                                     textContent: "OK",
                                     style: { marginRight: "10px" },
-                                    onclick: () => this.handleOkClick(),
+                                    onclick: () => this.releaseWorkflow(),
                                 }),
                                 $el("button", {
                                     id: "cancel-button",
@@ -639,8 +635,13 @@ export class ModalReleaseDialog extends ComfyDialog {
         return document.getElementById("input-field").value;
     }
 
-    async handleOkClick() {
+    async releaseWorkflow() {
         this.element.close();
+        if (lockCanvas == null) {
+            lockCanvas = new ModalBlankDialog(app, "Creating workflows...");
+        }
+        lockCanvas.show();
+        localStorage.setItem("ui_lock_status", "locked");
         try {
             var target = {
                 'name': this.getInputValue(),
@@ -652,6 +653,11 @@ export class ModalReleaseDialog extends ComfyDialog {
                 body: JSON.stringify(target)
             });
             const result = await response.json();
+            if (!result.result) {
+                lockCanvas.close();
+                var dialog = new ModalMessageDialog(app, result.message);
+                dialog.show();
+            }
         } catch (exception) {
             console.error('Error occurred during restore:', exception);
             alert('An error occurred during restore. Please try again later.');
