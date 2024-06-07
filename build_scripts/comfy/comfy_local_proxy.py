@@ -890,16 +890,4 @@ async def get_workflows(self):
         return web.Response(status=500, content_type='application/json',
                             body=json.dumps({"result": False, "message": e}))
 
-@server.PromptServer.instance.routes.post("/workflows")
-async def get_workflows(self):
-    try:
-        get_response = requests.put(f"{api_url}/workflows", headers=headers)
-        response = get_response.json()
 
-        logger.info(f"{response}")
-        if get_response.status_code == 200:
-            return web.Response(status=200, content_type='application/json', body=json.dumps({"workflows": response['data']['workflows']}))
-    except Exception as e:
-        logger.info(f"error restart  {e}")
-        return web.Response(status=500, content_type='application/json',
-                            body=json.dumps({"result": False, "message": e}))
