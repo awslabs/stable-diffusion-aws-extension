@@ -323,6 +323,9 @@ Resources:
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
           cp s5cmd /usr/local/bin/
           
+          # s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
+          # tar --overwrite -xf "/tmp/src.tar" -C "/root/tar/"
+          
           cat > comfy.service <<EOF
           [Unit]
           Description=Comfy Service

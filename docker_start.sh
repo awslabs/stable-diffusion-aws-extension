@@ -92,11 +92,11 @@ else
   docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\"\$WORKFLOW_NAME\"
 fi
 
-mkdir -p $CONTAINER_PATH/output/$PROGRAM_NAME
-mkdir -p $CONTAINER_PATH/temp/$PROGRAM_NAME
+sudo mkdir -p $CONTAINER_PATH/output/$PROGRAM_NAME
+sudo mkdir -p $CONTAINER_PATH/temp/$PROGRAM_NAME
 
-chmod -R 777 $CONTAINER_PATH/output/$PROGRAM_NAME
-chmod -R 777 $CONTAINER_PATH/temp/$PROGRAM_NAME
+sudo chmod -R 777 $CONTAINER_PATH/output/$PROGRAM_NAME
+sudo chmod -R 777 $CONTAINER_PATH/temp/$PROGRAM_NAME
 
 docker build -f $CONTAINER_PATH/$PROGRAM_NAME.Dockerfile --build-arg BASE_IMAGE=\"\$BASE_IMAGE\" -t $PROGRAM_NAME .
 docker stop $PROGRAM_NAME || true
