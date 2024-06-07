@@ -28,60 +28,21 @@ Parameters:
 
 Mappings:
   RegionToAmiId:
-    ap-south-2:
-      AMI: ami-09dd17e8adf1fb52d
-    ap-south-1:
-      AMI: ami-0a303ebf909b46aea
-    eu-south-1:
-      AMI: ami-088d3d25a75944f99
-    eu-south-2:
-      AMI: ami-099efa28cc2f1fe1d
-    me-central-1:
-      AMI: ami-02ec54bc0a27faa40
-    ca-central-1:
-      AMI: ami-0e490ef27ed5c0f5d
-    eu-central-1:
-      AMI: ami-09490b9a3b284c6f0
-    eu-central-2:
-      AMI: ami-09105ea2bc53285e6
-    us-west-1:
-      AMI: ami-0ff832bdf91944651
-    us-west-2:
-      AMI: ami-04a32162efe87cb4c
-    af-south-1:
-      AMI: ami-07ac148979be497a5
-    eu-north-1:
-      AMI: ami-0fd303abd14827300
-    eu-west-3:
-      AMI: ami-001368180587164c8
-    eu-west-2:
-      AMI: ami-0aad72a0b9d9baec1
-    eu-west-1:
-      AMI: ami-09b0d7d31ba756f46
-    ap-northeast-3:
-      AMI: ami-0d1fdff91da68b01c
-    ap-northeast-2:
-      AMI: ami-086cae3329a3f7d75
-    me-south-1:
-      AMI: ami-0515452e9b0f40e44
-    ap-northeast-1:
-      AMI: ami-0889fe01fe3d6b816
-    sa-east-1:
-      AMI: ami-0e2f00f1a5c710177
-    ap-east-1:
-      AMI: ami-0596fbc9bc165e0a6
-    ap-southeast-1:
-      AMI: ami-04d17ac01971b3b87
-    ap-southeast-2:
-      AMI: ami-04ba7a89b4f74783e
-    ap-southeast-3:
-      AMI: ami-0a854f2bba86de98f
-    ap-southeast-4:
-      AMI: ami-08ae3a79f5d03faa5
     us-east-1:
-      AMI: ami-0e21465cede02fd1e
+      AMI: ami-02a07d31009cc8717
     us-east-2:
-      AMI: ami-05fb0b8c1424f266b
+      AMI: ami-02a912b010cf774bd
+    ap-southeast-1:
+      AMI: ami-06f0228bde7a6dac2
+    ap-northeast-1:
+      AMI: ami-0f9b45ca95cee6386
+    ap-northeast-2:
+      AMI: ami-0aba6dcbc1be4e85e
+    us-west-1:
+      AMI: ami-0ea5aefd1471f67b2
+    us-west-2:
+      AMI: ami-09d4fb52761c3d78d
+
 
 Resources:
 
@@ -344,11 +305,6 @@ Resources:
           done
           
           sudo apt update && sudo apt install nginx jq supervisor -y
-          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/comfy_custom_502.html
-          sudo ufw allow 'Nginx HTTP'
-          sudo systemctl enable nginx
-          sudo systemctl restart nginx
           
           aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
           docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:dev
@@ -363,6 +319,12 @@ Resources:
           sudo mkdir -p /root/stable-diffusion-aws-extension/
           tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
           rm -rf /tmp/src.tar
+          
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy.conf /etc/nginx/sites-available/default
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/custom_502.html
+          sudo ufw allow 'Nginx HTTP'
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
           
           cat > comfy.service <<EOF
           [Unit]
