@@ -903,6 +903,12 @@ if is_on_ec2:
         return total_size
 
 
+    def dir_size(source_path: str):
+        total_size_bytes = get_directory_size(source_path)
+        source_size = round(total_size_bytes / (1024 ** 3), 2)
+        return str(source_size)
+
+
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
 
@@ -945,10 +951,7 @@ if is_on_ec2:
 
             cur_workflow_name = os.getenv('WORKFLOW_NAME')
             source_path = f"/container/workflows/{cur_workflow_name}"
-
             print(f"source_path is {source_path}")
-            total_size_bytes = get_directory_size(source_path)
-            source_size = round(total_size_bytes / (1024 ** 3), 2)
 
             s5cmd_sync_command = (f's5cmd sync '
                                   f'--delete=true '
@@ -977,7 +980,7 @@ if is_on_ec2:
                 "payload_json": payload_json,
                 "image_uri": image_uri,
                 "name": workflow_name,
-                "size": str(source_size),
+                "size": dir_size(source_path),
             }
             get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             response = get_response.json()
@@ -1072,7 +1075,7 @@ if is_on_ec2:
             workflows = data['workflows']
             list = [{
                 "name": 'default',
-                "size": '',
+                "size": dir_size(f"/container/workflows/default"),
                 "status": 'Enabled',
                 "payload_json": '',
                 "in_use": 'default' == workflow_name
