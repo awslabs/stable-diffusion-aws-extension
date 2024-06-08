@@ -1,5 +1,5 @@
-import {app} from '../../scripts/app.js'
-import {api} from '../../scripts/api.js';
+import { app } from '../../scripts/app.js'
+import { api } from '../../scripts/api.js';
 import { ComfyDialog } from "../../scripts/ui/dialog.js";
 import { $el } from "../../scripts/ui.js";
 
@@ -29,7 +29,7 @@ export async function restore() {
             var target = {};
             const response = await api.fetchApi("/restore", {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(target)
             });
             const result = await response.json();
@@ -51,10 +51,10 @@ export async function changeOnAWS(disableAWS) {
     if (disableAWS === false) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
             try {
-                target = {'DISABLE_AWS_PROXY': "True"}
+                target = { 'DISABLE_AWS_PROXY': "True" }
                 const response = await api.fetchApi("/change_env", {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
                 });
             } catch (exception) {
@@ -64,10 +64,10 @@ export async function changeOnAWS(disableAWS) {
     } else {
         var dialog = new ModalConfirmDialog(app, 'Do you want to ENABLE cloud prompt?', async () => {
             try {
-                target = {'DISABLE_AWS_PROXY': "False"}
+                target = { 'DISABLE_AWS_PROXY': "False" }
                 const response = await api.fetchApi("/change_env", {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
                 });
             } catch (exception) {
@@ -189,14 +189,19 @@ function createConfigPanel() {
 function toggleConfigPanelPosition(div) {
     const menu = document.getElementsByClassName('comfy-menu')[0];
     const menuRect = menu.getBoundingClientRect();
-    const moveTop = menuRect.top -  div.getBoundingClientRect().top + 12;
+    const moveTop = menuRect.top - div.getBoundingClientRect().top + 12;
     const moveLeft = 0 - menuRect.width + 4;
+
+    // Add transition styles
+    div.style.transition = 'transform 0.1s ease-in-out';
+
     if (div.style.transform === '') {
         div.style.transform = `translate(${moveLeft}px, ${moveTop}px)`;
     } else {
         div.style.transform = '';
     }
 }
+
 
 function createWorkflowList() {
     const outerContainer = document.createElement('div');
@@ -313,7 +318,7 @@ async function handleChangeButton() {
                 };
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
@@ -340,7 +345,7 @@ async function handleDeleteButton() {
                 };
                 const response = await api.fetchApi("/workflows", {
                     method: 'DELETE',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
@@ -427,7 +432,7 @@ function createWorkflowItem(workflow, onClick) {
     nameLabel.textContent = `${workflow.name}`;
     if (workflow.in_use) {
         nameLabel.style.fontWeight = '600';
-    }else{
+    } else {
         nameLabel.style.fontWeight = '200';
     }
     nameLabel.style.color = '#212529';
@@ -509,11 +514,11 @@ const awsConfigPanel = {
 app.registerExtension(awsConfigPanel);
 
 function lockScreen() {
-        if (lockCanvas == null) {
-            lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
-        }
-        lockCanvas.show();
-        localStorage.setItem("ui_lock_status", "locked");
+    if (lockCanvas == null) {
+        lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
+    }
+    lockCanvas.show();
+    localStorage.setItem("ui_lock_status", "locked");
 }
 
 function unLockScreen() {
@@ -546,64 +551,64 @@ window.addEventListener("load", () => {
 
 // Blank modal dialog, show a close button after 10 seconds
 export class ModalBlankDialog extends ComfyDialog {
-	constructor(app, message) {
-		super();
-		this.app = app;
-		this.settingsValues = {};
-		this.settingsLookup = {};
-		this.element = $el(
-			"dialog",
-			{
-				id: "comfy-settings-dialog",
-				parent: document.body,
-			},
-			[
-				$el("table.comfy-modal-content.comfy-table", [
-					$el(
-						"caption",
-						{ textContent: message },
-					),
-					$el(
-						"tr",
-						{
-							style: { display: "none" },
-						},
-						[$el("th"), $el("th", { style: { width: "23%" } })]
-					),
-				]),
-				$el(
-					"div",
-					{
-						id: "close-button",
-						style: {
-							position: "fixed",
-							top: "10px",
-							right: "10px",
-							display: "none",
-						},
-					},
-					[
-						$el("button", {
-							textContent: "X",
-							onclick: () => this.element.close(),
-						}),
-					]
-				),
-			]
-		);
+    constructor(app, message) {
+        super();
+        this.app = app;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: message },
+                    ),
+                    $el(
+                        "tr",
+                        {
+                            style: { display: "none" },
+                        },
+                        [$el("th"), $el("th", { style: { width: "23%" } })]
+                    ),
+                ]),
+                $el(
+                    "div",
+                    {
+                        id: "close-button",
+                        style: {
+                            position: "fixed",
+                            top: "10px",
+                            right: "10px",
+                            display: "none",
+                        },
+                    },
+                    [
+                        $el("button", {
+                            textContent: "X",
+                            onclick: () => this.element.close(),
+                        }),
+                    ]
+                ),
+            ]
+        );
 
-		setTimeout(() => {
-			document.getElementById("close-button").style.display = "block";
-		}, lockTimeout);
-	}
+        setTimeout(() => {
+            document.getElementById("close-button").style.display = "block";
+        }, lockTimeout);
+    }
 
-	show() {
-		this.element.showModal();
-	}
+    show() {
+        this.element.showModal();
+    }
 
     close() {
-		this.element.close();
-	}
+        this.element.close();
+    }
 }
 
 
@@ -690,7 +695,7 @@ export class ModalReleaseDialog extends ComfyDialog {
         localStorage.setItem("ui_lock_status", "locked");
         try {
             let payloadJson = '';
-            app.graphToPrompt().then(p=>{
+            app.graphToPrompt().then(p => {
                 payloadJson = JSON.stringify(p.workflow, null, 2);
             });
 
@@ -700,7 +705,7 @@ export class ModalReleaseDialog extends ComfyDialog {
             };
             const response = await api.fetchApi("/workflows", {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(target)
             });
             const result = await response.json();
@@ -739,7 +744,7 @@ export class ModalConfirmDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "AWS Config" , style: { border: "0" }},
+                        { textContent: "AWS Config", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
@@ -752,7 +757,7 @@ export class ModalConfirmDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0"  } }, [
+                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0" } }, [
                                 $el("button", {
                                     id: "ok-button",
                                     textContent: "Yes",
