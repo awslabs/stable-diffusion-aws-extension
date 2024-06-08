@@ -3,19 +3,20 @@ import {api} from '../../scripts/api.js';
 import { ComfyDialog } from "../../scripts/ui/dialog.js";
 import { $el } from "../../scripts/ui.js";
 
-let container = null;
-let lockCanvas = null;
-let selectedItem = null;
+var container = null;
+var lockCanvas = null;
+var selectedItem = null;
+var lockTimeout = 10000; // 10 seconds
+var errorMessage = 'An error occurred, please try again later.';
 
 export function restartAPI() {
 
-    var dialog = new ModalConfirmDialog(app, 'Do you want to restare ComfyUI server?', async () => {
+    var dialog = new ModalConfirmDialog(app, 'Do you want to RESTART the ComfyUI?', async () => {
         try {
             api.fetchApi("/restart");
         } catch (exception) {
-            console.error('Error occurred during restore:', exception);
-            var messageDialog = new ModalMessageDialog(app, 'An error occurred during restore. Please try again later.');
-            messageDialog.show();
+            console.error('Restart error:', exception);
+            alert(errorMessage);
         }
     });
     dialog.show();
@@ -23,7 +24,7 @@ export function restartAPI() {
 
 export async function restore() {
 
-    var dialog = new ModalConfirmDialog(app, 'Do you want to restore the local environment?', async () => {
+    var dialog = new ModalConfirmDialog(app, 'Do you want to RESET the local environment?', async () => {
         try {
             var target = {};
             const response = await api.fetchApi("/restore", {
@@ -33,16 +34,13 @@ export async function restore() {
             });
             const result = await response.json();
             if (response.ok) {
-                var messageDialog = new ModalMessageDialog(app, 'Restore success.');
-                messageDialog.show();
+                alert('Reset local environment successful.');
             } else {
-                var messageDialog = new ModalMessageDialog(app, 'Restore failed. Please try again later.');
-                messageDialog.show();
+                alert(errorMessage);
             }
         } catch (exception) {
-            console.error('Error occurred during restore:', exception);
-            var messageDialog = new ModalMessageDialog(app, 'An error occurred during restore. Please try again later.');
-            messageDialog.show();
+            console.error('Reset error:', exception);
+            alert(errorMessage);
         }
     });
     dialog.show();
@@ -51,7 +49,7 @@ export async function restore() {
 export async function changeOnAWS(disableAWS) {
     var target
     if (disableAWS === false) {
-        if (confirm("Are you sure you'd like to execute your workflow on Local?")) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
             try {
                 target = {'DISABLE_AWS_PROXY': "True"}
                 const response = await api.fetchApi("/change_env", {
@@ -61,10 +59,10 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
-            return false;
-        }
+        });
+        dialog.show();
     } else {
-        if (confirm("Are you sure you'd like to execute your workflow on AWS?")) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to ENABLE cloud prompt?', async () => {
             try {
                 target = {'DISABLE_AWS_PROXY': "False"}
                 const response = await api.fetchApi("/change_env", {
@@ -74,37 +72,42 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
-            return true;
-        }
+        });
+        dialog.show();
     }
     return disableAWS;
+}
+
+function alert(message) {
+    var messageDialog = new ModalMessageDialog(app, message);
+    messageDialog.show();
 }
 
 function createButton(text, onClick) {
     const button = document.createElement('button');
     button.textContent = text;
-    button.style.padding = '4px 12px'; // Increased padding for a more modern look
-    button.style.borderRadius = '4px'; // Rounded corners for a modern look
-    button.style.border = 'none'; // Remove the default border
-    button.style.backgroundColor = '#232f3e'; // Dark background color
-    button.style.color = '#fff'; // Light white color
-    button.style.fontWeight = '600'; // Semibold font weight
-    button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
-    button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
+    button.style.padding = '4px 12px';
+    button.style.borderRadius = '4px';
+    button.style.border = 'none';
+    button.style.backgroundColor = '#232f3e';
+    button.style.color = '#fff';
+    button.style.fontWeight = '600';
+    button.style.cursor = 'pointer';
+    button.style.transition = 'background-color 0.3s ease';
     button.style.width = '90%';
     button.style.marginTop = '4px';
     button.style.whiteSpace = 'nowrap';
-    button.style.overflow = 'hidden'; // Hide overflowing text
-    button.style.textOverflow = 'ellipsis'; // Add an ellipsis (...) for overflowing text
+    button.style.overflow = 'hidden';
+    button.style.textOverflow = 'ellipsis';
     button.style.fontSize = '14px';
 
     // Add hover effect
     button.addEventListener('mouseenter', () => {
-        button.style.backgroundColor = '#cbd3da'; // Lighter background color on hover
+        button.style.backgroundColor = '#cbd3da';
     });
 
     button.addEventListener('mouseleave', () => {
-        button.style.backgroundColor = '#232f3e'; // Reset to original dark background color
+        button.style.backgroundColor = '#232f3e';
     });
 
     button.addEventListener('click', onClick);
@@ -148,31 +151,31 @@ function createSageMakerOption(labelText, name, checked, onChange) {
 
 function createConfigPanel() {
     const div = document.createElement('div');
-    div.style.border = '1px solid #d9d9d9'; // Use a light gray border
+    div.style.border = '1px solid #d9d9d9';
     div.style.width = '100%';
     div.style.position = 'relative';
-    div.style.paddingTop = '10px'; // Increase padding for better spacing
-    div.style.paddingBottom = '10px'; // Increase padding for better spacing
-    div.style.marginTop = '20px'; // Increase margin for better spacing
-    div.style.borderRadius = '4px'; // Add rounded corners
-    div.style.backgroundColor = '#ffffff'; // Set a white background color
+    div.style.paddingTop = '10px';
+    div.style.paddingBottom = '10px';
+    div.style.marginTop = '20px';
+    div.style.borderRadius = '4px';
+    div.style.backgroundColor = '#ffffff';
 
     const label = document.createElement('label');
     label.textContent = 'AWS Config';
     label.style.position = 'absolute';
-    label.style.borderRadius = '4px'; // Add rounded corners
+    label.style.borderRadius = '4px';
 
-    label.style.top = '-8px'; // Adjust the top position
-    label.style.left = '32px'; // Move the label to the left
-    label.style.backgroundColor = '#ffffff'; // Set a white background color
-    label.style.padding = '4px 4px 0px 4px'; // Adjust padding
-    label.style.fontSize = '14px'; // Set a font size similar to AWS console
-    label.style.fontWeight = '700'; // Make the label text bold
-    label.style.color = '#212529'; // Use a dark gray color for the label text
+    label.style.top = '-8px';
+    label.style.left = '32px';
+    label.style.backgroundColor = '#ffffff';
+    label.style.padding = '4px 4px 0px 4px';
+    label.style.fontSize = '14px';
+    label.style.fontWeight = '700';
+    label.style.color = '#212529';
 
     // Add the icon
     const icon = document.createElement('span');
-    icon.innerHTML = '&#10064;'; // Use an icon or symbol as desired
+    icon.innerHTML = '&#10064;';
     icon.style.marginLeft = '8px';
     icon.style.cursor = 'pointer';
     icon.addEventListener('click', () => toggleConfigPanelPosition(div));
@@ -195,9 +198,6 @@ function toggleConfigPanelPosition(div) {
     }
 }
 
-
-
-
 function createWorkflowList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
@@ -213,7 +213,7 @@ function createWorkflowList() {
     container.style.height = '100%';
     container.style.overflow = 'auto';
     container.style.border = '1px solid #949494';
-    container.style.position = 'relative'; // Add this line to position the background text
+    container.style.position = 'relative';
 
     // Add the background text
     const backgroundText = document.createElement('div');
@@ -225,7 +225,7 @@ function createWorkflowList() {
     backgroundText.style.color = '#949494';
     backgroundText.style.fontSize = '16px';
     backgroundText.style.fontWeight = '600';
-    backgroundText.style.pointerEvents = 'none'; // Ensure the text doesn't interfere with click events
+    backgroundText.style.pointerEvents = 'none';
     container.appendChild(backgroundText);
 
     outerContainer.appendChild(toolbarContainer);
@@ -234,12 +234,11 @@ function createWorkflowList() {
     return outerContainer;
 }
 
-
 function createToolbar() {
     const toolbarContainer = document.createElement('div');
     toolbarContainer.style.display = 'flex';
     toolbarContainer.style.justifyContent = 'space-between';
-    toolbarContainer.style.backgroundColor = '#232f3e'; // Dark background color
+    toolbarContainer.style.backgroundColor = '#232f3e';
     toolbarContainer.style.padding = '3px';
     toolbarContainer.style.position = 'sticky';
     toolbarContainer.style.top = '0';
@@ -247,9 +246,9 @@ function createToolbar() {
 
     toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButton, 'Create New Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleRefreshButton, 'Reload Workflow'));
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChooseButton, 'Change Workflow'));
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeButton, 'Change Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow'));
 
@@ -261,7 +260,7 @@ function handleReleaseButton() {
     dialog.show();
 }
 
-async function handleRefreshButton() {
+async function handleLoadButton() {
     // Clear the container
     container.innerHTML = '';
 
@@ -281,9 +280,9 @@ async function handleRefreshButton() {
         data.data.workflows.forEach(workflow => {
             const itemContainer = createWorkflowItem(workflow, () => {
                 if (selectedItem) {
-                    selectedItem.style.backgroundColor = '#f8f9fa'; // Reset previous selection
+                    selectedItem.style.backgroundColor = '#f8f9fa';
                 }
-                itemContainer.style.backgroundColor = '#cbd3da'; // Highlight the selected item
+                itemContainer.style.backgroundColor = '#cbd3da';
                 selectedItem = itemContainer;
             });
             container.appendChild(itemContainer);
@@ -294,20 +293,21 @@ async function handleRefreshButton() {
 
         // Display an error message
         const errorMessage = document.createElement('div');
-        errorMessage.textContent = 'Error occurred while fetching workflows. Please try again later.';
+        errorMessage.textContent = 'Loading error, please try again later.';
         errorMessage.style.textAlign = 'center';
         errorMessage.style.padding = '20px';
         container.appendChild(errorMessage);
 
-        console.error('Error occurred while fetching workflows:', error);
+        console.error('Loading error:', error);
     }
 }
 
 
-async function handleChooseButton() {
+async function handleChangeButton() {
     if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to change the current workflow?', async () => {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
             try {
+                lockScreen();
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
@@ -317,22 +317,23 @@ async function handleChooseButton() {
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
+                unLockScreen();
+                alert(result.message);
             } catch (exception) {
-                console.error('Error occurred during restore:', exception);
-                alert('An error occurred during restore. Please try again later.');
+                console.error('Change error:', exception);
+                alert(errorMessage);
             }
         });
         dialog.show();
     } else {
-        var dialog = new ModalMessageDialog(app, 'Please select a workflow in the list');
-        dialog.show();
+        alert('Please select a workflow in the list');
     }
 
 }
 
 async function handleDeleteButton() {
     if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to delete the workflow?', async () => {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to DELETE the workflow?', async () => {
             try {
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
@@ -343,17 +344,20 @@ async function handleDeleteButton() {
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
+                if (!result.result) {
+                    lockCanvas.close();
+                    alert(result.message);
+                }
             } catch (exception) {
-                console.error('Error occurred during restore:', exception);
-                alert('An error occurred during restore. Please try again later.');
+                console.error('Delete error:', exception);
+                alert(errorMessage);
             }
         });
         dialog.show();
         selectedItem.remove();
         selectedItem = null;
     } else {
-        var dialog = new ModalMessageDialog(app, 'Please select a workflow in the list');
-        dialog.show();
+        alert('Please select a workflow in the list');
     }
 
 }
@@ -361,29 +365,29 @@ async function handleDeleteButton() {
 function createToolbarButton(icon, onClick, altText) {
     const button = document.createElement('button');
     button.innerHTML = icon;
-    button.style.padding = '6px 12px'; // Increased padding for a more modern look
-    button.style.borderRadius = '4px'; // Rounded corners for a modern look
-    button.style.border = 'none'; // Remove the default border
-    button.style.backgroundColor = '#232f3e'; // Dark background color
-    button.style.color = '#fff'; // Light white color
-    button.style.fontWeight = '600'; // Semibold font weight
-    button.style.cursor = 'pointer'; // Change cursor to a pointer on hover
-    button.style.transition = 'background-color 0.3s ease'; // Smooth transition on hover
-    button.style.width = '40px'; // Set the fixed width
+    button.style.padding = '6px 12px';
+    button.style.borderRadius = '4px';
+    button.style.border = 'none';
+    button.style.backgroundColor = '#232f3e';
+    button.style.color = '#fff';
+    button.style.fontWeight = '600';
+    button.style.cursor = 'pointer';
+    button.style.transition = 'background-color 0.3s ease';
+    button.style.width = '40px';
     button.style.display = 'flex';
     button.style.justifyContent = 'center';
     button.style.alignItems = 'center';
     button.style.fontSize = '14px';
-    button.setAttribute('alt', altText); // Add the alt attribute
-    button.setAttribute('title', altText); // Add the alt attribute
+    button.setAttribute('alt', altText);
+    button.setAttribute('title', altText);
 
     // Add hover effect
     button.addEventListener('mouseenter', () => {
-        button.style.backgroundColor = '#cbd3da'; // Lighter background color on hover
+        button.style.backgroundColor = '#cbd3da';
     });
 
     button.addEventListener('mouseleave', () => {
-        button.style.backgroundColor = '#232f3e'; // Reset to original dark background color
+        button.style.backgroundColor = '#232f3e';
     });
 
     button.addEventListener('click', onClick);
@@ -395,27 +399,29 @@ function createButtonSeparator() {
     const buttonSeparator = document.createElement('div');
     buttonSeparator.style.width = '1px';
     buttonSeparator.style.height = '24px';
-    buttonSeparator.style.backgroundColor = '#949494'; // Light gray color
+    buttonSeparator.style.backgroundColor = '#949494';
     return buttonSeparator;
 }
 
 function createWorkflowItem(workflow, onClick) {
     const itemContainer = document.createElement('div');
     itemContainer.style.display = 'flex';
-    itemContainer.style.alignItems = 'flex-start'; // Align items to the top
+    itemContainer.style.alignItems = 'flex-start';
     itemContainer.style.justifyContent = 'space-between';
     itemContainer.style.padding = '2px';
     itemContainer.style.paddingLeft = '4px';
     itemContainer.style.borderBottom = '1px solid #949494';
-    itemContainer.style.backgroundColor = '#f8f9fa'; // Default background color
-    itemContainer.style.position = 'relative'; // Add this line to position the label
+    itemContainer.style.backgroundColor = '#f8f9fa';
+    itemContainer.style.position = 'relative';
     itemContainer.addEventListener('click', onClick);
 
     const labelContainer = document.createElement('div');
     labelContainer.style.display = 'flex';
     labelContainer.style.flexDirection = 'column';
-    labelContainer.style.alignItems = 'flex-start'; // Align labels to the left
-    labelContainer.style.zIndex = '1'; // Add this line to ensure the label is on top of the background text
+    labelContainer.style.alignItems = 'flex-start';
+    labelContainer.style.zIndex = '1';
+    labelContainer.setAttribute('alt', workflow.payload_json);
+    labelContainer.setAttribute('title', workflow.payload_json);
 
     const nameLabel = document.createElement('span');
     nameLabel.textContent = `${workflow.name}`;
@@ -464,55 +470,69 @@ async function handlePromptChange(event) {
 const awsConfigPanel = {
     name: 'awsConfigPanel',
     async setup(app) {
-        //       const check_response = await api.fetchApi("/check_is_master");
-        //       const check_data = await check_response.json();
+        const check_response = await api.fetchApi("/check_is_master");
+        const check_data = await check_response.json();
+        const isMaster = check_data.master;
         const widgetsContainer = createConfigPanel();
 
-        if (true) {
+        if (isMaster) {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
 
             const checkboxSageMaker = createSageMakerOption('Prompt on AWS', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
-        if (true) {
+
+        if (isMaster) {
             const scrollList = createWorkflowList();
             widgetsContainer.appendChild(scrollList);
         }
-        if (true) {
+
+        if (isMaster) {
             const syncButton = createButton('New Workflow', handleReleaseButton);
             widgetsContainer.appendChild(syncButton);
         }
+
         const restartButton = createButton('Restart ComfyUI', restartAPI);
         widgetsContainer.appendChild(restartButton);
-        if (true) {
+
+        if (isMaster) {
             const restoreButton = createButton('Reset to default', restore);
             widgetsContainer.appendChild(restoreButton);
         }
+
         app.ui.menuContainer.appendChild(widgetsContainer);
-        handleRefreshButton();
+        handleLoadButton();
     }
 }
 
 app.registerExtension(awsConfigPanel);
 
-api.addEventListener("ui_lock", ({ detail }) => {
-    if (detail.lock) {
+function lockScreen() {
         if (lockCanvas == null) {
             lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
         }
         lockCanvas.show();
         localStorage.setItem("ui_lock_status", "locked");
+}
+
+function unLockScreen() {
+    if (lockCanvas != null) {
+        lockCanvas.close();
+        localStorage.setItem("ui_lock_status", "unlocked");
+    }
+}
+
+api.addEventListener("ui_lock", ({ detail }) => {
+    if (detail.lock) {
+        lockScreen();
     }
 });
 
 // Close ui_lock listener
 api.addEventListener("ui_lock", ({ detail }) => {
     if (!detail.lock) {
-        if (lockCanvas != null) {
-            lockCanvas.close();
-            localStorage.setItem("ui_lock_status", "unlocked");
-        }
+        unLockScreen();
     }
 });
 
@@ -520,10 +540,7 @@ api.addEventListener("ui_lock", ({ detail }) => {
 window.addEventListener("load", () => {
     const uiLockStatus = localStorage.getItem("ui_lock_status");
     if (uiLockStatus === "locked") {
-        if (lockCanvas == null) {
-            lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
-        }
-        lockCanvas.show();
+        lockScreen();
     }
 });
 
@@ -577,7 +594,7 @@ export class ModalBlankDialog extends ComfyDialog {
 
 		setTimeout(() => {
 			document.getElementById("close-button").style.display = "block";
-		}, 10000);
+		}, lockTimeout);
 	}
 
 	show() {
@@ -608,17 +625,17 @@ export class ModalReleaseDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "Release Workflow" },
+                        { textContent: "Release Workflow", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Workflow Name" }),
+                            $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
                                     type: "text",
                                     id: "input-field",
-                                    style: { width: "100%" },
+                                    style: { width: "100%", border: "0" },
                                 }),
                             ]),
                         ]
@@ -626,16 +643,17 @@ export class ModalReleaseDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0" } }, [
                                 $el("button", {
                                     id: "ok-button",
                                     textContent: "OK",
-                                    style: { marginRight: "10px" },
+                                    style: { marginRight: "10px", width: "60px" },
                                     onclick: () => this.releaseWorkflow(),
                                 }),
                                 $el("button", {
                                     id: "cancel-button",
                                     textContent: "Cancel",
+                                    style: { marginRight: "10px", width: "60px" },
                                     onclick: () => this.handleCancelClick(),
                                 }),
                             ]),
@@ -666,14 +684,19 @@ export class ModalReleaseDialog extends ComfyDialog {
     async releaseWorkflow() {
         this.element.close();
         if (lockCanvas == null) {
-            lockCanvas = new ModalBlankDialog(app, "Creating workflows...");
+            lockCanvas = new ModalBlankDialog(app, "Creating workflow...");
         }
         lockCanvas.show();
         localStorage.setItem("ui_lock_status", "locked");
         try {
+            let payloadJson = '';
+            app.graphToPrompt().then(p=>{
+                payloadJson = JSON.stringify(p.workflow, null, 2);
+            });
+
             var target = {
                 'name': this.getInputValue(),
-                'payload_json': "workflow test payload"
+                'payload_json': payloadJson
             };
             const response = await api.fetchApi("/workflows", {
                 method: 'POST',
@@ -683,12 +706,12 @@ export class ModalReleaseDialog extends ComfyDialog {
             const result = await response.json();
             if (!result.result) {
                 lockCanvas.close();
-                var dialog = new ModalMessageDialog(app, result.message);
-                dialog.show();
+                alert(result.message);
             }
         } catch (exception) {
-            console.error('Error occurred during restore:', exception);
-            alert('An error occurred during restore. Please try again later.');
+            console.error('Create error:', exception);
+            lockCanvas.close()
+            alert(errorMessage);
         }
     }
 
@@ -716,12 +739,12 @@ export class ModalConfirmDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "AWS Config" },
+                        { textContent: "AWS Config" , style: { border: "0" }},
                     ),
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0" } }, [
                                 $el("p", { textContent: this.message, style: { textAlign: "center" } }),
                             ]),
                         ]
@@ -729,16 +752,17 @@ export class ModalConfirmDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0"  } }, [
                                 $el("button", {
                                     id: "ok-button",
                                     textContent: "Yes",
-                                    style: { marginRight: "10px" },
+                                    style: { marginRight: "10px", width: "40px" },
                                     onclick: () => this.handleYesClick(),
                                 }),
                                 $el("button", {
                                     id: "cancel-button",
                                     textContent: "No",
+                                    style: { marginRight: "10px", width: "40px" },
                                     onclick: () => this.handleNoClick(),
                                 }),
                             ]),
@@ -754,7 +778,7 @@ export class ModalConfirmDialog extends ComfyDialog {
     }
 
     handleYesClick() {
-        // Add your logic for the Yes button here
+
         this.callback();
         this.element.close();
     }
@@ -783,12 +807,12 @@ export class ModalMessageDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "AWS Config" },
+                        { textContent: "AWS Config", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center" } }, [
+                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0" } }, [
                                 $el("p", { textContent: this.message, style: { textAlign: "center" } }),
                             ]),
                         ]
@@ -818,4 +842,3 @@ export class ModalMessageDialog extends ComfyDialog {
         this.element.close();
     }
 }
-
