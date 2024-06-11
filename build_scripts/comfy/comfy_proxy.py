@@ -1050,6 +1050,15 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"name is required"}))
             name = json_data['name']
+
+            if name == 'default' or name == 'local':
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"{name} is not allowed"}))
+
+            if os.getenv('WORKFLOW_NAME') == name:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": "can not delete current workflow"}))
+
             data = {
                 "workflow_name_list": [name],
             }
