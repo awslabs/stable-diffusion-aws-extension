@@ -178,6 +178,8 @@ function createConfigPanel() {
     icon.innerHTML = '&#10064;';
     icon.style.marginLeft = '8px';
     icon.style.cursor = 'pointer';
+    icon.setAttribute('alt', 'Move Panel');
+    icon.setAttribute('title', 'Move Panel');
     icon.addEventListener('click', () => toggleConfigPanelPosition(div));
     label.appendChild(icon);
 
@@ -249,7 +251,7 @@ function createToolbar() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
 
-    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleReleaseButton, 'Create New Workflow'));
+    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateButton, 'Create New Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
     toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow'));
     toolbarContainer.appendChild(createButtonSeparator());
@@ -260,7 +262,7 @@ function createToolbar() {
     return toolbarContainer;
 }
 
-function handleReleaseButton() {
+function handleCreateButton() {
     var dialog = new ModalReleaseDialog(app);
     dialog.show();
 }
@@ -312,7 +314,7 @@ async function handleChangeButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
             try {
-                lockScreen();
+                handleLockScreen();
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
@@ -322,7 +324,7 @@ async function handleChangeButton() {
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
-                unLockScreen();
+                handleUnlockScreen();
                 alert(result.message);
             } catch (exception) {
                 console.error('Change error:', exception);
@@ -350,7 +352,7 @@ async function handleDeleteButton() {
                 });
                 const result = await response.json();
                 if (!result.result) {
-                    lockCanvas.close();
+                    handleUnlockScreen();
                     alert(result.message);
                 }
             } catch (exception) {
@@ -359,8 +361,6 @@ async function handleDeleteButton() {
             }
         });
         dialog.show();
-        selectedItem.remove();
-        selectedItem = null;
     } else {
         alert('Please select a workflow in the list');
     }
@@ -430,8 +430,30 @@ function createWorkflowItem(workflow, onClick) {
 
     const nameLabel = document.createElement('span');
     nameLabel.textContent = `${workflow.name}`;
+    nameLabel.style.display = 'flex';
+    nameLabel.style.alignItems = 'center';
     if (workflow.in_use) {
         nameLabel.style.fontWeight = '600';
+        try{
+            var target = {
+                'clientId': api.initialClientId ?? api.clientId,
+                'releaseVersion': `${workflow.name}`
+            };
+            const response = api.fetchApi("/map_release", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(target)
+            });
+        } catch (error) {
+            console.error('Error checking lock status:', error);
+        }
+        const greenBall = document.createElement('div');
+        greenBall.style.width = '8px';
+        greenBall.style.height = '8px';
+        greenBall.style.borderRadius = '50%';
+        greenBall.style.backgroundColor = 'green';
+        greenBall.style.marginRight = '4px';
+        nameLabel.insertBefore(greenBall, nameLabel.firstChild);
     } else {
         nameLabel.style.fontWeight = '200';
     }
@@ -494,7 +516,7 @@ const awsConfigPanel = {
         }
 
         if (isMaster) {
-            const syncButton = createButton('New Workflow', handleReleaseButton);
+            const syncButton = createButton('New Workflow', handleCreateButton);
             widgetsContainer.appendChild(syncButton);
         }
 
@@ -513,15 +535,15 @@ const awsConfigPanel = {
 
 app.registerExtension(awsConfigPanel);
 
-function lockScreen() {
+function handleLockScreen(message) {
     if (lockCanvas == null) {
-        lockCanvas = new ModalBlankDialog(app, "Processing workflows...");
+        lockCanvas = new ModalBlankDialog(app, message ? message : "Processing workflows...");
     }
     lockCanvas.show();
     localStorage.setItem("ui_lock_status", "locked");
 }
 
-function unLockScreen() {
+function handleUnlockScreen() {
     if (lockCanvas != null) {
         lockCanvas.close();
         localStorage.setItem("ui_lock_status", "unlocked");
@@ -529,25 +551,44 @@ function unLockScreen() {
 }
 
 api.addEventListener("ui_lock", ({ detail }) => {
+    console.log(detail);
     if (detail.lock) {
-        lockScreen();
+        handleLockScreen();
     }
 });
 
 // Close ui_lock listener
 api.addEventListener("ui_lock", ({ detail }) => {
     if (!detail.lock) {
-        unLockScreen();
+        handleUnlockScreen();
     }
 });
 
 // Restore ui_lock status on page load
-window.addEventListener("load", () => {
-    const uiLockStatus = localStorage.getItem("ui_lock_status");
-    if (uiLockStatus === "locked") {
-        lockScreen();
+// window.addEventListener("load", () => {
+//     const uiLockStatus = localStorage.getItem("ui_lock_status");
+//     if (uiLockStatus === "locked") {
+//         handleLockScreen();
+//     }
+// });
+
+(async function checkLockStatus() {
+    try {
+        const response = await api.fetchApi("/lock");
+        const data = await response.json();
+
+        if (data.locked) {
+            handleLockScreen();
+        } else {
+            handleUnlockScreen();
+        }
+    } catch (error) {
+        console.error('Error checking lock status:', error);
     }
-});
+
+    // Call the function again after 5 seconds
+    setTimeout(checkLockStatus, 5000);
+})();
 
 // Blank modal dialog, show a close button after 10 seconds
 export class ModalBlankDialog extends ComfyDialog {
@@ -641,14 +682,14 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     type: "text",
                                     id: "input-field",
                                     style: { width: "100%", border: "0" },
-                                }),
+                                })
                             ]),
                         ]
                     ),
                     $el(
                         "tr",
                         [
-                            $el("td", { colspan: 2, style: { textAlign: "center", border: "0" } }, [
+                            $el("td", { colspan: 3, style: { textAlign: "center", border: "0" } }, [
                                 $el("button", {
                                     id: "ok-button",
                                     textContent: "OK",
@@ -659,6 +700,12 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     id: "cancel-button",
                                     textContent: "Cancel",
                                     style: { marginRight: "10px", width: "60px" },
+                                    onclick: () => this.handleCancelClick(),
+                                }),
+                                $el("span", {
+                                    id: "release-validate",
+                                    textContent: "",
+                                    style: { marginRight: "10px", color: "red" },
                                     onclick: () => this.handleCancelClick(),
                                 }),
                             ]),
@@ -687,12 +734,22 @@ export class ModalReleaseDialog extends ComfyDialog {
     }
 
     async releaseWorkflow() {
-        this.element.close();
-        if (lockCanvas == null) {
-            lockCanvas = new ModalBlankDialog(app, "Creating workflow...");
+        // validate names
+        const inputValue = this.getInputValue();
+        if (inputValue.length > 40) {
+            document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
+            return;
         }
-        lockCanvas.show();
-        localStorage.setItem("ui_lock_status", "locked");
+
+        // Check if the input value contains only English letters, numbers, and underscores
+        const nameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!nameRegex.test(inputValue)) {
+            document.getElementById("release-validate").textContent = 'The workflow name must only contain letters, numbers, and underscores.';
+            return;
+        }
+
+        this.element.close();
+        handleLockScreen("Creating workflow...");
         try {
             let payloadJson = '';
             app.graphToPrompt().then(p => {
@@ -700,7 +757,7 @@ export class ModalReleaseDialog extends ComfyDialog {
             });
 
             var target = {
-                'name': this.getInputValue(),
+                'name': inputValue,
                 'payload_json': payloadJson
             };
             const response = await api.fetchApi("/workflows", {
@@ -710,12 +767,12 @@ export class ModalReleaseDialog extends ComfyDialog {
             });
             const result = await response.json();
             if (!result.result) {
-                lockCanvas.close();
+                handleUnlockScreen();
                 alert(result.message);
             }
         } catch (exception) {
             console.error('Create error:', exception);
-            lockCanvas.close()
+            handleUnlockScreen();
             alert(errorMessage);
         }
     }
@@ -724,7 +781,6 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.close();
     }
 }
-
 
 export class ModalConfirmDialog extends ComfyDialog {
     constructor(app, message, callback) {
@@ -792,8 +848,6 @@ export class ModalConfirmDialog extends ComfyDialog {
         this.element.close();
     }
 }
-
-
 
 export class ModalMessageDialog extends ComfyDialog {
     constructor(app, message) {
