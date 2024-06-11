@@ -39,7 +39,7 @@ from boto3.dynamodb.conditions import Key
 DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
 sync_msg_list = []
 client_release_map = {}
-
+lock_status = False
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -766,6 +766,11 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/reboot")
     async def restart(self):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only master can restart"}))
@@ -805,6 +810,11 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/gc")
     async def gc(self):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+
         logger.info(f"start to gc {self}")
         try:
             logger.info(f"gc start: {time.time()}")
@@ -823,6 +833,9 @@ if is_on_ec2:
 
 
     def is_action_lock():
+        global lock_status
+        if lock_status:
+            return True
         lock_file = f'/container/sync_lock'
         if os.path.exists(lock_file):
             with open(lock_file, 'r') as f:
@@ -833,14 +846,18 @@ if is_on_ec2:
 
 
     def action_lock(name: str):
-        send_msg_to_all_sockets("ui_lock", {"lock": True})
+        global lock_status
+        lock_status = True
+        # send_msg_to_all_sockets("ui_lock", {"lock": True})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write(name)
 
 
     def action_unlock():
-        send_msg_to_all_sockets("ui_lock", {"lock": False})
+        global lock_status
+        lock_status = False
+        # send_msg_to_all_sockets("ui_lock", {"lock": False})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write("")
@@ -848,6 +865,10 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/restart")
     async def restart(self):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
         return restart_response()
 
 
@@ -909,8 +930,67 @@ if is_on_ec2:
         return str(source_size)
 
 
+    def async_release_workflow(workflow_name, payload_json):
+        start_time = time.time()
+
+        action_lock(workflow_name)
+
+        base_image = os.getenv('BASE_IMAGE')
+        subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
+        subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
+
+        cur_workflow_name = os.getenv('WORKFLOW_NAME')
+        source_path = f"/container/workflows/{cur_workflow_name}"
+        print(f"source_path is {source_path}")
+
+        s5cmd_sync_command = (f's5cmd sync '
+                              f'--delete=true '
+                              f'--exclude="*comfy.tar" '
+                              f'--exclude="*.log" '
+                              f'--exclude="*__pycache__*" '
+                              f'--exclude="*/ComfyUI/input/*" '
+                              f'--exclude="*/ComfyUI/output/*" '
+                              f'"{source_path}/*" '
+                              f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+
+        s5cmd_lock_command = (f'echo "lock" > lock && '
+                              f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
+        logger.info(f"sync workflows files start {s5cmd_sync_command}")
+
+        subprocess.check_output(s5cmd_sync_command, shell=True)
+        subprocess.check_output(s5cmd_lock_command, shell=True)
+
+        end_time = time.time()
+        cost_time = end_time - start_time
+        image_hash = os.getenv('IMAGE_HASH')
+        image_uri = f"{image_hash}:{workflow_name}"
+
+        data = {
+            "payload_json": payload_json,
+            "image_uri": image_uri,
+            "name": workflow_name,
+            "size": dir_size(source_path),
+        }
+        get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+        response = get_response.json()
+        logger.info(f"release workflow response is {response}")
+        action_unlock()
+        print(f"release workflow cost time is {cost_time}")
+
+
+    @server.PromptServer.instance.routes.get("/lock")
+    async def get_lock_status(request):
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "lock": is_action_lock()}))
+
+
     @server.PromptServer.instance.routes.post("/workflows")
     async def release_workflow(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -941,54 +1021,11 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
-            start_time = time.time()
-
-            action_lock(workflow_name)
-
-            base_image = os.getenv('BASE_IMAGE')
-            subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
-            subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
-
-            cur_workflow_name = os.getenv('WORKFLOW_NAME')
-            source_path = f"/container/workflows/{cur_workflow_name}"
-            print(f"source_path is {source_path}")
-
-            s5cmd_sync_command = (f's5cmd sync '
-                                  f'--delete=true '
-                                  f'--exclude="*comfy.tar" '
-                                  f'--exclude="*.log" '
-                                  f'--exclude="*__pycache__*" '
-                                  f'--exclude="*/ComfyUI/input/*" '
-                                  f'--exclude="*/ComfyUI/output/*" '
-                                  f'"{source_path}/*" '
-                                  f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
-
-            s5cmd_lock_command = (f'echo "lock" > lock && '
-                                  f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
-
-            logger.info(f"sync workflows files start {s5cmd_sync_command}")
-
-            subprocess.check_output(s5cmd_sync_command, shell=True)
-            subprocess.check_output(s5cmd_lock_command, shell=True)
-
-            end_time = time.time()
-            cost_time = end_time - start_time
-            image_hash = os.getenv('IMAGE_HASH')
-            image_uri = f"{image_hash}:{workflow_name}"
-
-            data = {
-                "payload_json": payload_json,
-                "image_uri": image_uri,
-                "name": workflow_name,
-                "size": dir_size(source_path),
-            }
-            get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
-            response = get_response.json()
-            logger.info(f"release workflow response is {response}")
-            action_unlock()
+            thread = threading.Thread(target=async_release_workflow, args=(workflow_name, payload_json))
+            thread.start()
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "success", "cost_time": cost_time}))
+                                body=json.dumps({"result": True, "message": "Pending to release workflow"}))
         except Exception as e:
             logger.info(e)
             action_unlock()
@@ -997,6 +1034,10 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.delete("/workflows")
     async def delete_workflow(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -1025,6 +1066,11 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.put("/workflows")
     async def switch_workflow(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
@@ -1105,6 +1151,11 @@ if is_on_ec2:
 
 
     def restart_docker_commands():
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during release workflow"}))
+
         # subprocess.run(["sleep", "5"])
         # subprocess.run(["pkill", "-f", "python3"])
         # just for test in docker
@@ -1123,6 +1174,11 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+
         if os.getenv('WORKFLOW_NAME') != 'default':
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only default workflow can be restored"}))
@@ -1368,6 +1424,10 @@ if is_on_sagemaker:
 
     @server.PromptServer.instance.routes.post("/execute_proxy")
     async def execute_proxy(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during sync workflow"}))
         json_data = await request.json()
         if 'out_path' in json_data and json_data['out_path'] is not None:
             out_path = json_data['out_path']
