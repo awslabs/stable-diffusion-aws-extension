@@ -1466,10 +1466,7 @@ if is_on_sagemaker:
 
     @server.PromptServer.instance.routes.post("/execute_proxy")
     async def execute_proxy(request):
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
+        logger.info("start to execute_proxy inside")
         json_data = await request.json()
         if 'out_path' in json_data and json_data['out_path'] is not None:
             out_path = json_data['out_path']
