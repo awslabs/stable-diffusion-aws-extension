@@ -243,7 +243,7 @@ if is_on_ec2:
                                f"Something went wrong when execute,please check your client_id and try again")
                 return web.Response()
             global client_release_map
-            workflow_name = client_release_map.get(client_id)
+            workflow_name = client_release_map.get(client_id) if client_release_map.get(client_id) else os.getenv('WORKFLOW_NAME')
             if not workflow_name:
                 send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
                 return web.Response()
