@@ -1050,6 +1050,15 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"name is required"}))
             name = json_data['name']
+
+            if name == 'default' or name == 'local':
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"{name} is not allowed"}))
+
+            if os.getenv('WORKFLOW_NAME') == name:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": "can not delete current workflow"}))
+
             data = {
                 "workflow_name_list": [name],
             }
@@ -1058,7 +1067,7 @@ if is_on_ec2:
             print(response)
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "success"}))
+                                body=json.dumps({"result": True, "message": "Workflow will be deleted soon"}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
