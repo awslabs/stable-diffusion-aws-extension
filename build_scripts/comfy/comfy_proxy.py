@@ -1058,7 +1058,7 @@ if is_on_ec2:
             print(response)
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "success"}))
+                                body=json.dumps({"result": True, "message": "Workflow will be deleted soon"}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
