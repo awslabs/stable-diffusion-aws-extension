@@ -769,7 +769,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -813,7 +813,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
 
         logger.info(f"start to gc {self}")
         try:
@@ -868,7 +868,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
         return restart_response()
 
 
@@ -990,7 +990,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -1037,7 +1037,7 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -1096,12 +1096,12 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
 
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during sync workflow"}))
+                                    {"result": False, "message": "switch is not allowed during workflow release/restore"}))
 
         try:
             json_data = await request.json()
@@ -1223,8 +1223,8 @@ if is_on_ec2:
         os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
         os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
         os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
-        subprocess.run(["pkill", "-f", "python3"])
         action_unlock()
+        subprocess.run(["pkill", "-f", "python3"])
 
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
@@ -1469,7 +1469,7 @@ if is_on_sagemaker:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
         json_data = await request.json()
         if 'out_path' in json_data and json_data['out_path'] is not None:
             out_path = json_data['out_path']
