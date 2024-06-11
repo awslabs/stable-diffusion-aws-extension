@@ -1127,7 +1127,7 @@ if is_on_ec2:
             name_file = os.getenv('WORKFLOW_NAME_FILE')
             subprocess.check_output(f"echo {workflow_name} > {name_file}", shell=True)
 
-            thread = threading.Thread(target=restore_workflow)
+            thread = threading.Thread(target=kill_after_seconds)
             thread.start()
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "comfy will be switch in 2 seconds"}))
@@ -1206,25 +1206,13 @@ if is_on_ec2:
         return web.Response(status=200, content_type='application/json',
                             body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds"}))
 
-    def restore_workflow():
+    def kill_after_seconds():
         subprocess.run(["sleep", "2"])
         subprocess.run(["pkill", "-f", "python3"])
 
-    @server.PromptServer.instance.routes.post("/restore")
-    async def release_rebuild_workflow(request):
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during sync workflow"}))
-
-        if os.getenv('WORKFLOW_NAME') != 'default':
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": False, "message": "only default workflow can be restored"}))
-
-        if not is_master_process:
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": False, "message": "only master can restore comfy"}))
-
+    def restore_workflow():
+        action_lock("restore")
+        subprocess.run(["sleep", "2"])
         os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
         os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
         os.system("rm -rf /container/workflows/default")
@@ -1235,6 +1223,23 @@ if is_on_ec2:
         os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
         os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
         os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
+        subprocess.run(["pkill", "-f", "python3"])
+        action_unlock()
+
+    @server.PromptServer.instance.routes.post("/restore")
+    async def release_rebuild_workflow(request):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
+
+        if os.getenv('WORKFLOW_NAME') != 'default':
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only default workflow can be restored"}))
+
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can restore comfy"}))
 
         thread = threading.Thread(target=restore_workflow)
         thread.start()
