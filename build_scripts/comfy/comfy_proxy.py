@@ -848,7 +848,7 @@ if is_on_ec2:
     def action_lock(name: str):
         global lock_status
         lock_status = True
-        # send_msg_to_all_sockets("ui_lock", {"lock": True})
+        send_msg_to_all_sockets("ui_lock", {"lock": True})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write(name)
@@ -857,7 +857,7 @@ if is_on_ec2:
     def action_unlock():
         global lock_status
         lock_status = False
-        # send_msg_to_all_sockets("ui_lock", {"lock": False})
+        send_msg_to_all_sockets("ui_lock", {"lock": False})
         lock_file = f'/container/sync_lock'
         with open(lock_file, 'w') as f:
             f.write("")
