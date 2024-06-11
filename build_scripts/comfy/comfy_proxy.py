@@ -1059,6 +1059,24 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": "can not delete current workflow"}))
 
+            i = 0
+            start_n = 10000
+            while i < 30:
+                port = start_n + i
+                file_path = f"/container/comfy_{port}"
+                i = i + 1
+                if os.path.exists(file_path):
+                    with open(file_path, 'r') as f:
+                        content = f.read()
+                        content = content.strip()
+                        if content == name:
+                            return web.Response(status=200, content_type='application/json',
+                                                body=json.dumps({"result": False,
+                                                                 "message": f"can not delete workflow "
+                                                                            f"because it is in use by {port}"}))
+
+            os.system(f"rm -rf /container/workflows/{name}")
+
             data = {
                 "workflow_name_list": [name],
             }
@@ -1098,7 +1116,8 @@ if is_on_ec2:
 
             if workflow_name == 'default' and not is_master_process:
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "slave can not use default workflow"}))
+                                    body=json.dumps({"result": False, "message": "slave can not use default workflow "
+                                                                                 "after initial"}))
 
             if workflow_name != 'default':
                 if not check_workflow_exists(workflow_name):

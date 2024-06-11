@@ -18,7 +18,7 @@ while true; do
 
     if [ "$current_image" = "$image_target_name" ]; then
         echo "$current_image already pushed"
-        sleep 10
+        sleep 30
         continue
     fi
     current_image=$image_target_name
