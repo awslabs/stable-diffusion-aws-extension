@@ -320,7 +320,7 @@ Resources:
           tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
           rm -rf /tmp/src.tar
           
-          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy.conf /etc/nginx/sites-available/default
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy_new.conf /etc/nginx/sites-available/default
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/custom_502.html
           sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
