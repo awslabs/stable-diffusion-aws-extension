@@ -1126,10 +1126,11 @@ if is_on_ec2:
 
             name_file = os.getenv('WORKFLOW_NAME_FILE')
             subprocess.check_output(f"echo {workflow_name} > {name_file}", shell=True)
-            subprocess.run(["pkill", "-f", "python3"])
 
+            thread = threading.Thread(target=restore_workflow)
+            thread.start()
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Please wait to restart"}))
+                                body=json.dumps({"result": True, "message": "comfy will be switch in 2 seconds"}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
@@ -1147,13 +1148,18 @@ if is_on_ec2:
 
             data = response.json()['data']
             workflows = data['workflows']
-            list = [{
-                "name": 'default',
-                "size": dir_size(f"/container/workflows/default"),
-                "status": 'Enabled',
-                "payload_json": '',
-                "in_use": 'default' == workflow_name
-            }]
+
+            list = []
+
+            if is_master_process:
+                list.append({
+                    "name": 'default',
+                    "size": dir_size(f"/container/workflows/default"),
+                    "status": 'Enabled',
+                    "payload_json": '',
+                    "in_use": 'default' == workflow_name
+                })
+
             for workflow in workflows:
                 list.append({
                     "name": workflow['name'],
@@ -1200,6 +1206,10 @@ if is_on_ec2:
         return web.Response(status=200, content_type='application/json',
                             body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds"}))
 
+    def restore_workflow():
+        subprocess.run(["sleep", "2"])
+        subprocess.run(["pkill", "-f", "python3"])
+
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
         if is_action_lock():
@@ -1215,22 +1225,21 @@ if is_on_ec2:
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": False, "message": "only master can restore comfy"}))
 
-        logger.info(f"start to restore EC2 {request}")
+        os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
+        os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
+        os.system("rm -rf /container/workflows/default")
+        os.system("mkdir -p /container/workflows/default")
+        logger.info("restore workflow...")
+        os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
+        os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
+        os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
+        os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
+        os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
 
-        try:
-            os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
-            os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
-            os.system("rm -rf /container/workflows/default")
-            os.system("mkdir -p /container/workflows/default")
-            os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
-            os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
-            os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
-            os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
-            os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
-            return restart_response()
-        except Exception as e:
-            return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": e}))
+        thread = threading.Thread(target=restore_workflow)
+        thread.start()
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "comfy will be restore in 2 seconds"}))
 
 if is_on_sagemaker:
 
