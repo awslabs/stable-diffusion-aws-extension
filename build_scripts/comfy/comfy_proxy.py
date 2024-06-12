@@ -888,7 +888,7 @@ if is_on_ec2:
 
     # only for restart comfy not docker
     @server.PromptServer.instance.routes.get("/restart_comfy")
-    async def restart(self):
+    async def restart_comfy(self):
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
