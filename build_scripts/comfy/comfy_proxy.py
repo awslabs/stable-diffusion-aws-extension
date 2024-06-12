@@ -244,7 +244,7 @@ if is_on_ec2:
                 return web.Response()
             global client_release_map
             workflow_name = client_release_map.get(client_id) if client_release_map.get(client_id) else os.getenv('WORKFLOW_NAME')
-            if not workflow_name:
+            if not workflow_name or workflow_name == 'default':
                 send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
                 return web.Response()
                 # if not is_master_process:
