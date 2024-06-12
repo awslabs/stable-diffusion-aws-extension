@@ -179,7 +179,7 @@ class CloudApiManager:
 
             return r['data']['trainings'], last_ek
         except Exception as e:
-            # logger.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             return [], ''
 
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token="", last_key: str = ""):
