@@ -171,7 +171,7 @@ class CloudApiManager:
             r = response.json()
             if not r or r['statusCode'] != 200:
                 logger.error(f"list_trainings: {r}")
-                return []
+                return [], ''
 
             last_ek = ''
             if 'last_evaluated_key' in r['data']:
