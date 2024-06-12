@@ -474,8 +474,8 @@ if is_on_ec2:
                                                "You have some errors when execute prompt on cloud . Please check your sagemaker logs.")
                                 break
                     else:
-                        logger.error(f"get execute error: {execute_resp}")
-                        send_error_msg(executor, prompt_id, "Please valid your prompt and try again.")
+                        logger.error(f"get execute error: {execute_resp.json()}")
+                        send_error_msg(executor, prompt_id, "Please valid your prompt and try again." if not (execute_resp.json() and execute_resp.json().get("message")) else execute_resp.json().get("message"))
                 logger.info("execute finished")
             executorThread.shutdown()
 
