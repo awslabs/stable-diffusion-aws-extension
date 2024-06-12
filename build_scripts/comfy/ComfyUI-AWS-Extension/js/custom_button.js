@@ -7,7 +7,8 @@ var container = null;
 var lockCanvas = null;
 var isMaster = false;
 var selectedItem = null;
-var lockTimeout = 10000; // 10 seconds
+var lockTimeout = 30000; // 30 seconds
+var lockInterval = 2000; // 2  seconds
 var errorMessage = 'An error occurred, please try again later.';
 
 export function handleRestartButton() {
@@ -361,14 +362,15 @@ async function handleDeleteButton() {
                     handleUnlockScreen();
                     alert(result.message);
                 }
+                selectedItem.remove();
+                selectedItem = null;
             } catch (exception) {
                 console.error('Delete error:', exception);
                 alert(errorMessage);
             }
         });
         dialog.show();
-        selectedItem.remove();
-        selectedItem = null;
+
     } else {
         alert('Please select a workflow in the list');
     }
@@ -593,8 +595,8 @@ api.addEventListener("ui_lock", ({ detail }) => {
     } catch (error) {
     }
 
-    // Call the function again after 5 seconds
-    setTimeout(checkLockStatus, 5000);
+    // Call the function again after 'lockInterval' seconds
+    setTimeout(checkLockStatus, lockInterval);
 })();
 
 // Blank modal dialog, show a close button after 10 seconds
