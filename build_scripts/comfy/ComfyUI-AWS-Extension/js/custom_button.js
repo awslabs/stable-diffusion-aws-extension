@@ -11,11 +11,17 @@ var lockTimeout = 30000; // 30 seconds
 var lockInterval = 2000; // 2  seconds
 var errorMessage = 'An error occurred, please try again later.';
 
-export function handleRestartButton() {
+export async function handleRestartButton() {
 
     var dialog = new ModalConfirmDialog(app, 'Do you want to RESTART the ComfyUI?', async () => {
         try {
-            api.fetchApi("/restart");
+            const response = await api.fetchApi("/restart");
+            const result = await response.json();
+            if (response.result) {
+                alert(result.message);
+            } else {
+                alert(result.message);
+            }
         } catch (exception) {
             console.error('Restart error:', exception);
             alert(errorMessage);
@@ -35,10 +41,10 @@ export async function handleResetButton() {
                 body: JSON.stringify(target)
             });
             const result = await response.json();
-            if (response.ok) {
+            if (response.result) {
                 alert(result.message);
             } else {
-                alert(errorMessage);
+                alert(result.message);
             }
         } catch (exception) {
             console.error('Reset error:', exception);
@@ -447,7 +453,7 @@ function createWorkflowItem(workflow, onClick) {
     nameLabel.style.alignItems = 'center';
     if (workflow.in_use) {
         nameLabel.style.fontWeight = '600';
-        try{
+        try {
             var target = {
                 'clientId': api.initialClientId ?? api.clientId,
                 'releaseVersion': `${workflow.name}`
@@ -557,6 +563,8 @@ function handleUnlockScreen() {
     if (lockCanvas != null) {
         lockCanvas.close();
         localStorage.setItem("ui_lock_status", "unlocked");
+        // reload workflow list when unlock
+        handleLoadButton();
     }
 }
 
@@ -703,7 +711,9 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     id: "ok-button",
                                     textContent: "OK",
                                     style: { marginRight: "10px", width: "60px" },
-                                    onclick: () => this.releaseWorkflow(),
+                                    onclick: async () => {
+                                        this.releaseWorkflow();
+                                    }
                                 }),
                                 $el("button", {
                                     id: "cancel-button",
@@ -714,8 +724,7 @@ export class ModalReleaseDialog extends ComfyDialog {
                                 $el("span", {
                                     id: "release-validate",
                                     textContent: "",
-                                    style: { marginRight: "10px", color: "red" },
-                                    onclick: () => this.handleCancelClick(),
+                                    style: { marginRight: "10px", color: "red" }
                                 }),
                             ]),
                         ]
@@ -738,13 +747,13 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
-    getInputValue() {
+    async getInputValue() {
         return document.getElementById("input-field").value;
     }
 
     async releaseWorkflow() {
+        const inputValue = await document.getElementById("input-field").value;
         // validate names
-        const inputValue = this.getInputValue();
         if (inputValue.length > 40) {
             document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
             return;
@@ -757,7 +766,7 @@ export class ModalReleaseDialog extends ComfyDialog {
             return;
         }
 
-        this.element.close();
+        // this.element.close();
         handleLockScreen("Creating workflow...");
         try {
             let payloadJson = '';
@@ -777,12 +786,14 @@ export class ModalReleaseDialog extends ComfyDialog {
             const result = await response.json();
             if (!result.result) {
                 handleUnlockScreen();
-                alert(result.message);
+                document.getElementById("release-validate").textContent = result.message;
+            } else {
+                this.element.close();
             }
         } catch (exception) {
             console.error('Create error:', exception);
             handleUnlockScreen();
-            alert(errorMessage);
+            document.getElementById("release-validate").textContent = errorMessage;
         }
     }
 
