@@ -335,6 +335,7 @@ if [ -n "$ON_EC2" ]; then
       exit 1
     else
       start_at=$(date +%s)
+      echo "$WORKFLOW_NAME" > /container/s5cmd_lock
       s5cmd --log=error sync "s3://$COMFY_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "$WORKFLOW_DIR/"
       rm -rf /container/s5cmd_lock
       end_at=$(date +%s)

@@ -1146,9 +1146,6 @@ if is_on_ec2:
 
             workflow_name = json_data['name']
 
-            with open("/container/s5cmd_lock", "w") as f:
-                f.write(workflow_name)
-
             if workflow_name == os.getenv('WORKFLOW_NAME'):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": "workflow is already in use"}))
