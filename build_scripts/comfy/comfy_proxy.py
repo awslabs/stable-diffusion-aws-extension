@@ -453,6 +453,13 @@ if is_on_ec2:
                                         images_response.json()['data']['output_files']) > 0)):
                                     save_files(prompt_id, images_response.json(), 'temp_files', './temp', False)
                                     save_files(prompt_id, images_response.json(), 'output_files', './output', True)
+
+                                    output_dir = folder_paths.get_output_directory()
+                                    temp_dir = folder_paths.get_temp_directory()
+                                    logger.info(f"save images to {output_dir} and {temp_dir}")
+                                    save_files(prompt_id, images_response.json(), 'temp_files', temp_dir, False)
+                                    save_files(prompt_id, images_response.json(), 'output_files', output_dir,
+                                               True)
                                     break
                                 else:
                                     send_error_msg(executor, prompt_id,
