@@ -234,6 +234,7 @@ Resources:
 
           source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
           pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
+          pip install ml_dtypes==0.4.0
           pip install boto3
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
