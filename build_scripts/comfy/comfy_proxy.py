@@ -886,6 +886,20 @@ if is_on_ec2:
                                     {"result": False, "message": "action is not allowed during workflow release/restore"}))
         return restart_response()
 
+    # only for restart comfy not docker
+    @server.PromptServer.instance.routes.get("/restart_comfy")
+    async def restart(self):
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False,
+                                     "message": "action is not allowed during workflow release/restore"}))
+
+        thread = threading.Thread(target=restart_comfy_commands)
+        thread.start()
+        return web.Response(status=200, content_type='application/json',
+                            body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds"}))
+
 
     @server.PromptServer.instance.routes.get("/sync_env")
     async def sync_env(request):
@@ -1205,15 +1219,22 @@ if is_on_ec2:
                                 body=json.dumps(
                                     {"result": False, "message": "action is not allowed during release workflow"}))
 
-        # subprocess.run(["sleep", "5"])
-        # subprocess.run(["pkill", "-f", "python3"])
-        # just for test in docker
+        subprocess.run(["sleep", "5"])
+        subprocess.run(["pkill", "-f", "python3"])
+
+
+    def restart_comfy_commands():
+        if is_action_lock():
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "action is not allowed during release workflow"}))
         try:
             sys.stdout.close_log()
         except Exception as e:
             logger.info(f"error restart  {e}")
             pass
         return os.execv(sys.executable, [sys.executable] + sys.argv)
+
 
     def restart_response():
         thread = threading.Thread(target=restart_docker_commands)
