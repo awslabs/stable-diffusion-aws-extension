@@ -1137,7 +1137,8 @@ if is_on_ec2:
         if os.path.exists("/container/s5cmd_lock"):
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during other's switch"}))
+                                    {"result": False, "message": "switch is not allowed during other's switch, "
+                                                                 "please try again later"}))
 
         try:
             json_data = await request.json()
