@@ -255,7 +255,7 @@ if is_on_ec2:
                 #     return web.Response()
             # else:
                 # comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
-            logger.info(f"use endpoint:{get_endpoint_name_by_workflow_name(workflow_name)} workflow:{workflow_name} to generate")
+            logger.info(f"use endpoint:{get_endpoint_name_by_workflow_name(workflow_name)} workflow:{workflow_name} api: {api_url}to generate")
 
             payload = {
                 "number": str(server.PromptServer.instance.number),
