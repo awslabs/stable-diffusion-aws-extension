@@ -14,6 +14,7 @@ export AWS_REGION=$(aws configure get region)
 CUR_PATH=$(realpath ./)
 CONTAINER_PATH=$(realpath ./container)
 sudo rm -rf "$CONTAINER_PATH/sync_lock"
+sudo rm -rf "$CONTAINER_PATH/s5cmd_lock"
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 START_SH=$(realpath ./build_scripts/inference/start.sh)
 COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)

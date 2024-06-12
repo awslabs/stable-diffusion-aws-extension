@@ -898,7 +898,8 @@ if is_on_ec2:
         thread = threading.Thread(target=restart_comfy_commands)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds"}))
+                            body=json.dumps({"result": True, "message": "comfy will be restart in 5 seconds, "
+                                                                        "it's may take a few seconds"}))
 
 
     @server.PromptServer.instance.routes.get("/sync_env")
@@ -1054,7 +1055,8 @@ if is_on_ec2:
             thread.start()
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Pending to release workflow"}))
+                                body=json.dumps({"result": True, "message": "Pending to release workflow, "
+                                                                            "it's may take a few minutes"}))
         except Exception as e:
             logger.info(e)
             action_unlock()
@@ -1132,12 +1134,20 @@ if is_on_ec2:
                                 body=json.dumps(
                                     {"result": False, "message": "switch is not allowed during workflow release/restore"}))
 
+        if os.path.exists("/container/s5cmd_lock"):
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps(
+                                    {"result": False, "message": "switch is not allowed during other's switch"}))
+
         try:
             json_data = await request.json()
             if 'name' not in json_data or not json_data['name']:
                 raise ValueError("name is required")
 
             workflow_name = json_data['name']
+
+            with open("/container/s5cmd_lock", "w") as f:
+                f.write(workflow_name)
 
             if workflow_name == os.getenv('WORKFLOW_NAME'):
                 return web.Response(status=200, content_type='application/json',
@@ -1159,7 +1169,8 @@ if is_on_ec2:
             thread = threading.Thread(target=kill_after_seconds)
             thread.start()
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "comfy will be switch in 2 seconds"}))
+                                body=json.dumps({"result": True, "message": "Comfy will be switch in 2 seconds, "
+                                                                            "it's may take a few minutes"}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
@@ -1280,7 +1291,8 @@ if is_on_ec2:
         thread = threading.Thread(target=restore_workflow)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "comfy will be restore in 2 seconds"}))
+                            body=json.dumps({"result": True, "message": "Comfy will be start restore in 2 seconds, "
+                                                                        "it's may take a few minutes"}))
 
 if is_on_sagemaker:
 

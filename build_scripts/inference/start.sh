@@ -336,6 +336,7 @@ if [ -n "$ON_EC2" ]; then
     else
       start_at=$(date +%s)
       s5cmd --log=error sync "s3://$COMFY_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "$WORKFLOW_DIR/"
+      rm -rf /container/s5cmd_lock
       end_at=$(date +%s)
       export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
       echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
