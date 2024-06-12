@@ -166,13 +166,13 @@ if is_on_ec2:
                 if loca_file.endswith("output_images_will_be_put_here"):
                     continue
                 if need_prefix:
-                    with open(f"./{target_dir}/{prefix}_{loca_file}", 'wb') as f:
+                    with open(f"{target_dir}/{prefix}_{loca_file}", 'wb') as f:
                         f.write(response.content)
                     # current override exist
-                    with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+                    with open(f"{target_dir}/{loca_file}", 'wb') as f:
                         f.write(response.content)
                 else:
-                    with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+                    with open(f"{target_dir}/{loca_file}", 'wb') as f:
                         f.write(response.content)
 
 
@@ -360,9 +360,17 @@ if is_on_ec2:
                                                 images_response.json()['data']['temp_files']) > 0) or ((
                                                 'output_files' in images_response.json()['data'] and len(
                                             images_response.json()['data']['output_files']) > 0)):
-                                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                                            save_files(prompt_id, images_response.json(), 'output_files', 'output',
+                                            logger.info(f"save images to default")
+                                            save_files(prompt_id, images_response.json(), 'temp_files', './temp', False)
+                                            save_files(prompt_id, images_response.json(), 'output_files', './output',
                                                        True)
+                                            output_dir = folder_paths.get_output_directory()
+                                            temp_dir = folder_paths.get_temp_directory()
+                                            logger.info(f"save images to {output_dir} and {temp_dir}")
+                                            save_files(prompt_id, images_response.json(), 'temp_files', temp_dir, False)
+                                            save_files(prompt_id, images_response.json(), 'output_files', output_dir,
+                                                       True)
+
                                         else:
                                             send_error_msg(executor, prompt_id,
                                                            "There may be some errors when executing the prompt on the cloud. Please check the SageMaker logs.")
@@ -443,8 +451,8 @@ if is_on_ec2:
                                         images_response.json()['data']['temp_files']) > 0) or ((
                                         'output_files' in images_response.json()['data'] and len(
                                         images_response.json()['data']['output_files']) > 0)):
-                                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
-                                    save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
+                                    save_files(prompt_id, images_response.json(), 'temp_files', './temp', False)
+                                    save_files(prompt_id, images_response.json(), 'output_files', './output', True)
                                     break
                                 else:
                                     send_error_msg(executor, prompt_id,
