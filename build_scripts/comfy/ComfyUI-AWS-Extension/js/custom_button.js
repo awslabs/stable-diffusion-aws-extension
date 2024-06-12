@@ -5,11 +5,12 @@ import { $el } from "../../scripts/ui.js";
 
 var container = null;
 var lockCanvas = null;
+var isMaster = false;
 var selectedItem = null;
 var lockTimeout = 10000; // 10 seconds
 var errorMessage = 'An error occurred, please try again later.';
 
-export function restartAPI() {
+export function handleRestartButton() {
 
     var dialog = new ModalConfirmDialog(app, 'Do you want to RESTART the ComfyUI?', async () => {
         try {
@@ -22,7 +23,7 @@ export function restartAPI() {
     dialog.show();
 }
 
-export async function restore() {
+export async function handleResetButton() {
 
     var dialog = new ModalConfirmDialog(app, 'Do you want to RESET the local environment?', async () => {
         try {
@@ -34,7 +35,7 @@ export async function restore() {
             });
             const result = await response.json();
             if (response.ok) {
-                alert('Reset local environment successful.');
+                alert(result.message);
             } else {
                 alert(errorMessage);
             }
@@ -250,14 +251,17 @@ function createToolbar() {
     toolbarContainer.style.position = 'sticky';
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
-
-    toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateButton, 'Create New Workflow'));
+    if (isMaster) {
+        toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateButton, 'Create New Workflow', isMaster));
+    }
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow'));
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow', true));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeButton, 'Change Workflow'));
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeButton, 'Change Workflow', true));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow'));
+    if (isMaster) {
+        toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow', isMaster));
+    }
 
     return toolbarContainer;
 }
@@ -285,14 +289,16 @@ async function handleLoadButton() {
         // Clear the loading indicator
         container.innerHTML = '';
         data.data.workflows.forEach(workflow => {
-            const itemContainer = createWorkflowItem(workflow, () => {
-                if (selectedItem) {
-                    selectedItem.style.backgroundColor = '#f8f9fa';
-                }
-                itemContainer.style.backgroundColor = '#cbd3da';
-                selectedItem = itemContainer;
-            });
-            container.appendChild(itemContainer);
+            if (workflow.status == 'Enabled') {
+                const itemContainer = createWorkflowItem(workflow, () => {
+                    if (selectedItem) {
+                        selectedItem.style.backgroundColor = '#f8f9fa';
+                    }
+                    itemContainer.style.backgroundColor = '#cbd3da';
+                    selectedItem = itemContainer;
+                });
+                container.appendChild(itemContainer);
+            }
         });
     } catch (error) {
         // Clear the loading indicator
@@ -361,13 +367,15 @@ async function handleDeleteButton() {
             }
         });
         dialog.show();
+        selectedItem.remove();
+        selectedItem = null;
     } else {
         alert('Please select a workflow in the list');
     }
 
 }
 
-function createToolbarButton(icon, onClick, altText) {
+function createToolbarButton(icon, onClick, altText, enabled) {
     const button = document.createElement('button');
     button.innerHTML = icon;
     button.style.padding = '6px 12px';
@@ -385,17 +393,20 @@ function createToolbarButton(icon, onClick, altText) {
     button.style.fontSize = '14px';
     button.setAttribute('alt', altText);
     button.setAttribute('title', altText);
+    button.disabled = !enabled;
 
-    // Add hover effect
-    button.addEventListener('mouseenter', () => {
-        button.style.backgroundColor = '#cbd3da';
-    });
+    if (enabled) {
+        // Add hover effect
+        button.addEventListener('mouseenter', () => {
+            button.style.backgroundColor = '#cbd3da';
+        });
 
-    button.addEventListener('mouseleave', () => {
-        button.style.backgroundColor = '#232f3e';
-    });
+        button.addEventListener('mouseleave', () => {
+            button.style.backgroundColor = '#232f3e';
+        });
 
-    button.addEventListener('click', onClick);
+        button.addEventListener('click', onClick);
+    }
     return button;
 }
 
@@ -499,9 +510,8 @@ const awsConfigPanel = {
     async setup(app) {
         const check_response = await api.fetchApi("/check_is_master");
         const check_data = await check_response.json();
-        const isMaster = check_data.master;
+        isMaster = check_data.master;
         const widgetsContainer = createConfigPanel();
-
         if (isMaster) {
             const response = await api.fetchApi("/get_env");
             const data = await response.json();
@@ -510,21 +520,19 @@ const awsConfigPanel = {
             widgetsContainer.appendChild(checkboxSageMaker);
         }
 
-        if (isMaster) {
-            const scrollList = createWorkflowList();
-            widgetsContainer.appendChild(scrollList);
-        }
+        const scrollList = createWorkflowList();
+        widgetsContainer.appendChild(scrollList);
 
         if (isMaster) {
             const syncButton = createButton('New Workflow', handleCreateButton);
             widgetsContainer.appendChild(syncButton);
         }
 
-        const restartButton = createButton('Restart ComfyUI', restartAPI);
+        const restartButton = createButton('Restart ComfyUI', handleRestartButton);
         widgetsContainer.appendChild(restartButton);
 
         if (isMaster) {
-            const restoreButton = createButton('Reset to default', restore);
+            const restoreButton = createButton('Reset to default', handleResetButton);
             widgetsContainer.appendChild(restoreButton);
         }
 
@@ -576,14 +584,13 @@ api.addEventListener("ui_lock", ({ detail }) => {
     try {
         const response = await api.fetchApi("/lock");
         const data = await response.json();
-
-        if (data.locked) {
+        // fixed cannot lock screen
+        if (data.lock) {
             handleLockScreen();
         } else {
             handleUnlockScreen();
         }
     } catch (error) {
-        console.error('Error checking lock status:', error);
     }
 
     // Call the function again after 5 seconds
