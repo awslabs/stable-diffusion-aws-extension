@@ -72,11 +72,11 @@ phases:
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/sd_dev.yaml --content-type text/yaml --acl public-read
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/sd_$BUILD_VERSION.yaml --content-type text/yaml --acl public-read
       - echo ""
-      - sed -i "s/ESD_VERSION=dev/ESD_VERSION=$BUILD_VERSION/" ../workshop/comfy_new.yaml
-      - sed -i "s/ComfyEC2Dev/ComfyEC2${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}/" ../workshop/comfy_new.yaml
-      - sed -i "s/ApiGwResource/ApiGwResource${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}/" ../workshop/comfy_new.yaml
-      - aws s3 cp --region us-east-1 ../workshop/comfy_new.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/comfy_dev.yaml --content-type text/yaml --acl public-read
-      - aws s3 cp --region us-east-1 ../workshop/comfy_new.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/comfy_$BUILD_VERSION.yaml --content-type text/yaml --acl public-read
+      - sed -i "s/ESD_VERSION=dev/ESD_VERSION=$BUILD_VERSION/" ../workshop/comfy.yaml
+      - sed -i "s/ComfyEC2Dev/ComfyEC2${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}/" ../workshop/comfy.yaml
+      - sed -i "s/ApiGwResource/ApiGwResource${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}/" ../workshop/comfy.yaml
+      - aws s3 cp --region us-east-1 ../workshop/comfy.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/comfy_dev.yaml --content-type text/yaml --acl public-read
+      - aws s3 cp --region us-east-1 ../workshop/comfy.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/comfy_$BUILD_VERSION.yaml --content-type text/yaml --acl public-read
       - echo ""
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
