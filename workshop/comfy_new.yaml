@@ -327,6 +327,7 @@ Resources:
           
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy_new.conf /etc/nginx/sites-available/default
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/custom_502.html
+          sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/index.html
           sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
           sudo systemctl restart nginx
