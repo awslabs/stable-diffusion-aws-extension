@@ -296,6 +296,17 @@ Resources:
           echo "SERVICE_TYPE=comfy" >> /etc/environment
           
           source /etc/environment
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
+          rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz
+          
+          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
+          sudo rm -rf /root/stable-diffusion-aws-extension
+          sudo mkdir -p /root/stable-diffusion-aws-extension/
+          tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
+          rm -rf /tmp/src.tar
           
           sleep 150
           
@@ -309,19 +320,7 @@ Resources:
             sleep 1
           done
           
-          sudo apt update && sudo apt install nginx jq supervisor -y
-
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
-          rm -rf s5cmd_2.2.2_Linux-64bit.tar.gz
-          
-          s5cmd cp "s3://aws-gcr-solutions-${AWS::Region}/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/src.tar" "/tmp/src.tar"
-          sudo rm -rf /root/stable-diffusion-aws-extension
-          sudo mkdir -p /root/stable-diffusion-aws-extension/
-          tar --overwrite -xf "/tmp/src.tar" -C "/root/stable-diffusion-aws-extension/"
-          rm -rf /tmp/src.tar
-          
+          sudo apt update && sudo apt install jq supervisor nginx -y
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_nginx_proxy_new.conf /etc/nginx/sites-available/default
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/custom_502.html
           sudo cp -f /root/stable-diffusion-aws-extension/workshop/comfy_custom_502.html /usr/share/nginx/html/index.html
