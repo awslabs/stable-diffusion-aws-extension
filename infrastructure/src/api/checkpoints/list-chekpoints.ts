@@ -118,10 +118,24 @@ export class ListCheckPointsApi {
                       },
                     },
                     target_path: {
-                      type: JsonSchemaType.STRING,
+                      oneOf: [
+                        {
+                          type: JsonSchemaType.NULL,
+                        },
+                        {
+                          type: JsonSchemaType.STRING,
+                        },
+                      ],
                     },
                     source_path: {
-                      type: JsonSchemaType.STRING,
+                      oneOf: [
+                        {
+                          type: JsonSchemaType.NULL,
+                        },
+                        {
+                          type: JsonSchemaType.STRING,
+                        },
+                      ],
                     },
                   },
                   required: [
