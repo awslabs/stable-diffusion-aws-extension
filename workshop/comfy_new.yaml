@@ -297,6 +297,8 @@ Resources:
           
           source /etc/environment
           
+          sleep 150
+          
           while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
             echo "Waiting for other apt process to finish..."
             sleep 1
