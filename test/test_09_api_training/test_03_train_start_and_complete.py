@@ -9,7 +9,6 @@ import pytest
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class TestTrainStartCompleteE2E:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -60,13 +59,9 @@ class TestTrainStartCompleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": config.train_model_name,
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": config.train_model_name,
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }
@@ -95,13 +90,9 @@ class TestTrainStartCompleteE2E:
                     "general_threshold": "0.7"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": config.train_wd14_model_name,
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": config.train_wd14_model_name,
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }

@@ -8,13 +8,15 @@ from aws_lambda_powertools import Tracer
 from common.const import PERMISSION_TRAIN_ALL
 from common.response import ok, not_found
 from libs.utils import response_error, permissions_check
+from trainings.training_event import get_logs_presign
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
+bucket_name = os.environ.get("S3_BUCKET_NAME")
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
+s3 = boto3.client('s3')
 
 
 @tracer.capture_lambda_handler
@@ -32,15 +34,22 @@ def handler(event, ctx):
 
         item = job['Item']
 
+        if 'logs' not in item:
+            logs = []
+        else:
+            logs = item['logs']
+
         data = {
             'id': item['id'],
-            'checkpoint_id': item['checkpoint_id'],
             'job_status': item['job_status'],
             'model_id': item['model_id'],
             'params': item['params'],
             'timestamp': str(item['timestamp']),
             'train_type': item['train_type'],
             'sagemaker_train_name': item['sagemaker_train_name'],
+            'logs': get_logs_presign(job_id, logs),
+            # todo will remove
+            'checkpoint_id': '',
         }
 
         return ok(data=data, decimal=True)

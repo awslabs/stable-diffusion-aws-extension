@@ -3,9 +3,9 @@ import json
 import logging
 import os
 import traceback
-import time
 import copy
-
+import datetime
+import boto3
 from fastapi import FastAPI
 
 from modules import sd_models
@@ -28,6 +28,111 @@ def dummy_function(*args, **kwargs):
 
 logger = logging.getLogger("sd_proxy")
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
+cloudwatch = boto3.client('cloudwatch')
+
+endpoint_name = os.getenv('ENDPOINT_NAME')
+endpoint_instance_id = os.getenv('ENDPOINT_INSTANCE_ID', 'default')
+
+ddb_client = boto3.resource('dynamodb')
+inference_table = ddb_client.Table('SDInferenceJobTable')
+
+
+def update_execute_job_table(prompt_id, key, value):
+    logger.info(f"Update job with prompt_id: {prompt_id}, key: {key}, value: {value}")
+    try:
+        inference_table.update_item(
+            Key={
+                "InferenceJobId": prompt_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(InferenceJobId)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update execute job table error: {e}")
+        raise e
+
+
+def record_metric(req: InvocationsRequest):
+    data = [
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceTotal',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+                {
+                    'Name': 'Instance',
+                    'Value': endpoint_instance_id
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Service',
+                    'Value': 'Stable-Diffusion'
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+        {
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Endpoint',
+                    'Value': endpoint_name
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        },
+    ]
+
+    if req.workflow:
+        data.append({
+            'MetricName': 'InferenceEndpointReceived',
+            'Dimensions': [
+                {
+                    'Name': 'Workflow',
+                    'Value': req.workflow
+                },
+            ],
+            'Timestamp': datetime.datetime.utcnow(),
+            'Value': 1,
+            'Unit': 'Count'
+        })
+
+    response = cloudwatch.put_metric_data(
+        Namespace='ESD',
+        MetricData=data
+    )
+
+    logger.info(f"record_metric response: {response}")
 
 
 def merge_model_on_cloud(req):
@@ -175,11 +280,23 @@ def sagemaker_api(_, app: FastAPI):
     global thread_deque
     thread_deque = deque()
 
+    def wrap_response(start_time, data):
+        data['start_time'] = start_time
+        data['endpoint_name'] = os.getenv('ENDPOINT_NAME')
+        data['endpoint_instance_id'] = os.getenv('ENDPOINT_INSTANCE_ID')
+        return data
+
     @app.post("/invocations")
     def invocations(req: InvocationsRequest):
 
         logger.info(f'-------invocation on port {req.port}------')
         logger.info(json.dumps(req.__dict__, default=str))
+
+        start_time = datetime.datetime.now().isoformat()
+
+        update_execute_job_table(req.id, 'startTime', start_time)
+
+        record_metric(req)
 
         with condition:
             try:
@@ -218,7 +335,7 @@ def sagemaker_api(_, app: FastAPI):
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp.update(response.json())
-                    return resp
+                    return wrap_response(start_time, resp)
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
                     checkspace_and_update_models(req.models)
@@ -233,22 +350,22 @@ def sagemaker_api(_, app: FastAPI):
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp.update(response.json())
-                    return resp
+                    return wrap_response(start_time, resp)
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'extra-single-image':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-single-image',
                                              json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'extra-batch-images':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/sdapi/v1/extra-batch-images',
                                              json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'rembg':
                     response = requests.post(url=f'http://0.0.0.0:{req.port}/rembg', json=payload)
-                    return response.json()
+                    return wrap_response(start_time, response.json())
                 elif req.task == 'db-create-model':
                     r"""
                     task: db-create-model
@@ -409,8 +526,8 @@ try:
     import modules.script_callbacks as script_callbacks
 
     script_callbacks.on_app_started(sagemaker_api)
-    on_docker = os.environ.get('ON_DOCKER', "false")
-    if on_docker == "true":
+    on_sagemaker = os.environ.get('ON_SAGEMAKER', "false")
+    if on_sagemaker == "true":
         from modules import shared
         shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)

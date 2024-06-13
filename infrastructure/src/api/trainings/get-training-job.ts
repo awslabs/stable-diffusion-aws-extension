@@ -98,7 +98,6 @@ export class GetTrainingJobApi {
     });
   }
 
-
   private apiLambda() {
     return new PythonFunction(
       this.scope,
@@ -119,7 +118,6 @@ export class GetTrainingJobApi {
         layers: [this.layer],
       });
   }
-
 
   private iamRole(): Role {
 
@@ -149,6 +147,7 @@ export class GetTrainingJobApi {
       actions: [
         // get an object for training
         's3:GetObject',
+        's3:ListBucket',
       ],
       resources: [
         `${this.s3Bucket.bucketArn}`,

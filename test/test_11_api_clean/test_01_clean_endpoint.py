@@ -5,7 +5,7 @@ import time
 
 import config as config
 from utils.api import Api
-from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, update_oas
+from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, check_s3_directory
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 class TestCleanEndpoint:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -88,17 +88,16 @@ class TestCleanEndpoint:
 
         endpoints = resp.json()['data']['endpoints']
         for endpoint in endpoints:
-            endpoint_name = endpoint['endpoint_name']
+            logger.info(f"Deleting endpoint {endpoint['endpoint_name']}")
             while True:
                 data = {
-                    "endpoint_name_list": [
-                        endpoint_name
-                    ],
+                    "endpoint_name_list": [endpoint['endpoint_name']],
                 }
                 resp = self.api.delete_endpoints(headers=headers, data=data)
+                time.sleep(5)
                 if resp.status_code == 400:
                     logger.info(resp.json()['message'])
-                    time.sleep(5)
                     continue
                 else:
+                    check_s3_directory(f"{endpoint['endpoint_name']}/")
                     break

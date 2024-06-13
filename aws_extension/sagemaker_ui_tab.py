@@ -2,9 +2,11 @@ import datetime
 import json
 import logging
 import os
+import shutil
 import subprocess
 import threading
 
+import boto3
 import gradio as gr
 import modules.ui
 import requests
@@ -28,6 +30,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
+region_name = os.getenv('AWS_REGION', 'us-east-1')
 
 page_key = {}
 
@@ -41,6 +44,14 @@ inference_choices = ["ml.g4dn.2xlarge",
                      "ml.g5.12xlarge",
                      "ml.g5.24xlarge",
                      "ml.p4d.24xlarge",
+                     "ml.g6.xlarge",
+                     "ml.g6.2xlarge",
+                     "ml.g6.4xlarge",
+                     "ml.g6.8xlarge",
+                     "ml.g6.12xlarge",
+                     "ml.g6.16xlarge",
+                     "ml.g6.24xlarge",
+                     "ml.g6.48xlarge",
                      ]
 
 if is_gcr():
@@ -757,6 +768,8 @@ def model_upload_tab():
                 return default_list, show_page_info, 'No data'
 
             for model in resp.json()['data']['checkpoints']:
+                if model['type'] == 'Comfy':
+                    continue
                 allowed = ''
                 if model['allowed_roles_or_users']:
                     allowed = ', '.join(model['allowed_roles_or_users'])
@@ -1334,6 +1347,45 @@ def dataset_tab():
                     inputs=[cloud_dataset_name],
                     outputs=[]
                 )
+                resolution = gr.Textbox(value="",
+                                        visible=True,
+                                        label="Max Resolution",
+                                        placeholder="512x512",
+                                        info="Crop dataset to max resolution, like: 512x512")
+                crop_dataset_button = ToolButton(value="✂️")
+
+                def crop_dataset(dt_name, max_res, pr: gr.Request):
+
+                    if not dt_name:
+                        gr.Warning("Please select dataset")
+                        return resolution.update(value=max_res)
+
+                    if not max_res:
+                        gr.Warning("Please input max resolution")
+                        return resolution.update(value='')
+
+                    max_res = max_res.strip()
+
+                    headers = {
+                        'x-api-key': utils.api_key(),
+                        'username': pr.username,
+                    }
+                    data = {
+                        "max_resolution": max_res
+                    }
+                    resp = api.crop_dataset(dataset_name=dt_name, data=data, headers=headers)
+
+                    if resp.status_code == 202:
+                        gr.Info("Crop job created, please wait for a while")
+                    else:
+                        gr.Warning(f"Failed to crop dataset: {resp.json()['message']}")
+                        return resolution.update(value=max_res)
+
+                    return resolution.update(value="")
+
+                crop_dataset_button.click(fn=crop_dataset,
+                                          inputs=[cloud_dataset_name, resolution],
+                                          outputs=[resolution])
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text')
             with gr.Row():
@@ -1406,13 +1458,10 @@ def trainings_tab():
                 )
 
             default_config = {
-                "saving_arguments": {
-                    "output_name": "model_name",
-                    "save_every_n_epochs": 1000
-                },
-                "training_arguments": {
-                    "max_train_epochs": 100
-                }
+                "output_name": "model_name",
+                "save_every_n_epochs": 5,
+                "max_train_epochs": 100,
+                "enable_wd14_tagger": False,
             }
             config_params = gr.TextArea(value=json.dumps(default_config, indent=4),
                                         label="config_params",
@@ -1440,16 +1489,6 @@ def trainings_tab():
                             interactive=False,
                         )
 
-                        def list_ep_first(rq: gr.Request):
-                            set_page_key_empty(rq.username, 'trainings')
-                            result = _list_trainings_job(rq.username)
-                            return result, train_list_info.update(value="", visible=False), ""
-
-                        def list_ep_next(rq: gr.Request):
-                            last_key = get_page_key_next(rq.username, 'trainings')
-                            result = _list_trainings_job(rq.username, last_key)
-                            return result, train_list_info.update(value="", visible=False), ""
-
                     with gr.Row():
                         t_list_load_btn = gr.Button(value='First Page')
                         t_list_next_btn = gr.Button(value='Next Page')
@@ -1457,27 +1496,106 @@ def trainings_tab():
                     with gr.Row():
                         train_list_info = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
                         train_selected = gr.Textbox(value="", label="Selected Training item", visible=False)
+                    with gr.Row():
+                        list_logs = gr.HTML(value="", label="Training Logs", visible=False)
+                    with gr.Row():
+                        def list_ep_first(rq: gr.Request):
+                            set_page_key_empty(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username)
+                            return result, train_list_info.update(value="", visible=False), "", list_logs.update(
+                                value="", visible=False)
+
+                        def list_ep_next(rq: gr.Request):
+                            last_key = get_page_key_next(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username, last_key)
+                            return result, train_list_info.update(value="", visible=False), "", list_logs.update(
+                                value="", visible=False)
 
                         t_list_load_btn.click(fn=list_ep_first, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
+                                              outputs=[train_list, train_list_info, train_selected, list_logs])
                         t_list_next_btn.click(fn=list_ep_next, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
+                                              outputs=[train_list, train_list_info, train_selected, list_logs])
+                    with gr.Row():
+                        def get_instance_id():
+                            # EC2 metadata URL to retrieve instance ID
+                            metadata_url = "http://169.254.169.254/latest/meta-data/instance-id"
 
-                        def choose_training(evt: gr.SelectData, dataset):
+                            try:
+                                # Send a GET request to the metadata URL
+                                response = requests.get(metadata_url)
+
+                                # Check if the request was successful
+                                if response.status_code == 200:
+                                    # Extract and return the instance ID from the response
+                                    return response.text.strip()
+                                else:
+                                    # If the request failed, print an error message
+                                    print("Failed to retrieve instance ID. Status code:", response.status_code)
+                                    return None
+                            except Exception as e:
+                                # If an exception occurred, print the error
+                                print("Error:", e)
+                                return None
+
+                        def get_instance_public_ip(instance_id):
+                            # Create a Boto3 EC2 client
+                            ec2_client = boto3.client('ec2')
+
+                            # Use the describe_instances() method to get information about the specified instance
+                            response = ec2_client.describe_instances(InstanceIds=[instance_id])
+
+                            # Extract the public IP address from the response
+                            public_ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+                            return public_ip
+
+                        def get_tensorboard_url():
+                            if os.environ.get('ESD_EC2', "false") == "true":
+                                return get_instance_public_ip(get_instance_id())
+                            else:
+                                return "localhost"
+
+                        def choose_training(evt: gr.SelectData, dataset, rq: gr.Request):
                             row_index = evt.index[0]
                             train_id = dataset.values[row_index][0]
                             if train_id:
+                                headers = {'x-api-key': utils.api_key(), "username": rq.username}
                                 message = f"You selected training is: {train_id}"
                                 visible = True
+                                resp = api.get_training_job(job_id=train_id, headers=headers).json()
+                                logs = ""
+                                if 'data' in resp and 'logs' in resp['data'] and len(resp['data']['logs']) > 0:
+                                    logs = "<div style='padding: 10px'>"
+                                    logs += "<h2>Logs</h2>"
+                                    pip = get_tensorboard_url()
+                                    for item in resp['data']['logs']:
+                                        filename = item['filename']
+                                        url = item['url']
+
+                                        for root, dirs, files in os.walk("/tmp/trains_logs/"):
+                                            for d in dirs:
+                                                shutil.rmtree(os.path.join(root, d))
+
+                                        log_dir = f"/tmp/trains_logs/{train_id}/"
+                                        if not os.path.exists(log_dir):
+                                            os.makedirs(log_dir)
+                                        log_path = f"{log_dir}{filename}"
+                                        if not os.path.exists(log_path):
+                                            with open(log_path, 'wb') as f:
+                                                f.write(requests.get(url).content)
+                                        logs += f"<p><a href='http://{pip}:6006/' target='_blank'>{filename}</a></p>\n"
+                                    logs += f"</div>"
                             else:
                                 train_id = ""
                                 message = ""
                                 visible = False
-                            return train_list_info.update(value=message, visible=visible), train_id
+                                logs = ""
+                            return train_list_info.update(value=message, visible=visible), train_id, list_logs.update(
+                                value=logs, visible=visible)
 
                         train_list.select(fn=choose_training,
                                           inputs=[train_list],
-                                          outputs=[train_list_info, train_selected])
+                                          outputs=[train_list_info, train_selected, list_logs])
 
                         def _train_delete(train, pr: gr.Request):
                             if not train:

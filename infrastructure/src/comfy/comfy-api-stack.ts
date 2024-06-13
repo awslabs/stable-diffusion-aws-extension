@@ -11,15 +11,17 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { CreateExecuteApi, ExecuteApiProps } from '../api/comfy/create_excute';
 import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
-import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
+import { MergeExecuteApi } from '../api/comfy/merge_execute';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import {GetExecuteLogsApi, GetExecuteLogsProps} from "../api/comfy/get_execute_logs";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -38,6 +40,7 @@ export interface ComfyInferenceStackProps extends StackProps {
   snsTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
   queue: sqs.Queue;
+  mergeQueue: sqs.Queue;
 }
 
 export class ComfyApiStack extends Construct {
@@ -49,6 +52,7 @@ export class ComfyApiStack extends Construct {
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
+  private readonly mergeQueue: aws_sqs.Queue;
 
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
@@ -61,6 +65,7 @@ export class ComfyApiStack extends Construct {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
+    this.mergeQueue = props.mergeQueue;
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
@@ -85,7 +90,6 @@ export class ComfyApiStack extends Construct {
       s3Bucket: props.s3Bucket,
       configTable: this.configTable,
       msgTable: this.msgTable,
-      queue: this.queue,
       commonLayer: this.layer,
     });
 
@@ -100,13 +104,14 @@ export class ComfyApiStack extends Construct {
     });
 
     // POST /executes
-    new ExecuteApi(
+    new CreateExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
+        mergeQueue: this.mergeQueue,
         commonLayer: this.layer,
       },
     );
@@ -134,6 +139,18 @@ export class ComfyApiStack extends Construct {
       },
     );
 
+    new MergeExecuteApi(
+      scope, 'MergeExecute', <ExecuteApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.merge,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        endpointTable: this.endpointTable,
+        mergeQueue: this.mergeQueue,
+        commonLayer: this.layer,
+      },
+    );
+
     // POST /prepare
     new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
@@ -155,11 +172,21 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'GET',
         router: executeGetRouter,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
       },
     );
+
+      // GET /executes/{id}/logs
+      new GetExecuteLogsApi(
+          scope, 'GetExecuteLogs', <GetExecuteLogsProps>{
+              httpMethod: 'GET',
+              router: executeGetRouter,
+              s3Bucket: props.s3Bucket,
+              executeTable: this.executeTable,
+              commonLayer: this.layer,
+          },
+      );
 
     // GET /execute/{id}
     new GetPrepareApi(
@@ -206,6 +233,15 @@ export class ComfyApiStack extends Construct {
       ],
     });
 
+    const cwStatement = new iam.PolicyStatement({
+        actions: [
+            'cloudwatch:PutMetricData',
+        ],
+        resources: [
+            '*'
+        ],
+    });
+
     const snsStatement = new iam.PolicyStatement({
       actions: [
         'sns:Publish',
@@ -241,6 +277,7 @@ export class ComfyApiStack extends Construct {
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
+    handler.addToRolePolicy(cwStatement);
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(

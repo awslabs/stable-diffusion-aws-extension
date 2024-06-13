@@ -28,15 +28,6 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 ![generate results](../../images/generate-results.png)
 
 
-### Continuous Inference Scenario
-1. Following the **General Inference Scenario**, complete the parameter inputs and click **Generate on Cloud** to submit the initial inference task.
-2. Wait for the appearance of a new **Inference ID**in the right-side "Output" section.
-3. Once the new **Inference ID** appears, you can proceed to click **Generate on Cloud** again for the next inference task.
-
-![generate results](../../images/continue-inference.png)
-
-
-
 ### Inference Using Extra Model(s) like Lora
 1. Please follow the native version of WebUI, and upload a copy of the required model (including Textual Inversion, Hypernetworks, Checkpoints or Lora models) to local machine.
 2. Upload corresponding models to the cloud, following [Upload Models](../CloudAssetsManage/).
@@ -45,3 +36,5 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 
 ## Inference Job Histories
 Inference Job displays the latest 10 inference jobs by default, following naming format Time-Type-Status-UUID. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users a customized inference job list.
+
+The inference API combinations and corresponding parameters for a specific historical inference task can be obtained in [API Debugger](../developer-guide/api_debugger.md)

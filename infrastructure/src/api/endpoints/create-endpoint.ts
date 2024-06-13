@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -23,8 +23,9 @@ import {
   SCHEMA_ENDPOINT_START_TIME,
   SCHEMA_ENDPOINT_STATUS,
   SCHEMA_ENDPOINT_TYPE,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_NAME,
 } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -33,6 +34,7 @@ export interface CreateEndpointApiProps {
   multiUserTable: Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
+  workflowsTable: aws_dynamodb.Table;
   commonLayer: LayerVersion;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
@@ -50,6 +52,7 @@ export class CreateEndpointApi {
   private readonly multiUserTable: Table;
   private readonly syncTable: Table;
   private readonly instanceMonitorTable: Table;
+  private readonly workflowsTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly userNotifySNS: Topic;
@@ -67,6 +70,7 @@ export class CreateEndpointApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
     this.syncTable = props.syncTable;
+    this.workflowsTable = props.workflowsTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
     this.userNotifySNS = props.userNotifySNS;
@@ -87,7 +91,7 @@ export class CreateEndpointApi {
 
     this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -249,6 +253,8 @@ export class CreateEndpointApi {
         this.multiUserTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
+        this.workflowsTable.tableArn,
+        `arn:${Aws.PARTITION}:dynamodb:${Aws.REGION}:${Aws.ACCOUNT_ID}:table/ComfyExecuteTable`,
       ],
     });
 
@@ -313,6 +319,7 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
           },
           endpoint_type: SCHEMA_ENDPOINT_TYPE,
+          workflow_name: SCHEMA_WORKFLOW_NAME,
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
@@ -356,14 +363,6 @@ export class CreateEndpointApi {
     });
   }
 
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-      validateRequestParameters: false,
-    });
-  }
-
   private apiLambda() {
     const endpoint_role = <Role>Role.fromRoleName(this.scope, 'esd-role', ESD_ROLE);
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
@@ -384,6 +383,7 @@ export class CreateEndpointApi {
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
         COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
+        WORKFLOWS_TABLE: this.workflowsTable.tableName,
         EXECUTION_ROLE_ARN: endpoint_role.roleArn,
       },
       layers: [this.layer],

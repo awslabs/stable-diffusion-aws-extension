@@ -6,7 +6,7 @@ import pytest
 
 import config as config
 from utils.api import Api
-from utils.helper import upload_multipart_file, wget_file, update_oas
+from utils.helper import upload_multipart_file, wget_file
 
 logger = logging.getLogger(__name__)
 checkpoint_id = None
@@ -19,7 +19,7 @@ class TestCheckPointForTrainE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

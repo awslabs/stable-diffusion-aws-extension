@@ -6,6 +6,8 @@ import os
 import sys
 import tarfile
 import time
+import uuid
+import gc
 from dataclasses import dataclass
 from typing import Optional
 
@@ -15,6 +17,7 @@ import server
 import folder_paths
 from aiohttp import web
 from boto3.dynamodb.conditions import Key
+import comfy
 
 global need_sync
 global prompt_id
@@ -24,11 +27,16 @@ executing = False
 global reboot
 reboot = False
 
+global last_call_time
+last_call_time = None
+global gc_triggered
+gc_triggered = False
+
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
 
-GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
+GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID') if 'ENDPOINT_INSTANCE_ID' in os.environ and os.environ.get('ENDPOINT_INSTANCE_ID') else str(uuid.uuid4())
 ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
 ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
@@ -43,6 +51,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
 
 ROOT_PATH = '/home/ubuntu/ComfyUI'
+sqs_client = boto3.client('sqs', region_name=REGION)
+
+GC_WAIT_TIME = 1800
+
+
+def print_env():
+    for key, value in os.environ.items():
+        logger.info(f"{key}: {value}")
 
 
 @dataclass
@@ -57,11 +73,11 @@ def ok(body: dict):
 
 
 def error(body: dict):
-    return web.Response(status=500, content_type='application/json', body=json.dumps(body))
+    # TODO 500 -》200 because of need resp anyway not exception
+    return web.Response(status=200, content_type='application/json', body=json.dumps(body))
 
 
 def sen_sqs_msg(message_body, prompt_id_key):
-    sqs_client = boto3.client('sqs', region_name=REGION)
     response = sqs_client.send_message(
         QueueUrl=QUEUE_URL,
         MessageBody=json.dumps(message_body),
@@ -69,6 +85,16 @@ def sen_sqs_msg(message_body, prompt_id_key):
     )
     message_id = response['MessageId']
     return message_id
+
+
+def sen_finish_sqs_msg(prompt_id_key):
+    global need_sync
+    # logger.info(f"sen_finish_sqs_msg start... {need_sync},{prompt_id_key}")
+    if need_sync and QUEUE_URL and REGION:
+        message_body = {'prompt_id': prompt_id_key, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id_key},
+                        'sid': None}
+        message_id = sen_sqs_msg(message_body, prompt_id_key)
+        logger.info(f"finish message sent {message_id}")
 
 
 async def prepare_comfy_env(sync_item: dict):
@@ -105,9 +131,20 @@ async def prepare_comfy_env(sync_item: dict):
             logger.info("sync_script")
             # sync_script.startswith('s5cmd') 不允许
             try:
-                if sync_script and (sync_script.startswith("pip install") or sync_script.startswith("apt-get")
-                                    or sync_script.startswith("os.environ")):
+                if sync_script and (sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
+                                    or sync_script.startswith("pip install") or sync_script.startswith("apt")
+                                    or sync_script.startswith("os.environ") or sync_script.startswith("ls")
+                                    or sync_script.startswith("env") or sync_script.startswith("source")
+                                    or sync_script.startswith("curl") or sync_script.startswith("wget")
+                                    or sync_script.startswith("print") or sync_script.startswith("cat")
+                                    or sync_script.startswith("sudo chmod") or sync_script.startswith("chmod")
+                                    or sync_script.startswith("/home/ubuntu/ComfyUI/venv/bin/python")):
                     os.system(sync_script)
+                elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
+                    sync_script_key = sync_script.split(" ")[1]
+                    sync_script_value = sync_script.split(" ")[2]
+                    os.environ[sync_script_key] = sync_script_value
+                    logger.info(os.environ.get(sync_script_key))
             except Exception as e:
                 logger.error(f"Exception while execute sync_scripts : {sync_script}")
                 rlt = False
@@ -130,10 +167,13 @@ async def prepare_comfy_env(sync_item: dict):
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     logger.info("sync_s3_models_or_inputs_to_local start")
     # s5cmd_command = f'{ROOT_PATH}/tools/s5cmd sync "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
-    s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
+    if need_un_tar:
+        s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
+    else:
+        s5cmd_command = f's5cmd sync --delete=true "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
+    # s5cmd_command = f's5cmd sync --delete=true "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
+    # s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
     try:
-        # TODO 注意添加去重逻辑
-        # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         logger.info(s5cmd_command)
         os.system(s5cmd_command)
         logger.info(f'Files copied from "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" to "{local_path}/"')
@@ -141,8 +181,13 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
                     tar_filepath = os.path.join(local_path, filename)
+                    # extract_path = os.path.splitext(os.path.splitext(tar_filepath)[0])[0]
+                    # os.makedirs(extract_path, exist_ok=True)
+                    # logger.info(f'Extracting extract_path is {extract_path}')
+
                     with tarfile.open(tar_filepath, "r:gz") as tar:
-                        tar.extractall(path=local_path)
+                        for member in tar.getmembers():
+                            tar.extract(member, path=local_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
         return True
@@ -185,8 +230,8 @@ def sync_local_outputs_to_base64(local_path):
         return {}
 
 
-@server.PromptServer.instance.routes.post("/invocations")
-async def invocations(request):
+@server.PromptServer.instance.routes.post("/execute_proxy")
+async def execute_proxy(request):
     json_data = await request.json()
     if 'out_path' in json_data and json_data['out_path'] is not None:
         out_path = json_data['out_path']
@@ -202,6 +247,7 @@ async def invocations(request):
         if executing is True:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
+            sen_finish_sqs_msg(prompt_id)
             return error(resp)
         executing = True
         logger.info(
@@ -213,6 +259,7 @@ async def invocations(request):
                 resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                         "message": "the environment is not ready with sync"}
                 executing = False
+                sen_finish_sqs_msg(prompt_id)
                 return error(resp)
         server_instance = server.PromptServer.instance
         if "number" in json_data:
@@ -225,11 +272,20 @@ async def invocations(request):
                     number = -number
             server_instance.number += 1
         valid = execution.validate_prompt(json_data['prompt'])
+        logger.info(f"Validating prompt result is {valid}")
         if not valid[0]:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
             executing = False
+            response = {"prompt_id": prompt_id, "number": number, "node_errors": valid[3]}
+            sen_finish_sqs_msg(prompt_id)
             return error(resp)
+        # if len(valid) == 4 and len(valid[3]) > 0:
+        #     logger.info(f"Validating prompt error there is something error because of :valid: {valid}")
+        #     resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+        #             "message": f"the valid is error, need to resync or check the workflow :{valid}"}
+        #     executing = False
+        #     return error(resp)
         extra_data = {}
         client_id = ''
         if "extra_data" in json_data:
@@ -265,19 +321,40 @@ async def invocations(request):
             "output_path": f's3://{BUCKET}/comfy/{s3_out_path}',
             "temp_path": f's3://{BUCKET}/comfy/{s3_temp_path}',
         }
-
+        sen_finish_sqs_msg(prompt_id)
         logger.info(f"execute inference response is {response_body}")
-
         executing = False
-        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
-        sen_sqs_msg(message_body, prompt_id)
         return ok(response_body)
-    except Exception as e:
-        logger.info("exception occurred", e)
+    except Exception as ecp:
+        logger.info(f"exception occurred {ecp}")
         resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
-                "message": f"exception occurred {e}"}
+                "message": f"exception occurred {ecp}"}
         executing = False
         return error(resp)
+    finally:
+        logger.info(f"gc check: {time.time()}")
+        try:
+            global last_call_time, gc_triggered
+            gc_triggered = False
+            if last_call_time is None:
+                logger.info(f"gc check last time is NONE")
+                last_call_time = time.time()
+            else:
+                if time.time() - last_call_time > GC_WAIT_TIME:
+                    if not gc_triggered:
+                        logger.info(f"gc start: {time.time()} - {last_call_time}")
+                        e.reset()
+                        comfy.model_management.cleanup_models()
+                        gc.collect()
+                        comfy.model_management.soft_empty_cache()
+                        gc_triggered = True
+                        logger.info(f"gc end: {time.time()} - {last_call_time}")
+                    last_call_time = time.time()
+                else:
+                    last_call_time = time.time()
+            logger.info(f"gc check end: {time.time()}")
+        except Exception as e:
+            logger.info(f"gc error: {e}")
 
 
 def get_last_ddb_sync_record():
@@ -379,21 +456,21 @@ def sync_instance_monitor_status(need_save: bool):
 
 @server.PromptServer.instance.routes.post("/reboot")
 async def restart(self):
-    logger.info(f"start to reboot!!!!!!!! {self}")
+    logger.debug(f"start to reboot!!!!!!!! {self}")
     global executing
     if executing is True:
         logger.info(f"other inference doing cannot reboot!!!!!!!!")
-        return {"message": "other inference doing cannot reboot"}
+        return ok({"message": "other inference doing cannot reboot"})
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
-        return {"message": "no need to reboot by os"}
+        return ok({"message": "no need to reboot by os"})
     global reboot
     if reboot is False:
         logger.info("no need to reboot by global constant")
-        return {"message": "no need to reboot by constant"}
+        return ok({"message": "no need to reboot by constant"})
 
-    logger.info("rebooting !!!!!!!!")
+    logger.debug("rebooting !!!!!!!!")
     try:
         sys.stdout.close_log()
     except Exception as e:
@@ -451,7 +528,9 @@ async def sync_instance(request):
                     and instance_monitor_record['last_sync_request_id']
                     and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']
                     and instance_monitor_record['sync_status']
-                    and instance_monitor_record['sync_status'] == 'success'):
+                    and instance_monitor_record['sync_status'] == 'success'
+                    and os.environ.get('LAST_SYNC_REQUEST_TIME')
+                    and os.environ.get('LAST_SYNC_REQUEST_TIME') == str(last_sync_record['request_time'])):
                 logger.info("last sync record already sync")
                 sync_instance_monitor_status(False)
                 resp = {"status": "success", "message": "no sync ddb"}
@@ -480,11 +559,8 @@ async def sync_instance(request):
 
 def validate_prompt_proxy(func):
     def wrapper(*args, **kwargs):
-        # 在这里添加您的代理逻辑
         logger.info("validate_prompt_proxy start...")
-        # 调用原始函数
         result = func(*args, **kwargs)
-        # 在这里添加执行后的操作
         logger.info("validate_prompt_proxy end...")
         return result
 
@@ -496,20 +572,20 @@ execution.validate_prompt = validate_prompt_proxy(execution.validate_prompt)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
-        logger.info(f"Sending sync request!!!!!!! {args}")
+        logger.debug(f"Sending sync request!!!!!!! {args}")
         global need_sync
         global prompt_id
         logger.info(f"send_sync_proxy start... {need_sync},{prompt_id} {args}")
         func(*args, **kwargs)
         if need_sync and QUEUE_URL and REGION:
-            logger.info(f"send_sync_proxy params... {QUEUE_URL},{REGION},{need_sync},{prompt_id}")
+            logger.debug(f"send_sync_proxy params... {QUEUE_URL},{REGION},{need_sync},{prompt_id}")
             event = args[1]
             data = args[2]
             sid = args[3] if len(args) == 4 else None
             message_body = {'prompt_id': prompt_id, 'event': event, 'data': data, 'sid': sid}
             message_id = sen_sqs_msg(message_body, prompt_id)
             logger.info(f'send_sync_proxy message_id :{message_id} message_body: {message_body}')
-        logger.info(f"send_sync_proxy end...")
+        logger.debug(f"send_sync_proxy end...")
 
     return wrapper
 

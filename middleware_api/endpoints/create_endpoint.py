@@ -5,6 +5,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -14,9 +15,9 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted
 from common.util import resolve_instance_invocations_num
-from libs.data_types import Endpoint
+from libs.data_types import Endpoint, Workflow
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error, permissions_check, get_workflow_by_name
 
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
@@ -57,6 +58,8 @@ class CreateEndpointEvent:
     custom_extensions: str = ""
     # service for: sd / comfy
     service_type: str = "sd"
+    workflow: Optional[Workflow] = None
+    workflow_name: str = ""
     # todo will be removed
     creator: str = ""
 
@@ -95,6 +98,15 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     return f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-inference:{esd_version}"
 
 
+def create_from_workflow(event: CreateEndpointEvent):
+    if event.workflow_name:
+        event.workflow = get_workflow_by_name(event.workflow_name)
+        if event.workflow.status != 'Enabled':
+            raise BadRequestException(f"{event.workflow_name} is {event.workflow.status}")
+
+    return event
+
+
 # POST /endpoints
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
@@ -119,15 +131,22 @@ def handler(raw_event, ctx):
                 raise BadRequestException(
                     f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
 
+        event = create_from_workflow(event)
+
         event = check_custom_extensions(event)
 
         endpoint_id = str(uuid.uuid4())
         short_id = endpoint_id[:7]
+        endpoint_type = event.endpoint_type.lower()
 
         if event.endpoint_name:
             short_id = event.endpoint_name
 
-        endpoint_type = event.endpoint_type.lower()
+        if event.workflow:
+            if endpoint_type != 'async':
+                raise BadRequestException(message=f"Your cant create Async endpoint only for workflow currently")
+            short_id = event.workflow.name
+
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
         model_name = f"{endpoint_name}"
         endpoint_config_name = f"{endpoint_name}"
@@ -146,6 +165,10 @@ def handler(raw_event, ctx):
             endpoint = Endpoint(**(ddb_service.deserialize(endpoint_row)))
             logger.info("endpoint:")
             logger.info(endpoint.__dict__)
+
+            if not endpoint.owner_group_or_role:
+                continue
+
             # Compatible with fields used in older data, endpoint.status must be 'deleted'
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
@@ -182,7 +205,7 @@ def handler(raw_event, ctx):
         data = Endpoint(
             EndpointDeploymentJobId=endpoint_id,
             endpoint_name=endpoint_name,
-            startTime=str(datetime.now()),
+            startTime=datetime.now().isoformat(),
             endpoint_status=EndpointStatus.CREATING.value,
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
@@ -211,26 +234,37 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
     tracer.put_annotation('endpoint_name', endpoint_name)
     image_url = get_docker_image_uri(event)
 
+    if event.workflow:
+        image_url = event.workflow.image_uri
+
+    environment = {
+        'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
+        'S3_BUCKET_NAME': s3_bucket_name,
+        'IMAGE_URL': image_url,
+        'INSTANCE_TYPE': event.instance_type,
+        'ENDPOINT_NAME': endpoint_name,
+        'ENDPOINT_ID': endpoint_id,
+        'EXTENSIONS': event.custom_extensions,
+        'CREATED_AT': datetime.utcnow().isoformat(),
+        'COMFY_QUEUE_URL': queue_url or '',
+        'COMFY_SYNC_TABLE': sync_table or '',
+        'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
+        'ESD_VERSION': esd_version,
+        'ESD_COMMIT_ID': esd_commit_id,
+        'SERVICE_TYPE': event.service_type,
+        'ON_SAGEMAKER': 'true',
+        'AWS_REGION': aws_region,
+        'AWS_DEFAULT_REGION': aws_region,
+    }
+
+    if event.workflow:
+        environment['WORKFLOW_NAME'] = event.workflow.name
+        environment['APP_CWD'] = '/home/ubuntu/ComfyUI'
+
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
-        'Environment': {
-            'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
-            'S3_BUCKET_NAME': s3_bucket_name,
-            'IMAGE_URL': image_url,
-            'INSTANCE_TYPE': event.instance_type,
-            'ENDPOINT_NAME': endpoint_name,
-            'ENDPOINT_ID': endpoint_id,
-            'EXTENSIONS': event.custom_extensions,
-            'CREATED_AT': datetime.utcnow().isoformat(),
-            'COMFY_QUEUE_URL': queue_url or '',
-            'COMFY_SYNC_TABLE': sync_table or '',
-            'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
-            'ESD_VERSION': esd_version,
-            'ESD_COMMIT_ID': esd_commit_id,
-            'SERVICE_TYPE': event.service_type,
-            'ON_DOCKER': 'true',
-        },
+        'Environment': environment,
     }
 
     tracer.put_metadata('primary_container', primary_container)
@@ -252,8 +286,8 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
-            "ModelDataDownloadTimeoutInSeconds": 60 * 30,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 10,  # Specify the health checkup timeout in seconds
+            "ModelDataDownloadTimeoutInSeconds": 60 * 20,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 60,  # Specify the health checkup timeout in seconds
         }
     ]
 

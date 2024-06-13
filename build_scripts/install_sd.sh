@@ -4,10 +4,11 @@ echo "--------------------------------------------------------------------------
 echo "install esd..."
 
 export INITIAL_SUPPORT_COMMIT_ROOT=bef51aed032c0aaa5cfd80445bc4cf0d85b408b5
-export INITIAL_SUPPORT_COMMIT_CONTROLNET=2a210f0489a4484f55088159bbfa51aaf73e10d9
+export INITIAL_SUPPORT_COMMIT_CONTROLNET=3d75bd08e3f20b9999985a828f7567c84925c862
 export INITIAL_SUPPORT_COMMIT_TILEDVAE=f9f8073e64f4e682838f255215039ba7884553bf
 export INITIAL_SUPPORT_COMMIT_REMBG=a4c07b857e73f3035f759876797fa6de986def3d
-export INITIAL_SUPPORT_COMMIT_REACTOR=0185d7a2afa4a3c76b304314233a1cafd1cf4842
+export INITIAL_SUPPORT_COMMIT_REACTOR=4a7a367ea1a5ea7a7215269bf1c251ae30e40eb1
+export INITIAL_SUPPORT_COMMIT_EVACLIP=39966e79a5291b9fef8b42de69057dd3b19f4c23
 
 rm -rf stable-diffusion-webui
 
@@ -22,7 +23,7 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions || exit 1
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev"
 cd stable-diffusion-aws-extension || exit 1
 
 if [ -n "$ESD_COMMIT_ID" ]; then
@@ -31,24 +32,20 @@ if [ -n "$ESD_COMMIT_ID" ]; then
 fi
 
 # remove unused files for docker layer reuse
-if [ "$ON_DOCKER" == "true" ]; then
+if [ "$ON_SAGEMAKER" == "true" ]; then
   rm -rf docs
   rm -rf infrastructure
   rm -rf middleware_api
   rm -rf test
   rm -rf workshop
 fi
-
 cd ../
 
-# Clone sd-webui-controlnet
 git clone https://github.com/Mikubill/sd-webui-controlnet.git --branch main --single-branch
-# Go to sd-webui-controlnet directory and reset to specific commit
 cd sd-webui-controlnet || exit 1
 git reset --hard ${INITIAL_SUPPORT_COMMIT_CONTROLNET}
 cd ../
 
-# Clone Tiled VAE
 git clone https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git --branch main --single-branch
 cd multidiffusion-upscaler-for-automatic1111 || exit 1
 git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
@@ -59,9 +56,12 @@ cd stable-diffusion-webui-rembg || exit 1
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
 cd ../
 
-# Clone sd-webui-reactor
+git clone https://github.com/huchenlei/sd-webui-controlnet-evaclip.git --branch main --single-branch
+cd sd-webui-controlnet-evaclip || exit 1
+git reset --hard ${INITIAL_SUPPORT_COMMIT_EVACLIP}
+cd ../
+
 git clone https://github.com/Gourieff/sd-webui-reactor.git --branch main --single-branch
-# Go to reactor directory and reset to specific commit
 cd sd-webui-reactor || exit 1
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REACTOR}
 cd ../

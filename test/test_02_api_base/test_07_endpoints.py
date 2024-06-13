@@ -6,7 +6,7 @@ from time import sleep
 
 import config as config
 from utils.api import Api
-from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, update_oas
+from utils.helper import get_endpoint_status, delete_sagemaker_endpoint, check_s3_directory
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestEndpointsApi:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -41,6 +41,7 @@ class TestEndpointsApi:
                     logger.info(resp.json()['message'])
                     continue
                 else:
+                    check_s3_directory(f"{endpoint['endpoint_name']}/")
                     break
 
     def test_1_endpoints_delete_async_before(self):
@@ -279,3 +280,25 @@ class TestEndpointsApi:
 
         resp = self.api.delete_endpoints(headers=headers, data=data)
         assert resp.status_code == 204, resp.dumps()
+
+    def test_17_create_endpoint_with_bad_workflow(self):
+        headers = {
+            "x-api-key": config.api_key,
+            "username": config.username
+        }
+
+        workflow_name = 'bad_workflow'
+
+        data = {
+            "endpoint_name": "dev-test",
+            "instance_type": 'ml.g5.2xlarge',
+            "endpoint_type": "Async",
+            "initial_instance_count": 1,
+            "autoscaling_enabled": True,
+            "assign_to_roles": ["IT Operator"],
+            "creator": config.username,
+            'workflow_name': workflow_name
+        }
+
+        resp = self.api.create_endpoint(headers=headers, data=data)
+        assert f"workflow {workflow_name} not found" in resp.json()["message"]

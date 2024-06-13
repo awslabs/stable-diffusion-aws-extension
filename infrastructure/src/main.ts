@@ -1,5 +1,4 @@
 import { App, Aspects, Aws, aws_apigateway, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
-import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
@@ -25,7 +24,7 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
-
+import {Workflow} from "./shared/workflow";
 const app = new App();
 
 export class Middleware extends Stack {
@@ -70,9 +69,16 @@ export class Middleware extends Stack {
 
     const logLevel = new CfnParameter(this, 'LogLevel', {
       type: 'String',
-      description: 'Log level, example: ERROR|INFO|DEBUG',
+      description: 'Log level, example: ERROR | INFO | DEBUG',
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
+    const apiEndpointType = new CfnParameter(this, 'ApiEndpointType', {
+      type: 'String',
+      description: 'API Endpoint, example: REGIONAL | PRIVATE | EDGE',
+      default: 'REGIONAL',
+      allowedValues: ['REGIONAL', 'PRIVATE', 'EDGE'],
     });
 
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
@@ -81,6 +87,12 @@ export class Middleware extends Stack {
       isChinaCondition.logicalId,
       '753680513547',
       '366590864501',
+    );
+
+    const consoleUrl = Fn.conditionIf(
+        isChinaCondition.logicalId,
+        'amazonaws.cn',
+        'aws.amazon.com',
     );
 
     // Create resources here
@@ -111,7 +123,7 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer');
 
-    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, apiEndpointType, [
       // service
       'api',
       'ping',
@@ -131,11 +143,9 @@ export class Middleware extends Stack {
       'config',
       'prepare',
       'sync',
+      'merge',
+      'workflows',
     ]);
-    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    cfnApi.addPropertyOverride('EndpointConfiguration', {
-      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
-    });
 
     new MultiUsers(this, {
       synthesizer: props.synthesizer,
@@ -163,6 +173,16 @@ export class Middleware extends Stack {
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+
+    new Workflow(this, {
+      routers: restApi.routers,
+      s3_bucket: s3Bucket,
+      workflowsTable: ddbTables.workflowsTable,
+      multiUserTable: ddbTables.multiUserTable,
+      commonLayer: commonLayers.commonLayer,
+      synthesizer: props.synthesizer,
+      resourceProvider,
+    });
 
     new Inference(this, {
       routers: restApi.routers,
@@ -198,6 +218,11 @@ export class Middleware extends Stack {
       visibilityTimeout: 900,
     });
 
+    const sqsMergeStack = new SqsStack(this, 'comfy-merge-sqs', {
+      name: 'SyncComfyMergeJob',
+      visibilityTimeout: 900,
+    });
+
     const apis = new ComfyApiStack(this, 'comfy-api', <ComfyInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
@@ -214,6 +239,7 @@ export class Middleware extends Stack {
       executeFailTopic: snsTopics.executeResultFailTopic,
       snsTopic: snsTopics.snsTopic,
       queue: sqsStack.queue,
+      mergeQueue: sqsMergeStack.queue,
     });
     apis.node.addDependency(ddbComfyTables);
 
@@ -225,6 +251,7 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       multiUserTable: ddbTables.multiUserTable,
+      workflowsTable: ddbTables.workflowsTable,
       snsTopic: snsTopics.snsTopic,
       EndpointDeploymentJobTable: ddbTables.sDEndpointDeploymentJobTable,
       syncTable: ddbComfyTables.syncTable,
@@ -261,6 +288,7 @@ export class Middleware extends Stack {
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
         timestamp: new Date().toISOString(),
+        apiEndpointType: apiEndpointType.valueAsString,
       },
     );
 
@@ -285,18 +313,10 @@ export class Middleware extends Stack {
     this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
 
     // make order for api
-    let requestValidator: aws_apigateway.RequestValidator;
     let model: aws_apigateway.Model;
+    let gatewayResponse: aws_apigateway.GatewayResponse;
+    let gatewayResource: aws_apigateway.Resource;
     this.node.children.forEach(child => {
-
-      if (child instanceof aws_apigateway.RequestValidator) {
-        if (!requestValidator) {
-          requestValidator = child;
-        } else {
-          child.node.addDependency(requestValidator);
-          requestValidator = child;
-        }
-      }
 
       if (child instanceof aws_apigateway.Model) {
         if (!model) {
@@ -304,6 +324,24 @@ export class Middleware extends Stack {
         } else {
           child.node.addDependency(model);
           model = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.GatewayResponse) {
+        if (!gatewayResponse) {
+          gatewayResponse = child;
+        } else {
+          child.node.addDependency(gatewayResponse);
+          gatewayResponse = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.Resource) {
+        if (!gatewayResource) {
+          gatewayResource = child;
+        } else {
+          child.node.addDependency(gatewayResource);
+          gatewayResource = child;
         }
       }
 
@@ -345,10 +383,21 @@ export class Middleware extends Stack {
       description: 'S3 Bucket Name',
     });
 
+    new CfnOutput(this, 'EndpointType', {
+      value: apiEndpointType.valueAsString,
+      description: 'API Endpoint Type',
+    });
+
     new CfnOutput(this, 'SNSTopicName', {
       value: snsTopics.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
     });
+
+    new CfnOutput(this, 'DashboardURL', {
+      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudwatch/home?region=${Aws.REGION}#dashboards/dashboard/ESD`,
+      description: 'CloudWatch Dashboard URL',
+    });
+
   }
 
   addEnvToAllLambdas(variableName: string, value: string) {

@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
@@ -12,8 +12,9 @@ import {
   SCHEMA_INFERENCE,
   SCHEMA_INFERENCE_ASYNC_MODEL,
   SCHEMA_INFERENCE_REAL_TIME_MODEL,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW,
 } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -62,7 +63,7 @@ export class CreateInferenceJobApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -147,6 +148,7 @@ export class CreateInferenceJobApi {
                   type: {
                     type: JsonSchemaType.STRING,
                   },
+                  workflow: SCHEMA_WORKFLOW,
                   api_params_s3_location: {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
@@ -224,6 +226,7 @@ export class CreateInferenceJobApi {
             type: JsonSchemaType.STRING,
           },
           inference_type: SCHEMA_INFER_TYPE,
+          workflow: SCHEMA_WORKFLOW,
           payload_string: {
             type: JsonSchemaType.STRING,
           },
@@ -308,22 +311,14 @@ export class CreateInferenceJobApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'cloudwatch:PutMetricAlarm',
+        'cloudwatch:PutMetricData',
         'kms:Decrypt',
       ],
       resources: ['*'],
     }));
 
     return newRole;
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.id}-create-infer-Validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
   }
 
   private apiLambda() {

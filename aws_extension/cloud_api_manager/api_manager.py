@@ -160,23 +160,27 @@ class CloudApiManager:
         if not self.auth_manger.api_url:
             return [], ''
 
-        response = requests.get(f'{self.auth_manger.api_url}trainings',
-                                params={
-                                    'username': username,
-                                    'exclusive_start_key': last_key,
-                                    'limit': 10,
-                                },
-                                headers=self._get_headers_by_user(username))
-        r = response.json()
-        if not r or r['statusCode'] != 200:
-            logger.error(f"list_trainings: {r}")
-            return []
+        try:
+            response = requests.get(f'{self.auth_manger.api_url}trainings',
+                                    params={
+                                        'username': username,
+                                        'exclusive_start_key': last_key,
+                                        'limit': 10,
+                                    },
+                                    headers=self._get_headers_by_user(username))
+            r = response.json()
+            if not r or r['statusCode'] != 200:
+                logger.error(f"list_trainings: {r}")
+                return [], ''
 
-        last_ek = ''
-        if 'last_evaluated_key' in r['data']:
-            last_ek = r['data']['last_evaluated_key']
+            last_ek = ''
+            if 'last_evaluated_key' in r['data']:
+                last_ek = r['data']['last_evaluated_key']
 
-        return r['data']['trainings'], last_ek
+            return r['data']['trainings'], last_ek
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return [], ''
 
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token="", last_key: str = ""):
         if self.auth_manger.enableAuth and not user_token:

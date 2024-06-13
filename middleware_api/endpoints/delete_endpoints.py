@@ -8,7 +8,9 @@ from aws_lambda_powertools import Tracer
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import NotFoundException
 from common.response import no_content
+from common.util import endpoint_clean
 from libs.data_types import Endpoint
 from libs.enums import EndpointStatus
 from libs.utils import response_error, get_endpoint_by_name
@@ -19,14 +21,9 @@ sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 esd_version = os.environ.get("ESD_VERSION")
-
-s3 = boto3.resource('s3')
-s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
-bucket = s3.Bucket(s3_bucket_name)
 
 
 @dataclass
@@ -49,7 +46,9 @@ def handler(raw_event, ctx):
                 ep = get_endpoint_by_name(endpoint_name)
                 delete_endpoint(ep)
             except Exception as e:
-                logger.error(e, exc_info=True)
+                if isinstance(e, NotFoundException):
+                    continue
+                raise e
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
@@ -73,17 +72,12 @@ def delete_endpoint(ep: Endpoint):
 
     endpoint = get_endpoint_in_sagemaker(ep.endpoint_name)
     if endpoint is None:
-        delete_endpoint_item(ep)
+        endpoint_clean(ep)
         return
 
     sagemaker.delete_endpoint(EndpointName=ep.endpoint_name)
-    sagemaker.delete_endpoint_config(EndpointConfigName=ep.endpoint_name)
-    sagemaker.delete_model(ModelName=ep.endpoint_name)
 
-    response = cw_client.delete_alarms(AlarmNames=[f'{ep.endpoint_name}-HasBacklogWithoutCapacity-Alarm'], )
-    logger.info(f"delete_metric_alarm response: {response}")
-
-    delete_endpoint_item(ep)
+    endpoint_clean(ep)
 
 
 @tracer.capture_method
@@ -93,12 +87,3 @@ def get_endpoint_in_sagemaker(endpoint_name):
     except (BotoCoreError, ClientError) as error:
         logger.error(error, exc_info=True)
         return None
-
-
-def delete_endpoint_item(ep: Endpoint):
-    ddb_service.delete_item(
-        table=sagemaker_endpoint_table,
-        keys={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
-    )
-
-    # bucket.objects.filter(Prefix=f"endpoint-{esd_version}-{ep.endpoint_name}").delete()

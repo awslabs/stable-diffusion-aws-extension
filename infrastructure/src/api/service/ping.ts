@@ -36,7 +36,7 @@ export class PingApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        operationName: 'PingResponse',
+        operationName: 'Ping',
         methodResponses: [
           ApiModels.methodResponse(this.responseModel()),
           ApiModels.methodResponses400(),
@@ -78,6 +78,7 @@ export class PingApi {
         schema: JsonSchemaVersion.DRAFT7,
         title: 'PingResponse',
         type: JsonSchemaType.OBJECT,
+        description: 'Response Model for Ping API',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

@@ -10,7 +10,7 @@ import pytest
 import config as config
 from utils.api import Api
 from utils.enums import InferenceStatus, InferenceType
-from utils.helper import upload_with_put, get_inference_job_status, update_oas
+from utils.helper import upload_with_put, get_inference_job_status
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class TestTxt2ImgInferenceAsyncAfterTrainE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):

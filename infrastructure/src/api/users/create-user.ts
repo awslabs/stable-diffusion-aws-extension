@@ -1,11 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_PASSWORD, SCHEMA_USER_ROLES, SCHEMA_USERNAME } from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -44,7 +45,7 @@ export class CreateUserApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
@@ -128,16 +129,6 @@ export class CreateUserApi {
       },
       contentType: 'application/json',
     });
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-user-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
   }
 
   private responseModel() {

@@ -106,7 +106,7 @@ def get_model_name(params):
     model_name = 'not_applied'
 
     try:
-        model_name = params['config_params']['saving_arguments']['output_name']
+        model_name = params['config_params']['output_name']
         if model_name:
             model_name = f"{model_name}.safetensors"
     except Exception as e:

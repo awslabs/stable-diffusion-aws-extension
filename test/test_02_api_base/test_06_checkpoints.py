@@ -4,7 +4,6 @@ import logging
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ class TestCheckpointsApi:
     @classmethod
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -141,3 +140,29 @@ class TestCheckpointsApi:
         resp = self.api.update_checkpoint(checkpoint_id="1111-2222-3333-4444")
 
         assert resp.status_code == 403, resp.dumps()
+
+    def test_10_create_checkpoint_without_username(self):
+        filename = "v1-5-pruned-emaonly.safetensors"
+        checkpoint_type = "Stable-diffusion"
+
+        headers = {
+            "x-api-key": config.api_key,
+        }
+
+        data = {
+            "checkpoint_type": checkpoint_type,
+            "filenames": [
+                {
+                    "filename": filename,
+                    "parts_number": 5
+                }
+            ],
+            "params": {
+                "message": config.ckpt_message,
+                "creator": "bad_username"
+            }
+        }
+
+        resp = self.api.create_checkpoint(headers=headers, data=data)
+
+        assert resp.status_code == 401, resp.dumps()

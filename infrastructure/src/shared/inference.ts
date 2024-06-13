@@ -15,6 +15,7 @@ import { DeleteInferenceJobsApi } from '../api/inferences/delete-inference-jobs'
 import { GetInferenceJobApi } from '../api/inferences/get-inference-job';
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi } from '../api/inferences/start-inference-job';
+import { Effect } from "aws-cdk-lib/aws-iam";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -170,9 +171,18 @@ export class Inference {
     },
     );
 
+    const cwStatement = new iam.PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+            'cloudwatch:PutMetricData',
+        ],
+        resources: ['*'],
+    });
+
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
+    handler.addToRolePolicy(cwStatement);
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(

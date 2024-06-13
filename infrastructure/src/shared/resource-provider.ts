@@ -90,6 +90,7 @@ export class ResourceProvider extends Construct {
         'kms:CreateAlias',
         'kms:DisableKeyRotation',
         'kms:ListAliases',
+        'cloudwatch:PutDashboard',
       ],
       resources: [
         '*',

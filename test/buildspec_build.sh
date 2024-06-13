@@ -14,11 +14,6 @@ echo "export STACK_NAME=$STACK_NAME" >> env.properties
 
 aws cloudformation delete-stack --stack-name "comfy-stack"
 aws cloudformation delete-stack --stack-name "webui-stack"
-#aws cloudformation delete-stack --stack-name "$STACK_NAME"
-
-aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
-aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
-#aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
 
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
@@ -95,6 +90,9 @@ export API_GATEWAY_URL=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] | sele
 export API_GATEWAY_URL_TOKEN=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey=="ApiGatewayUrlToken").OutputValue')
 echo "export API_GATEWAY_URL=$API_GATEWAY_URL" >> env.properties
 echo "export API_GATEWAY_URL_TOKEN=$API_GATEWAY_URL_TOKEN" >> env.properties
+
+aws cloudformation wait stack-delete-complete --stack-name "comfy-stack"
+aws cloudformation wait stack-delete-complete --stack-name "webui-stack"
 
 set -euxo pipefail
 

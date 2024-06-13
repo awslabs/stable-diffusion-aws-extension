@@ -9,6 +9,8 @@ import boto3
 from PIL import Image
 from aws_lambda_powertools import Tracer
 
+from common.util import upload_file_to_s3, record_queue_latency_metrics
+from libs.enums import ServiceType
 from libs.utils import log_json
 
 tracer = Tracer()
@@ -18,16 +20,20 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sns = boto3.client('sns')
 s3_client = boto3.client('s3')
 
-inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 ddb_client = boto3.resource('dynamodb')
-inference_table = ddb_client.Table(inference_table_name)
+inference_table = ddb_client.Table('SDInferenceJobTable')
 
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 
 @tracer.capture_method
-def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name):
-    update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
+def parse_sagemaker_result(sagemaker_out, create_time, inference_id, task_type, endpoint_name):
+    update_inference_job_table(inference_id, 'completeTime', datetime.now().isoformat())
+    record_queue_latency_metrics(create_time=create_time,
+                                 start_time=sagemaker_out['start_time'],
+                                 ep_name=endpoint_name,
+                                 service=ServiceType.SD.value)
+
     try:
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
@@ -40,26 +46,6 @@ def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name
     except Exception as e:
         update_inference_job_table(inference_id, 'status', 'failed')
         raise e
-
-
-@tracer.capture_method
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Add the directory to the object_name
-    if directory:
-        object_name = f"{directory}/{object_name}"
-
-    # Upload the file
-    try:
-        s3_client.upload_file(file_name, bucket, object_name)
-        log_json(f"File {file_name} uploaded to {bucket}/{object_name}")
-    except Exception as e:
-        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
-        return False
-    return True
 
 
 def decode_base64_to_image(encoding):
@@ -89,17 +75,40 @@ def get_bucket_and_key(s3uri):
 
 
 def update_inference_job_table(inference_id, key, value):
-    logger.info(f"Update inference job table with inference id: {inference_id}, key: {key}, value: {value}")
+    logger.info(f"Update job with inference id: {inference_id}, key: {key}, value: {value}")
+    try:
+        inference_table.update_item(
+            Key={
+                "InferenceJobId": inference_id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression="attribute_exists(InferenceJobId)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update Inference job table error: {e}")
+        raise e
 
-    inference_table.update_item(
-        Key={
-            "InferenceJobId": inference_id,
-        },
-        UpdateExpression=f"set #k = :r",
-        ExpressionAttributeNames={'#k': key},
-        ExpressionAttributeValues={':r': value},
-        ReturnValues="UPDATED_NEW"
-    )
+
+def update_table_by_pk(table_name: str, pk: str, id: str, key: str, value):
+    logger.info(f"Update {table_name} with {pk}: {id}, key: {key}, value: {value}")
+    try:
+        ddb_table = ddb_client.Table(table_name)
+        ddb_table.update_item(
+            Key={
+                pk: id,
+            },
+            UpdateExpression=f"set #k = :r",
+            ExpressionAttributeNames={'#k': key},
+            ExpressionAttributeValues={':r': value},
+            ConditionExpression=f"attribute_exists({pk})",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update {table_name} error: {e}")
+        raise e
 
 
 def esi_rembg(sagemaker_out, inference_id, endpoint_name):

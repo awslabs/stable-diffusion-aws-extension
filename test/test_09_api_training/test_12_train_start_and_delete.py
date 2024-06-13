@@ -7,7 +7,6 @@ import pytest
 
 import config as config
 from utils.api import Api
-from utils.helper import update_oas
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 class TestTrainStartDeleteE2E:
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -58,13 +57,9 @@ class TestTrainStartDeleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": "model_name_temp",
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": 'new_train_model_name',
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }
@@ -109,16 +104,12 @@ class TestTrainStartDeleteE2E:
                     "fm_type": "sd_1_5"
                 },
                 "config_params": {
-                    "saving_arguments": {
-                        "output_name": "v1-5-pruned-emaonly",
-                        "save_every_n_epochs": 1
-                    },
-                    "training_arguments": {
-                        "max_train_epochs": 1
-                    }
+                    "output_name": config.train_wd14_model_name,
+                    "save_every_n_epochs": 1,
+                    "max_train_epochs": 1
                 }
             }
         }
 
         resp = self.api.create_training_job(headers=headers, data=payload)
-        assert "v1-5-pruned-emaonly" in resp.json()["message"], resp.dumps()
+        assert config.train_wd14_model_name in resp.json()["message"], resp.dumps()

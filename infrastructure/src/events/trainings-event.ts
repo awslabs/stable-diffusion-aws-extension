@@ -48,6 +48,7 @@ export class SagemakerTrainingEvents {
       actions: [
         'dynamodb:UpdateItem',
         'dynamodb:Scan',
+        'dynamodb:PutItem',
         'dynamodb:GetItem',
       ],
       resources: [
@@ -66,6 +67,7 @@ export class SagemakerTrainingEvents {
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
         'cloudwatch:PutMetricAlarm',
+        'cloudwatch:PutMetricData',
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',
       ],

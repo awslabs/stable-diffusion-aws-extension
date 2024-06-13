@@ -11,19 +11,19 @@ Parameters:
   ApiGatewayUrl:
     Description: API URL
     Type: String
-    MinLength: 1
+    MinLength: "1"
   ApiGatewayUrlToken:
     Description: API Key
     Type: String
-    MinLength: 1
+    MinLength: "1"
   BucketName:
     Description: Bucket Name
     Type: String
-    MinLength: 1
+    MinLength: "1"
   EndpointName:
     Description: Endpoint Name
     Type: String
-    MinLength: 1
+    MinLength: "1"
   keyPairName:
     Description: Name of the key pair to use for the EC2 instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -32,25 +32,55 @@ Parameters:
     Description: EC2 Instance Type of the Comfy to deploy
     Type: String
     AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
       - g5.2xlarge
       - g5.4xlarge
       - g5.8xlarge
     Default: g5.2xlarge
+  ProcessNumber:
+    Description: Number of the Comfy Processes
+    Type: String
+    AllowedValues:
+      - 1
+      - 5
+      - 10
+      - 15
+      - 20
+    Default: 10
+  EsdVersion:
+    Description: Version of the ESD
+    Type: String
+    AllowedValues:
+      - latest
+      - dev
+    Default: latest
+  WorkflowName:
+    Description: Bind Workflow Name
+    Type: String
 
 Mappings:
   RegionToAmiId:
     us-east-1:
-      AMI: ami-0e4cc88070dfcf17b
+      AMI: ami-02a07d31009cc8717
     us-east-2:
-      AMI: ami-0a48cc2a4a0988c70
+      AMI: ami-02a912b010cf774bd
     ap-southeast-1:
-      AMI: ami-09a7fb29eb7375468
+      AMI: ami-06f0228bde7a6dac2
     ap-northeast-1:
-      AMI: ami-0a1f6795aeb907a68
+      AMI: ami-0f9b45ca95cee6386
+    ap-northeast-2:
+      AMI: ami-0aba6dcbc1be4e85e
+    us-west-1:
+      AMI: ami-0ea5aefd1471f67b2
+    us-west-2:
+      AMI: ami-09d4fb52761c3d78d
 
 Resources:
   ComfyVPC:
     Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
@@ -58,6 +88,7 @@ Resources:
 
   ComfySubnet:
     Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       CidrBlock: 10.0.1.0/24
@@ -65,6 +96,7 @@ Resources:
 
   ComfyInstanceRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -80,18 +112,27 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket' ]
-                Resource: [ !Sub 'arn:aws:s3:::${BucketName}/*', !Sub 'arn:aws:s3:::${BucketName}' ]
+                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket', 's3:HeadObject' ]
+                Resource: [ '*' ]
+        - PolicyName: EcrPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ 'ecr:*' ]
+                Resource: [ '*' ]
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Delete
     Properties:
       Path: "/"
       Roles:
-        - Ref: ComfyInstanceRole
+        - !Ref ComfyInstanceRole
 
   ComfySecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       GroupName: !Sub ${AWS::StackName}-sg
@@ -103,7 +144,7 @@ Resources:
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 8188
-          ToPort: 8188
+          ToPort: 8288
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -112,20 +153,24 @@ Resources:
 
   ComfyInternetGateway:
     Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
 
   ComfyVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
       InternetGatewayId: !Ref ComfyInternetGateway
 
   ComfyRouteTable:
     Type: AWS::EC2::RouteTable
+    DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
 
   ComfyRoute:
     Type: AWS::EC2::Route
+    DeletionPolicy: Delete
     Properties:
       RouteTableId: !Ref ComfyRouteTable
       DestinationCidrBlock: 0.0.0.0/0
@@ -133,12 +178,15 @@ Resources:
 
   ComfySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DeletionPolicy: Delete
     Properties:
       SubnetId: !Ref ComfySubnet
       RouteTableId: !Ref ComfyRouteTable
 
   ComfyEC2Instance:
     Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    DependsOn: ComfyInstanceProfile
     Properties:
       InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref ComfyInstanceProfile
@@ -148,7 +196,7 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 1024
-            VolumeType: gp3
+            VolumeType: gp2
       KeyName: !Ref keyPairName
       SecurityGroupIds:
         - !GetAtt ComfySecurityGroup.GroupId
@@ -168,7 +216,11 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          echo "export DISABLE_AUTO_SYNC=true" >> /etc/environment
+          echo "export DISABLE_AWS_PROXY=false" >> /etc/environment
           source /etc/environment
+          
+          sudo systemctl enable docker
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -185,15 +237,24 @@ Resources:
           
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update -y
-          sudo apt install wget python3.10 python3.10-venv python3-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
+          sudo apt --fix-broken install wget python3.10 python3.10-venv python3-dev python3.10-dev python3-pip git libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
           sudo python3 -m venv venv
           source venv/bin/activate
           
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | bash;
+          sudo curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_comfy.sh" | sudo bash;
           sudo rm /ComfyUI/custom_nodes/comfy_sagemaker_proxy.py
-          sudo chmod 777 -R /ComfyUI
+          
+          sudo mkdir -p /ComfyUI/models/vae/
+          sudo wget -O /ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors
+          
+          sudo mkdir -p /ComfyUI/models/checkpoints/
+          sudo wget -O /ComfyUI/models/checkpoints/majicmixRealistic_v7.safetensors https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors
+          
+          sudo mkdir -p /ComfyUI/models/animatediff_models/
+          sudo wget -O /ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt
+          sudo chmod -R 777 /ComfyUI
           
           cat > comfy.service <<EOF
           [Unit]
@@ -203,7 +264,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/ComfyUI
-          ExecStart=/venv/bin/python3 main.py --listen
+          ExecStart=sudo /venv/bin/python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
@@ -219,30 +280,6 @@ Resources:
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
 
-#          cat > comfy_upload.service <<EOF
-#          [Unit]
-#          Description=Comfy Upload Service
-#          After=network.target
-#          StartLimitIntervalSec=0
-#
-#          [Service]
-#          WorkingDirectory=/ComfyUI
-#          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
-#          Type=simple
-#          Restart=always
-#          RestartSec=3
-#          User=root
-#          StartLimitAction=reboot
-#
-#          [Install]
-#          WantedBy=default.target
-#
-#          EOF
-#          sudo mv comfy_upload.service /etc/systemd/system
-#          sudo chown root:root /etc/systemd/system/comfy_upload.service
-#          sudo systemctl enable comfy_upload.service
-#          sudo systemctl start comfy_upload.service
-
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
           # sudo journalctl -u comfy_upload -f
@@ -251,8 +288,10 @@ Resources:
 
   ComfyEIP:
     Type: AWS::EC2::EIP
+    DeletionPolicy: Delete
   ComfyEIPAssociation:
     Type: AWS::EC2::EIPAssociation
+    DeletionPolicy: Delete
     Properties:
       AllocationId: !GetAtt ComfyEIP.AllocationId
       InstanceId: !Ref ComfyEC2Instance

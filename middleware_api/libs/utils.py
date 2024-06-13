@@ -11,20 +11,90 @@ from botocore.exceptions import ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
 from common.response import unauthorized, forbidden, not_found, bad_request
-from libs.data_types import PARTITION_KEYS, User, Role, Endpoint
+from libs.data_types import PARTITION_KEYS, User, Role, Endpoint, Workflow
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 user_table = os.environ.get('MULTI_USER_TABLE')
-
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 encode_type = "utf-8"
-
+s3 = boto3.client('s3')
 ddb = boto3.resource('dynamodb')
 endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
+dynamodb = boto3.client('dynamodb')
+
+
+@tracer.capture_method
+def check_file_exists(key):
+    try:
+        s3.head_object(Bucket=s3_bucket_name, Key=key)
+        return True
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise e
+
+
+@tracer.capture_method
+def update_table_by_pk(table: str, pk_name: str, pk_value: str, key: str, value):
+    logger.info(f"Update {table} with {pk_name}: {id}, key: {key}, value: {value}")
+    try:
+        ddb_client = boto3.resource('dynamodb')
+        ddb_table = ddb_client.Table(table)
+        ddb_table.update_item(
+            Key={
+                pk_name: pk_value,
+            },
+            UpdateExpression=f"set #k = :v",
+            ExpressionAttributeNames={'#pk_name': pk_name, '#k': key},
+            ExpressionAttributeValues={':v': value},
+            ConditionExpression=f"attribute_exists(#pk_name)",
+            ReturnValues="UPDATED_NEW"
+        )
+    except Exception as e:
+        logger.error(f"Update {table} error: {e}")
+        raise e
+
+
+def get_endpoint_name_by_workflow_name(name: str, endpoint_type: str = 'async'):
+    return f"comfy-{endpoint_type}-{name}"
+
+
+@tracer.capture_method
+def get_workflow_by_name(workflow_name: str):
+    tracer.put_annotation(key="workflow_name", value=workflow_name)
+
+    table_name = os.environ.get('WORKFLOWS_TABLE')
+
+    response = dynamodb.get_item(
+        TableName=table_name,
+        Key={
+            'name': {'S': workflow_name}
+        }
+    )
+    logger.info(response)
+
+    tracer.put_metadata(key="workflow_name", value=response)
+
+    item = response.get('Item', None)
+
+    if item is None:
+        raise NotFoundException(f'workflow {workflow_name} not found')
+
+    return Workflow(
+        name=item['name']['S'],
+        status=item['status']['S'],
+        s3_location=item['s3_location']['S'],
+        image_uri=item['image_uri']['S'],
+        payload_json=item['payload_json']['S'],
+        create_time=item['create_time']['S'],
+    )
 
 
 @tracer.capture_method

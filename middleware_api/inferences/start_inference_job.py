@@ -13,6 +13,7 @@ from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import accepted
+from common.util import record_latency_metrics, record_count_metrics
 from get_inference_job import get_infer_data
 from inference_libs import parse_sagemaker_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationRequest
@@ -72,6 +73,7 @@ def inference_start(job: InferenceJob, username):
     payload = InvocationRequest(
         id=job.InferenceJobId,
         task=job.taskType,
+        workflow=job.workflow,
         username=username,
         models=models,
         param_s3=job.params['input_body_s3'],
@@ -81,27 +83,40 @@ def inference_start(job: InferenceJob, username):
     log_json("inference job", job.__dict__)
     log_json("inference invoke payload", payload.__dict__)
 
-    update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
-
     if job.inference_type == EndpointType.RealTime.value:
+        update_inference_job_table(job.InferenceJobId, 'startTime', datetime.now().isoformat())
         return real_time_inference(payload, job, endpoint_name)
 
     return async_inference(payload, job, endpoint_name)
 
 
 @tracer.capture_method
-def real_time_inference(payload: InvocationRequest, job: InferenceJob, endpoint_name):
+def real_time_inference(payload: InvocationRequest, job: InferenceJob, ep_name: str):
     tracer.put_annotation(key="InferenceJobId", value=job.InferenceJobId)
-    sagemaker_out = predictor_real_time_predict(endpoint_name=endpoint_name,
+    sagemaker_out = predictor_real_time_predict(endpoint_name=ep_name,
                                                 data=payload.__dict__,
                                                 inference_id=job.InferenceJobId,
                                                 )
 
     if 'error' in sagemaker_out:
+        record_count_metrics(ep_name=ep_name,
+                             metric_name='InferenceFailed',
+                             workflow=job.workflow,
+                             )
         update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
         raise Exception(str(sagemaker_out))
 
-    parse_sagemaker_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
+    parse_sagemaker_result(sagemaker_out, job.createTime, job.InferenceJobId, job.taskType, ep_name)
+
+    record_count_metrics(ep_name=ep_name,
+                         metric_name='InferenceSucceed',
+                         workflow=job.workflow,
+                         )
+    record_latency_metrics(start_time=sagemaker_out['start_time'],
+                           ep_name=ep_name,
+                           metric_name='InferenceLatency',
+                           workflow=job.workflow,
+                           )
 
     return get_infer_data(job.InferenceJobId)
 

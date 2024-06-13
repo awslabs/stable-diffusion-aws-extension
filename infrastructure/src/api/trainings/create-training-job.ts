@@ -1,13 +1,22 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_MESSAGE,
+  SCHEMA_TRAIN_CONFIG_PARAMS,
+  SCHEMA_TRAIN_CREATED,
+  SCHEMA_TRAIN_ID,
+  SCHEMA_TRAIN_STATUS,
+  SCHEMA_TRAINING_TYPE
+} from '../../shared/schema';
+import { ApiValidators } from '../../shared/validator';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -47,7 +56,7 @@ export class CreateTrainingJobApi {
 
     this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
+      requestValidator: ApiValidators.bodyValidator,
       requestModels: {
         $default: this.createRequestBodyModel(),
       },
@@ -96,30 +105,7 @@ export class CreateTrainingJobApi {
                     properties: {
                       config_params: {
                         type: JsonSchemaType.OBJECT,
-                        properties: {
-                          saving_arguments: {
-                            type: JsonSchemaType.OBJECT,
-                            properties: {
-                              output_name: {
-                                type: JsonSchemaType.STRING,
-                              },
-                              save_every_n_epochs: {
-                                type: JsonSchemaType.STRING,
-                              },
-                            },
-                            required: ['output_name', 'save_every_n_epochs'],
-                          },
-                          training_arguments: {
-                            type: JsonSchemaType.OBJECT,
-                            properties: {
-                              max_train_epochs: {
-                                type: JsonSchemaType.STRING,
-                              },
-                            },
-                            required: ['max_train_epochs'],
-                          },
-                        },
-                        required: ['saving_arguments', 'training_arguments'],
+                        additionalProperties: true,
                       },
                       training_params: {
                         type: JsonSchemaType.OBJECT,
@@ -337,40 +323,7 @@ export class CreateTrainingJobApi {
                   'fm_type',
                 ],
               },
-              config_params: {
-                type: JsonSchemaType.OBJECT,
-                properties: {
-                  saving_arguments: {
-                    type: JsonSchemaType.OBJECT,
-                    description: 'Saving arguments',
-                    properties: {
-                      output_name: {
-                        type: JsonSchemaType.STRING,
-                        description: 'Output name',
-                      },
-                      save_every_n_epochs: {
-                        type: JsonSchemaType.INTEGER,
-                        description: 'Save every n epochs',
-                      },
-                    },
-                    required: ['output_name', 'save_every_n_epochs'],
-                  },
-                  training_arguments: {
-                    type: JsonSchemaType.OBJECT,
-                    description: 'Training arguments',
-                    properties: {
-                      max_train_epochs: {
-                        type: JsonSchemaType.INTEGER,
-                      },
-                    },
-                    required: ['max_train_epochs'],
-                  },
-                },
-                required: [
-                  'saving_arguments',
-                  'training_arguments',
-                ],
-              },
+              config_params: SCHEMA_TRAIN_CONFIG_PARAMS,
             },
             required: [
               'training_params',
@@ -385,16 +338,6 @@ export class CreateTrainingJobApi {
       },
       contentType: 'application/json',
     });
-  }
-
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.id}-create-train-validator`,
-      {
-        restApi: this.props.router.api,
-        validateRequestBody: true,
-      });
   }
 
   private apiLambda() {

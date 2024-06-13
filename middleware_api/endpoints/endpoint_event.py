@@ -6,10 +6,13 @@ from datetime import datetime
 import boto3
 from aws_lambda_powertools import Tracer
 
-from common.ddb_service.client import DynamoDbUtilsService
+from common.util import record_seconds_metrics, endpoint_clean
+from inferences.inference_libs import update_table_by_pk
 from libs.data_types import Endpoint
-from libs.enums import EndpointStatus, EndpointType
+from libs.enums import EndpointStatus, EndpointType, ServiceType
 from libs.utils import get_endpoint_by_name
+
+lambda_client = boto3.client('lambda')
 
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
@@ -20,9 +23,14 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 autoscaling_client = boto3.client('application-autoscaling')
 cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
-ddb_service = DynamoDbUtilsService(logger=logger)
 
+esd_version = os.environ.get("ESD_VERSION")
 cool_down_period = 15 * 60  # 15 minutes
+
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(s3_bucket_name)
+aws_region = os.environ.get('AWS_REGION')
 
 
 # lambda: handle sagemaker events
@@ -31,6 +39,7 @@ def handler(event, context):
     logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
+    current_time = datetime.now().isoformat()
 
     try:
         endpoint = get_endpoint_by_name(endpoint_name)
@@ -39,12 +48,20 @@ def handler(event, context):
 
         update_endpoint_field(endpoint, 'endpoint_status', business_status)
 
+        if business_status == EndpointStatus.UPDATING.value:
+            update_endpoint_field(endpoint, 'startTime', current_time)
+
         if business_status == EndpointStatus.IN_SERVICE.value:
-            # start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
-            # deploy_seconds = int((datetime.now() - start_time).total_seconds())
-            # update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', deploy_seconds)
-            current_time = str(datetime.now())
             update_endpoint_field(endpoint, 'endTime', current_time)
+
+            if endpoint.service_type == 'sd':
+                service_type = ServiceType.SD.value
+            else:
+                service_type = ServiceType.Comfy.value
+
+            record_seconds_metrics(start_time=endpoint.startTime,
+                                   metric_name='EndpointReadySeconds',
+                                   service=service_type)
 
             # if it is the first time in service
             if not endpoint.endTime:
@@ -58,30 +75,15 @@ def handler(event, context):
                 instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
                 update_endpoint_field(endpoint, 'current_instance_count', instance_count)
         else:
-            delete_ep_model_config(endpoint_name)
-            ddb_service.delete_item(sagemaker_endpoint_table,
-                                    keys={'EndpointDeploymentJobId': endpoint.EndpointDeploymentJobId})
+            endpoint_clean(endpoint)
 
         if business_status == EndpointStatus.FAILED.value:
             update_endpoint_field(endpoint, 'error', event['FailureReason'])
 
     except Exception as e:
-        delete_ep_model_config(endpoint_name)
         logger.error(e, exc_info=True)
 
     return {'statusCode': 200}
-
-
-def delete_ep_model_config(endpoint_name: str):
-    try:
-        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_name)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-
-    try:
-        sagemaker.delete_model(ModelName=endpoint_name)
-    except Exception as e:
-        logger.error(e, exc_info=True)
 
 
 def check_and_enable_autoscaling(ep: Endpoint, variant_name):
@@ -298,11 +300,11 @@ def enable_autoscaling_real_time(ep: Endpoint, variant_name):
 
 
 def update_endpoint_field(ep: Endpoint, field_name, field_value):
-    logger.info(f"Updating DynamoDB {field_name} to {field_value} for: {ep.EndpointDeploymentJobId}")
-    ddb_service.update_item(
-        table=sagemaker_endpoint_table,
-        key={'EndpointDeploymentJobId': ep.EndpointDeploymentJobId},
-        field_name=field_name,
+    update_table_by_pk(
+        table_name=sagemaker_endpoint_table,
+        pk='EndpointDeploymentJobId',
+        id=ep.EndpointDeploymentJobId,
+        key=field_name,
         value=field_value
     )
 

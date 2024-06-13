@@ -38,15 +38,15 @@ class Api:
 
         dump_string = ""
         if headers:
-            dump_string += f"\nRequest headers: {get_json(headers)}"
+            dump_string += f"\nRequest headers: {self.get_json(headers)}"
         if data:
-            dump_string += f"\nRequest data: {get_json(data)}"
+            dump_string += f"\nRequest data: {self.get_json(data)}"
         if params:
-            dump_string += f"\nRequest params: {get_json(params)}"
+            dump_string += f"\nRequest params: {self.get_json(params)}"
         if resp.status_code:
             dump_string += f"\nResponse status_code: {resp.status_code}"
         if resp.text:
-            dump_string += f"\nResponse body: {get_json(resp.text)}"
+            dump_string += f"\nResponse body: {self.get_json(resp.text)}"
 
         resp.dumps = lambda: logger.info(
             f"\n----------------------------"
@@ -56,7 +56,7 @@ class Api:
         )
 
         if operation_id:
-            validate_response(self, resp, operation_id)
+            self.validate_response(resp, operation_id)
 
         return resp
 
@@ -64,7 +64,7 @@ class Api:
         return self.req(
             "GET",
             "ping",
-            operation_id='PingResponse',
+            operation_id='Ping',
             headers=headers
         )
 
@@ -89,6 +89,15 @@ class Api:
             "endpoints",
             headers=headers,
             operation_id='DeleteEndpoints',
+            data=data
+        )
+
+    def delete_workflows(self, headers=None, data=None):
+        return self.req(
+            "DELETE",
+            "workflows",
+            headers=headers,
+            operation_id='DeleteWorkflows',
             data=data
         )
 
@@ -236,12 +245,38 @@ class Api:
             params=params
         )
 
+    def list_workflows(self, headers=None, params=None):
+        return self.req(
+            "GET",
+            "workflows",
+            headers=headers,
+            operation_id='ListWorkflows',
+            params=params
+        )
+
+    def get_workflow(self, name: str, headers=None):
+        return self.req(
+            "GET",
+            f"workflows/{name}",
+            headers=headers,
+            operation_id='GetWorkflow',
+        )
+
     def create_endpoint(self, headers=None, data=None):
         return self.req(
             "POST",
             "endpoints",
             headers=headers,
             operation_id='CreateEndpoint',
+            data=data
+        )
+
+    def create_workflow(self, headers=None, data=None):
+        return self.req(
+            "POST",
+            "workflows",
+            headers=headers,
+            operation_id='CreateWorkflow',
             data=data
         )
 
@@ -296,6 +331,14 @@ class Api:
             headers=headers
         )
 
+    def get_execute_job_logs(self, prompt_id: str, headers=None):
+        return self.req(
+            "GET",
+            f"executes/{prompt_id}/logs",
+            operation_id='GetExecuteLogs',
+            headers=headers
+        )
+
     def get_inference_job(self, job_id: str, headers=None):
         return self.req(
             "GET",
@@ -339,6 +382,15 @@ class Api:
             data=data
         )
 
+    def crop_dataset(self, dataset_id: str, headers=None, data=None):
+        return self.req(
+            "POST",
+            f"datasets/{dataset_id}/crop",
+            headers=headers,
+            operation_id='CropDataset',
+            data=data
+        )
+
     def create_training_job(self, headers=None, data=None):
         return self.req(
             "POST",
@@ -366,60 +418,73 @@ class Api:
             params=params
         )
 
+    def validate_response(self, resp: requests.Response, operation_id: str):
+        if resp.status_code != 204:
+            with open(f"response.json", "w") as s:
+                s.write(json.dumps(resp.json(), indent=4))
 
-def get_schema_by_id_and_code(api: Api, operation_id: str, code: int):
-    code = str(code)
+        validate_schema = self.get_schema_by_id_and_code(operation_id, resp)
 
-    responses = None
-    for path, methods in api.schema['paths'].items():
-        for method, op in methods.items():
-            if op.get('operationId') == operation_id:
-                responses = op['responses']
-                break
+        if resp.status_code == 204:
+            return
 
-    if responses is None:
-        raise Exception(f'{operation_id} not found')
+        try:
+            validate(instance=resp.json(), schema=validate_schema)
+        except Exception as e:
+            print(f"\n**********************************************")
+            with open(f"schema.json", "w") as s:
+                s.write(json.dumps(validate_schema, indent=4))
+            print(f"\n**********************************************")
+            print(operation_id)
+            print(f"\n**********************************************")
+            raise e
 
-    if f"{code}" not in responses:
-        raise Exception(f'{code} not found in responses of {operation_id}')
+    def get_schema_by_id_and_code(self, operation_id: str, resp: requests.Response):
+        code = resp.status_code
 
-    ref = responses[f"{code}"]['content']['application/json']['schema']['$ref']
-    model_name = ref.split('/')[-1]
-    json_schema = api.schema['components']['schemas'][model_name]
+        if not self.schema:
+            raise Exception('api.schema is empty')
 
-    return json_schema
+        code = str(code)
 
+        responses = None
+        for path, methods in self.schema['paths'].items():
+            for method, op in methods.items():
+                if op.get('operationId') == operation_id:
+                    responses = op['responses']
+                    break
 
-def validate_response(api: Api, resp: requests.Response, operation_id: str):
-    if resp.status_code != 204:
-        with open(f"response.json", "w") as s:
-            s.write(json.dumps(resp.json(), indent=4))
+        if responses is None:
+            raise Exception(f'{operation_id} not found')
 
-    validate_schema = get_schema_by_id_and_code(api, operation_id, resp.status_code)
+        if f"{code}" not in responses:
+            logger.info(f"responses: {resp.json()}")
+            raise Exception(f'{code} not found in responses of {operation_id}')
 
-    if resp.status_code == 204:
-        return
+        ref = responses[f"{code}"]['content']['application/json']['schema']['$ref']
+        model_name = ref.split('/')[-1]
+        json_schema = self.schema['components']['schemas'][model_name]
 
-    try:
-        validate(instance=resp.json(), schema=validate_schema)
-    except Exception as e:
-        print(f"\n**********************************************")
-        with open(f"schema.json", "w") as s:
-            s.write(json.dumps(validate_schema, indent=4))
-        print(f"\n**********************************************")
-        print(operation_id)
-        print(f"\n**********************************************")
-        raise e
+        return json_schema
 
+    def feat_oas_schema(self):
+        headers = {'x-api-key': self.config.api_key}
+        resp = self.doc(headers)
+        assert resp.status_code == 200, resp.dumps()
 
-def get_json(data):
-    try:
-        # if data is string
-        if isinstance(data, str):
-            return json.dumps(json.loads(data), indent=4)
-        # if data is object
-        if isinstance(data, dict):
-            json.dumps(dict(data), indent=4)
-        return str(data)
-    except TypeError:
-        return str(data)
+        self.schema = resp.json()
+
+        with open('oas.json', 'w') as f:
+            f.write(json.dumps(resp.json(), indent=4))
+
+    def get_json(self, data):
+        try:
+            # if data is string
+            if isinstance(data, str):
+                return json.dumps(json.loads(data), indent=4)
+            # if data is object
+            if isinstance(data, dict):
+                json.dumps(dict(data), indent=4)
+            return str(data)
+        except TypeError:
+            return str(data)

@@ -11,6 +11,7 @@ import { CreateEndpointApi } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi } from '../api/endpoints/list-endpoints';
 import { SagemakerEndpointEvents } from '../events/endpoints-event';
+import {EndpointsCloudwatchEvents} from "../events/cloudwatch-event";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -29,6 +30,7 @@ export interface EndpointStackProps extends StackProps {
   snsTopic: aws_sns.Topic;
   EndpointDeploymentJobTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
+  workflowsTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   queue: aws_sqs.Queue;
@@ -61,11 +63,19 @@ export class EndpointStack {
       },
     );
 
+      const endpointsCloudwatchEvents = new EndpointsCloudwatchEvents(
+          scope, 'EndpointsCloudwatchEvents', {
+              commonLayer: props.commonLayer,
+              endpointDeploymentTable: props.EndpointDeploymentJobTable,
+          },
+      );
+
     new SagemakerEndpointEvents(
       scope, 'EndpointEvents', {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        cloudwatchLambda: endpointsCloudwatchEvents.lambda,
       },
     );
 
@@ -75,6 +85,7 @@ export class EndpointStack {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        workflowsTable: props.workflowsTable,
         syncTable: props.syncTable,
         instanceMonitorTable: props.instanceMonitorTable,
         httpMethod: 'POST',

@@ -59,7 +59,7 @@
 
 
 ### 步骤2：配置 API URL 和 API Token
-堆栈创建成功后，您可以参考[这里](../user-guide/multi-user.md)进行后续配置工作。
+堆栈创建成功后，您可以参考[这里](../user-guide/webUI/multi-user.md)进行后续配置工作。
 
 
 <!-- 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。

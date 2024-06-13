@@ -1,1 +1,5 @@
-The API is open to the public network by default. To protect it from being accessed by the public network, access control can be achieved through [Resource Policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-resource-policies.html){:target="_blank"}.
+The API is open to the public network and the type is `REGIONAL` by default. 
+
+If you want to restrict access to the API, you can set `ApiEndpointType` to `PRIVATE`.
+
+You can link VpcEndpoint to the API by setting `VpcEndpointIds` to the VPC endpoint ID.

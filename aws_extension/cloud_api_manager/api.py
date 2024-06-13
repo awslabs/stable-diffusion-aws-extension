@@ -293,6 +293,14 @@ class Api:
             data=data
         )
 
+    def crop_dataset(self, dataset_name: str, headers=None, data=None):
+        return self.req(
+            "POST",
+            f"datasets/{dataset_name}/crop",
+            headers=headers,
+            data=data
+        )
+
     def create_model(self, headers=None, data=None):
         return self.req(
             "POST",

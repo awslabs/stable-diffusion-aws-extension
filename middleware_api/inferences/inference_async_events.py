@@ -4,8 +4,9 @@ import os
 
 import boto3
 from aws_lambda_powertools import Tracer
-from common.sns_util import send_message_to_sns
 
+from common.sns_util import send_message_to_sns
+from common.util import record_latency_metrics, record_count_metrics
 from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job
 from start_inference_job import update_inference_job_table
 
@@ -32,15 +33,26 @@ def handler(event, context):
 
     invocation_status = message["invocationStatus"]
     inference_id = message["inferenceId"]
+    job = get_inference_job(inference_id)
+
+    # Get the task type
+    task_type = job.get('taskType', 'txt2img')
+    workflow = job.get('workflow', None)
+    create_time = job.get('createTime')
+
+    endpoint_name = message["requestParameters"]["endpointName"]
 
     if invocation_status != "Completed":
         update_inference_job_table(inference_id, 'status', 'failed')
         update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         print(f"Not complete invocation!")
         send_message_to_sns(message, SNS_TOPIC)
+        record_count_metrics(ep_name=endpoint_name,
+                             metric_name='InferenceFailed',
+                             workflow=workflow
+                             )
         return message
 
-    endpoint_name = message["requestParameters"]["endpointName"]
     output_location = message["responseParameters"]["outputLocation"]
     bucket, key = get_bucket_and_key(output_location)
     obj = s3_resource.Object(bucket, key)
@@ -59,8 +71,13 @@ def handler(event, context):
         send_message_to_sns(message_json, SNS_TOPIC)
         raise ValueError("body contains invalid JSON")
 
-    # Get the task type
-    job = get_inference_job(inference_id)
-    task_type = job.get('taskType', 'txt2img')
+    parse_sagemaker_result(sagemaker_out, create_time, inference_id, task_type, endpoint_name)
 
-    parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name)
+    record_count_metrics(ep_name=endpoint_name,
+                         metric_name='InferenceSucceed',
+                         workflow=workflow
+                         )
+    record_latency_metrics(start_time=sagemaker_out['start_time'],
+                           ep_name=endpoint_name,
+                           workflow=workflow,
+                           metric_name='InferenceLatency')

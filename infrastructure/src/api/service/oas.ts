@@ -50,6 +50,7 @@ export class OasApi {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
+        description: 'Response Model for OAS',
         additionalProperties: true,
       },
       contentType: 'application/json',

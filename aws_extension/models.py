@@ -3,6 +3,7 @@ from typing import Optional
 
 
 class InvocationsRequest(BaseModel):
+    id: str
     task: str
     username: Optional[str]
     # checkpoint_info:Optional[dict]
@@ -16,6 +17,7 @@ class InvocationsRequest(BaseModel):
     merge_checkpoint_payload: Optional[dict]
     param_s3: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
     port: Optional[str] = "8080"
 
 

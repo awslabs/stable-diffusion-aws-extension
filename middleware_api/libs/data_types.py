@@ -46,6 +46,8 @@ class CheckPoint:
     version: str = 'v1.0'  # todo: this is for the future
     checkpoint_names: Optional[list[str]] = None  # the actual checkpoint file names
     params: Optional[dict[str, Any]] = None
+    source_path: Optional[str] = None
+    target_path: Optional[str] = None
 
     def __post_init__(self):
         if type(self.checkpoint_status) == str:
@@ -57,17 +59,18 @@ class TrainJob:
     id: str
     timestamp: float
     model_id: str
-    checkpoint_id: str
     train_type: str
     job_status: TrainJobStatus
     input_s3_location: str
     sagemaker_train_name: Optional[str] = ''
-    sagemaker_sfn_arn: Optional[str] = ''
+    ckpt_type: Optional[str] = ''
+    base_key: Optional[str] = ''
     params: Optional[dict[str, Any]] = None
     allowed_roles_or_users: Optional[list[str]] = None
-
-    # { 'model': 'model.tar', 'data1': 'data1.tar' }
-    # base s3: s3://bucket/Stable-diffusion/123-123-0123/
+    # todo will remove
+    checkpoint_id: str = None
+    sagemaker_sfn_arn: Optional[str] = None
+    logs: Optional[List[str]] = None
 
     def __post_init__(self):
         if type(self.job_status) == str:
@@ -153,7 +156,7 @@ class InferenceJob:
     owner_group_or_role: Optional[List[str]] = None
     # todo will delete
     inference_info_name: Optional[Any] = None
-    startTime: Optional[Any] = None
+    startTime: Optional[Any] = ''
     createTime: Optional[Any] = None
     image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
@@ -161,6 +164,7 @@ class InferenceJob:
     params: Optional[dict[str, Any]] = None
     inference_type: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None
 
 
 @dataclass
@@ -183,6 +187,17 @@ class Endpoint:
     service_type: str = ""
 
 
+@dataclass
+class Workflow:
+    name: str
+    s3_location: str
+    image_uri: str
+    status: str
+    payload_json: str = ""
+    size: str = ""
+    create_time: Optional[Any] = None
+
+
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
 class InvocationRequest:
@@ -192,3 +207,4 @@ class InvocationRequest:
     models: Optional[dict]
     param_s3: Optional[str] = None
     payload_string: Optional[str] = None
+    workflow: Optional[str] = None

@@ -5,7 +5,7 @@ from time import sleep
 
 import config as config
 from utils.api import Api
-from utils.helper import delete_sagemaker_endpoint, get_endpoint_status, update_oas
+from utils.helper import delete_sagemaker_endpoint, get_endpoint_status
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class TestEndpointCreateE2E:
 
     def setup_class(self):
         self.api = Api(config)
-        update_oas(self.api)
+        self.api.feat_oas_schema()
 
     @classmethod
     def teardown_class(self):
@@ -145,7 +145,7 @@ class TestEndpointCreateE2E:
         resp = self.api.create_endpoint(headers=headers, data=data)
         assert "Cannot create already existing model" in resp.json()["message"]
 
-    def test_3_create_confy_endpoint_async(self):
+    def test_3_create_comfy_endpoint_async(self):
         headers = {
             "x-api-key": config.api_key,
             "username": config.username
