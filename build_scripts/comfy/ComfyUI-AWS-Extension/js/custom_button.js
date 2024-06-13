@@ -364,12 +364,13 @@ async function handleDeleteButton() {
                     body: JSON.stringify(target)
                 });
                 const result = await response.json();
-                if (!result.result) {
+                if (result.result) {
+                    selectedItem.remove();
+                    selectedItem = null;
+                } else {
                     handleUnlockScreen();
                     alert(result.message);
                 }
-                selectedItem.remove();
-                selectedItem = null;
             } catch (exception) {
                 console.error('Delete error:', exception);
                 alert(errorMessage);
