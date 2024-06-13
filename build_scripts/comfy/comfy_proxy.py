@@ -980,6 +980,7 @@ if is_on_ec2:
                               f'--exclude="*__pycache__*" '
                               f'--exclude="*/ComfyUI/input/*" '
                               f'--exclude="*/ComfyUI/output/*" '
+                              f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
                               f'"{source_path}/*" '
                               f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
 
