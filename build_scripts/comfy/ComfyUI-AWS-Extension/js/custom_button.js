@@ -563,8 +563,6 @@ function handleUnlockScreen() {
     if (lockCanvas != null) {
         lockCanvas.close();
         localStorage.setItem("ui_lock_status", "unlocked");
-        // reload workflow list when unlock
-        handleLoadButton();
     }
 }
 
