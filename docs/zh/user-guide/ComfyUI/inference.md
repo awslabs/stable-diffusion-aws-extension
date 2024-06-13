@@ -3,8 +3,9 @@
 在成功部署解决方案后，您可以打开部署成功的堆栈所提供的**ComfyUI**原生页面，在工作流的调试、发布和推理，总结步骤如下：
 
 1. 在本地（虚拟机EC2）上进行新工作流的调试，安装缺失的节点并上传所需的推理模型，并能够成功在本地（虚拟机EC2）加载并推理成功。
-2. 发布该工作流为模版。
-3. 在ComfyUI推理页面，选择已发布模版，按需修改推理词、推理模型并推理图片/视频。
+2. 在发布该工作流为模版。
+3. 创建工作流所需endpoint 
+4. 在ComfyUI推理页面，选择已发布模版，按需修改推理词、推理模型并推理图片/视频。
 
 
 
@@ -18,15 +19,12 @@
 3. 稍作等待，即可看到新弹出的、EC2链接页面。按需输入代码，即可完成各类操作。常用命令如下：
 
 ```
-sudo journalctl -u comfy -f  用于实时查看comfy运行日志
+tail -f /var/log/cloud-init-output.log 用于实时查看ec2启动Comfy过程初始日志
+sudo journalctl -u comfy -f 用于实时查看comfy运行日志
+tail -f /root/stable-diffusion-aws-extension/container/*.log 用于查看comfy运行容器所有日志
 sudo journalctl -u comfy --no-pager -n 200 用于查看comfy运行日志最后200条
-sudo systemctl start comfy.service 启动comfy
-sudo systemctl restart comfy.service 重启comfy
-sudo systemctl stop comfy.service 停止comfy
+docker images -q | xargs docker rmi -f
 ```
-
-更多其他关于EC2环境变量的设置，可以参考[这里](../../deployment/deployment_comfyui.md)中的“其他环境变量设置”子章节部分。
-
 
 ## 工作流管理
 ### 工作流的调试
@@ -46,7 +44,7 @@ sudo systemctl stop comfy.service 停止comfy
 ### 工作流的发布
 待工作流在本地（虚拟机EC2）已经可以成功推理图片/视频后，可以快速跟随以下步骤，将调试好的工作流发布成为模版，便于后续稳定、便利的调用推理。
 
-1. 点击右侧导航栏中的**Release**。
+1. 点击右侧导航栏中的**New Workflow** 或 右侧导航工作流列表模块上方加号。
 2. 在弹框中，填入待发布模版的名字，点击**确定**。
 
     !!! tip "贴士"
@@ -54,10 +52,15 @@ sudo systemctl stop comfy.service 停止comfy
 
 3. 工作流发布过程中，ComfyUI前端不可以有更新操作。在发布完成后会在前端有弹框提示发布完成。
 
+### 创建工作流的推理端点
+待工作流发布完成以后，还需要创建推理端点来依据工作流进行云端推理。
+1. 需要通过api的方式调用创建，可以参考[这里](../../deployment/deployment_comfyui.md)中的“部署新的Amazon SageMaker推理节点”子章节部分。
+2. 待推理端点创建完成后，且为InService的状态后，已发布的工作流便处于可推理的状态。
+
 ### 基于已发布工作流的推理
 在ComfyUI的推理页面，可以简单通过以下步骤完成基于模版的推理。
 
-1. 打开ComfyUI的推理页面，在右侧导航栏选择一个已发布的模版。
+1. 打开ComfyUI的推理页面，在右侧导航栏选择一个已发布的模版。如果是调试环境，还需要选中右侧导航栏中“Prompt on AWS”复选框。
 2. ComfyUI页面即会自动渲染该模版的工作流，按需调整参数，并点击**添加提示词队列（Queue Prompt）**，提交推理任务。
 3. 当推理任务完成后，生成结果会自动展示在页面。
 
