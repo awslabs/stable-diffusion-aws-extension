@@ -1112,7 +1112,7 @@ if is_on_ec2:
             }
             response = requests.delete(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             resp = response.json()
-            if response.status_code != 200:
+            if response.status_code != 202:
                 return web.Response(status=200,
                                     content_type='application/json',
                                     body=json.dumps({"result": False, "message": resp['message']}))
