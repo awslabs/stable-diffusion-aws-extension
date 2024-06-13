@@ -1110,10 +1110,14 @@ if is_on_ec2:
             data = {
                 "workflow_name_list": [name],
             }
-            get_response = requests.delete(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
-            response = get_response.json()
+            response = requests.delete(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+            resp = response.json()
+            if response.status_code != 200:
+                return web.Response(status=200,
+                                    content_type='application/json',
+                                    body=json.dumps({"result": False, "message": resp['message']}))
+
             os.system(f"rm -rf /container/workflows/{name}")
-            print(response)
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "message": "Workflow will be deleted soon"}))
