@@ -17,7 +17,7 @@
 ## デプロイの手順
 
 ### ステップ 1 - Linux: Stable Diffusion WebUI を更新する (Linux)
-1. [リンク](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)から CloudFormation テンプレートをダウンロードする
+1. [リンク](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml)から CloudFormation テンプレートをダウンロードする
 2. [AWS マネジメントコンソール](https://console.aws.amazon.com/)にサインインし、[CloudFormation コンソール](https://console.aws.amazon.com/cloudformation/)に移動する
 3. [スタック]ページで、[スタックの作成]を選択し、[新しいリソース(標準)の作成]を選択する
 4. [テンプレートの指定]ページで、[テンプレートが準備済み]を選択し、[テンプレートファイルのアップロード]を選択し、ステップ1でダウンロードしたテンプレートを参照して選択し、[次へ]を選択する
