@@ -26,7 +26,7 @@ Parameters:
     Description: The number of inference ports
     Type: Number
     MinValue: 1
-    MaxValue: 15
+    MaxValue: 5
     Default: 1
 
 Mappings:
