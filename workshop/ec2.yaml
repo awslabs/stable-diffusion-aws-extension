@@ -211,6 +211,11 @@ Resources:
             sleep 1
           done
           
+          while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
+          
           sudo apt-get update
           sudo apt install nginx -y
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
