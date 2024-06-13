@@ -68,6 +68,8 @@ phases:
       - cat ../infrastructure/src/shared/version.ts
       - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
       - echo ""
+      - sed -i "s/ESD_VERSION=dev/ESD_VERSION=$BUILD_VERSION/" ../workshop/ec2.yaml
+      - sed -i "s/WebUiEC2Instance/WebUiEC2Instance${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}/" ../workshop/ec2.yaml
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/ec2.yaml --content-type text/yaml --acl public-read
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/sd_dev.yaml --content-type text/yaml --acl public-read
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions/extension-for-stable-diffusion-on-aws/sd_$BUILD_VERSION.yaml --content-type text/yaml --acl public-read
