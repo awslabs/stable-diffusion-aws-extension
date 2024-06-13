@@ -310,9 +310,6 @@ Resources:
           done
           
           sudo apt update && sudo apt install nginx jq supervisor -y
-          
-          aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
-          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:dev
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -331,6 +328,9 @@ Resources:
           sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
           sudo systemctl restart nginx
+
+          aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com
+          docker pull 366590864501.dkr.ecr.${AWS::Region}.amazonaws.com/esd-inference:dev
           
           cat > comfy.service <<EOF
           [Unit]
