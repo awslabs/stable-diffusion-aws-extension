@@ -105,7 +105,9 @@ class TestCheckpointsApi:
             "params": {
                 "message": config.ckpt_message,
                 "creator": "bad_username"
-            }
+            },
+            "source_path": "/test/test_02_api_base",
+            "target_path": "/test/test_02_api_base"
         }
 
         resp = self.api.create_checkpoint(headers=headers, data=data)
@@ -160,7 +162,9 @@ class TestCheckpointsApi:
             "params": {
                 "message": config.ckpt_message,
                 "creator": "bad_username"
-            }
+            },
+            "source_path": "/test/test_02_api_base",
+            "target_path": "/test/test_02_api_base"
         }
 
         resp = self.api.create_checkpoint(headers=headers, data=data)
