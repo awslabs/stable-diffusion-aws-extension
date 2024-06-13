@@ -137,7 +137,7 @@ Resources:
       Runtime: python3.8
       Timeout: 30
 
-  CustomResource:
+  ApiGwResource:
     Type: Custom::MyCustomResource
     Properties:
       ServiceToken: !GetAtt LambdaFunction.Arn
@@ -145,7 +145,7 @@ Resources:
 
   ComfyVPC:
     Type: AWS::EC2::VPC
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       CidrBlock: 10.0.0.0/16
@@ -154,7 +154,7 @@ Resources:
 
   ComfySubnet:
     Type: AWS::EC2::Subnet
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -163,7 +163,7 @@ Resources:
 
   ComfyInstanceRole:
     Type: AWS::IAM::Role
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
@@ -192,7 +192,7 @@ Resources:
 
   ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       Path: "/"
@@ -201,7 +201,7 @@ Resources:
 
   ComfySecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -223,12 +223,12 @@ Resources:
 
   ComfyInternetGateway:
     Type: AWS::EC2::InternetGateway
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
 
   ComfyVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -236,7 +236,7 @@ Resources:
 
   ComfyRouteTable:
     Type: AWS::EC2::RouteTable
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       VpcId: !Ref ComfyVPC
@@ -251,7 +251,7 @@ Resources:
 
   ComfySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    DependsOn: CustomResource
+    DependsOn: ApiGwResource
     DeletionPolicy: Delete
     Properties:
       SubnetId: !Ref ComfySubnet
@@ -285,9 +285,9 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
 
-          echo "COMFY_API_URL=${CustomResource.ApiGatewayUrl}" >> /etc/environment
-          echo "COMFY_API_TOKEN=${CustomResource.ApiGatewayUrlToken}" >> /etc/environment
-          echo "COMFY_BUCKET_NAME=${CustomResource.S3BucketName}" >> /etc/environment
+          echo "COMFY_API_URL=${ApiGwResource.ApiGatewayUrl}" >> /etc/environment
+          echo "COMFY_API_TOKEN=${ApiGwResource.ApiGatewayUrlToken}" >> /etc/environment
+          echo "COMFY_BUCKET_NAME=${ApiGwResource.S3BucketName}" >> /etc/environment
           echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "AWS_REGION=${AWS::Region}" >> /etc/environment
