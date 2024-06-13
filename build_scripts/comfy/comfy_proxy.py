@@ -1107,13 +1107,12 @@ if is_on_ec2:
                                                                  "message": f"can not delete workflow "
                                                                             f"because it is in use by {port}"}))
 
-            os.system(f"rm -rf /container/workflows/{name}")
-
             data = {
                 "workflow_name_list": [name],
             }
             get_response = requests.delete(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
             response = get_response.json()
+            os.system(f"rm -rf /container/workflows/{name}")
             print(response)
 
             return web.Response(status=200, content_type='application/json',
