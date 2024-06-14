@@ -13,22 +13,18 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/img2img-guide/">
       
       
-        <link rel="prev" href="../txt2img-guide/">
-      
-      
-        <link rel="next" href="../controlnet-guide/">
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.18">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
     
     
       
-        <title>img2img指南 - Stable Diffusion 亚马逊云科技插件解决方案</title>
+        <title>使用img2img进行云上推理 - Stable Diffusion 亚马逊云科技插件解决方案</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.66ac8b77.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
       
       
 
@@ -103,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              img2img指南
+              使用img2img进行云上推理
             
           </span>
         </div>
@@ -172,7 +168,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             正在初始化搜索引擎
@@ -214,20 +210,16 @@
         
   
   
-    
-  
   
     
     
       
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../.." class="md-tabs__link">
           
   
@@ -290,28 +282,23 @@
       
   
   
-    
   
   
-  
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -322,7 +309,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             实施指南
@@ -722,11 +709,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/deployment_comfyui/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    新用户部署ComfyUI步骤
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/deployment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    新用户部署步骤
+    新用户部署SD webUI步骤
   </span>
   
 
@@ -747,7 +755,7 @@
         
   
   <span class="md-ellipsis">
-    更新已有的部署
+    更新已有SD webUI的部署
   </span>
   
 
@@ -790,8 +798,6 @@
                 
   
   
-    
-  
   
   
     
@@ -801,11 +807,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
         
           
           <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
@@ -819,7 +825,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_7">
             <span class="md-nav__icon md-icon"></span>
             用户指南
@@ -833,11 +839,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../preparation/" class="md-nav__link">
+      <a href="../training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    准备工作
+    Kohya训练指南
   </span>
   
 
@@ -853,8 +859,46 @@
   
   
   
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_7_2" id="__nav_1_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    webUI指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            webUI指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../multi-user/" class="md-nav__link">
+      <a href="../webUI/multi-user/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -875,7 +919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CloudAssetsManage/" class="md-nav__link">
+      <a href="../webUI/CloudAssetsManage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -896,7 +940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../txt2img-guide/" class="md-nav__link">
+      <a href="../webUI/txt2img-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -914,30 +958,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    img2img指南
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../webUI/img2img-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -946,122 +970,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目录">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目录
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#img2img_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      img2img的使用方法
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="img2img的使用方法">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#img2img_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      img2img不同标签功能的标准流程
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#img2img_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      img2img标签操作示例
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sketch" class="md-nav__link">
-    <span class="md-ellipsis">
-      Sketch标签操作示例
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#inpaint" class="md-nav__link">
-    <span class="md-ellipsis">
-      Inpaint标签操作示例
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#inpaint-sketch" class="md-nav__link">
-    <span class="md-ellipsis">
-      Inpaint Sketch标签操作示例
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#inpaint-upload" class="md-nav__link">
-    <span class="md-ellipsis">
-      Inpaint Upload标签操作示例
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#interrogate-clipdeepbooru" class="md-nav__link">
-    <span class="md-ellipsis">
-      Interrogate clip/deepbooru功能的使用
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      连续使用场景
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inference-job" class="md-nav__link">
-    <span class="md-ellipsis">
-      Inference Job
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1074,7 +982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../controlnet-guide/" class="md-nav__link">
+      <a href="../webUI/controlnet-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1095,15 +1003,23 @@
   
   
     <li class="md-nav__item">
-      <a href="../training-guide/" class="md-nav__link">
+      <a href="../webUI/extensions-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    训练指南
+    其他插件指南
   </span>
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1116,11 +1032,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../extensions-guide/" class="md-nav__link">
+      <a href="../ComfyUI/inference/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    其他插件指南
+    ComfyUI指南
   </span>
   
 
@@ -1385,27 +1301,6 @@
           </ul>
         </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../developer-guide/oas/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    OpenAPI Specification
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -1760,9 +1655,6 @@
 <img alt="img2img tab" src="../../images/clip_tab.png" /></p>
 </li>
 <li>
-<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。</p>
-</li>
-<li>
 <p>点击<strong>Interrogate CLIP on cloud</strong>或<strong>Interrogate DeepBooru on cloud</strong>。</p>
 </li>
 <li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。
@@ -1775,7 +1667,7 @@ img2img标签的提示词区域就能看到结果。
 <li>等待右侧<strong>Output</strong>部分出现了新的<strong>inference id</strong>。</li>
 <li>在新的<strong>Inference Job ID</strong>出现后，便可再次点击<strong>Generate on Cloud</strong>进行下一次推理。</li>
 </ol>
-<p><img alt="continuous generate results" src="../../images/continue-inference.png" /></p>
+<p><img alt="continuous generate results" src="../images/continue-inference.png" /></p>
 <h2 id="inference-job">Inference Job</h2>
 <p>Inference Job下拉列表默认列出最近10条推理任务，命名格式遵循 Time-Type-Status-Uid。如果需要列出账户历史上所有推理任务，只需选中<strong>Show All</strong>。如果需要应用筛选器，缩小显示列表，可以勾选<strong>Advanced Inference Job filter</strong>，页面下方会自动增加本解决方案提供的筛选器维度，用户可以按需选择。</p>
 
@@ -1822,7 +1714,7 @@ img2img标签的提示词区域就能看到结果。
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.3220b9d7.min.js"></script>
+      <script src="../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>
