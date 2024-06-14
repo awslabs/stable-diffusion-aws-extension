@@ -18,7 +18,7 @@
 
 ### 步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)
 
-1. 从 [链接](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} 下载CloudFormation模板。
+1. 从 [链接](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml){:target="_blank"} 下载CloudFormation模板。
 2. 登录到[AWS管理控制台](https://console.aws.amazon.com/){:target="_blank"}，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/){:target="_blank"}。
 3. 在**堆栈**页面上，选择**创建堆栈**，然后选择**使用新资源（标准）**。
 4. 在**指定模板**页面上，选择**模板准备就绪**，选择**上传模板文件**，选择步骤1中下载的模板，最后选择**下一步**。

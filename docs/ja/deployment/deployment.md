@@ -20,7 +20,7 @@ AWS 上にこのソリューションをデプロイするには、次の手順�
 
 ### ステップ 0 - Linux: Stable Diffusion WebUI をデプロイする(Linux)
 
-1. [AWS Management Console](https://console.aws.amazon.com/)にサインインし、[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)を使用してスタックを作成します。
+1. [AWS Management Console](https://console.aws.amazon.com/)にサインインし、[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml)を使用してスタックを作成します。
 2. 「 Create Stack 」ページで「 Next 」を選択します。
 3. 「 Specify stack details 」ページで、スタック名を Stack name ボックスに入力し、パラメーターを必要に応じて調整してから、「 Next 」を選択します。
 4. 「 Configure stack options 」ページで「 Next 」を選択します。

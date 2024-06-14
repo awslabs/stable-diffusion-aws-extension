@@ -61,7 +61,9 @@ class TestUpdateCheckPointE2E:
             "params": {
                 "creator": config.username,
                 "message": config.ckpt_message
-            }
+            },
+            "source_path": "/test/test_02_api_base",
+            "target_path": "/test/test_02_api_base"
         }
 
         resp = self.api.create_checkpoint(headers=headers, data=data)
@@ -85,7 +87,9 @@ class TestUpdateCheckPointE2E:
             "params": {
                 "creator": config.username,
                 "message": config.ckpt_message
-            }
+            },
+            "source_path": "/test/test_02_api_base",
+            "target_path": "/test/test_02_api_base"
         }
 
         resp = self.api.create_checkpoint(headers=headers, data=data)

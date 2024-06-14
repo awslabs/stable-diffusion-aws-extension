@@ -165,10 +165,24 @@ export class CreateCheckPointApi {
                     ],
                   },
                   source_path: {
-                    type: JsonSchemaType.STRING,
+                    oneOf: [
+                      {
+                        type: JsonSchemaType.NULL,
+                      },
+                      {
+                        type: JsonSchemaType.STRING,
+                      },
+                    ],
                   },
                   target_path: {
-                    type: JsonSchemaType.STRING,
+                    oneOf: [
+                      {
+                        type: JsonSchemaType.NULL,
+                      },
+                      {
+                        type: JsonSchemaType.STRING,
+                      },
+                    ],
                   },
                 },
                 required: [

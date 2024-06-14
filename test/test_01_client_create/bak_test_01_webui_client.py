@@ -8,7 +8,7 @@ import config as config
 logger = logging.getLogger(__name__)
 client = boto3.client('cloudformation')
 
-template = "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml"
+template = "https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml"
 
 
 @pytest.mark.skipif(config.is_gcr, reason="not ready in gcr")

@@ -76,6 +76,115 @@ Mappings:
       AMI: ami-065d315e052507855
 
 Resources:
+  WebUiEC2Instance:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    DependsOn: WebUiInstanceProfile
+    Properties:
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref WebUiInstanceProfile
+      SubnetId: !Ref WebUiSubnet
+      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 1024
+            VolumeType: gp3
+      SecurityGroupIds:
+        - !GetAtt WebUiSecurityGroup.GroupId
+      Tags: [
+        { "Key": "Name", "Value": !Sub "sd-on-aws-${Branch}" },
+      ]
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          
+          mkdir -p ~/.aws
+          echo "[default]
+          region = ${AWS::Region}" > ~/.aws/config
+          
+          echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
+          echo "ESD_EC2=true" >> /etc/environment
+          echo "ESD_VERSION=dev" >> /etc/environment
+          source /etc/environment
+          
+          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
+          
+          while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
+            echo "Waiting for other apt process to finish..."
+            sleep 1
+          done
+          
+          sudo apt-get update
+          sudo apt install nginx -y
+          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
+          sudo wget -O /usr/share/nginx/html/index.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
+          sudo ufw allow 'Nginx HTTP'
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
+          
+          sudo apt install software-properties-common -y
+          sudo apt install wget git python3.10 python3.10-venv python3-dev build-essential net-tools libgl1 libtcmalloc-minimal4 -y
+          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          
+          cd /home/ubuntu
+          
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_sd.sh" | bash;
+          
+          cd stable-diffusion-webui/extensions
+          git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
+          
+          cd stable-diffusion-aws-extension
+
+          source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
+          pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
+          pip install ml_dtypes==0.4.0
+          pip install boto3
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
+          
+          export AWS_REGION=us-east-1
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_models.txt
+          s5cmd run sd_models.txt
+          
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
+          
+          cat > sd-webui.service <<EOF
+          [Unit]
+          Description=Stable Diffusion UI server
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          WorkingDirectory=/home/ubuntu/stable-diffusion-webui
+          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=ubuntu
+          StartLimitAction=reboot
+
+          [Install]
+          WantedBy=default.target
+
+          EOF
+          sudo mv sd-webui.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/sd-webui.service
+          sudo systemctl enable sd-webui.service
+          sudo systemctl start sd-webui.service
+          
+          # tail -f /var/log/cloud-init-output.log
+          # sudo journalctl -u sd-webui -f
+
+
   WebUiVPC:
     Type: AWS::EC2::VPC
     DeletionPolicy: Delete
@@ -173,116 +282,10 @@ Resources:
       SubnetId: !Ref WebUiSubnet
       RouteTableId: !Ref WebUiRouteTable
 
-  WebUiEC2Instance:
-    Type: AWS::EC2::Instance
-    DeletionPolicy: Delete
-    DependsOn: WebUiInstanceProfile
-    Properties:
-      InstanceType: !Ref InstanceType
-      IamInstanceProfile: !Ref WebUiInstanceProfile
-      SubnetId: !Ref WebUiSubnet
-      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1
-          Ebs:
-            VolumeSize: 1024
-            VolumeType: gp3
-      SecurityGroupIds:
-        - !GetAtt WebUiSecurityGroup.GroupId
-      Tags: [
-        { "Key": "Name", "Value": !Sub "sd-on-aws-${Branch}" },
-      ]
-      UserData:
-        'Fn::Base64': !Sub |
-          #!/bin/bash
-          set -euxo pipefail
-          
-          mkdir -p ~/.aws
-          echo "[default]
-          region = ${AWS::Region}" > ~/.aws/config
-          
-          echo "AWS_REGION=${AWS::Region}" >> /etc/environment
-          echo "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
-          echo "ESD_EC2=true" >> /etc/environment
-          source /etc/environment
-          
-          while sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ; do
-            echo "Waiting for other apt process to finish..."
-            sleep 1
-          done
-          
-          while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
-            echo "Waiting for other apt process to finish..."
-            sleep 1
-          done
-          
-          sudo apt-get update
-          sudo apt install nginx -y
-          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
-          sudo wget -O /usr/share/nginx/html/index.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
-          sudo ufw allow 'Nginx HTTP'
-          sudo systemctl enable nginx
-          sudo systemctl restart nginx
-          
-          sudo apt install software-properties-common -y
-          sudo apt install wget git python3.10 python3.10-venv python3-dev build-essential net-tools libgl1 libtcmalloc-minimal4 -y
-          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
-          
-          cd /home/ubuntu
-          
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/build_scripts/install_sd.sh" | bash;
-          
-          cd stable-diffusion-webui/extensions
-          git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
-          
-          cd stable-diffusion-aws-extension
-
-          source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
-          pip install tensorboard==2.15.2 tensorflow==2.15.0.post1
-          pip install ml_dtypes==0.4.0
-          pip install boto3
-
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
-          
-          export AWS_REGION=us-east-1
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_models.txt
-          s5cmd run sd_models.txt
-          
-          sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
-          
-          cat > sd-webui.service <<EOF
-          [Unit]
-          Description=Stable Diffusion UI server
-          After=network.target
-          StartLimitIntervalSec=0
-
-          [Service]
-          WorkingDirectory=/home/ubuntu/stable-diffusion-webui
-          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
-          Type=simple
-          Restart=always
-          RestartSec=3
-          User=ubuntu
-          StartLimitAction=reboot
-
-          [Install]
-          WantedBy=default.target
-
-          EOF
-          sudo mv sd-webui.service /etc/systemd/system
-          sudo chown root:root /etc/systemd/system/sd-webui.service
-          sudo systemctl enable sd-webui.service
-          sudo systemctl start sd-webui.service
-          
-          # tail -f /var/log/cloud-init-output.log
-          # sudo journalctl -u sd-webui -f
-
   WebUiEIP:
     Type: AWS::EC2::EIP
     DeletionPolicy: Delete
+
   WebUiEIPAssociation:
     Type: AWS::EC2::EIPAssociation
     DeletionPolicy: Delete

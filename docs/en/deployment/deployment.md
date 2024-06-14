@@ -21,7 +21,7 @@ Use the following steps to deploy this solution on AWS.
 
 ### Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).
 
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} to create the stack.
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml){:target="_blank"} to create the stack.
 2. On the **Create Stack** page, choose **Next**.
 3. On the **Specify stack details** page, type a stack name in the Stack name box, adjust parameters as need, then choose **Next**.
 4. On the **Configure stack options** page, choose **Next**.
