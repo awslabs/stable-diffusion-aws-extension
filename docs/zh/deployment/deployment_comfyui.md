@@ -34,7 +34,7 @@
 ### 步骤2: 部署ComfyUI前端
 步骤3将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
 
-1. 点击[链接](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml){:target="_blank"}来下载ComfyUI前端部署的yaml文件。
+1. 点击[链接](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy-v1.6.0.yaml){:target="_blank"}来下载ComfyUI前端部署的yaml文件。
 2. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击控制台右上角**Create Stack**, **With new resource(standard)**，页面跳转至创建堆栈。
 3. 在**创建堆栈**页面上，选择**Choose an existing template**，在**特定模版**区域选择**Upload a template file**，从本地选择选择刚下载的yaml文件上传，然后选择**下一步**。
 4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，**InstanceType**为选择部署的ec2的实例类型、**NumberOfInferencePorts**为推理环境数量（建议不超过5个）**StackName**来自于部署步骤第一大部分中成功部署堆栈的名称。**keyPairName**选择现有的一个EC2 Key Pair，点击**Next**。
