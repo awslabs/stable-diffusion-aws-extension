@@ -21,7 +21,7 @@
 
 ### 步骤0 - Linux：部署 Stable Diffusion WebUI (Linux)。
 
-1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)。
+1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd.yaml)。
 2. 在**创建堆栈**页面，选择**下一步**。
 3. 在**指定堆栈名称和参数**页面上，输入堆栈名称到堆栈名称框中，按需调整对应选项后，选择**下一步**。
 4. 在**设置堆栈选项**页面上，选择**下一步**。
