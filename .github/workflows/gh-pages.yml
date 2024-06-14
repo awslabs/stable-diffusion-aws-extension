@@ -32,9 +32,9 @@ jobs:
           python3 -m pip install pymdown-extensions
       - name: Build mkdocs
         run: |
-          wget -qO ./docs/zh/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
-          wget -qO ./docs/jp/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
-          wget -qO ./docs/en/developer-guide/api/esd-oas-v1.5.0.json https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/esd-oas-v1.5.0.json
+          wget -qO ./docs/zh/developer-guide/api/esd-oas.json https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/esd-oas.json
+          wget -qO ./docs/jp/developer-guide/api/esd-oas.json https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/esd-oas.json
+          wget -qO ./docs/en/developer-guide/api/esd-oas.json https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/esd-oas.json
           mkdocs build -f ./docs/mkdocs.en.yml
           mkdocs build -f ./docs/mkdocs.zh.yml
           mkdocs build -f ./docs/mkdocs.ja.yml
