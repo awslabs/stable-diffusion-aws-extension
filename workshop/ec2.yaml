@@ -93,7 +93,7 @@ Resources:
       SecurityGroupIds:
         - !GetAtt WebUiSecurityGroup.GroupId
       Tags: [
-        { "Key": "Name", "Value": !Sub "sd-on-aws-${Branch}" },
+        { "Key": "Name", "Value": !Sub "sd-on-aws" },
       ]
       UserData:
         'Fn::Base64': !Sub |
@@ -285,6 +285,10 @@ Resources:
   WebUiEIP:
     Type: AWS::EC2::EIP
     DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "sd-on-aws"
 
   WebUiEIPAssociation:
     Type: AWS::EC2::EIPAssociation
