@@ -165,9 +165,9 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
   mkdir -p models/checkpoints/
   wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
-  wget --quiet -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp16.safetensors"
-  wget --quiet -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp8.safetensors"
-  wget --quiet -O models/checkpoints/sd3_medium_incl_clips.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips.safetensors"
+  wget --quiet -O models/clip/sd3_medium_incl_clips_t5xxlfp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp16.safetensors"
+  wget --quiet -O models/clip/sd3_medium_incl_clips_t5xxlfp8.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp8.safetensors"
+  wget --quiet -O models/clip/sd3_medium_incl_clips.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips.safetensors"
   wget --quiet -O models/checkpoints/sd3_medium.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium.safetensors"
   mkdir -p models/animatediff_models/
   wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
