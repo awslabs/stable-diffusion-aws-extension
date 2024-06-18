@@ -171,8 +171,8 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   wget --quiet -O models/checkpoints/sd3_medium.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium.safetensors"
   wget --quiet -O models/clip/clip_g.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/clip_g.safetensors"
   wget --quiet -O models/clip/clip_l.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/clip_l.safetensors"
-#  wget --quiet -O models/clip/t5xxl_fp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp16.safetensors"
-  wget --quiet -O models/clip/t5xxl_fp8_e4m3fn.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp8_e4m3fn.safetensors"
+  wget --quiet -O models/clip/t5xxl_fp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp16.safetensors"
+#  wget --quiet -O models/clip/t5xxl_fp8_e4m3fn.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp8_e4m3fn.safetensors"
   mkdir -p models/animatediff_models/
   wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
   wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
