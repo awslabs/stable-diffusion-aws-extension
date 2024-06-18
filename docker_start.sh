@@ -147,22 +147,24 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
 if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
-  if [ ! -f "$CONTAINER_PATH/default.tar" ]; then
+  bucket="aws-gcr-solutions-$AWS_REGION"
+  tar_file="$CONTAINER_PATH/default.tar"
+
+  if [ ! -f "$tar_file" ]; then
       mkdir -p "$CONTAINER_PATH/workflows"
       start_at=$(date +%s)
-      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
+      s5cmd cp "s3://$bucket/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$tar_file"
       end_at=$(date +%s)
       export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
   fi
   start_at=$(date +%s)
   rm -rf "$CONTAINER_PATH/workflows/default"
   mkdir -p "$CONTAINER_PATH/workflows/default"
-  tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default/"
+  tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
 
-  bucket="aws-gcr-solutions-$AWS_REGION"
   prefix="stable-diffusion-aws-extension-github-mainline/models"
   echo "cp s3://$bucket/$prefix/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
   echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
