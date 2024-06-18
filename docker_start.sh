@@ -161,21 +161,22 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
-  mkdir -p models/vae/
-  wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
-  mkdir -p models/checkpoints/
-  wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
-#  wget --quiet -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp16.safetensors"
-#  wget --quiet -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips_t5xxlfp8.safetensors"
-#  wget --quiet -O models/checkpoints/sd3_medium_incl_clips.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium_incl_clips.safetensors"
-  wget --quiet -O models/checkpoints/sd3_medium.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/sd3_medium.safetensors"
-  wget --quiet -O models/clip/clip_g.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/clip_g.safetensors"
-  wget --quiet -O models/clip/clip_l.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/clip_l.safetensors"
-  wget --quiet -O models/clip/t5xxl_fp16.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp16.safetensors"
-#  wget --quiet -O models/clip/t5xxl_fp8_e4m3fn.safetensors "https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Comfy/sd3/clip/t5xxl_fp8_e4m3fn.safetensors"
-  mkdir -p models/animatediff_models/
-  wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
-  wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
+
+  bucket="aws-gcr-solutions-$AWS_REGION"
+  prefix="stable-diffusion-aws-extension-github-mainline/models"
+  echo "cp s3://$bucket/$prefix/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp16.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp8.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/sd3_medium.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/clip_g.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/clip_l.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/t5xxl_fp16.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/t5xxl_fp8_e4m3fn.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$bucket/$prefix/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
+  s5cmd run /tmp/models.txt
 fi
 
 SUPERVISOR_CONF="[supervisord]
