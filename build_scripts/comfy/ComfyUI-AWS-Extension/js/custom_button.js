@@ -794,10 +794,6 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
-    async getInputValue() {
-        return document.getElementById("input-field").value;
-    }
-
     async releaseWorkflow() {
         const inputValue = document.getElementById("input-field").value;
         // validate names
