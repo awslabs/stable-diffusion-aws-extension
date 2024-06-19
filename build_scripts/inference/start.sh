@@ -62,7 +62,11 @@ echo "--------------------------------------------------------------------------
 
 set_conda(){
     echo "set conda environment..."
-    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+    if [ -z "${LD_LIBRARY_PATH+x}" ]; then
+      export LD_LIBRARY_PATH=/home/ubuntu/conda/lib
+    else
+      export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+    fi
 }
 
 # -------------------- sd functions --------------------
@@ -347,8 +351,9 @@ download_conda_and_models(){
 
   if [ -f "/tmp/s5cmd.txt" ]; then
     s5cmd run /tmp/s5cmd.txt
-    set_conda
   fi
+
+  set_conda
 
 }
 
@@ -365,7 +370,6 @@ if [ -n "$ON_EC2" ]; then
     if [ "$WORKFLOW_NAME" = "default" ]; then
       echo "default workflow init must be in create EC2"
       tar_file="$CONTAINER_PATH/default.tar"
-
       if [ ! -f "$tar_file" ]; then
           mkdir -p "$CONTAINER_PATH/workflows"
           start_at=$(date +%s)
@@ -383,15 +387,7 @@ if [ -n "$ON_EC2" ]; then
 
       echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
       echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips_t5xxlfp16.safetensors models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips_t5xxlfp8.safetensors models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips.safetensors models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium.safetensors models/checkpoints/" >> /tmp/models.txt
       echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/clip_g.safetensors models/clip/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/clip_l.safetensors models/clip/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/t5xxl_fp16.safetensors models/clip/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/t5xxl_fp8_e4m3fn.safetensors models/clip/" >> /tmp/models.txt
       echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
       s5cmd run /tmp/models.txt
     else
