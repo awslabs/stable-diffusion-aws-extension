@@ -327,12 +327,44 @@ if [ -n "$ON_EC2" ]; then
 
   export WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
   export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
+  export CONTAINER_PATH="/container"
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
     if [ "$WORKFLOW_NAME" = "default" ]; then
       echo "default workflow init must be in create EC2"
-      exit 1
+      bucket="aws-gcr-solutions-$AWS_REGION"
+      tar_file="$CONTAINER_PATH/default.tar"
+
+      if [ ! -f "$tar_file" ]; then
+          mkdir -p "$CONTAINER_PATH/workflows"
+          start_at=$(date +%s)
+          s5cmd cp "s3://$bucket/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$tar_file"
+          end_at=$(date +%s)
+          export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
+      fi
+      start_at=$(date +%s)
+      rm -rf "$CONTAINER_PATH/workflows/default"
+      mkdir -p "$CONTAINER_PATH/workflows/default"
+      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
+      end_at=$(date +%s)
+      export DECOMPRESS_SECONDS=$((end_at-start_at))
+      cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+
+      prefix="stable-diffusion-aws-extension-github-mainline/models"
+      echo "cp s3://$bucket/$prefix/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp16.safetensors models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp8.safetensors models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips.safetensors models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/sd3_medium.safetensors models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/clip_g.safetensors models/clip/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/clip_l.safetensors models/clip/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/t5xxl_fp16.safetensors models/clip/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/t5xxl_fp8_e4m3fn.safetensors models/clip/" >> /tmp/models.txt
+      echo "cp s3://$bucket/$prefix/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
+      s5cmd run /tmp/models.txt
     else
       start_at=$(date +%s)
       echo "$WORKFLOW_NAME" > /container/s5cmd_lock

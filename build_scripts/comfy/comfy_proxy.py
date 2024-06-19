@@ -1262,16 +1262,7 @@ if is_on_ec2:
     def restore_workflow():
         action_lock("restore")
         subprocess.run(["sleep", "2"])
-        os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
-        os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
         os.system("rm -rf /container/workflows/default")
-        os.system("mkdir -p /container/workflows/default")
-        logger.info("restore workflow...")
-        os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
-        os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
-        os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
-        os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
-        os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
         action_unlock()
         subprocess.run(["pkill", "-f", "python3"])
 
