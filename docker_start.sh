@@ -10,6 +10,7 @@ export SERVICE_TYPE="comfy"
 export CONTAINER_NAME="esd_container"
 export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
+export COMMON_FILES_PREFIX="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline"
 
 CUR_PATH=$(realpath ./)
 CONTAINER_PATH=$(realpath ./container)
@@ -153,7 +154,7 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   if [ ! -f "$tar_file" ]; then
       mkdir -p "$CONTAINER_PATH/workflows"
       start_at=$(date +%s)
-      s5cmd cp "s3://$bucket/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$tar_file"
+      s5cmd cp "s3://$COMMON_FILES_PREFIX/$ESD_VERSION/comfy.tar" "$tar_file"
       end_at=$(date +%s)
       export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
   fi
@@ -165,11 +166,18 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
 
-  prefix="stable-diffusion-aws-extension-github-mainline/models"
-  echo "cp s3://$bucket/$prefix/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips_t5xxlfp16.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips_t5xxlfp8.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium_incl_clips.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/sd3_medium.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/clip_g.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/clip_l.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/t5xxl_fp16.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/t5xxl_fp8_e4m3fn.safetensors models/clip/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
 fi
 
