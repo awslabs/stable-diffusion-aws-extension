@@ -799,7 +799,7 @@ export class ModalReleaseDialog extends ComfyDialog {
     }
 
     async releaseWorkflow() {
-        const inputValue = await document.getElementById("input-field").value;
+        const inputValue = document.getElementById("input-field").value;
         // validate names
         if (inputValue.length > 40) {
             document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
