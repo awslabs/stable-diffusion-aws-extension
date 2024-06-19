@@ -168,15 +168,7 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   prefix="stable-diffusion-aws-extension-github-mainline/models"
   echo "cp s3://$bucket/$prefix/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
   echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp16.safetensors models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips_t5xxlfp8.safetensors models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/sd3_medium_incl_clips.safetensors models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/sd3_medium.safetensors models/checkpoints/" >> /tmp/models.txt
   echo "cp s3://$bucket/$prefix/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/clip_g.safetensors models/clip/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/clip_l.safetensors models/clip/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/t5xxl_fp16.safetensors models/clip/" >> /tmp/models.txt
-  echo "cp s3://$bucket/$prefix/t5xxl_fp8_e4m3fn.safetensors models/clip/" >> /tmp/models.txt
   echo "cp s3://$bucket/$prefix/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
 fi
