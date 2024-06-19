@@ -944,6 +944,44 @@ if is_on_ec2:
         return web.Response(status=200, content_type='application/json', body=json.dumps({"master": is_master}))
 
 
+    def get_cloud_workflows(workflow_name):
+        response = requests.get(f"{api_url}/workflows", headers=headers, params={"limit": 1000})
+        if response.status_code != 200:
+            return None
+
+        data = response.json()['data']
+        workflows = data['workflows'] if (data and 'workflows' in data) else None
+
+        if not workflows:
+            return None
+
+        for workflow in workflows:
+            if workflow['name'] == workflow_name:
+                return workflow['payload_json']
+        return None
+
+
+    @server.PromptServer.instance.routes.get("/get_env_template/{id}")
+    async def get_env_template(request):
+        logger.info(f"start to get_env_template {request}")
+        template_id = request.match_info.get("id", None)
+        logger.info("template_id is :" + str(template_id))
+        if not template_id or template_id == "env":
+            workflow_name = os.getenv('WORKFLOW_NAME')
+            if workflow_name == 'default':
+                logger.info(f"workflow_name is {workflow_name}")
+                return web.Response(status=500, content_type='application/json', body=None)
+            prompt_json = get_cloud_workflows(workflow_name)
+            if not prompt_json:
+                logger.info(f"get_cloud_workflows none")
+                return web.Response(status=500, content_type='application/json', body=None)
+
+            return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
+        else:
+            logger.info("latter development :get_json_by_template_id")
+            return web.Response(status=500, content_type='application/json', body=None)
+
+
     def get_directory_size(directory):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(directory):
