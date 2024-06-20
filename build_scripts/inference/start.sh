@@ -328,6 +328,9 @@ if [ -n "$ON_EC2" ]; then
   export WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
   export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
 
+  rm -rf /container/sync_lock
+  rm -rf /container/s5cmd_lock
+
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
     if [ "$WORKFLOW_NAME" = "default" ]; then
