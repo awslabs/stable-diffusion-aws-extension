@@ -902,7 +902,7 @@ if is_on_ec2:
                                                                         "it's may take a few seconds"}))
 
 
-    @server.PromptServer.instance.routes.get("/sync_env")
+    @server.PromptServer.instance.routes.post("/sync_env")
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
