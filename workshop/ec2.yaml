@@ -93,7 +93,7 @@ Resources:
       SecurityGroupIds:
         - !GetAtt WebUiSecurityGroup.GroupId
       Tags: [
-        { "Key": "Name", "Value": !Sub "sd-on-aws-${Branch}" },
+        { "Key": "Name", "Value": !Sub "sd-on-aws" },
       ]
       UserData:
         'Fn::Base64': !Sub |
@@ -151,9 +151,18 @@ Resources:
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
           cp s5cmd /usr/local/bin/
           
-          export AWS_REGION=us-east-1
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_models.txt
-          s5cmd run sd_models.txt
+          bucket="aws-gcr-solutions-$AWS_REGION"
+          prefix="stable-diffusion-aws-extension-github-mainline/models"
+          echo "cp s3://$bucket/$prefix/sd_xl_base_1.0.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/" > /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/v1-5-pruned-emaonly.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/LahCuteCartoonSDXL_alpha.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/majicmixRealistic_v7.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/control_v11p_sd15_canny.pth /home/ubuntu/stable-diffusion-webui/models/ControlNet/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/control_v11p_sd15_openpose.pth /home/ubuntu/stable-diffusion-webui/models/ControlNet/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/lcm_lora_xl.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/lcm_lora_1_5.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/" >> /tmp/models.txt
+          echo "cp s3://$bucket/$prefix/nendoroid_xl_v7.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/" >> /tmp/models.txt
+          s5cmd run /tmp/models.txt
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
@@ -285,6 +294,10 @@ Resources:
   WebUiEIP:
     Type: AWS::EC2::EIP
     DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "sd-on-aws"
 
   WebUiEIPAssociation:
     Type: AWS::EC2::EIPAssociation
