@@ -88,6 +88,7 @@ Resources:
           echo "DISABLE_AUTO_SYNC=false" >> /etc/environment
           echo "DISABLE_AWS_PROXY=false" >> /etc/environment
           echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "ACCOUNT_ID=${AWS::AccountId}" >> /etc/environment
           echo "PROCESS_NUMBER=${NumberOfInferencePorts}" >> /etc/environment
           echo "ESD_VERSION=dev" >> /etc/environment
           echo "SERVICE_TYPE=comfy" >> /etc/environment
