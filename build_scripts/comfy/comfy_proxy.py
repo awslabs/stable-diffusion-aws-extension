@@ -535,7 +535,7 @@ if is_on_ec2:
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
-            compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
+            # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
             logger.info(f" sync input files")
             s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
             logger.info(f"sync input files start {s5cmd_syn_input_command}")
