@@ -105,6 +105,7 @@ Resources:
           region = ${AWS::Region}" > ~/.aws/config
           
           echo "AWS_REGION=${AWS::Region}" >> /etc/environment
+          echo "ACCOUNT_ID=${AWS::AccountId}" >> /etc/environment
           echo "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
           echo "ESD_EC2=true" >> /etc/environment
           echo "ESD_VERSION=dev" >> /etc/environment
