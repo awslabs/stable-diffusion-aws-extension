@@ -980,14 +980,14 @@ if is_on_ec2:
         return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
 
 
-def get_directory_size(directory):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(directory):
-            for filename in filenames:
-                filepath = os.path.join(dirpath, filename)
-                if not os.path.islink(filepath):  # 检查文件是否不是符号链接
-                    total_size += os.path.getsize(filepath)
-        return total_size
+    def get_directory_size(directory):
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(directory):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    if not os.path.islink(filepath):  # 检查文件是否不是符号链接
+                        total_size += os.path.getsize(filepath)
+            return total_size
 
 
     def dir_size(source_path: str):
