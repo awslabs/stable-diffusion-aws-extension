@@ -9,6 +9,7 @@ fi
 export SERVICE_TYPE="comfy"
 export CONTAINER_NAME="esd_container"
 export AWS_REGION=$(aws configure get region)
+export COMMON_FILES_PREFIX="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline"
 
 CUR_PATH=$(realpath ./)
 CONTAINER_PATH=$(realpath ./container)
@@ -144,27 +145,28 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
 if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
-  if [ ! -f "$CONTAINER_PATH/default.tar" ]; then
+  tar_file="$CONTAINER_PATH/default.tar"
+
+  if [ ! -f "$tar_file" ]; then
       mkdir -p "$CONTAINER_PATH/workflows"
       start_at=$(date +%s)
-      s5cmd cp "s3://aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline/$ESD_VERSION/comfy.tar" "$CONTAINER_PATH/default.tar"
+      s5cmd cp "s3://$COMMON_FILES_PREFIX/$ESD_VERSION/comfy.tar" "$tar_file"
       end_at=$(date +%s)
       export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
   fi
   start_at=$(date +%s)
   rm -rf "$CONTAINER_PATH/workflows/default"
   mkdir -p "$CONTAINER_PATH/workflows/default"
-  tar --overwrite -xf "$CONTAINER_PATH/default.tar" -C "$CONTAINER_PATH/workflows/default/"
+  tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
-  mkdir -p models/vae/
-  wget --quiet -O models/vae/vae-ft-mse-840000-ema-pruned.safetensors "https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors"
-  mkdir -p models/checkpoints/
-  wget --quiet -O models/checkpoints/majicmixRealistic_v7.safetensors "https://huggingface.co/GreenGrape/231209/resolve/045ebfc504c47ba8ccc424f1869c65a223d1f5cc/majicmixRealistic_v7.safetensors"
-  mkdir -p models/animatediff_models/
-  wget --quiet -O models/animatediff_models/mm_sd_v15_v2.ckpt "https://huggingface.co/guoyww/animatediff/resolve/main/mm_sd_v15_v2.ckpt"
-  wget --quiet -O models/checkpoints/v1-5-pruned-emaonly.ckpt "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt"
+
+  echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
+  echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
+  s5cmd run /tmp/models.txt
 fi
 
 SUPERVISOR_CONF="[supervisord]
