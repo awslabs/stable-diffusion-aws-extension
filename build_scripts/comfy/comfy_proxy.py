@@ -902,12 +902,12 @@ if is_on_ec2:
                                                                         "it's may take a few seconds"}))
 
 
-    @server.PromptServer.instance.routes.post("/sync_env")
+    @server.PromptServer.instance.routes.get("/sync_env")
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
-            workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
+            workflow_name = json_data['workflow_name']
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
             thread.start()
@@ -944,50 +944,14 @@ if is_on_ec2:
         return web.Response(status=200, content_type='application/json', body=json.dumps({"master": is_master}))
 
 
-    def get_cloud_workflows(workflow_name):
-        response = requests.get(f"{api_url}/workflows", headers=headers, params={"limit": 1000})
-        if response.status_code != 200:
-            return None
-
-        data = response.json()['data']
-        workflows = data['workflows'] if (data and 'workflows' in data) else None
-
-        if not workflows:
-            return None
-
-        for workflow in workflows:
-            if workflow['name'] == workflow_name:
-                return workflow['payload_json']
-        return None
-
-
-    @server.PromptServer.instance.routes.get("/get_env_template/{id}")
-    async def get_env_template(request):
-        logger.info(f"start to get_env_template {request}")
-        template_id = request.match_info.get("id", None)
-        logger.info("template_id is :" + str(template_id))
-        workflow_name = os.getenv('WORKFLOW_NAME')
-        if not template_id:
-            workflow_name = template_id
-        if workflow_name == 'default':
-            logger.info(f"workflow_name is {workflow_name}")
-            return web.Response(status=500, content_type='application/json', body=None)
-        prompt_json = get_cloud_workflows(workflow_name)
-        if not prompt_json:
-            logger.info(f"get_cloud_workflows none")
-            return web.Response(status=500, content_type='application/json', body=None)
-
-        return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
-
-
     def get_directory_size(directory):
-            total_size = 0
-            for dirpath, dirnames, filenames in os.walk(directory):
-                for filename in filenames:
-                    filepath = os.path.join(dirpath, filename)
-                    if not os.path.islink(filepath):  # 检查文件是否不是符号链接
-                        total_size += os.path.getsize(filepath)
-            return total_size
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(directory):
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                if not os.path.islink(filepath):
+                    total_size += os.path.getsize(filepath)
+        return total_size
 
 
     def dir_size(source_path: str):
@@ -1297,7 +1261,16 @@ if is_on_ec2:
     def restore_workflow():
         action_lock("restore")
         subprocess.run(["sleep", "2"])
+        os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
+        os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
         os.system("rm -rf /container/workflows/default")
+        os.system("mkdir -p /container/workflows/default")
+        logger.info("restore workflow...")
+        os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
+        os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
+        os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
+        os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
+        os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
         action_unlock()
         subprocess.run(["pkill", "-f", "python3"])
 

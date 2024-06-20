@@ -62,7 +62,7 @@
 请打开任何可以运行代码的窗口，比如本地Macbook电脑的Terminal，运行如下API代码。
 
 ```
-curl --location ‘此处填写您的api地址/endpoints’ \
+curl --location ‘此处填写您的api地址’ \
 --header ‘x-api-key: 此处填写您的apikey’ \
 --header ‘username: api’ \
 --header ‘Content-Type: application/json’ \
