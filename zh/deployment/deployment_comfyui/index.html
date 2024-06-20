@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
@@ -1700,7 +1700,7 @@
 <p>在步骤1成功完成后，需要通过API方式部署所需的Amazon SageMaker推理节点。后续的新发布的ComfyUI工作流推理都将使用该推理节点的计算资源。</p>
 <p>以下API代码中所需的ApiGatewayUrl及ApiGatewayUrlToken，可以在步骤1部署成功的堆栈<strong>Outputs</strong>标签页找到。</p>
 <p>请打开任何可以运行代码的窗口，比如本地Macbook电脑的Terminal，运行如下API代码。</p>
-<div class="highlight"><pre><span></span><code>curl --location ‘此处填写您的api地址’ \
+<div class="highlight"><pre><span></span><code>curl --location ‘此处填写您的api地址/endpoints’ \
 --header ‘x-api-key: 此处填写您的apikey’ \
 --header ‘username: api’ \
 --header ‘Content-Type: application/json’ \
