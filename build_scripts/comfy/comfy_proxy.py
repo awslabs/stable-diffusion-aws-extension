@@ -530,7 +530,7 @@ if is_on_ec2:
             prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
             need_prepare = True
             prepare_type = 'default'
-            need_reboot = True
+            need_reboot = False
             # logger.info(f" sync custom nodes files")
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
@@ -1393,7 +1393,7 @@ if is_on_sagemaker:
                                                                     False)
                 if not sync_inputs_rlt:
                     rlt = False
-            if prepare_type in ['default', 'nodes']:
+            if prepare_type in ['nodes']:
                 sync_nodes_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes/*',
                                                                    f'{ROOT_PATH}/custom_nodes', True)
                 if not sync_nodes_rlt:
