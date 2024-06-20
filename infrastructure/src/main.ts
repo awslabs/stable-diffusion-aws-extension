@@ -398,12 +398,12 @@ export class Middleware extends Stack {
       description: 'API Doc - OAS3',
     });
 
-    new CfnOutput(this, 'TemplateForSDOnEc2', {
+    new CfnOutput(this, 'TemplateForSDOnEC2', {
       value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_${ESD_VERSION}.yaml`,
       description: 'Create New or Update EC2 Stack for SD',
     });
 
-    new CfnOutput(this, 'TemplateForComfyOnEc2', {
+    new CfnOutput(this, 'TemplateForComfyOnEC2', {
       value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_${ESD_VERSION}.yaml`,
       description: 'Create New or Update EC2 Stack for Comfy',
     });

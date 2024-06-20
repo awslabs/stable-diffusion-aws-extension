@@ -389,6 +389,9 @@ Resources:
       InstanceId: !Ref ComfyEC2Dev
 
 Outputs:
+  TemplateSource:
+    Description: Source file of the template
+    Value: https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_dev.yaml
   Designer:
     Description: URL for Designer
     Value: !Sub http://${ComfyEIP}

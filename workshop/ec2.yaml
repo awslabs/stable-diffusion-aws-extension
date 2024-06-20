@@ -308,6 +308,9 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
+  TemplateSource:
+    Description: Source file of the template
+    Value: https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_dev.yaml
   WebUINginxURL:
     Description: URL for Stable Diffusion WebUI
     Value: !Sub http://${WebUiEIP}
