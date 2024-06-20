@@ -966,23 +966,21 @@ if is_on_ec2:
         logger.info(f"start to get_env_template {request}")
         template_id = request.match_info.get("id", None)
         logger.info("template_id is :" + str(template_id))
-        if not template_id or template_id == "env":
-            workflow_name = os.getenv('WORKFLOW_NAME')
-            if workflow_name == 'default':
-                logger.info(f"workflow_name is {workflow_name}")
-                return web.Response(status=500, content_type='application/json', body=None)
-            prompt_json = get_cloud_workflows(workflow_name)
-            if not prompt_json:
-                logger.info(f"get_cloud_workflows none")
-                return web.Response(status=500, content_type='application/json', body=None)
-
-            return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
-        else:
-            logger.info("latter development :get_json_by_template_id")
+        workflow_name = os.getenv('WORKFLOW_NAME')
+        if not template_id:
+            workflow_name = template_id
+        if workflow_name == 'default':
+            logger.info(f"workflow_name is {workflow_name}")
+            return web.Response(status=500, content_type='application/json', body=None)
+        prompt_json = get_cloud_workflows(workflow_name)
+        if not prompt_json:
+            logger.info(f"get_cloud_workflows none")
             return web.Response(status=500, content_type='application/json', body=None)
 
+        return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
 
-    def get_directory_size(directory):
+
+def get_directory_size(directory):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(directory):
             for filename in filenames:

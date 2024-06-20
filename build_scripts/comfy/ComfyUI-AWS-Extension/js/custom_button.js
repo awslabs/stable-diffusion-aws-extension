@@ -330,6 +330,9 @@ async function handleChangeButton() {
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
+
+                // await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -593,8 +596,6 @@ const awsConfigPanel = {
 
         app.ui.menuContainer.appendChild(widgetsContainer);
         handleLoadButton();
-        const templateId = 'env'
-        // await handleLoadJson(templateId);
     }
 }
 
