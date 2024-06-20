@@ -1014,7 +1014,6 @@ def get_directory_size(directory):
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
                               f'--exclude="*__pycache__*" '
-                              f'--exclude="*/ComfyUI/input/*" '
                               f'--exclude="*/ComfyUI/output/*" '
                               f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
                               f'"{source_path}/*" '
