@@ -531,7 +531,7 @@ if is_on_ec2:
             need_prepare = True
             prepare_type = 'default'
             need_reboot = True
-            logger.info(f" sync custom nodes files")
+            # logger.info(f" sync custom nodes files")
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
