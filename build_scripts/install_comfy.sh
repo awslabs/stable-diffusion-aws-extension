@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# todo: deprecated
-
 echo "---------------------------------------------------------------------------------"
 echo "install comfy..."
 
-export INITIAL_COMFY_COMMIT_ROOT=605e64f6d3da44235498bf9103d7aab1c95ef211
+export INITIAL_COMFY_COMMIT_ROOT=0fecfd2b1a2794b77277c7e256c84de54a63d860
 
 rm -rf ComfyUI
 rm -rf stable-diffusion-aws-extension
