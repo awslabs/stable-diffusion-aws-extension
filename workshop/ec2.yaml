@@ -318,3 +318,6 @@ Outputs:
     Description: URL for Stable Diffusion WebUI
     # add port 7860 to the end of the URL
     Value: !Sub http://${WebUiEIP}:7860
+  PageUrlOfEC2Connect:
+    Description: URL of EC2 Connect Page
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/ec2/home?region=${AWS::Region}#ConnectToInstance:instanceId=${WebUiEC2Instance}
