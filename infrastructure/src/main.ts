@@ -398,6 +398,15 @@ export class Middleware extends Stack {
       description: 'CloudWatch Dashboard URL',
     });
 
+    new CfnOutput(this, 'NewEc2ForSD', {
+      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudformation/home?region=${Aws.REGION}#/stacks/create?stackName=ESD_EC2_SD&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_${ESD_VERSION}.yaml`,
+      description: 'Create New EC2 for SD',
+    });
+
+    new CfnOutput(this, 'NewEc2ForComfy', {
+      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudformation/home?region=${Aws.REGION}#/stacks/create?stackName=ESD_EC2_COMFY&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_${ESD_VERSION}.yaml`,
+      description: 'Create New EC2 for Comfy',
+    });
   }
 
   addEnvToAllLambdas(variableName: string, value: string) {
