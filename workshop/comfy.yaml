@@ -391,7 +391,7 @@ Resources:
 Outputs:
   Designer:
     Description: URL for Designer
-    Value: !Sub http://${ComfyEIP}:10000
+    Value: !Sub http://${ComfyEIP}
   DesignerDockerfile:
     Description: Dockerfile for EC2 and SageMaker
     Value: /root/stable-diffusion-aws-extension/container/comfy_10000.Dockerfile
