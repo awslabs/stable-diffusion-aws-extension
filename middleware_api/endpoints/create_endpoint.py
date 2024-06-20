@@ -144,7 +144,7 @@ def handler(raw_event, ctx):
 
         if event.workflow:
             if endpoint_type != 'async':
-                raise BadRequestException(message=f"Your cant create Async endpoint only for workflow currently")
+                raise BadRequestException(message=f"Your can't create Async endpoint only for workflow currently")
             short_id = event.workflow.name
 
         endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
