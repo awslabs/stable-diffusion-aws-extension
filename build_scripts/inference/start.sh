@@ -366,6 +366,7 @@ if [ -n "$ON_EC2" ]; then
   export CONTAINER_PATH="/container"
 
   rm -rf /container/sync_lock
+  rm -rf /container/s5cmd_lock
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
