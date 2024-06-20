@@ -32,8 +32,6 @@ export CACHE_PUBLIC_COMFY="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-ex
 
 export ENDPOINT_INSTANCE_ID=$(date +"%m%d%H%M%S")
 
-export COMMON_FILES_PREFIX="aws-gcr-solutions-$AWS_REGION/stable-diffusion-aws-extension-github-mainline"
-
 cores=$(lscpu | grep "^Core(s) per socket:" | awk '{print $4}')
 sockets=$(lscpu | grep "^Socket(s):" | awk '{print $2}')
 export CUP_CORE_NUMS=$((cores * sockets))
@@ -62,11 +60,7 @@ echo "--------------------------------------------------------------------------
 
 set_conda(){
     echo "set conda environment..."
-    if [ -z "${LD_LIBRARY_PATH+x}" ]; then
-      export LD_LIBRARY_PATH=/home/ubuntu/conda/lib
-    else
-      export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
-    fi
+    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 }
 
 # -------------------- sd functions --------------------
@@ -328,42 +322,11 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
-download_conda_and_models(){
-  echo "---------------------------------------------------------------------------------"
-
-  rm -rf /tmp/s5cmd.txt
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcufft.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcurand.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors /home/ubuntu/ComfyUI/models/vae/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt /home/ubuntu/ComfyUI/models/animatediff_models/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ -f "/tmp/s5cmd.txt" ]; then
-    s5cmd run /tmp/s5cmd.txt
-  fi
-
-  set_conda
-
-}
-
-# ----------------------------- On EC2 -----------------------------
 if [ -n "$ON_EC2" ]; then
   set -euxo pipefail
 
   export WORKFLOW_NAME=$(cat "$WORKFLOW_NAME_FILE")
   export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
-  export CONTAINER_PATH="/container"
 
   rm -rf /container/sync_lock
   rm -rf /container/s5cmd_lock
@@ -372,27 +335,7 @@ if [ -n "$ON_EC2" ]; then
     mkdir -p "$WORKFLOW_DIR"
     if [ "$WORKFLOW_NAME" = "default" ]; then
       echo "default workflow init must be in create EC2"
-      tar_file="$CONTAINER_PATH/default.tar"
-      if [ ! -f "$tar_file" ]; then
-          mkdir -p "$CONTAINER_PATH/workflows"
-          start_at=$(date +%s)
-          s5cmd cp "s3://$COMMON_FILES_PREFIX/$ESD_VERSION/comfy.tar" "$tar_file"
-          end_at=$(date +%s)
-          export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
-      fi
-      start_at=$(date +%s)
-      rm -rf "$CONTAINER_PATH/workflows/default"
-      mkdir -p "$CONTAINER_PATH/workflows/default"
-      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
-      end_at=$(date +%s)
-      export DECOMPRESS_SECONDS=$((end_at-start_at))
-      cd "$CONTAINER_PATH/workflows/default/ComfyUI"
-
-      echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
-      echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
-      s5cmd run /tmp/models.txt
+      exit 1
     else
       start_at=$(date +%s)
       echo "$WORKFLOW_NAME" > /container/s5cmd_lock
@@ -409,8 +352,7 @@ if [ -n "$ON_EC2" ]; then
 
   ln -s "$WORKFLOW_DIR/ComfyUI" /home/ubuntu/ComfyUI
 
-  cd "/home/ubuntu/ComfyUI" || exit 1
-  download_conda_and_models
+  cd /home/ubuntu/ComfyUI || exit 1
 
   if [ -f "/comfy_proxy.py" ]; then
     cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
@@ -434,15 +376,13 @@ if [ -n "$ON_EC2" ]; then
   exit 1
 fi
 
-# ----------------------------- On SageMaker -----------------------------
 if [ -n "$WORKFLOW_NAME" ]; then
   cd /home/ubuntu || exit 1
 
   if [ -d "/home/ubuntu/ComfyUI/venv" ]; then
       if [ -n "$ON_EC2" ]; then
         set -euxo pipefail
-        cd "/home/ubuntu/ComfyUI" || exit 1
-        download_conda_and_models
+        cd /home/ubuntu/ComfyUI || exit 1
         rm -rf web/extensions/ComfyLiterals
         chmod -R +x venv
         source venv/bin/activate
@@ -459,7 +399,6 @@ if [ -n "$WORKFLOW_NAME" ]; then
   echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
 
   cd "/home/ubuntu/ComfyUI" || exit 1
-  download_conda_and_models
 
   rm -rf web/extensions/ComfyLiterals
 
@@ -467,6 +406,7 @@ if [ -n "$WORKFLOW_NAME" ]; then
   chmod -R +x venv
   source venv/bin/activate
 
+  # on SageMaker
   python /metrics.py &
   python3 serve.py
   exit 1
