@@ -365,6 +365,8 @@ if [ -n "$ON_EC2" ]; then
   export WORKFLOW_DIR="/container/workflows/$WORKFLOW_NAME"
   export CONTAINER_PATH="/container"
 
+  rm -rf /container/sync_lock
+
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
     if [ "$WORKFLOW_NAME" = "default" ]; then

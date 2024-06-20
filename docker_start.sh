@@ -83,8 +83,6 @@ WORKDIR /home/ubuntu/ComfyUI"
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
 
-rm -rf /container/sync_lock
-
 ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
