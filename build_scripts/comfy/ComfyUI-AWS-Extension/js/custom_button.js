@@ -594,7 +594,7 @@ const awsConfigPanel = {
         app.ui.menuContainer.appendChild(widgetsContainer);
         handleLoadButton();
         const templateId = 'env'
-        await handleLoadJson(templateId);
+        // await handleLoadJson(templateId);
     }
 }
 
