@@ -373,11 +373,6 @@ export class Middleware extends Stack {
       description: 'API Gateway Token',
     });
 
-    new CfnOutput(this, 'ApiOAS3', {
-      value: `${restApi.apiGateway.url}api`,
-      description: 'API Doc - OAS3',
-    });
-
     new CfnOutput(this, 'S3BucketName', {
       value: s3BucketName.valueAsString,
       description: 'S3 Bucket Name',
@@ -398,14 +393,19 @@ export class Middleware extends Stack {
       description: 'CloudWatch Dashboard URL',
     });
 
-    new CfnOutput(this, 'NewEc2ForSD', {
-      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudformation/home?region=${Aws.REGION}#/stacks/create?stackName=ESD_EC2_SD&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_${ESD_VERSION}.yaml`,
-      description: 'Create New EC2 for SD',
+    new CfnOutput(this, 'ApiDoc', {
+      value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/oas_${ESD_VERSION}.json`,
+      description: 'API Doc - OAS3',
     });
 
-    new CfnOutput(this, 'NewEc2ForComfy', {
-      value: `https://${Aws.REGION}.console.${consoleUrl.toString()}/cloudformation/home?region=${Aws.REGION}#/stacks/create?stackName=ESD_EC2_COMFY&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_${ESD_VERSION}.yaml`,
-      description: 'Create New EC2 for Comfy',
+    new CfnOutput(this, 'TemplateForSDOnEc2', {
+      value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_${ESD_VERSION}.yaml`,
+      description: 'Create New or Update EC2 Stack for SD',
+    });
+
+    new CfnOutput(this, 'TemplateForComfyOnEc2', {
+      value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_${ESD_VERSION}.yaml`,
+      description: 'Create New or Update EC2 Stack for Comfy',
     });
   }
 
