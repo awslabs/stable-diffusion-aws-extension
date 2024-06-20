@@ -542,10 +542,6 @@ def handler(event: dict, context: LambdaContext):
             }
         ]
 
-        json_schema['info']['contact'] = {
-            "email": "elonniu@amazon.com",
-        }
-
         json_schema['info']['license'] = {
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
