@@ -902,12 +902,12 @@ if is_on_ec2:
                                                                         "it's may take a few seconds"}))
 
 
-    @server.PromptServer.instance.routes.get("/sync_env")
+    @server.PromptServer.instance.routes.post("/sync_env")
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
-            workflow_name = json_data['workflow_name']
+            workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
             thread.start()
