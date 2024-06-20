@@ -909,7 +909,7 @@ if is_on_ec2:
             json_data = await request.json()
             workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
-            thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
+            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint,))
             thread.start()
             # result = sync_default_files()
             # logger.debug(f"sync result is :{result}")
