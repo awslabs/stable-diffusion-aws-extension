@@ -406,7 +406,6 @@ if [ -n "$WORKFLOW_NAME" ]; then
   chmod -R +x venv
   source venv/bin/activate
 
-  # on SageMaker
   python /metrics.py &
   python3 serve.py
   exit 1
