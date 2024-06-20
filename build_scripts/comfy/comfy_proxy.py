@@ -64,9 +64,9 @@ if is_on_ec2:
         if item in env_keys:
             logger.info(f'evn key： {item} {os.environ.get(item)}')
 
-    DIR3 = "input"
-    DIR1 = "models"
-    DIR2 = "custom_nodes"
+    DIR3 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/input"
+    DIR1 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/models"
+    DIR2 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/custom_nodes"
 
     if 'COMFY_INPUT_PATH' in os.environ and os.environ.get('COMFY_INPUT_PATH'):
         DIR3 = os.environ.get('COMFY_INPUT_PATH')
