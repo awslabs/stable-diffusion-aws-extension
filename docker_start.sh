@@ -86,9 +86,9 @@ WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
   BASE_IMAGE=$PUBLIC_BASE_IMAGE
 else
-  BASE_IMAGE=\$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
-  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin \$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-  docker pull \$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\$WORKFLOW_NAME
+  BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
+  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\$WORKFLOW_NAME
 fi
 
 sudo mkdir -p $CONTAINER_PATH/output/$PROGRAM_NAME
