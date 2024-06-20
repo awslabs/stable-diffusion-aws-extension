@@ -64,9 +64,9 @@ if is_on_ec2:
         if item in env_keys:
             logger.info(f'evn key： {item} {os.environ.get(item)}')
 
-    DIR3 = "input"
-    DIR1 = "models"
-    DIR2 = "custom_nodes"
+    DIR3 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/input"
+    DIR1 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/models"
+    DIR2 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/custom_nodes"
 
     if 'COMFY_INPUT_PATH' in os.environ and os.environ.get('COMFY_INPUT_PATH'):
         DIR3 = os.environ.get('COMFY_INPUT_PATH')
@@ -902,12 +902,12 @@ if is_on_ec2:
                                                                         "it's may take a few seconds"}))
 
 
-    @server.PromptServer.instance.routes.get("/sync_env")
+    @server.PromptServer.instance.routes.post("/sync_env")
     async def sync_env(request):
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
-            workflow_name = json_data['workflow_name']
+            workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
             thread.start()
@@ -949,7 +949,7 @@ if is_on_ec2:
         for dirpath, dirnames, filenames in os.walk(directory):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
-                if not os.path.islink(filepath):  # 检查文件是否不是符号链接
+                if not os.path.islink(filepath):
                     total_size += os.path.getsize(filepath)
         return total_size
 
@@ -978,7 +978,6 @@ if is_on_ec2:
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
                               f'--exclude="*__pycache__*" '
-                              f'--exclude="*/ComfyUI/input/*" '
                               f'--exclude="*/ComfyUI/output/*" '
                               f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
                               f'"{source_path}/*" '

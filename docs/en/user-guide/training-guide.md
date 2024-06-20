@@ -44,7 +44,7 @@ After the base model and dataset have been uploaded successfully, please follow 
 5. The successfully trained LoRa model can be selected directly in **txt2img** or **img2img**, and used in image generation. More details refer to [txt2img guide](./txt2img-guide.md) or [img2img guide](./img2img-guide.md).
 
 ### Train Loss Visualization
-On the **Train Management** tab, all the finished training job will be listed in the **Training List**, click the training id and the logs will show the below reffered to the follwing figure. 
+On the **Train Management** tab, all the finished training job will be listed in the **Training List**, click the training id and the logs will show the below referred to the following figure. 
 ![Training List](../images/traininglist.jpg)
 Click the log event link and a new web page with loss tensorboard will be appeared as the below figure.
 ![Training Loss](../images/trainingloss.jpg)
