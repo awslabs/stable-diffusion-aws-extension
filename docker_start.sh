@@ -8,7 +8,6 @@ fi
 
 export SERVICE_TYPE="comfy"
 export CONTAINER_NAME="esd_container"
-export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export AWS_REGION=$(aws configure get region)
 
 CUR_PATH=$(realpath ./)
@@ -82,15 +81,14 @@ WORKDIR /home/ubuntu/ComfyUI"
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
 
-ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
 if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
   BASE_IMAGE=$PUBLIC_BASE_IMAGE
 else
-  BASE_IMAGE=\$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
-  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin \$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-  docker pull \$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\$WORKFLOW_NAME
+  BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
+  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container:\$WORKFLOW_NAME
 fi
 
 sudo mkdir -p $CONTAINER_PATH/output/$PROGRAM_NAME
@@ -109,6 +107,7 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
            --gpus all \\
            -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
+           -e ACCOUNT_ID=$ACCOUNT_ID \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
