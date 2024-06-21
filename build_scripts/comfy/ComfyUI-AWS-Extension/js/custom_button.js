@@ -331,9 +331,7 @@ async function handleChangeButton() {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
 
-                const rlt = await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
-                console.log(rlt)
-
+                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -554,16 +552,34 @@ async function handleLoadJson(templateId){
         const response = await api.fetchApi(`/get_env_template/${templateId}`);
         console.log(response);
         if (response.ok) {
-            const data =await response.json();
-            await loadEnvJson(data)
+            const promptJson =await response.json();
+            if (!promptJson){
+                console.info("load default json")
+                return
+            }
+            let jsonContent;
+            if (typeof promptJson === 'object') {
+                const jsonString = JSON.stringify(promptJson);
+                jsonContent = JSON.parse(jsonString);
+            } else {
+                jsonContent = JSON.parse(promptJson);
+            }
+            if (jsonContent?.workflow) {
+                const workflowJsonString = JSON.stringify(jsonContent.workflow);
+                const workflowContent = JSON.parse(workflowJsonString);
+                console.log(workflowContent)
+                app.loadGraphData(workflowContent);
+                console.log("finished loadGraphData")
+            } else {
+                console.error(jsonContent);
+                console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
+            }
         }else {
             console.info('Loading json none: load default');
         }
-        return true
     } catch (error) {
         console.error('Loading error:', error);
     }
-    return false
 }
 
 const awsConfigPanel = {
