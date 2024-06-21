@@ -64,9 +64,9 @@ if is_on_ec2:
         if item in env_keys:
             logger.info(f'evn key： {item} {os.environ.get(item)}')
 
-    DIR3 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/input"
-    DIR1 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/models"
-    DIR2 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/custom_nodes"
+    DIR3 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/input"
+    DIR1 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/models"
+    DIR2 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/custom_nodes"
 
     if 'COMFY_INPUT_PATH' in os.environ and os.environ.get('COMFY_INPUT_PATH'):
         DIR3 = os.environ.get('COMFY_INPUT_PATH')
@@ -524,7 +524,7 @@ if is_on_ec2:
         #         os.remove(tar_filepath)
 
 
-    def sync_default_files(comfy_endpoint):
+    def sync_default_files(comfy_endpoint, sync_type):
         try:
             timestamp = str(int(time.time() * 1000))
             prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
@@ -536,15 +536,18 @@ if is_on_ec2:
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
             # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
-            logger.info(f" sync input files")
-            s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
-            logger.info(f"sync input files start {s5cmd_syn_input_command}")
-            os.system(s5cmd_syn_input_command)
-            logger.info(f" sync models files")
-            s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
-            logger.info(f"sync models files start {s5cmd_syn_model_command}")
-            os.system(s5cmd_syn_model_command)
-            logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
+            if sync_type in ['default', 'input']:
+                logger.info(f" sync input files")
+                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                logger.info(f"sync input files start {s5cmd_syn_input_command}")
+                os.system(s5cmd_syn_input_command)
+            if sync_type in ['default', 'models']:
+                logger.info(f" sync models files")
+                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                logger.info(f"sync models files start {s5cmd_syn_model_command}")
+                os.system(s5cmd_syn_model_command)
+            logger.info(f"Files changed in:: {need_prepare} {sync_type} {DIR2} {DIR1} {DIR3}")
+
             url = api_url + "prepare"
             logger.info(f"URL:{url}")
             data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": prepare_version,
@@ -554,6 +557,7 @@ if is_on_ec2:
                                      f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                     capture_output=True, text=True)
             logger.info(result.stdout)
+
             return result.stdout
         except Exception as e:
             logger.info(f"sync_files error {e}")
@@ -741,8 +745,8 @@ if is_on_ec2:
         event_handler = MyHandlerWithSync()
         observer = Observer()
         try:
-            observer.schedule(event_handler, DIR1, recursive=True)
-            observer.schedule(event_handler, DIR2, recursive=True)
+            # observer.schedule(event_handler, DIR1, recursive=True)
+            # observer.schedule(event_handler, DIR2, recursive=True)
             observer.schedule(event_handler, DIR3, recursive=True)
             observer.start()
             while True:
@@ -907,9 +911,10 @@ if is_on_ec2:
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
+            sync_type = json_data['sync_type'] if json_data and 'sync_type' in json_data else 'default'
             workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
-            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint,))
+            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint, sync_type))
             thread.start()
             # result = sync_default_files()
             # logger.debug(f"sync result is :{result}")
