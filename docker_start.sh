@@ -34,7 +34,6 @@ aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS 
 PUBLIC_BASE_IMAGE="366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
 docker pull "$PUBLIC_BASE_IMAGE"
 
-export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME"
 
 echo "Starting container..."
@@ -83,8 +82,7 @@ WORKDIR /home/ubuntu/ComfyUI"
   START_HANDLER="#!/bin/bash
 set -euxo pipefail
 
-export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-export WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
+WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
 if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
   BASE_IMAGE=$PUBLIC_BASE_IMAGE
