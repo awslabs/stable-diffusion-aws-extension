@@ -322,7 +322,7 @@ async function handleLoadButton() {
     }
 }
 
-async function handleChangeButton() {
+function handleChangeButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
             try {
@@ -331,7 +331,8 @@ async function handleChangeButton() {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
 
-                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+                let rlt = handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+                console.log(rlt)
 
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
@@ -515,7 +516,7 @@ async function handlePromptChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
-async function loadEnvJson(promptJson){
+function loadEnvJson(promptJson){
     if (!promptJson){
         return
     }
@@ -548,19 +549,21 @@ async function loadEnvJson(promptJson){
     }
 }
 
-async function handleLoadJson(templateId){
+function handleLoadJson(templateId){
     try {
-        const response = await api.fetchApi(`/get_env_template/${templateId}`);
+        const response = api.fetchApi(`/get_env_template/${templateId}`);
         console.log(response);
         if (response.ok) {
-            const data = await response.json();
-            await loadEnvJson(data)
+            const data = response.json();
+            loadEnvJson(data)
         }else {
             console.info('Loading json none: load default');
         }
+        return true
     } catch (error) {
         console.error('Loading error:', error);
     }
+    return false
 }
 
 const awsConfigPanel = {
