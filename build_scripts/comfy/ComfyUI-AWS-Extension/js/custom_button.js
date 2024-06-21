@@ -331,7 +331,7 @@ async function handleChangeButton() {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
 
-                let rlt = handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+                let rlt = await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
                 console.log(rlt)
 
                 const response = await api.fetchApi("/workflows", {
