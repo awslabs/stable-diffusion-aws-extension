@@ -34,6 +34,7 @@ aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS 
 PUBLIC_BASE_IMAGE="366590864501.dkr.ecr.$AWS_REGION.amazonaws.com/esd-inference:$ESD_VERSION"
 docker pull "$PUBLIC_BASE_IMAGE"
 
+export ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 export release_image="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME"
 
 echo "Starting container..."
