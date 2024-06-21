@@ -1037,6 +1037,9 @@ if is_on_ec2:
         image_hash = os.getenv('IMAGE_HASH')
         image_uri = f"{image_hash}:{workflow_name}"
 
+        if isinstance(payload_json, dict):
+            payload_json = json.dumps(payload_json)
+
         data = {
             "payload_json": payload_json,
             "image_uri": image_uri,
