@@ -331,7 +331,7 @@ async function handleChangeButton() {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
 
-                handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
 
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
@@ -515,7 +515,7 @@ async function handlePromptChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
-function loadEnvJson(promptJson){
+async function loadEnvJson(promptJson){
     if (!promptJson){
         return
     }
@@ -548,13 +548,13 @@ function loadEnvJson(promptJson){
     }
 }
 
-function handleLoadJson(templateId){
+async function handleLoadJson(templateId){
     try {
-        const response = api.fetchApi(`/get_env_template/${templateId}`);
+        const response = await api.fetchApi(`/get_env_template/${templateId}`);
         console.log(response);
         if (response.ok) {
-            const data = response.json();
-            loadEnvJson(data)
+            const data = await response.json();
+            await loadEnvJson(data)
         }else {
             console.info('Loading json none: load default');
         }
