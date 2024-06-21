@@ -806,12 +806,12 @@ if is_on_ec2:
         return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-    @server.PromptServer.instance.routes.get("/check_prepare")
+    @server.PromptServer.instance.routes.post("/check_prepare")
     async def check_prepare(request):
         logger.info(f"start to check_prepare {request}")
         try:
             json_data = await request.json()
-            workflow_name = json_data['workflow_name']
+            workflow_name = os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             get_response = requests.get(f"{api_url}/prepare/{comfy_endpoint}", headers=headers)
             response = get_response.json()
