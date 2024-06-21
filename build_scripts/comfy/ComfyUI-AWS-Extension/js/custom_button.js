@@ -322,7 +322,7 @@ async function handleLoadButton() {
     }
 }
 
-function handleChangeButton() {
+async function handleChangeButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
             try {
@@ -516,7 +516,7 @@ async function handlePromptChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
-function loadEnvJson(promptJson){
+async function loadEnvJson(promptJson){
     if (!promptJson){
         return
     }
@@ -549,13 +549,13 @@ function loadEnvJson(promptJson){
     }
 }
 
-function handleLoadJson(templateId){
+async function handleLoadJson(templateId){
     try {
-        const response = api.fetchApi(`/get_env_template/${templateId}`);
+        const response = await api.fetchApi(`/get_env_template/${templateId}`);
         console.log(response);
         if (response.ok) {
-            const data = response.json();
-            loadEnvJson(data)
+            const data =await response.json();
+            await loadEnvJson(data)
         }else {
             console.info('Loading json none: load default');
         }
