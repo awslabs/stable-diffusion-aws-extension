@@ -322,7 +322,6 @@ async function handleLoadButton() {
     }
 }
 
-
 async function handleChangeButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
@@ -331,6 +330,8 @@ async function handleChangeButton() {
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
+
+                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -513,6 +514,73 @@ async function handlePromptChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
+async function loadEnvJson(promptJson){
+    if (!promptJson){
+        return
+    }
+    let jsonContent;
+    if (typeof promptJson === 'object') {
+        const jsonString = JSON.stringify(promptJson);
+        jsonContent = JSON.parse(jsonString);
+    } else {
+        jsonContent = JSON.parse(promptJson);
+    }
+
+    // if (jsonContent?.output) {
+    //     const jsonString2 = JSON.stringify(jsonContent.output);
+    //     const outputContent = JSON.parse(jsonString2);
+    //     var graph = new LiteGraph.LGraph();
+    //     app.loadApiJson(outputContent);
+    // } else {
+    //     console.error("Invalid JSON: missing 'workflow' property.");
+    // }
+
+    if (jsonContent?.workflow) {
+        const workflowJsonString = JSON.stringify(jsonContent.workflow);
+        const workflowContent = JSON.parse(workflowJsonString);
+        console.log(workflowContent)
+        app.loadGraphData(workflowContent);
+        console.log("finished loadGraphData")
+    } else {
+        console.error(jsonContent);
+        console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
+    }
+}
+
+async function handleLoadJson(templateId){
+    try {
+        const response = await api.fetchApi(`/get_env_template/${templateId}`);
+        console.log(response);
+        if (response.ok) {
+            const promptJson =await response.json();
+            if (!promptJson){
+                console.info("load default json")
+                return
+            }
+            let jsonContent;
+            if (typeof promptJson === 'object') {
+                const jsonString = JSON.stringify(promptJson);
+                jsonContent = JSON.parse(jsonString);
+            } else {
+                jsonContent = JSON.parse(promptJson);
+            }
+            if (jsonContent?.workflow) {
+                const workflowJsonString = JSON.stringify(jsonContent.workflow);
+                const workflowContent = JSON.parse(workflowJsonString);
+                console.log(workflowContent)
+                app.loadGraphData(workflowContent);
+                console.log("finished loadGraphData")
+            } else {
+                console.error(jsonContent);
+                console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
+            }
+        }else {
+            console.info('Loading json none: load default');
+        }
+    } catch (error) {
+        console.error('Loading error:', error);
+    }
+}
 
 const awsConfigPanel = {
     name: 'awsConfigPanel',
@@ -746,12 +814,8 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
-    async getInputValue() {
-        return document.getElementById("input-field").value;
-    }
-
     async releaseWorkflow() {
-        const inputValue = await document.getElementById("input-field").value;
+        const inputValue = document.getElementById("input-field").value;
         // validate names
         if (inputValue.length > 40) {
             document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
@@ -768,10 +832,12 @@ export class ModalReleaseDialog extends ComfyDialog {
         // this.element.close();
         handleLockScreen("Creating workflow...");
         try {
-            let payloadJson = '';
-            app.graphToPrompt().then(p => {
-                payloadJson = JSON.stringify(p.workflow, null, 2);
-            });
+            // let payloadJson = '';
+            // app.graphToPrompt().then(p => {
+            //     payloadJson = JSON.stringify(p.workflow, null, 2);
+            // });
+            let payloadJson =await app.graphToPrompt()
+            console.log(payloadJson)
 
             var target = {
                 'name': inputValue,

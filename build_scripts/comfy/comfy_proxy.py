@@ -64,9 +64,9 @@ if is_on_ec2:
         if item in env_keys:
             logger.info(f'evn key： {item} {os.environ.get(item)}')
 
-    DIR3 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/input"
-    DIR1 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/models"
-    DIR2 = "/root/stable-diffusion-aws-extension/container/workflows/default/ComfyUI/custom_nodes"
+    DIR3 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/input"
+    DIR1 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/models"
+    DIR2 = f"/root/stable-diffusion-aws-extension/container/workflows/{os.getenv('WORKFLOW_NAME')}/ComfyUI/custom_nodes"
 
     if 'COMFY_INPUT_PATH' in os.environ and os.environ.get('COMFY_INPUT_PATH'):
         DIR3 = os.environ.get('COMFY_INPUT_PATH')
@@ -524,27 +524,30 @@ if is_on_ec2:
         #         os.remove(tar_filepath)
 
 
-    def sync_default_files(comfy_endpoint):
+    def sync_default_files(comfy_endpoint, sync_type):
         try:
             timestamp = str(int(time.time() * 1000))
             prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
             need_prepare = True
             prepare_type = 'default'
-            need_reboot = True
-            logger.info(f" sync custom nodes files")
+            need_reboot = False
+            # logger.info(f" sync custom nodes files")
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
-            compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
-            logger.info(f" sync input files")
-            s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
-            logger.info(f"sync input files start {s5cmd_syn_input_command}")
-            os.system(s5cmd_syn_input_command)
-            logger.info(f" sync models files")
-            s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
-            logger.info(f"sync models files start {s5cmd_syn_model_command}")
-            os.system(s5cmd_syn_model_command)
-            logger.info(f"Files changed in:: {need_prepare} {DIR2} {DIR1} {DIR3}")
+            # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
+            if sync_type in ['default', 'input']:
+                logger.info(f" sync input files")
+                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                logger.info(f"sync input files start {s5cmd_syn_input_command}")
+                os.system(s5cmd_syn_input_command)
+            if sync_type in ['default', 'models']:
+                logger.info(f" sync models files")
+                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                logger.info(f"sync models files start {s5cmd_syn_model_command}")
+                os.system(s5cmd_syn_model_command)
+            logger.info(f"Files changed in:: {need_prepare} {sync_type} {DIR2} {DIR1} {DIR3}")
+
             url = api_url + "prepare"
             logger.info(f"URL:{url}")
             data = {"endpoint_name": comfy_endpoint, "need_reboot": need_reboot, "prepare_id": prepare_version,
@@ -554,6 +557,7 @@ if is_on_ec2:
                                      f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                     capture_output=True, text=True)
             logger.info(result.stdout)
+
             return result.stdout
         except Exception as e:
             logger.info(f"sync_files error {e}")
@@ -741,8 +745,8 @@ if is_on_ec2:
         event_handler = MyHandlerWithSync()
         observer = Observer()
         try:
-            observer.schedule(event_handler, DIR1, recursive=True)
-            observer.schedule(event_handler, DIR2, recursive=True)
+            # observer.schedule(event_handler, DIR1, recursive=True)
+            # observer.schedule(event_handler, DIR2, recursive=True)
             observer.schedule(event_handler, DIR3, recursive=True)
             observer.start()
             while True:
@@ -802,12 +806,12 @@ if is_on_ec2:
         return os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
-    @server.PromptServer.instance.routes.get("/check_prepare")
+    @server.PromptServer.instance.routes.post("/check_prepare")
     async def check_prepare(request):
         logger.info(f"start to check_prepare {request}")
         try:
             json_data = await request.json()
-            workflow_name = json_data['workflow_name']
+            workflow_name = os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
             get_response = requests.get(f"{api_url}/prepare/{comfy_endpoint}", headers=headers)
             response = get_response.json()
@@ -907,9 +911,10 @@ if is_on_ec2:
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
+            sync_type = json_data['sync_type'] if json_data and 'sync_type' in json_data else 'default'
             workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
-            thread = threading.Thread(target=sync_default_files, args=comfy_endpoint)
+            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint, sync_type))
             thread.start()
             # result = sync_default_files()
             # logger.debug(f"sync result is :{result}")
@@ -942,6 +947,42 @@ if is_on_ec2:
     async def check_is_master(request):
         is_master = is_master_process
         return web.Response(status=200, content_type='application/json', body=json.dumps({"master": is_master}))
+
+
+    def get_cloud_workflows(workflow_name):
+        response = requests.get(f"{api_url}/workflows", headers=headers, params={"limit": 1000})
+        if response.status_code != 200:
+            return None
+
+        data = response.json()['data']
+        workflows = data['workflows'] if (data and 'workflows' in data) else None
+
+        if not workflows:
+            return None
+
+        for workflow in workflows:
+            if workflow['name'] == workflow_name:
+                return workflow['payload_json']
+        return None
+
+
+    @server.PromptServer.instance.routes.get("/get_env_template/{id}")
+    async def get_env_template(request):
+        logger.info(f"start to get_env_template {request}")
+        template_id = request.match_info.get("id", None)
+        logger.info("template_id is :" + str(template_id))
+        workflow_name = os.getenv('WORKFLOW_NAME')
+        if not template_id:
+            workflow_name = template_id
+        if workflow_name == 'default':
+            logger.info(f"workflow_name is {workflow_name}")
+            return web.Response(status=500, content_type='application/json', body=None)
+        prompt_json = get_cloud_workflows(workflow_name)
+        if not prompt_json:
+            logger.info(f"get_cloud_workflows none")
+            return web.Response(status=500, content_type='application/json', body=None)
+
+        return web.Response(status=200, content_type='application/json', body=json.dumps(prompt_json))
 
 
     def get_directory_size(directory):
@@ -1261,16 +1302,7 @@ if is_on_ec2:
     def restore_workflow():
         action_lock("restore")
         subprocess.run(["sleep", "2"])
-        os.system("mv /container/workflows/default/ComfyUI/models/checkpoints/v1-5-pruned-emaonly.ckpt /")
-        os.system("mv /container/workflows/default/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt /")
         os.system("rm -rf /container/workflows/default")
-        os.system("mkdir -p /container/workflows/default")
-        logger.info("restore workflow...")
-        os.system("tar --overwrite -xf /container/default.tar -C /container/workflows/default/")
-        os.system("mkdir -p /container/workflows/default/ComfyUI/models/checkpoints")
-        os.system("mkdir -p /container/workflows/default/ComfyUI/models/animatediff_models")
-        os.system("mv /v1-5-pruned-emaonly.ckpt /container/workflows/default/ComfyUI/models/checkpoints/")
-        os.system("mv /mm_sd_v15_v2.ckpt /container/workflows/default/ComfyUI/models/animatediff_models/")
         action_unlock()
         subprocess.run(["pkill", "-f", "python3"])
 
@@ -1393,7 +1425,7 @@ if is_on_sagemaker:
                                                                     False)
                 if not sync_inputs_rlt:
                     rlt = False
-            if prepare_type in ['default', 'nodes']:
+            if prepare_type in ['nodes']:
                 sync_nodes_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes/*',
                                                                    f'{ROOT_PATH}/custom_nodes', True)
                 if not sync_nodes_rlt:

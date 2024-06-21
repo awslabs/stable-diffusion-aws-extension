@@ -341,14 +341,6 @@ download_conda_and_models(){
     echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
   fi
 
-  if [ ! -f "/home/ubuntu/ComfyUI/models/vae/vae-ft-mse-840000-ema-pruned.safetensors" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors /home/ubuntu/ComfyUI/models/vae/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/ComfyUI/models/animatediff_models/mm_sd_v15_v2.ckpt" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt /home/ubuntu/ComfyUI/models/animatediff_models/" >> /tmp/s5cmd.txt
-  fi
-
   if [ -f "/tmp/s5cmd.txt" ]; then
     s5cmd run /tmp/s5cmd.txt
   fi
@@ -410,7 +402,7 @@ if [ -n "$ON_EC2" ]; then
   ln -s "$WORKFLOW_DIR/ComfyUI" /home/ubuntu/ComfyUI
 
   cd "/home/ubuntu/ComfyUI" || exit 1
-  download_conda_and_models
+  set_conda
 
   if [ -f "/comfy_proxy.py" ]; then
     cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/

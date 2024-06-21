@@ -32,7 +32,7 @@ jobs:
           python3 -m pip install pymdown-extensions
       - name: Build mkdocs
         run: |
-          export OAS_FILE=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/esd-oas.json
+          export OAS_FILE=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/oas.json
           mkdir -p ./docs/zh/developer-guide/api/
           wget -qO ./docs/zh/developer-guide/api/esd-oas.json $OAS_FILE
           mkdir -p ./docs/jp/developer-guide/api/
