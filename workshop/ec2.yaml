@@ -308,6 +308,9 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
+  TemplateSource:
+    Description: Source file of the template
+    Value: https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/sd_dev.yaml
   WebUINginxURL:
     Description: URL for Stable Diffusion WebUI
     Value: !Sub http://${WebUiEIP}
@@ -315,3 +318,6 @@ Outputs:
     Description: URL for Stable Diffusion WebUI
     # add port 7860 to the end of the URL
     Value: !Sub http://${WebUiEIP}:7860
+  PageUrlOfEC2Connect:
+    Description: URL of EC2 Connect Page
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/ec2/home?region=${AWS::Region}#ConnectToInstance:instanceId=${WebUiEC2Instance}

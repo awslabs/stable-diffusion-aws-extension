@@ -103,6 +103,7 @@ docker stop $PROGRAM_NAME || true
 docker rm $PROGRAM_NAME || true
 docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $CONTAINER_PATH:/container \\
+           -v $CONTAINER_PATH/conda:/home/ubuntu/conda \\
            -v $START_SH:/start.sh \\
            -v $COMFY_PROXY:/comfy_proxy.py:ro \\
            -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
@@ -167,6 +168,17 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
+fi
+
+rm -rf /tmp/s5cmd.txt
+if [ ! -f "$CONTAINER_PATH/conda/lib/libcufft.so.10" ]; then
+  echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
+fi
+if [ ! -f "$CONTAINER_PATH/conda/lib/libcurand.so.10" ]; then
+  echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
+fi
+if [ -f "/tmp/s5cmd.txt" ]; then
+  s5cmd run /tmp/s5cmd.txt
 fi
 
 SUPERVISOR_CONF="[supervisord]
