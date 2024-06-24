@@ -524,29 +524,28 @@ if is_on_ec2:
         #         os.remove(tar_filepath)
 
 
-    def sync_default_files(comfy_endpoint, sync_type):
+    def sync_default_files(comfy_endpoint, prepare_type):
         try:
             timestamp = str(int(time.time() * 1000))
             prepare_version = PREPARE_ID if PREPARE_MODE == 'additional' else timestamp
             need_prepare = True
-            prepare_type = 'default'
             need_reboot = False
             # logger.info(f" sync custom nodes files")
             # s5cmd_syn_node_command = f's5cmd --log=error sync --delete=true --exclude="*comfy_local_proxy.py" {DIR2}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
             # logger.info(f"sync custom_nodes files start {s5cmd_syn_node_command}")
             # os.system(s5cmd_syn_node_command)
             # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
-            if sync_type in ['default', 'input']:
+            if prepare_type in ['default', 'inputs']:
                 logger.info(f" sync input files")
                 s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
                 logger.info(f"sync input files start {s5cmd_syn_input_command}")
                 os.system(s5cmd_syn_input_command)
-            if sync_type in ['default', 'models']:
+            if prepare_type in ['default', 'models']:
                 logger.info(f" sync models files")
                 s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
                 logger.info(f"sync models files start {s5cmd_syn_model_command}")
                 os.system(s5cmd_syn_model_command)
-            logger.info(f"Files changed in:: {need_prepare} {sync_type} {DIR2} {DIR1} {DIR3}")
+            logger.info(f"Files changed in:: {need_prepare} {prepare_type} {DIR2} {DIR1} {DIR3}")
 
             url = api_url + "prepare"
             logger.info(f"URL:{url}")
@@ -911,10 +910,10 @@ if is_on_ec2:
         logger.info(f"start to sync_env {request}")
         try:
             json_data = await request.json()
-            sync_type = json_data['sync_type'] if json_data and 'sync_type' in json_data else 'default'
+            prepare_type = json_data['prepare_type'] if json_data and 'prepare_type' in json_data else 'inputs'
             workflow_name = json_data['workflow_name'] if json_data and 'workflow_name' in json_data else os.getenv('WORKFLOW_NAME')
             comfy_endpoint = get_endpoint_name_by_workflow_name(workflow_name)
-            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint, sync_type))
+            thread = threading.Thread(target=sync_default_files, args=(comfy_endpoint, prepare_type))
             thread.start()
             # result = sync_default_files()
             # logger.debug(f"sync result is :{result}")
@@ -1036,6 +1035,9 @@ if is_on_ec2:
         cost_time = end_time - start_time
         image_hash = os.getenv('IMAGE_HASH')
         image_uri = f"{image_hash}:{workflow_name}"
+
+        if isinstance(payload_json, dict):
+            payload_json = json.dumps(payload_json)
 
         data = {
             "payload_json": payload_json,
