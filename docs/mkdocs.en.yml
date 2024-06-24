@@ -44,8 +44,7 @@ nav:
         - API Inference Process: developer-guide/api_inference_process.md
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
-        - API Version & Details:
-            - 1.6.0: developer-guide/api/1.6.0.md
+        - API Details: developer-guide/api.md
         - Custom Container: developer-guide/byoc.md
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md
