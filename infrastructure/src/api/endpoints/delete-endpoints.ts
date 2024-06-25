@@ -1,13 +1,14 @@
 import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import {JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource} from 'aws-cdk-lib/aws-apigateway';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
-import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
+import {Role} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {ApiModels} from '../../shared/models';
 import {SCHEMA_ENDPOINT_NAME} from '../../shared/schema';
 import {ApiValidators} from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface DeleteEndpointsApiProps {
     router: Resource;
@@ -21,8 +22,6 @@ export class DeleteEndpointsApi {
     private readonly router: Resource;
     private readonly httpMethod: string;
     private readonly scope: Construct;
-    private readonly endpointDeploymentTable: Table;
-    private readonly multiUserTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
 
@@ -31,8 +30,6 @@ export class DeleteEndpointsApi {
         this.baseId = id;
         this.router = props.router;
         this.httpMethod = props.httpMethod;
-        this.endpointDeploymentTable = props.endpointDeploymentTable;
-        this.multiUserTable = props.multiUserTable;
         this.layer = props.commonLayer;
 
         const lambdaFunction = this.apiLambda();
@@ -58,85 +55,6 @@ export class DeleteEndpointsApi {
                 ApiModels.methodResponses403(),
             ],
         });
-    }
-
-    private iamRole(): Role {
-
-        const newRole = new Role(this.scope, `${this.baseId}-role`, {
-            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-        });
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'sagemaker:DeleteModel',
-                'sagemaker:DeleteEndpoint',
-                'sagemaker:DeleteEndpointConfig',
-                'sagemaker:DescribeEndpoint',
-                'sagemaker:DescribeEndpointConfig',
-            ],
-            resources: [
-                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:model/*`,
-                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`,
-                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint-config/*`,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                'dynamodb:Query',
-                'dynamodb:GetItem',
-                'dynamodb:PutItem',
-                'dynamodb:DeleteItem',
-                'dynamodb:UpdateItem',
-                'dynamodb:Describe*',
-                'dynamodb:List*',
-            ],
-            resources: [
-                this.endpointDeploymentTable.tableArn,
-                `${this.endpointDeploymentTable.tableArn}/*`,
-                this.multiUserTable.tableArn,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                's3:Get*',
-                's3:List*',
-                's3:PutObject',
-                's3:GetObject',
-                's3:DeleteObject',
-            ],
-            resources: [
-                '*',
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'application-autoscaling:DeregisterScalableTarget',
-                'cloudwatch:DeleteAlarms',
-                'cloudwatch:DescribeAlarms',
-                'cloudwatch:DeleteDashboards',
-            ],
-            resources: [
-                '*',
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents',
-                'logs:DeleteLogGroup',
-            ],
-            resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-        }));
-
-        return newRole;
     }
 
     private createRequestBodyModel(): Model {
@@ -165,6 +83,8 @@ export class DeleteEndpointsApi {
     }
 
     private apiLambda() {
+        const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
             entry: '../middleware_api/endpoints',
             architecture: Architecture.X86_64,
@@ -172,7 +92,7 @@ export class DeleteEndpointsApi {
             index: 'delete_endpoints.py',
             handler: 'handler',
             timeout: Duration.seconds(900),
-            role: this.iamRole(),
+            role: role,
             memorySize: 2048,
             tracing: aws_lambda.Tracing.ACTIVE,
             layers: [this.layer],
