@@ -51,3 +51,4 @@ test/**/.env
 /container/
 /.env
 supervisord.*
+oas.json

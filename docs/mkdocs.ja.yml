@@ -43,8 +43,7 @@ nav:
         - API推論プロセス: developer-guide/api_inference_process.md
         - API推論デバッガー: developer-guide/api_debugger.md
         - API認証: developer-guide/api_authentication.md
-        - APIバージョンと詳細:
-            - 1.6.0: developer-guide/api/1.6.0.md
+        - API詳細: developer-guide/api.md
         - カスタムコンテナ: developer-guide/byoc.md
     - トラブルシューティング: troubleshooting.md
     - FAQ: faq.md

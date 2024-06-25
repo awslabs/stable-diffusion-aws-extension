@@ -33,12 +33,12 @@ jobs:
       - name: Build mkdocs
         run: |
           export OAS_FILE=https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/oas.json
-          mkdir -p ./docs/zh/developer-guide/api/
-          wget -qO ./docs/zh/developer-guide/api/esd-oas.json $OAS_FILE
-          mkdir -p ./docs/jp/developer-guide/api/
-          wget -qO ./docs/jp/developer-guide/api/esd-oas.json $OAS_FILE
-          mkdir -p ./docs/en/developer-guide/api/
-          wget -qO ./docs/en/developer-guide/api/esd-oas.json $OAS_FILE
+          mkdir -p ./docs/zh/developer-guide/
+          wget -qO ./docs/zh/developer-guide/oas.json $OAS_FILE
+          mkdir -p ./docs/ja/developer-guide/
+          wget -qO ./docs/ja/developer-guide/oas.json $OAS_FILE
+          mkdir -p ./docs/en/developer-guide/
+          wget -qO ./docs/en/developer-guide/oas.json $OAS_FILE
           mkdocs build -f ./docs/mkdocs.en.yml
           mkdocs build -f ./docs/mkdocs.zh.yml
           mkdocs build -f ./docs/mkdocs.ja.yml
