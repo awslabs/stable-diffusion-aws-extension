@@ -8,9 +8,9 @@ import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
   SCHEMA_LAST_KEY,
-  SCHEMA_MESSAGE,
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_CREATED,
   SCHEMA_WORKFLOW_JSON_NAME,
-  SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_STATUS, SCHEMA_WORKFLOW_JSON_WORKFLOW
+  SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
 } from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
@@ -92,14 +92,14 @@ export class ListSchemasApi {
                   properties: {
                     name: SCHEMA_WORKFLOW_JSON_NAME,
                     payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
-                    status: SCHEMA_WORKFLOW_JSON_STATUS,
                     workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+                    create_time: SCHEMA_WORKFLOW_JSON_CREATED,
                   },
                   required: [
                     'name',
                     'payload',
-                    'status',
                     'workflow',
+                    'create_time',
                   ],
                 },
               },

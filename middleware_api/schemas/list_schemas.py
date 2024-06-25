@@ -8,7 +8,7 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param
-from libs.data_types import Workflow
+from libs.data_types import WorkflowSchema
 from libs.utils import response_error, decode_last_key, encode_last_key
 
 tracer = Tracer()
@@ -48,12 +48,12 @@ def handler(event, ctx):
 
         for row in scan_rows:
             logger.info(f"row: {row}")
-            results.append(Workflow(**row).__dict__)
+            results.append(WorkflowSchema(**row).__dict__)
 
-        results = sort_workflows(results)
+        results = sort(results)
 
         data = {
-            'workflows': results,
+            'schemas': results,
             'last_evaluated_key': last_evaluated_key
         }
 
@@ -62,7 +62,7 @@ def handler(event, ctx):
         return response_error(e)
 
 
-def sort_workflows(data):
+def sort(data):
     if len(data) == 0:
         return data
 

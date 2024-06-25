@@ -625,10 +625,6 @@ export const SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON: JsonSchema = {
   type: JsonSchemaType.STRING,
 };
 
-export const SCHEMA_WORKFLOW_JSON_STATUS: JsonSchema = {
-  type: JsonSchemaType.STRING,
-};
-
 export const SCHEMA_WORKFLOW_JSON_WORKFLOW: JsonSchema = {
   type: JsonSchemaType.STRING,
 };

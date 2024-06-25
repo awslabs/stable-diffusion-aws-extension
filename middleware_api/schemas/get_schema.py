@@ -27,11 +27,11 @@ def handler(event, ctx):
         inference = schemas_table.get_item(Key={'name': name})
 
         if 'Item' not in inference:
-            return not_found(message=f'workflow with name {name} not found')
+            return not_found(message=f'schema with name {name} not found')
 
         item = inference['Item']
 
-        log_json("inference job", item)
+        log_json("schema", item)
 
         return ok(data=item, decimal=True)
 

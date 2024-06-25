@@ -10,7 +10,7 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok
-from libs.data_types import Workflow
+from libs.data_types import WorkflowSchema
 from libs.utils import response_error, check_file_exists
 
 tracer = Tracer()
@@ -29,18 +29,17 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 @dataclass
-class CreateWorkflowEvent:
+class CreateSchemaEvent:
     name: str
-    image_uri: str
-    payload_json: str
-    size: str
+    workflow: str
+    payload: str
 
 
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
-        event = CreateWorkflowEvent(**json.loads(raw_event['body']))
+        event = CreateSchemaEvent(**json.loads(raw_event['body']))
 
         response = dynamodb.get_item(
             TableName=schemas_table,
@@ -51,18 +50,10 @@ def handler(raw_event, ctx):
         if response.get('Item', None) is not None:
             raise BadRequestException(f"{event.name} already exists")
 
-        s3_location = f"comfy/workflows/{event.name}/"
-
-        if not check_file_exists(f"{s3_location}lock"):
-            raise BadRequestException(f"{event.name} files not ready")
-
-        data = Workflow(
+        data = WorkflowSchema(
             name=event.name,
-            s3_location=s3_location,
-            image_uri=event.image_uri,
-            size=event.size,
-            payload_json=event.payload_json,
-            status='Enabled',
+            payload=event.payload,
+            workflow=event.workflow,
             create_time=datetime.utcnow().isoformat(),
         ).__dict__
 

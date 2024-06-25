@@ -210,7 +210,7 @@ async function createTables() {
     },
     ComfyWorkflowsSchemasTable: {
       partitionKey: {
-        name: 'id',
+        name: 'name',
         type: AttributeType.STRING,
       },
     },

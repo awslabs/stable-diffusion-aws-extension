@@ -28,8 +28,8 @@ lambda_client = boto3.client('lambda')
 
 
 @dataclass
-class DeleteWorkflowsEvent:
-    workflow_name_list: [str]
+class DeleteSchemasEvent:
+    schema_name_list: [str]
 
 
 def endpoint_in_use(endpoint_name):
@@ -42,9 +42,9 @@ def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
 
-        event = DeleteWorkflowsEvent(**json.loads(raw_event['body']))
+        event = DeleteSchemasEvent(**json.loads(raw_event['body']))
 
-        for name in event.workflow_name_list:
+        for name in event.schema_name_list:
             endpoint_in_use(f'comfy-async-{name}')
             endpoint_in_use(f'comfy-real-time-{name}')
 

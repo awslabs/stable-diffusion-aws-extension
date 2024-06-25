@@ -37,7 +37,7 @@ export class Workflow {
 
 
         new ListWorkflowsApi(
-            scope, 'ListWorkflows',
+            scope, 'ListWorkflowsJobs',
             {
                 workflowsTable: props.workflowsTable,
                 commonLayer: props.commonLayer,
