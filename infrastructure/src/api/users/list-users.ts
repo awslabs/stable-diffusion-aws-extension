@@ -1,7 +1,7 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
-import { Effect } from 'aws-cdk-lib/aws-iam';
+import {Role} from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
@@ -14,6 +14,7 @@ import {
   SCHEMA_USER_ROLES,
   SCHEMA_USERNAME,
 } from '../../shared/schema';
+import {ESD_ROLE} from "../../shared/const";
 
 
 export interface ListUsersApiProps {
@@ -28,7 +29,6 @@ export class ListUsersApi {
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
@@ -39,7 +39,6 @@ export class ListUsersApi {
     this.router = props.router;
     this.passwordKey = props.passwordKey;
     this.httpMethod = props.httpMethod;
-    this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -62,49 +61,6 @@ export class ListUsersApi {
         ApiModels.methodResponses404(),
       ],
     });
-  }
-
-  private iamRole(): aws_iam.Role {
-    const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
-      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-    });
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:BatchGetItem',
-        'dynamodb:GetItem',
-        'dynamodb:Scan',
-        'dynamodb:Query',
-      ],
-      resources: [this.multiUserTable.tableArn],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'kms:Decrypt',
-      ],
-      resources: ['*'],
-      conditions: {
-        StringEquals: {
-          'kms:RequestAlias': `alias/${this.passwordKey.keyId}`,
-        },
-      },
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-        'kms:Decrypt',
-      ],
-      resources: ['*'],
-    }));
-
-    return newRole;
   }
 
   private responseModel() {
@@ -166,6 +122,8 @@ export class ListUsersApi {
   }
 
   private apiLambda() {
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/users',
       architecture: Architecture.X86_64,
@@ -173,7 +131,7 @@ export class ListUsersApi {
       index: 'list_users.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {

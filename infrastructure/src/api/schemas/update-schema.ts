@@ -46,8 +46,7 @@ export class UpdateSchemaApi {
       },
     );
 
-    this.router.addResource('{name}')
-        .addMethod(
+    this.router.addMethod(
             this.httpMethod,
             lambdaIntegration,
             {

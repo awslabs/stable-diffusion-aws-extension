@@ -58,6 +58,8 @@ export class Schema {
             },
         );
 
+        const schemaResource = props.routers.schemas.addResource('{name}');
+
         new GetSchemaApi(
             scope, 'GetSchema',
             {
@@ -65,7 +67,7 @@ export class Schema {
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
-                router: props.routers.schemas,
+                router: schemaResource,
             },
         );
 
@@ -76,7 +78,7 @@ export class Schema {
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'PUT',
-                router: props.routers.schemas,
+                router: schemaResource,
             },
         );
 
