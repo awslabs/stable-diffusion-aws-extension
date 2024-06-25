@@ -612,7 +612,6 @@ export const SCHEMA_WORKFLOW_SIZE: JsonSchema = {
   type: JsonSchemaType.STRING,
 };
 
-
 export const SCHEMA_WORKFLOW_JSON_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
   minLength: 1,
