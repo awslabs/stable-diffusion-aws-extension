@@ -523,6 +523,14 @@ operations = {
             path_name
         ]
     ),
+    'UpdateSchema': APISchema(
+        summary="Update Schema",
+        tags=["Schemas"],
+        description="Update Schema by Name",
+        parameters=[
+            path_name
+        ]
+    ),
 }
 
 

@@ -8,6 +8,7 @@ import {CreateSchemaApi} from "../api/schemas/create-schema";
 import {ListSchemasApi} from "../api/schemas/list-schemas";
 import {DeleteSchemasApi} from "../api/schemas/delete-schemas";
 import {GetSchemaApi} from "../api/schemas/get-schema";
+import {UpdateSchemaApi} from "../api/schemas/update-schema";
 
 export interface SchemaProps extends StackProps {
     routers: { [key: string]: Resource };
@@ -68,6 +69,16 @@ export class Schema {
             },
         );
 
+        new UpdateSchemaApi(
+            scope, 'UpdateSchema',
+            {
+                workflowsSchemasTable: props.workflowsSchemasTable,
+                commonLayer: props.commonLayer,
+                multiUserTable: props.multiUserTable,
+                httpMethod: 'PUT',
+                router: props.routers.schemas,
+            },
+        );
 
     }
 

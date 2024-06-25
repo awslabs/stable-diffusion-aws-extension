@@ -48,7 +48,12 @@ def handler(event, ctx):
 
         for row in scan_rows:
             logger.info(f"row: {row}")
-            results.append(WorkflowSchema(**row).__dict__)
+            do = WorkflowSchema(**row)
+            results.append({
+                'name': do.name,
+                'workflow': do.workflow,
+                'create_time': do.create_time
+            })
 
         results = sort(results)
 

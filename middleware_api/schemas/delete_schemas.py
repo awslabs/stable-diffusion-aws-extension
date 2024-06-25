@@ -8,9 +8,9 @@ from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import accepted
+from common.response import no_content
 from endpoints.delete_endpoints import get_endpoint_in_sagemaker
-from libs.utils import response_error, update_table_by_pk
+from libs.utils import response_error
 
 tracer = Tracer()
 table_name = os.environ.get('WORKFLOW_SCHEMA_TABLE')
@@ -45,23 +45,8 @@ def handler(raw_event, ctx):
         event = DeleteSchemasEvent(**json.loads(raw_event['body']))
 
         for name in event.schema_name_list:
-            endpoint_in_use(f'comfy-async-{name}')
-            endpoint_in_use(f'comfy-real-time-{name}')
+            ddb_service.delete_item(table=table_name, keys={'name': name})
 
-            try:
-                update_table_by_pk(table=table_name, pk_name='name', pk_value=name, key='status', value='Deleting')
-            except Exception as e:
-                logger.error(f"Update workflow status error: {e}")
-
-            resp = lambda_client.invoke(
-                FunctionName=handler_name,
-                InvocationType='Event',
-                Payload=json.dumps({
-                    'name': name,
-                })
-            )
-            logger.info(resp)
-
-        return accepted(message="Workflows Delete Request Accepted")
+        return no_content(message="Schemas deleted successfully")
     except Exception as e:
         return response_error(e)

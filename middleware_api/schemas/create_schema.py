@@ -11,7 +11,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok
 from libs.data_types import WorkflowSchema
-from libs.utils import response_error, check_file_exists
+from libs.utils import response_error
 
 tracer = Tracer()
 schemas_table = os.environ.get('WORKFLOW_SCHEMA_TABLE')
