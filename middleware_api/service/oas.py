@@ -138,6 +138,7 @@ tags = [
     Tag(name="Prepare", description="Sync files to Endpoint").to_dict(),
     Tag(name="Sync", description="Sync Message from Endpoint").to_dict(),
     Tag(name="Workflows", description="Manage Workflows").to_dict(),
+    Tag(name="Schemas", description="Manage Schemas").to_dict(),
     Tag(name="Others", description="Others API").to_dict(),
 ]
 
@@ -495,6 +496,29 @@ operations = {
         summary="Get Workflow",
         tags=["Workflows"],
         description="Get Workflow by Name",
+        parameters=[
+            path_name
+        ]
+    ),
+    "CreateSchema": APISchema(
+        summary="Release new Schema",
+        tags=["Schemas"],
+        description="Create a new Schema",
+    ),
+    "ListSchemas": APISchema(
+        summary="List Schemas",
+        tags=["Schemas"],
+        description="List Schemas with Parameters",
+    ),
+    "DeleteSchemas": APISchema(
+        summary="Delete Schemas",
+        tags=["Schemas"],
+        description="Delete specify Schemas",
+    ),
+    'GetSchema': APISchema(
+        summary="Get Schema",
+        tags=["Schemas"],
+        description="Get Schema by Name",
         parameters=[
             path_name
         ]

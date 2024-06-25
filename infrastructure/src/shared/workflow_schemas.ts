@@ -4,68 +4,68 @@ import {Resource} from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import {Construct} from 'constructs';
 import {ResourceProvider} from './resource-provider';
-import {CreateWorkflowApi} from "../api/workflows/create-workflow";
-import {ListWorkflowsApi} from "../api/workflows/list-workflows";
-import {DeleteWorkflowsApi} from "../api/workflows/delete-workflows";
-import {GetWorkflowApi} from "../api/workflows/get-workflow";
+import {CreateSchemaApi} from "../api/schemas/create-schema";
+import {ListSchemasApi} from "../api/schemas/list-schemas";
+import {DeleteSchemasApi} from "../api/schemas/delete-schemas";
+import {GetSchemaApi} from "../api/schemas/get-schema";
 
-export interface WorkflowProps extends StackProps {
+export interface SchemaProps extends StackProps {
     routers: { [key: string]: Resource };
     s3_bucket: s3.Bucket;
-    workflowsTable: aws_dynamodb.Table;
+    workflowsSchemasTable: aws_dynamodb.Table;
     multiUserTable: aws_dynamodb.Table;
     commonLayer: PythonLayerVersion;
     resourceProvider: ResourceProvider;
 }
 
-export class Workflow {
+export class Schema {
 
     constructor(
         scope: Construct,
-        props: WorkflowProps,
+        props: SchemaProps,
     ) {
 
-        new CreateWorkflowApi(
-            scope, 'CreateWorkflow', {
-                workflowsTable: props.workflowsTable,
+        new CreateSchemaApi(
+            scope, 'CreateSchema', {
+                workflowsSchemasTable: props.workflowsSchemasTable,
                 commonLayer: props.commonLayer,
                 httpMethod: 'POST',
-                router: props.routers.workflows,
+                router: props.routers.schemas,
                 multiUserTable: props.multiUserTable,
             },
         );
 
 
-        new ListWorkflowsApi(
-            scope, 'ListWorkflows',
+        new ListSchemasApi(
+            scope, 'ListSchemas',
             {
-                workflowsTable: props.workflowsTable,
+                workflowsSchemasTable: props.workflowsSchemasTable,
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
-                router: props.routers.workflows,
+                router: props.routers.schemas,
             },
         );
 
-        new DeleteWorkflowsApi(
-            scope, 'DeleteWorkflows',
+        new DeleteSchemasApi(
+            scope, 'DeleteSchemas',
             {
-                workflowsTable: props.workflowsTable,
+                workflowsSchemasTable: props.workflowsSchemasTable,
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'DELETE',
-                router: props.routers.workflows,
+                router: props.routers.schemas,
             },
         );
 
-        new GetWorkflowApi(
-            scope, 'GetWorkflow',
+        new GetSchemaApi(
+            scope, 'GetSchema',
             {
-                workflowsTable: props.workflowsTable,
+                workflowsSchemasTable: props.workflowsSchemasTable,
                 commonLayer: props.commonLayer,
                 multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
-                router: props.routers.workflows,
+                router: props.routers.schemas,
             },
         );
 
