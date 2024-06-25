@@ -574,7 +574,7 @@ if is_on_ec2:
             logger.info(f"Files changed in: {filepath}")
             timestamp = str(int(time.time() * 1000))
             need_prepare = False
-            prepare_type = 'default'
+            prepare_type = 'inputs'
             need_reboot = False
             for ignore_item in no_need_sync_files:
                 if filepath.endswith(ignore_item):
