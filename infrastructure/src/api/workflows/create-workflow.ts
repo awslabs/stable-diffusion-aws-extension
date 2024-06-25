@@ -1,8 +1,8 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
+import { aws_lambda, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
@@ -16,6 +16,7 @@ import {
   SCHEMA_WORKFLOW_STATUS,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateWorkflowApiProps {
   router: Resource;
@@ -29,7 +30,6 @@ export class CreateWorkflowApi {
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly multiUserTable: Table;
   private readonly workflowsTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
@@ -39,7 +39,6 @@ export class CreateWorkflowApi {
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.multiUserTable = props.multiUserTable;
     this.workflowsTable = props.workflowsTable;
     this.layer = props.commonLayer;
 
@@ -117,70 +116,6 @@ export class CreateWorkflowApi {
     });
   }
 
-  private iamRole(): Role {
-
-    const s3Statement = new PolicyStatement({
-      actions: [
-        's3:Get*',
-        's3:List*',
-        's3:PutObject',
-        's3:GetObject',
-        's3:HeadObject',
-      ],
-      resources: [
-        '*',
-      ],
-    });
-
-    const ddbStatement = new PolicyStatement({
-      actions: [
-        'dynamodb:Query',
-        'dynamodb:GetItem',
-        'dynamodb:PutItem',
-        'dynamodb:Query',
-        'dynamodb:List*',
-      ],
-      resources: [
-        this.workflowsTable.tableArn,
-        this.multiUserTable.tableArn,
-      ],
-    });
-
-    const logStatement = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
-      resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-    });
-
-
-    const passStartDeployRole = new PolicyStatement({
-      actions: [
-        'iam:PassRole',
-      ],
-      resources: [
-        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/*`,
-      ],
-    });
-
-    const lambdaStartDeployRole = new Role(this.scope, 'EsdWorkflowRole', {
-      assumedBy: new CompositePrincipal(
-        new ServicePrincipal('lambda.amazonaws.com'),
-        new ServicePrincipal('sagemaker.amazonaws.com'),
-      ),
-    });
-
-    lambdaStartDeployRole.addToPolicy(s3Statement);
-    lambdaStartDeployRole.addToPolicy(ddbStatement);
-    lambdaStartDeployRole.addToPolicy(logStatement);
-    lambdaStartDeployRole.addToPolicy(passStartDeployRole);
-
-    return lambdaStartDeployRole;
-  }
-
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
@@ -208,6 +143,8 @@ export class CreateWorkflowApi {
   }
 
   private apiLambda() {
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/workflows',
       architecture: Architecture.X86_64,
@@ -215,7 +152,7 @@ export class CreateWorkflowApi {
       index: 'create_workflow.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {

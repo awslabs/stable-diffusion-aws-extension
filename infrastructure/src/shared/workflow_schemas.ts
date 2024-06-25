@@ -52,7 +52,6 @@ export class Schema {
             {
                 workflowsSchemasTable: props.workflowsSchemasTable,
                 commonLayer: props.commonLayer,
-                multiUserTable: props.multiUserTable,
                 httpMethod: 'DELETE',
                 router: props.routers.schemas,
             },
