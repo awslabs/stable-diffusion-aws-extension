@@ -136,11 +136,7 @@ export class Middleware extends Stack {
       'inferences',
       'trainings',
       // comfy api
-      'template',
-      'model',
       'executes',
-      'node',
-      'config',
       'prepare',
       'sync',
       'merge',
