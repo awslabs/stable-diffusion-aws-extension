@@ -514,39 +514,6 @@ async function handlePromptChange(event) {
     // event.target.checked = data.env.toUpperCase() === 'FALSE';
 }
 
-async function loadEnvJson(promptJson){
-    if (!promptJson){
-        return
-    }
-    let jsonContent;
-    if (typeof promptJson === 'object') {
-        const jsonString = JSON.stringify(promptJson);
-        jsonContent = JSON.parse(jsonString);
-    } else {
-        jsonContent = JSON.parse(promptJson);
-    }
-
-    // if (jsonContent?.output) {
-    //     const jsonString2 = JSON.stringify(jsonContent.output);
-    //     const outputContent = JSON.parse(jsonString2);
-    //     var graph = new LiteGraph.LGraph();
-    //     app.loadApiJson(outputContent);
-    // } else {
-    //     console.error("Invalid JSON: missing 'workflow' property.");
-    // }
-
-    if (jsonContent?.workflow) {
-        const workflowJsonString = JSON.stringify(jsonContent.workflow);
-        const workflowContent = JSON.parse(workflowJsonString);
-        console.log(workflowContent)
-        app.loadGraphData(workflowContent);
-        console.log("finished loadGraphData")
-    } else {
-        console.error(jsonContent);
-        console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
-    }
-}
-
 async function handleLoadJson(templateId){
     try {
         const response = await api.fetchApi(`/get_env_template/${templateId}`);
@@ -568,7 +535,7 @@ async function handleLoadJson(templateId){
                 const workflowJsonString = JSON.stringify(jsonContent.workflow);
                 const workflowContent = JSON.parse(workflowJsonString);
                 console.log(workflowContent)
-                app.loadGraphData(workflowContent);
+                await app.loadGraphData(workflowContent);
                 console.log("finished loadGraphData")
             } else {
                 console.error(jsonContent);
@@ -577,8 +544,10 @@ async function handleLoadJson(templateId){
         }else {
             console.info('Loading json none: load default');
         }
+        return true
     } catch (error) {
         console.error('Loading error:', error);
+        return false
     }
 }
 
