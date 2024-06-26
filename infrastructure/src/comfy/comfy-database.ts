@@ -2,8 +2,6 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 
 export class ComfyDatabase extends Construct {
-  public templateTable: Table;
-  public configTable: Table;
   public executeTable: Table;
   public syncTable: Table;
   public msgTable: Table;
@@ -11,9 +9,6 @@ export class ComfyDatabase extends Construct {
 
   constructor(scope: Construct, baseId: string) {
     super(scope, baseId);
-    this.templateTable = this.table(scope, baseId, 'ComfyTemplateTable');
-
-    this.configTable = this.table(scope, baseId, 'ComfyConfigTable');
 
     this.executeTable = this.table(scope, baseId, 'ComfyExecuteTable');
 
