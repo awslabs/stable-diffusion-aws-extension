@@ -971,12 +971,13 @@ if is_on_ec2:
         template_id = request.match_info.get("id", None)
         logger.info("template_id is :" + str(template_id))
         workflow_name = os.getenv('WORKFLOW_NAME')
-        if not template_id:
+        if template_id:
             workflow_name = template_id
         if workflow_name == 'default':
             logger.info(f"workflow_name is {workflow_name}")
             return web.Response(status=500, content_type='application/json', body=None)
         prompt_json = get_cloud_workflows(workflow_name)
+        logger.debug(f"workflow_name is {workflow_name} and prompt_json is: {prompt_json}")
         if not prompt_json:
             logger.info(f"get_cloud_workflows none")
             return web.Response(status=500, content_type='application/json', body=None)
