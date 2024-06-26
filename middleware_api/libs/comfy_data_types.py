@@ -5,24 +5,6 @@ from libs.enums import ComfyEnvPrepareType, ComfySyncStatus
 
 
 @dataclass
-class ComfyTemplateTable:
-    template_name: str
-    tag: Optional[str]
-    s3_path: str
-    create_time: str
-    modify_time: Optional[str]
-
-
-@dataclass
-class ComfyConfigTable:
-    config_name: str
-    tag: Optional[str]
-    config_value: str
-    create_time: str
-    modify_time: Optional[str]
-
-
-@dataclass
 class InferenceResult:
     instance_id: str
     status: str

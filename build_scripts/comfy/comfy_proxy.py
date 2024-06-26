@@ -1446,25 +1446,26 @@ if is_on_sagemaker:
                 sync_script = sync_item['sync_script']
                 logger.info(f"sync_script {sync_script}")
                 # sync_script.startswith('s5cmd') 不允许
-                # try:
-                    # if sync_script and (
-                    #         sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
-                    #         or sync_script.startswith("pip install") or sync_script.startswith("apt")
-                    #         or sync_script.startswith("os.environ") or sync_script.startswith("ls")
-                    #         or sync_script.startswith("env") or sync_script.startswith("source")
-                    #         or sync_script.startswith("curl") or sync_script.startswith("wget")
-                    #         or sync_script.startswith("print") or sync_script.startswith("cat")
-                    #         or sync_script.startswith("sudo chmod") or sync_script.startswith("chmod")
-                    #         or sync_script.startswith("/home/ubuntu/ComfyUI/venv/bin/python")):
-                    #     os.system(sync_script)
-                    # elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
-                    #     sync_script_key = sync_script.split(" ")[1]
-                    #     sync_script_value = sync_script.split(" ")[2]
-                    #     os.environ[sync_script_key] = sync_script_value
-                    #     logger.info(os.environ.get(sync_script_key))
-                # except Exception as e:
-                #     logger.error(f"Exception while execute sync_scripts : {sync_script}")
-                #     rlt = False
+                try:
+                    if sync_script and (
+                            sync_script.startswith("cat") or sync_script.startswith("os.environ")
+                            or sync_script.startswith("print") or sync_script.startswith("ls")
+                            # or sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
+                            # or sync_script.startswith("pip install") or sync_script.startswith("apt")
+                            # or sync_script.startswith("curl") or sync_script.startswith("wget")
+                            # or sync_script.startswith("env") or sync_script.startswith("source")
+                            # or sync_script.startswith("sudo chmod") or sync_script.startswith("chmod")
+                            # or sync_script.startswith("/home/ubuntu/ComfyUI/venv/bin/python")
+                    ):
+                        os.system(sync_script)
+                    elif sync_script and (sync_script.startswith("export ") and len(sync_script.split(" ")) > 2):
+                        sync_script_key = sync_script.split(" ")[1]
+                        sync_script_value = sync_script.split(" ")[2]
+                        os.environ[sync_script_key] = sync_script_value
+                        logger.info(os.environ.get(sync_script_key))
+                except Exception as e:
+                    logger.error(f"Exception while execute sync_scripts : {sync_script}")
+                    rlt = False
             need_reboot = True if ('need_reboot' in sync_item and sync_item['need_reboot']
                                    and str(sync_item['need_reboot']).lower() == 'true') else False
             global reboot

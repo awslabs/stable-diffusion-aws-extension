@@ -26,7 +26,6 @@ import {GetExecuteLogsApi, GetExecuteLogsProps} from "../api/comfy/get_execute_l
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   msgTable:aws_dynamodb.Table;
@@ -45,7 +44,6 @@ export interface ComfyInferenceStackProps extends StackProps {
 
 export class ComfyApiStack extends Construct {
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
@@ -58,7 +56,6 @@ export class ComfyApiStack extends Construct {
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
     super(scope, id);
     this.layer = props.commonLayer;
-    this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
@@ -88,7 +85,6 @@ export class ComfyApiStack extends Construct {
       httpMethod: 'GET',
       router: syncMsgGetRouter,
       s3Bucket: props.s3Bucket,
-      configTable: this.configTable,
       msgTable: this.msgTable,
       commonLayer: this.layer,
     });
@@ -97,7 +93,6 @@ export class ComfyApiStack extends Construct {
       httpMethod: 'POST',
       router: props.routers.sync,
       s3Bucket: props.s3Bucket,
-      configTable: this.configTable,
       msgTable: this.msgTable,
       queue: this.queue,
       commonLayer: this.layer,
@@ -108,7 +103,6 @@ export class ComfyApiStack extends Construct {
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
         mergeQueue: this.mergeQueue,
@@ -132,7 +126,6 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'GET',
         router: props.routers.executes,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         queue: this.queue,
         commonLayer: this.layer,
@@ -143,7 +136,6 @@ export class ComfyApiStack extends Construct {
       scope, 'MergeExecute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.merge,
-        configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
         mergeQueue: this.mergeQueue,
@@ -157,7 +149,6 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'POST',
         router: props.routers.prepare,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         syncTable: this.syncTable,
         instanceMonitorTable: this.instanceMonitorTable,
         endpointTable: this.endpointTable,
@@ -194,7 +185,6 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'GET',
         router: prepareGetRouter,
         s3Bucket: props.s3Bucket,
-        configTable: this.configTable,
         syncTable: this.syncTable,
         instanceMonitorTable: this.instanceMonitorTable,
         commonLayer: this.layer,
@@ -269,7 +259,6 @@ export class ComfyApiStack extends Construct {
         props.endpointTable.tableArn,
         props.executeTable.tableArn,
         props.syncTable.tableArn,
-        props.configTable.tableArn,
         props.multiUserTable.tableArn,
       ],
     });

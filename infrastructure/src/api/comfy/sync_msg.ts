@@ -13,7 +13,6 @@ export interface SyncMsgApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   msgTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
@@ -27,7 +26,6 @@ export class SyncMsgApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: s3.Bucket;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
 
@@ -37,7 +35,6 @@ export class SyncMsgApi {
     this.baseId = id;
     this.router = props.router;
     this.s3Bucket = props.s3Bucket;
-    this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
     this.queue = props.queue;
@@ -82,7 +79,6 @@ export class SyncMsgApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         this.msgTable.tableArn,
       ],
     }));
@@ -96,7 +92,6 @@ export class SyncMsgApi {
         'dynamodb:BatchWriteItem',
       ],
       resources: [
-        this.configTable.tableArn,
         this.msgTable.tableArn,
       ],
     }));
@@ -146,7 +141,6 @@ export class SyncMsgApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MSG_TABLE: this.msgTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
         SQS_URL: this.queue.queueUrl,
       },
       layers: [this.layer],
