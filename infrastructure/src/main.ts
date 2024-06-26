@@ -223,7 +223,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       // env: devEnv,
       s3Bucket: s3Bucket,
-      configTable: ddbComfyTables.configTable,
       executeTable: ddbComfyTables.executeTable,
       syncTable: ddbComfyTables.syncTable,
       msgTable: ddbComfyTables.msgTable,

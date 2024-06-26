@@ -11,7 +11,6 @@ import {SqsEventSource} from "aws-cdk-lib/aws-lambda-event-sources";
 export interface MergeExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   mergeQueue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
@@ -23,7 +22,6 @@ export class MergeExecuteApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly mergeQueue: aws_sqs.Queue;
 
@@ -32,7 +30,6 @@ export class MergeExecuteApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.mergeQueue = props.mergeQueue;
     this.layer = props.commonLayer;
@@ -81,7 +78,6 @@ export class MergeExecuteApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         `${this.executeTable.tableArn}`,
         `${this.executeTable.tableArn}/*`,
       ],
@@ -145,7 +141,6 @@ export class MergeExecuteApi {
       ephemeralStorageSize: Size.gibibytes(10),
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
         MERGE_SQS_URL: this.mergeQueue.queueUrl,
       },
       layers: [this.layer],

@@ -208,26 +208,6 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
-    ComfyTemplateTable: {
-      partitionKey: {
-        name: 'template_name',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'tag',
-        type: AttributeType.STRING,
-      },
-    },
-    ComfyConfigTable: {
-      partitionKey: {
-        name: 'config_name',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'tag',
-        type: AttributeType.STRING,
-      },
-    },
     ComfyExecuteTable: {
       partitionKey: {
         name: 'prompt_id',

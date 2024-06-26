@@ -12,7 +12,6 @@ export interface GetSyncMsgApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   msgTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
 }
@@ -26,7 +25,6 @@ export class GetSyncMsgApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: s3.Bucket;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: GetSyncMsgApiProps) {
@@ -35,7 +33,6 @@ export class GetSyncMsgApi {
     this.baseId = id;
     this.router = props.router;
     this.s3Bucket = props.s3Bucket;
-    this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
 
@@ -72,7 +69,6 @@ export class GetSyncMsgApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MSG_TABLE: this.msgTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
       },
       layers: [this.layer],
     });
@@ -92,7 +88,6 @@ export class GetSyncMsgApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         this.msgTable.tableArn,
       ],
     }));
@@ -106,7 +101,6 @@ export class GetSyncMsgApi {
         'dynamodb:BatchWriteItem',
       ],
       resources: [
-        this.configTable.tableArn,
         this.msgTable.tableArn,
       ],
     }));
