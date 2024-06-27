@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_lambda, Duration } from 'aws-cdk-lib';
+import {Aws, aws_apigateway, aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import {Role} from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -7,7 +7,6 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
-import {ESD_ROLE} from "../../shared/const";
 
 
 export interface CreateRoleApiProps {
@@ -119,7 +118,7 @@ export class CreateRoleApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/roles',

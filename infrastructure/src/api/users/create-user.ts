@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
+import {Aws, aws_apigateway, aws_dynamodb, aws_kms, aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import {Role} from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -7,7 +7,6 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_PASSWORD, SCHEMA_USER_ROLES, SCHEMA_USERNAME } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
-import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -108,7 +107,7 @@ export class CreateUserApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/users',

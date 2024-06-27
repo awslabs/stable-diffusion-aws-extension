@@ -1,5 +1,5 @@
 import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
-import {aws_lambda, Duration} from 'aws-cdk-lib';
+import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
 import {JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource} from 'aws-cdk-lib/aws-apigateway';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
 import {Role} from 'aws-cdk-lib/aws-iam';
@@ -8,7 +8,6 @@ import {Construct} from 'constructs';
 import {ApiModels} from '../../shared/models';
 import {SCHEMA_ENDPOINT_NAME} from '../../shared/schema';
 import {ApiValidators} from '../../shared/validator';
-import {ESD_ROLE} from "../../shared/const";
 
 export interface DeleteEndpointsApiProps {
     router: Resource;
@@ -83,7 +82,7 @@ export class DeleteEndpointsApi {
     }
 
     private apiLambda() {
-        const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+        const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
 
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
             entry: '../middleware_api/endpoints',

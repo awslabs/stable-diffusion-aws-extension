@@ -1,12 +1,11 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { ESD_ROLE } from '../../shared/const';
 import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
@@ -225,7 +224,7 @@ export class CreateEndpointApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/endpoints',

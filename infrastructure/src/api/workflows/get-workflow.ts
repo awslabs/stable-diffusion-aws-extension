@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_lambda, Duration } from 'aws-cdk-lib';
+import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Role } from 'aws-cdk-lib/aws-iam';
@@ -12,7 +12,6 @@ import {
   SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON,
   SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS
 } from '../../shared/schema';
-import {ESD_ROLE} from "../../shared/const";
 
 export interface GetWorkflowApiProps {
   router: Resource;
@@ -107,7 +106,7 @@ export class GetWorkflowApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
 
     return new PythonFunction(
       this.scope,

@@ -25,7 +25,7 @@ import {
 } from '@aws-sdk/client-kms';
 import { CreateBucketCommand, GetBucketLocationCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import {ESD_POLICY_DOCUMENT, ESD_ROLE} from './const';
+import {ESD_POLICY_DOCUMENT} from './const';
 import { CloudWatchClient, PutDashboardCommand } from "@aws-sdk/client-cloudwatch";
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
@@ -64,7 +64,7 @@ export async function handler(event: Event, context: Object) {
 }
 
 async function createAndCheckResources() {
-  await createRegionRole(ESD_ROLE);
+  await createRegionRole(`ESDRoleForEndpoint-${AWS_REGION}`);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   await createBucket();
