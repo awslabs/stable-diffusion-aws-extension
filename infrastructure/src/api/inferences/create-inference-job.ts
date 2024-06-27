@@ -211,7 +211,7 @@ export class CreateInferenceJobApi {
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
-      modelName: this.id,
+      modelName: `${this.id}Request`,
       description: `Request Model ${this.id}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

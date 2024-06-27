@@ -134,7 +134,7 @@ export class DeleteExecutesApi {
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
-        modelName: this.baseId,
+        modelName: `${this.baseId}Request`,
         description: `Request Model ${this.baseId}`,
         schema: {
           schema: JsonSchemaVersion.DRAFT7,

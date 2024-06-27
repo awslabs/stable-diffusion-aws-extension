@@ -257,6 +257,14 @@ operations = {
             header_user_name
         ]
     ),
+    "MergeExecute": APISchema(
+        summary="Merge Executes",
+        tags=["Executes"],
+        description="Merge specify Executes",
+        parameters=[
+            header_user_name
+        ]
+    ),
     "GetApiOAS": APISchema(
         summary="Get OAS",
         description="Get OAS json schema",

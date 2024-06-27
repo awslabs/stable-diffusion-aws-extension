@@ -120,7 +120,7 @@ export class CreateWorkflowApi {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',
-      modelName: this.baseId,
+      modelName: `${this.baseId}Request`,
       description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
