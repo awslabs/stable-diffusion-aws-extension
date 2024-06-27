@@ -6,6 +6,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface PingApiProps {
   router: Resource;
@@ -76,7 +77,7 @@ export class PingApi {
 
   private apiLambda() {
 
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,

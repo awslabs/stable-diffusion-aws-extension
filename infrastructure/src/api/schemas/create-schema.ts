@@ -12,6 +12,7 @@ import {
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_CREATED, SCHEMA_WORKFLOW_JSON_NAME,
   SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
 } from "../../shared/schema";
+import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateSchemaApiProps {
   router: Resource;
@@ -133,7 +134,7 @@ export class CreateSchemaApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/schemas',

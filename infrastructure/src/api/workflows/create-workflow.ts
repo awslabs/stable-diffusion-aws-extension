@@ -16,6 +16,7 @@ import {
   SCHEMA_WORKFLOW_STATUS,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateWorkflowApiProps {
   router: Resource;
@@ -142,7 +143,7 @@ export class CreateWorkflowApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/workflows',

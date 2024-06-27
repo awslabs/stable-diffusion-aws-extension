@@ -1,6 +1,7 @@
 export const KEY_ALIAS = 'sd-extension-password-key';
 export const STACK_ID = 'Extension-for-Stable-Diffusion-on-AWS';
 export const SOLUTION_NAME = 'comfy-aws-extension';
+export const ESD_ROLE = `ESDRoleForEndpoint`;
 export const ESD_POLICY_DOCUMENT = {
     Version: '2012-10-17',
     Statement: [{

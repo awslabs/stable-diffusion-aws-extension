@@ -7,6 +7,7 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_PASSWORD, SCHEMA_USER_ROLES, SCHEMA_USERNAME } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -107,7 +108,7 @@ export class CreateUserApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/users',

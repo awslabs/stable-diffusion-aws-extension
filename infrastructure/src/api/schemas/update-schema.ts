@@ -11,6 +11,7 @@ import {
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_WORKFLOW
 } from "../../shared/schema";
 import {ApiValidators} from "../../shared/validator";
+import {ESD_ROLE} from "../../shared/const";
 
 export interface UpdateSchemaApiProps {
   router: Resource;
@@ -110,7 +111,7 @@ export class UpdateSchemaApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(
       this.scope,

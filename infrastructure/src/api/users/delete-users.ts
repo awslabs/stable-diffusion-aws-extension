@@ -7,6 +7,7 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_USERNAME } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface DeleteUsersApiProps {
   router: aws_apigateway.Resource;
@@ -81,7 +82,7 @@ export class DeleteUsersApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/users',

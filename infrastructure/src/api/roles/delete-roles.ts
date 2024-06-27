@@ -12,6 +12,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface DeleteRolesApiProps {
   router: Resource;
@@ -94,7 +95,7 @@ export class DeleteRolesApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(
       this.scope,

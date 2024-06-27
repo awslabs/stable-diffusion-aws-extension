@@ -12,6 +12,7 @@ import {
   SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON,
   SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS
 } from '../../shared/schema';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface GetWorkflowApiProps {
   router: Resource;
@@ -106,7 +107,7 @@ export class GetWorkflowApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(
       this.scope,

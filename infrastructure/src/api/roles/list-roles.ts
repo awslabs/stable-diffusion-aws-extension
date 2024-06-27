@@ -6,6 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_CREATOR, SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE, SCHEMA_PERMISSIONS } from '../../shared/schema';
+import {ESD_ROLE} from "../../shared/const";
 
 
 export interface ListAllRolesApiProps {
@@ -106,7 +107,7 @@ export class ListRolesApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `ESDRoleForEndpoint-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/roles',
