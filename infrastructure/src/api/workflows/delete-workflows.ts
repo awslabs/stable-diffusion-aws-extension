@@ -51,6 +51,7 @@ export class DeleteWorkflowsApi {
             },
             operationName: 'DeleteWorkflows',
             methodResponses: [
+                ApiModels.methodResponses202(),
                 ApiModels.methodResponses204(),
                 ApiModels.methodResponses400(),
                 ApiModels.methodResponses401(),
