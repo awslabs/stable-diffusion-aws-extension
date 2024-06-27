@@ -60,7 +60,6 @@ export class UpdateSchemaApi {
                 ApiModels.methodResponse(this.responseModel()),
                 ApiModels.methodResponses401(),
                 ApiModels.methodResponses403(),
-                ApiModels.methodResponses404(),
               ],
             });
   }
