@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -77,7 +77,7 @@ export class PingApi {
 
   private apiLambda() {
 
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,

@@ -64,7 +64,7 @@ export async function handler(event: Event, context: Object) {
 }
 
 async function createAndCheckResources() {
-  await createRegionRole(`${ESD_ROLE}-${AWS_REGION}`);
+  await createRegionRole(ESD_ROLE);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   await createBucket();
@@ -1423,7 +1423,7 @@ async function createRegionRole(role_name: string) {
     // Define policy documents for each service
     await iamClient.send(new PutRolePolicyCommand({
       RoleName: role_name,
-      PolicyName: `${role_name}-policy`,
+      PolicyName: `Policy`,
       PolicyDocument: JSON.stringify(ESD_POLICY_DOCUMENT),
     }));
 

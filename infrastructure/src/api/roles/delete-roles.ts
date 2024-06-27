@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -95,7 +95,7 @@ export class DeleteRolesApi {
   }
 
   private apiLambda() {
-    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, `${ESD_ROLE}-${Aws.REGION}`);
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
     return new PythonFunction(
       this.scope,
