@@ -1499,6 +1499,7 @@ async function createRegionRole(role_name: string) {
           'sts:AssumeRole',
           'xray:PutTraceSegments',
           'xray:PutTelemetryRecords',
+          'lambda:InvokeFunction',
         ],
         Resource: [
           '*',
