@@ -198,6 +198,14 @@ class Workflow:
     create_time: Optional[Any] = None
 
 
+@dataclass
+class WorkflowSchema:
+    name: str
+    payload: str
+    workflow: str = ""
+    create_time: Optional[Any] = None
+
+
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclass
 class InvocationRequest:

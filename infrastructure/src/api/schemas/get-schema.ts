@@ -8,33 +8,34 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
-  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON,
-  SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS
-} from '../../shared/schema';
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_CREATED,
+  SCHEMA_WORKFLOW_JSON_NAME,
+  SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
+} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
-export interface GetWorkflowApiProps {
+export interface GetSchemaApiProps {
   router: Resource;
   httpMethod: string;
-  workflowsTable: Table;
+  workflowsSchemasTable: Table;
+  multiUserTable: Table;
   commonLayer: LayerVersion;
 }
 
-export class GetWorkflowApi {
+export class GetSchemaApi {
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly workflowsTable: Table;
+  private readonly workflowsSchemasTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: GetWorkflowApiProps) {
+  constructor(scope: Construct, id: string, props: GetSchemaApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.workflowsTable = props.workflowsTable;
+    this.workflowsSchemasTable = props.workflowsSchemasTable;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -46,13 +47,12 @@ export class GetWorkflowApi {
       },
     );
 
-    this.router.addResource('{name}')
-        .addMethod(
+    this.router.addMethod(
             this.httpMethod,
             lambdaIntegration,
             {
               apiKeyRequired: true,
-              operationName: 'GetWorkflow',
+              operationName: 'GetSchema',
               methodResponses: [
                 ApiModels.methodResponse(this.responseModel()),
                 ApiModels.methodResponses401(),
@@ -65,11 +65,11 @@ export class GetWorkflowApi {
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'GetWorkflowResponse',
-      description: 'Response Model GetWorkflow',
+      modelName: 'GetSchemaResponse',
+      description: 'Response Model GetSchema',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: 'GetWorkflow',
+        title: 'GetSchema',
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {
@@ -80,18 +80,16 @@ export class GetWorkflowApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              name: SCHEMA_WORKFLOW_NAME,
-              size: SCHEMA_WORKFLOW_SIZE,
-              status: SCHEMA_WORKFLOW_STATUS,
-              image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
-              payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
+              name: SCHEMA_WORKFLOW_JSON_NAME,
+              payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
+              workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+              create_time: SCHEMA_WORKFLOW_JSON_CREATED,
             },
             required: [
               'name',
-              'size',
-              'status',
-              'image_uri',
-              'payload_json',
+              'payload',
+              'workflow',
+              'create_time',
             ],
           },
         },
@@ -113,19 +111,20 @@ export class GetWorkflowApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: '../middleware_api/workflows',
+        entry: '../middleware_api/schemas',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
-        index: 'get_workflow.py',
+        index: 'get_schema.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: role,
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          WORKFLOWS_TABLE: this.workflowsTable.tableName,
+          WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
         },
         layers: [this.layer],
       });
   }
+
 }

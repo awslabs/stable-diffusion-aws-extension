@@ -208,6 +208,12 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
+    ComfyWorkflowsSchemasTable: {
+      partitionKey: {
+        name: 'name',
+        type: AttributeType.STRING,
+      },
+    },
     ComfyExecuteTable: {
       partitionKey: {
         name: 'prompt_id',

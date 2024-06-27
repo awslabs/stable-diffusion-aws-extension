@@ -50,7 +50,7 @@ async function waitApiReady(event: Event, path: string) {
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes. Exiting loop.`);
+      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes in ${path}. Exiting loop.`);
       break;
     }
 
@@ -66,11 +66,11 @@ async function waitApiReady(event: Event, path: string) {
       });
 
       if (resp.status === 200) {
-        console.log(`${event.ResourceProperties.name} Received 200 after ${(currentTime - startCheckTime) / 1000} seconds!`);
+        console.log(`${event.ResourceProperties.name} Received ${path} 200 after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
-      console.log(`${event.ResourceProperties.name} Did not receive 200 from API. Checking again in 3 seconds...`);
+      console.log(`${event.ResourceProperties.name} Did not receive 200 from API ${path}. Checking again in 3 seconds...`);
       await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {

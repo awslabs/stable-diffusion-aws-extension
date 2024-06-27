@@ -25,6 +25,7 @@ import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
 import {Workflow} from "./shared/workflow";
+import { Schema } from "./shared/workflow_schemas";
 const app = new App();
 
 export class Middleware extends Stack {
@@ -141,6 +142,7 @@ export class Middleware extends Stack {
       'sync',
       'merge',
       'workflows',
+      'schemas',
     ]);
 
     new MultiUsers(this, {
@@ -174,6 +176,16 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3_bucket: s3Bucket,
       workflowsTable: ddbTables.workflowsTable,
+      multiUserTable: ddbTables.multiUserTable,
+      commonLayer: commonLayers.commonLayer,
+      synthesizer: props.synthesizer,
+      resourceProvider,
+    });
+
+    new Schema(this, {
+      routers: restApi.routers,
+      s3_bucket: s3Bucket,
+      workflowsSchemasTable: ddbTables.workflowsSchemasTable,
       multiUserTable: ddbTables.multiUserTable,
       commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,

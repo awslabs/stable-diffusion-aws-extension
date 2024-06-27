@@ -6,32 +6,31 @@ import {Role} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {ApiModels} from '../../shared/models';
-import {SCHEMA_WORKFLOW_NAME} from '../../shared/schema';
 import {ApiValidators} from '../../shared/validator';
+import {SCHEMA_WORKFLOW_JSON_NAME} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
-export interface DeleteWorkflowsApiProps {
+export interface DeleteSchemasApiProps {
     router: Resource;
     httpMethod: string;
-    workflowsTable: Table;
-    multiUserTable: Table;
+    workflowsSchemasTable: Table;
     commonLayer: LayerVersion;
 }
 
-export class DeleteWorkflowsApi {
+export class DeleteSchemasApi {
     private readonly router: Resource;
     private readonly httpMethod: string;
     private readonly scope: Construct;
-    private readonly workflowsTable: Table;
+    private readonly workflowsSchemasTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
 
-    constructor(scope: Construct, id: string, props: DeleteWorkflowsApiProps) {
+    constructor(scope: Construct, id: string, props: DeleteSchemasApiProps) {
         this.scope = scope;
         this.baseId = id;
         this.router = props.router;
         this.httpMethod = props.httpMethod;
-        this.workflowsTable = props.workflowsTable;
+        this.workflowsSchemasTable = props.workflowsSchemasTable;
         this.layer = props.commonLayer;
 
         const lambdaFunction = this.apiLambda();
@@ -49,9 +48,9 @@ export class DeleteWorkflowsApi {
             requestModels: {
                 'application/json': this.createRequestBodyModel(),
             },
-            operationName: 'DeleteWorkflows',
+            operationName: 'DeleteSchemas',
             methodResponses: [
-                ApiModels.methodResponses204(),
+                ApiModels.methodResponses202(),
                 ApiModels.methodResponses400(),
                 ApiModels.methodResponses401(),
                 ApiModels.methodResponses403(),
@@ -69,15 +68,15 @@ export class DeleteWorkflowsApi {
                 title: this.baseId,
                 type: JsonSchemaType.OBJECT,
                 properties: {
-                    workflow_name_list: {
+                    schema_name_list: {
                         type: JsonSchemaType.ARRAY,
-                        items: SCHEMA_WORKFLOW_NAME,
+                        items: SCHEMA_WORKFLOW_JSON_NAME,
                         minItems: 1,
                         maxItems: 10,
                     },
                 },
                 required: [
-                    'workflow_name_list',
+                    'schema_name_list',
                 ],
             },
             contentType: 'application/json',
@@ -87,27 +86,11 @@ export class DeleteWorkflowsApi {
     private apiLambda() {
         const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
-        const deleteHandle = new PythonFunction(this.scope, `${this.baseId}-handler-lambda`, {
-            entry: '../middleware_api/workflows',
-            architecture: Architecture.X86_64,
-            runtime: Runtime.PYTHON_3_10,
-            index: 'delete_workflow_handler.py',
-            handler: 'handler',
-            timeout: Duration.seconds(900),
-            role: role,
-            memorySize: 2048,
-            tracing: aws_lambda.Tracing.ACTIVE,
-            layers: [this.layer],
-            environment:{
-                WORKFLOWS_TABLE: this.workflowsTable.tableName,
-            }
-        });
-
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-            entry: '../middleware_api/workflows',
+            entry: '../middleware_api/schemas',
             architecture: Architecture.X86_64,
             runtime: Runtime.PYTHON_3_10,
-            index: 'delete_workflows.py',
+            index: 'delete_schemas.py',
             handler: 'handler',
             timeout: Duration.seconds(900),
             role: role,
@@ -115,8 +98,7 @@ export class DeleteWorkflowsApi {
             tracing: aws_lambda.Tracing.ACTIVE,
             layers: [this.layer],
             environment:{
-                WORKFLOWS_TABLE: this.workflowsTable.tableName,
-                HANDLER_NAME: deleteHandle.functionName,
+                WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
             }
         });
     }

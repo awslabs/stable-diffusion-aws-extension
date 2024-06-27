@@ -41,7 +41,6 @@ export class Workflow {
             {
                 workflowsTable: props.workflowsTable,
                 commonLayer: props.commonLayer,
-                multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
                 router: props.routers.workflows,
             },
@@ -63,7 +62,6 @@ export class Workflow {
             {
                 workflowsTable: props.workflowsTable,
                 commonLayer: props.commonLayer,
-                multiUserTable: props.multiUserTable,
                 httpMethod: 'GET',
                 router: props.routers.workflows,
             },

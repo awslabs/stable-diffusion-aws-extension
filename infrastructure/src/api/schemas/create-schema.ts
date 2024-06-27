@@ -6,40 +6,36 @@ import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { ApiValidators } from '../../shared/validator';
 import {
   SCHEMA_DEBUG,
-  SCHEMA_MESSAGE,
-  SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME,
-  SCHEMA_WORKFLOW_PAYLOAD_JSON,
-  SCHEMA_WORKFLOW_SIZE,
-  SCHEMA_WORKFLOW_STATUS,
-} from '../../shared/schema';
-import { ApiValidators } from '../../shared/validator';
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_CREATED, SCHEMA_WORKFLOW_JSON_NAME,
+  SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
+} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
-export interface CreateWorkflowApiProps {
+export interface CreateSchemaApiProps {
   router: Resource;
   httpMethod: string;
-  workflowsTable: Table;
+  workflowsSchemasTable: Table;
   multiUserTable: Table;
   commonLayer: LayerVersion;
 }
 
-export class CreateWorkflowApi {
+export class CreateSchemaApi {
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly workflowsTable: Table;
+  private readonly workflowsSchemasTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: CreateWorkflowApiProps) {
+  constructor(scope: Construct, id: string, props: CreateSchemaApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.workflowsTable = props.workflowsTable;
+    this.workflowsSchemasTable = props.workflowsSchemasTable;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -57,9 +53,9 @@ export class CreateWorkflowApi {
       requestModels: {
         'application/json': this.createRequestBodyModel(),
       },
-      operationName: 'CreateWorkflow',
+      operationName: 'CreateSchema',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
@@ -71,12 +67,12 @@ export class CreateWorkflowApi {
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'CreateWorkflowResponse',
+      modelName: 'CreateSchemaResponse',
       description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
-        title: 'CreateWorkflowResponse',
+        title: 'CreateSchemaResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -89,18 +85,16 @@ export class CreateWorkflowApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              name: SCHEMA_WORKFLOW_NAME,
-              size: SCHEMA_WORKFLOW_SIZE,
-              status: SCHEMA_WORKFLOW_STATUS,
-              image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
-              payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
+              name: SCHEMA_WORKFLOW_JSON_NAME,
+              payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
+              workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+              create_time: SCHEMA_WORKFLOW_JSON_CREATED,
             },
             required: [
               'name',
-              'size',
-              'status',
-              'image_uri',
-              'payload_json',
+              'payload',
+              'workflow',
+              'create_time',
             ],
           },
         },
@@ -127,16 +121,14 @@ export class CreateWorkflowApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          name: SCHEMA_WORKFLOW_NAME,
-          size: SCHEMA_WORKFLOW_SIZE,
-          image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
-          payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
+          name: SCHEMA_WORKFLOW_JSON_NAME,
+          payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
+          workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
         },
         required: [
           'name',
-          'size',
-          'image_uri',
-          'payload_json',
+          'payload',
+          'workflow',
         ],
       },
     });
@@ -146,17 +138,17 @@ export class CreateWorkflowApi {
     const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: '../middleware_api/workflows',
+      entry: '../middleware_api/schemas',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
-      index: 'create_workflow.py',
+      index: 'create_schema.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        WORKFLOWS_TABLE: this.workflowsTable.tableName,
+        WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
       },
       layers: [this.layer],
     });

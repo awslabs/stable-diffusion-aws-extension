@@ -8,33 +8,33 @@ import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
-  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON,
-  SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS
-} from '../../shared/schema';
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_WORKFLOW
+} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
+import {ApiValidators} from "../../shared/validator";
 
-export interface GetWorkflowApiProps {
+export interface UpdateSchemaApiProps {
   router: Resource;
   httpMethod: string;
-  workflowsTable: Table;
+  workflowsSchemasTable: Table;
+  multiUserTable: Table;
   commonLayer: LayerVersion;
 }
 
-export class GetWorkflowApi {
+export class UpdateSchemaApi {
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly workflowsTable: Table;
+  private readonly workflowsSchemasTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: GetWorkflowApiProps) {
+  constructor(scope: Construct, id: string, props: UpdateSchemaApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.workflowsTable = props.workflowsTable;
+    this.workflowsSchemasTable = props.workflowsSchemasTable;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -46,13 +46,16 @@ export class GetWorkflowApi {
       },
     );
 
-    this.router.addResource('{name}')
-        .addMethod(
+    this.router.addMethod(
             this.httpMethod,
             lambdaIntegration,
             {
               apiKeyRequired: true,
-              operationName: 'GetWorkflow',
+              operationName: 'UpdateSchema',
+              requestValidator: ApiValidators.bodyValidator,
+              requestModels: {
+                'application/json': this.updateRequestBodyModel(),
+              },
               methodResponses: [
                 ApiModels.methodResponse(this.responseModel()),
                 ApiModels.methodResponses401(),
@@ -62,14 +65,34 @@ export class GetWorkflowApi {
             });
   }
 
+  private updateRequestBodyModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      contentType: 'application/json',
+      modelName: this.baseId,
+      description: `Request Model ${this.baseId}`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+        },
+        required: [
+          'workflow',
+        ],
+      },
+    });
+  }
+
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'GetWorkflowResponse',
-      description: 'Response Model GetWorkflow',
+      modelName: 'UpdateSchemaResponse',
+      description: 'Response Model UpdateSchema',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: 'GetWorkflow',
+        title: 'UpdateSchema',
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {
@@ -77,28 +100,10 @@ export class GetWorkflowApi {
           },
           debug: SCHEMA_DEBUG,
           message: SCHEMA_MESSAGE,
-          data: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              name: SCHEMA_WORKFLOW_NAME,
-              size: SCHEMA_WORKFLOW_SIZE,
-              status: SCHEMA_WORKFLOW_STATUS,
-              image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
-              payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
-            },
-            required: [
-              'name',
-              'size',
-              'status',
-              'image_uri',
-              'payload_json',
-            ],
-          },
         },
         required: [
           'statusCode',
           'debug',
-          'data',
           'message',
         ],
       },
@@ -113,19 +118,20 @@ export class GetWorkflowApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: '../middleware_api/workflows',
+        entry: '../middleware_api/schemas',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
-        index: 'get_workflow.py',
+        index: 'update_schema.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: role,
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          WORKFLOWS_TABLE: this.workflowsTable.tableName,
+          WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
         },
         layers: [this.layer],
       });
   }
+
 }
