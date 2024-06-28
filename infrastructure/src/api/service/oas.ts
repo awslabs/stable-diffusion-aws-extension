@@ -61,7 +61,7 @@ export class OasApi {
 
     const newRole = new Role(
       this.scope,
-      `${this.baseId}-role`,
+      `${this.baseId}-oas-role`,
       {
         assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
       },

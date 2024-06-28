@@ -261,7 +261,7 @@ export class CreateTrainingJobApi {
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.props.router.api,
-      modelName: this.id,
+      modelName: `${this.id}Request`,
       description: `Request Model ${this.id}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

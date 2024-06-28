@@ -12,7 +12,6 @@ export interface GetPrepareApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
@@ -27,7 +26,6 @@ export class GetPrepareApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: s3.Bucket;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
 
@@ -37,7 +35,6 @@ export class GetPrepareApi {
     this.baseId = id;
     this.router = props.router;
     this.s3Bucket = props.s3Bucket;
-    this.configTable = props.configTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
@@ -75,7 +72,6 @@ export class GetPrepareApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         SYNC_TABLE: this.syncTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
       },
       layers: [this.layer],
@@ -96,7 +92,6 @@ export class GetPrepareApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
       ],

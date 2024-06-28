@@ -1,11 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RestApi } from 'aws-cdk-lib/aws-apigateway';
-import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface RootAPIProps {
   httpMethod: string;
@@ -70,30 +71,9 @@ export class RootAPI {
     });
   }
 
-  private iamRole(): Role {
-
-    const newRole = new Role(
-      this.scope,
-      `${this.baseId}-role`,
-      {
-        assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-      },
-    );
-
-    newRole.addToPolicy(new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
-      resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-    }));
-
-    return newRole;
-  }
-
   private apiLambda() {
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,
       {
@@ -103,7 +83,7 @@ export class RootAPI {
         index: 'root.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
-        role: this.iamRole(),
+        role: role,
         memorySize: 2048,
         tracing: Tracing.ACTIVE,
         layers: [this.layer],

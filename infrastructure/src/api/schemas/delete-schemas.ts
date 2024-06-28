@@ -6,30 +6,31 @@ import {Role} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {ApiModels} from '../../shared/models';
-import {SCHEMA_ENDPOINT_NAME} from '../../shared/schema';
 import {ApiValidators} from '../../shared/validator';
+import {SCHEMA_WORKFLOW_JSON_NAME} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
-export interface DeleteEndpointsApiProps {
+export interface DeleteSchemasApiProps {
     router: Resource;
     httpMethod: string;
-    endpointDeploymentTable: Table;
-    multiUserTable: Table;
+    workflowsSchemasTable: Table;
     commonLayer: LayerVersion;
 }
 
-export class DeleteEndpointsApi {
+export class DeleteSchemasApi {
     private readonly router: Resource;
     private readonly httpMethod: string;
     private readonly scope: Construct;
+    private readonly workflowsSchemasTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
 
-    constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
+    constructor(scope: Construct, id: string, props: DeleteSchemasApiProps) {
         this.scope = scope;
         this.baseId = id;
         this.router = props.router;
         this.httpMethod = props.httpMethod;
+        this.workflowsSchemasTable = props.workflowsSchemasTable;
         this.layer = props.commonLayer;
 
         const lambdaFunction = this.apiLambda();
@@ -47,9 +48,9 @@ export class DeleteEndpointsApi {
             requestModels: {
                 'application/json': this.createRequestBodyModel(),
             },
-            operationName: 'DeleteEndpoints',
+            operationName: 'DeleteSchemas',
             methodResponses: [
-                ApiModels.methodResponses204(),
+                ApiModels.methodResponses202(),
                 ApiModels.methodResponses400(),
                 ApiModels.methodResponses401(),
                 ApiModels.methodResponses403(),
@@ -67,15 +68,15 @@ export class DeleteEndpointsApi {
                 title: this.baseId,
                 type: JsonSchemaType.OBJECT,
                 properties: {
-                    endpoint_name_list: {
+                    schema_name_list: {
                         type: JsonSchemaType.ARRAY,
-                        items: SCHEMA_ENDPOINT_NAME,
+                        items: SCHEMA_WORKFLOW_JSON_NAME,
                         minItems: 1,
                         maxItems: 10,
                     },
                 },
                 required: [
-                    'endpoint_name_list',
+                    'schema_name_list',
                 ],
             },
             contentType: 'application/json',
@@ -86,16 +87,19 @@ export class DeleteEndpointsApi {
         const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
         return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-            entry: '../middleware_api/endpoints',
+            entry: '../middleware_api/schemas',
             architecture: Architecture.X86_64,
             runtime: Runtime.PYTHON_3_10,
-            index: 'delete_endpoints.py',
+            index: 'delete_schemas.py',
             handler: 'handler',
             timeout: Duration.seconds(900),
             role: role,
             memorySize: 2048,
             tracing: aws_lambda.Tracing.ACTIVE,
             layers: [this.layer],
+            environment:{
+                WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
+            }
         });
     }
 

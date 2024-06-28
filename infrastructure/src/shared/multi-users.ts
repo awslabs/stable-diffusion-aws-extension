@@ -32,7 +32,6 @@ export class MultiUsers {
     new CreateRoleApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
-      multiUserTable: props.multiUserTable,
       router: props.routers.roles,
     });
 
@@ -40,7 +39,6 @@ export class MultiUsers {
     new ListRolesApi(scope, 'ListRoles', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
-      multiUserTable: props.multiUserTable,
       router: props.routers.roles,
     });
 
@@ -74,7 +72,6 @@ export class MultiUsers {
     new DeleteRolesApi(scope, 'DeleteRoles', {
       router: props.routers.roles,
       commonLayer: props.commonLayer,
-      multiUserTable: props.multiUserTable,
       httpMethod: 'DELETE',
     },
     );

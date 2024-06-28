@@ -54,8 +54,9 @@ export async function handleResetButton() {
     dialog.show();
 }
 
-export async function changeOnAWS(disableAWS) {
+export async function changeOnAWS(disableAWS, checkbox) {
     var target
+    var isChecked = checkbox.checked;
     if (disableAWS === false) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
             try {
@@ -67,6 +68,7 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = false;
         });
         dialog.show();
     } else {
@@ -80,9 +82,11 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = true;
         });
         dialog.show();
     }
+    checkbox.checked = !isChecked;
     return disableAWS;
 }
 
@@ -508,43 +512,7 @@ function createWorkflowItem(workflow, onClick) {
 async function handlePromptChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.checked);
-    // const response = await api.fetchApi("/get_env");
-    // const data = await response.json();
-    // event.target.checked = data.env.toUpperCase() === 'FALSE';
-}
-
-async function loadEnvJson(promptJson){
-    if (!promptJson){
-        return
-    }
-    let jsonContent;
-    if (typeof promptJson === 'object') {
-        const jsonString = JSON.stringify(promptJson);
-        jsonContent = JSON.parse(jsonString);
-    } else {
-        jsonContent = JSON.parse(promptJson);
-    }
-
-    // if (jsonContent?.output) {
-    //     const jsonString2 = JSON.stringify(jsonContent.output);
-    //     const outputContent = JSON.parse(jsonString2);
-    //     var graph = new LiteGraph.LGraph();
-    //     app.loadApiJson(outputContent);
-    // } else {
-    //     console.error("Invalid JSON: missing 'workflow' property.");
-    // }
-
-    if (jsonContent?.workflow) {
-        const workflowJsonString = JSON.stringify(jsonContent.workflow);
-        const workflowContent = JSON.parse(workflowJsonString);
-        console.log(workflowContent)
-        app.loadGraphData(workflowContent);
-        console.log("finished loadGraphData")
-    } else {
-        console.error(jsonContent);
-        console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
-    }
+    changeOnAWS(event.target.checked, event.target);
 }
 
 async function handleLoadJson(templateId){
@@ -568,7 +536,7 @@ async function handleLoadJson(templateId){
                 const workflowJsonString = JSON.stringify(jsonContent.workflow);
                 const workflowContent = JSON.parse(workflowJsonString);
                 console.log(workflowContent)
-                app.loadGraphData(workflowContent);
+                await app.loadGraphData(workflowContent);
                 console.log("finished loadGraphData")
             } else {
                 console.error(jsonContent);
@@ -577,8 +545,10 @@ async function handleLoadJson(templateId){
         }else {
             console.info('Loading json none: load default');
         }
+        return true
     } catch (error) {
         console.error('Loading error:', error);
+        return false
     }
 }
 
@@ -737,9 +707,10 @@ export class ModalBlankDialog extends ComfyDialog {
 }
 
 
-
+var newWorkflowName = '';
 // input field dialog
 export class ModalReleaseDialog extends ComfyDialog {
+
     constructor(app) {
         super();
         this.app = app;
@@ -766,6 +737,8 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     type: "text",
                                     id: "input-field",
                                     style: { width: "100%", border: "0" },
+                                    value: "",
+                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
                         ]
@@ -814,17 +787,20 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
+    handleInputChange(event) {
+        newWorkflowName = event.target.value;
+    }
+
     async releaseWorkflow() {
-        const inputValue = document.getElementById("input-field").value;
         // validate names
-        if (inputValue.length > 40) {
+        if (newWorkflowName.length > 40) {
             document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
-        if (!nameRegex.test(inputValue)) {
+        if (!nameRegex.test(newWorkflowName)) {
             document.getElementById("release-validate").textContent = 'The workflow name must only contain letters, numbers, and underscores.';
             return;
         }
@@ -840,7 +816,7 @@ export class ModalReleaseDialog extends ComfyDialog {
             console.log(payloadJson)
 
             var target = {
-                'name': inputValue,
+                'name': newWorkflowName,
                 'payload_json': payloadJson
             };
             const response = await api.fetchApi("/workflows", {
@@ -860,10 +836,12 @@ export class ModalReleaseDialog extends ComfyDialog {
             handleUnlockScreen();
             document.getElementById("release-validate").textContent = errorMessage;
         }
+        newWorkflowName = '';
     }
 
     handleCancelClick() {
         this.element.close();
+        newWorkflowName = ''
     }
 }
 
@@ -924,7 +902,6 @@ export class ModalConfirmDialog extends ComfyDialog {
     }
 
     handleYesClick() {
-
         this.callback();
         this.element.close();
     }

@@ -1,18 +1,18 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import {aws_apigateway, aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
-import { Effect } from 'aws-cdk-lib/aws-iam';
+import {Role} from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 
 export interface CreateRoleApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  multiUserTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
 }
 
@@ -21,7 +21,6 @@ export class CreateRoleApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: CreateRoleApiProps) {
@@ -30,7 +29,6 @@ export class CreateRoleApi {
     this.baseId = id;
     this.router = props.router;
     this.layer = props.commonLayer;
-    this.multiUserTable = props.multiUserTable;
 
     const lambdaFunction = this.apiLambda();
 
@@ -85,45 +83,10 @@ export class CreateRoleApi {
     });
   }
 
-  private iamRole(): aws_iam.Role {
-    const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
-      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-    });
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:BatchGetItem',
-        'dynamodb:GetItem',
-        'dynamodb:Scan',
-        'dynamodb:Query',
-        'dynamodb:BatchWriteItem',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-      ],
-      resources: [
-        this.multiUserTable.tableArn,
-      ],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
-      resources: ['*'],
-    }));
-
-    return newRole;
-  }
-
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: this.baseId,
+      modelName: `${this.baseId}Request`,
       description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
@@ -156,6 +119,8 @@ export class CreateRoleApi {
   }
 
   private apiLambda() {
+    const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
+
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/roles',
       architecture: Architecture.X86_64,
@@ -163,7 +128,7 @@ export class CreateRoleApi {
       index: 'create_role.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: role,
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],

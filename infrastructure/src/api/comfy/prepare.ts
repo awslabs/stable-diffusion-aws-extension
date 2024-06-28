@@ -13,7 +13,6 @@ export interface PrepareApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   s3Bucket: s3.Bucket;
-  configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
@@ -27,7 +26,6 @@ export class PrepareApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: s3.Bucket;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
@@ -38,7 +36,6 @@ export class PrepareApi {
     this.baseId = id;
     this.router = props.router;
     this.s3Bucket = props.s3Bucket;
-    this.configTable = props.configTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
@@ -85,7 +82,6 @@ export class PrepareApi {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.configTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
         this.endpointTable.tableArn,
@@ -142,7 +138,6 @@ export class PrepareApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         SYNC_TABLE: this.syncTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         ENDPOINT_TABLE: this.endpointTable.tableName,
       },
@@ -153,7 +148,7 @@ export class PrepareApi {
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: this.baseId,
+      modelName: `${this.baseId}Request`,
       description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

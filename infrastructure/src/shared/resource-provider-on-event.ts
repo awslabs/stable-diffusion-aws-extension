@@ -25,7 +25,7 @@ import {
 } from '@aws-sdk/client-kms';
 import { CreateBucketCommand, GetBucketLocationCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { ESD_ROLE } from './const';
+import {ESD_POLICY_DOCUMENT, ESD_ROLE} from './const';
 import { CloudWatchClient, PutDashboardCommand } from "@aws-sdk/client-cloudwatch";
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
@@ -66,8 +66,6 @@ export async function handler(event: Event, context: Object) {
 async function createAndCheckResources() {
   await createRegionRole(ESD_ROLE);
   await new Promise(resolve => setTimeout(resolve, 1000));
-  // todo will remove in the next major version, current to keep old endpoint
-  await createRegionRole(`ESDRoleForEndpoint-${AWS_REGION}`);
 
   await createBucket();
   await createTables();
@@ -208,23 +206,9 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
-    ComfyTemplateTable: {
+    ComfyWorkflowsSchemasTable: {
       partitionKey: {
-        name: 'template_name',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'tag',
-        type: AttributeType.STRING,
-      },
-    },
-    ComfyConfigTable: {
-      partitionKey: {
-        name: 'config_name',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'tag',
+        name: 'name',
         type: AttributeType.STRING,
       },
     },
@@ -1437,173 +1421,10 @@ async function createRegionRole(role_name: string) {
     }));
 
     // Define policy documents for each service
-    const snsPolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'sns:Publish',
-          'sns:ListSubscriptionsByTopic',
-          'sns:ListTopics',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
     await iamClient.send(new PutRolePolicyCommand({
       RoleName: role_name,
-      PolicyName: 'SnsPolicy',
-      PolicyDocument: snsPolicyDocument,
-    }));
-
-    const s3PolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          's3:Get*',
-          's3:List*',
-          's3:PutObject',
-          's3:GetObject',
-        ],
-        Resource: '*',
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'S3Policy',
-      PolicyDocument: s3PolicyDocument,
-    }));
-
-    const endpointPolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'sagemaker:DeleteModel',
-          'sagemaker:DeleteEndpoint',
-          'sagemaker:DescribeEndpoint',
-          'sagemaker:DeleteEndpointConfig',
-          'sagemaker:DescribeEndpointConfig',
-          'sagemaker:InvokeEndpoint',
-          'sagemaker:CreateModel',
-          'sagemaker:CreateEndpoint',
-          'sagemaker:CreateEndpointConfig',
-          'sagemaker:InvokeEndpointAsync',
-          'ecr:GetAuthorizationToken',
-          'ecr:BatchCheckLayerAvailability',
-          'ecr:GetDownloadUrlForLayer',
-          'ecr:GetRepositoryPolicy',
-          'ecr:DescribeRepositories',
-          'ecr:ListImages',
-          'ecr:DescribeImages',
-          'ecr:BatchGetImage',
-          'ecr:InitiateLayerUpload',
-          'ecr:UploadLayerPart',
-          'ecr:CompleteLayerUpload',
-          'ecr:PutImage',
-          'cloudwatch:PutMetricAlarm',
-          'cloudwatch:PutMetricData',
-          'cloudwatch:DeleteAlarms',
-          'cloudwatch:DescribeAlarms',
-          'sagemaker:UpdateEndpointWeightsAndCapacities',
-          'iam:CreateServiceLinkedRole',
-          'iam:PassRole',
-          'sts:AssumeRole',
-          'xray:PutTraceSegments',
-          'xray:PutTelemetryRecords',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'EndpointPolicy',
-      PolicyDocument: endpointPolicyDocument,
-    }));
-
-    const dynamoDBPolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'dynamodb:Query',
-          'dynamodb:GetItem',
-          'dynamodb:PutItem',
-          'dynamodb:DeleteItem',
-          'dynamodb:UpdateItem',
-          'dynamodb:Describe*',
-          'dynamodb:List*',
-          'dynamodb:Scan',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'DdbPolicy',
-      PolicyDocument: dynamoDBPolicyDocument,
-    }));
-
-    const logPolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'logs:CreateLogGroup',
-          'logs:CreateLogStream',
-          'logs:PutLogEvents',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'LogPolicy',
-      PolicyDocument: logPolicyDocument,
-    }));
-
-    const sqsPolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'sqs:SendMessage',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'SqsPolicy',
-      PolicyDocument: sqsPolicyDocument,
-    }));
-
-    const passRolePolicyDocument = JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [{
-        Effect: 'Allow',
-        Action: [
-          'iam:PassRole',
-        ],
-        Resource: [
-          '*',
-        ],
-      }],
-    });
-    await iamClient.send(new PutRolePolicyCommand({
-      RoleName: role_name,
-      PolicyName: 'PassRolePolicy',
-      PolicyDocument: passRolePolicyDocument,
+      PolicyName: `Policy`,
+      PolicyDocument: JSON.stringify(ESD_POLICY_DOCUMENT),
     }));
 
   } catch (err: any) {

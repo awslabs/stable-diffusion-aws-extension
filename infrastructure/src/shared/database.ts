@@ -12,6 +12,7 @@ export class Database {
   public sDEndpointDeploymentJobTable: Table;
   public multiUserTable: Table;
   public workflowsTable: Table;
+  public workflowsSchemasTable: Table;
 
   constructor(scope: Construct, baseId: string) {
 
@@ -30,6 +31,8 @@ export class Database {
     this.multiUserTable = this.table(scope, baseId, 'MultiUserTable');
 
     this.workflowsTable = this.table(scope, baseId, 'ComfyWorkflowsTable');
+
+    this.workflowsSchemasTable = this.table(scope, baseId, 'ComfyWorkflowsSchemasTable');
 
   }
 

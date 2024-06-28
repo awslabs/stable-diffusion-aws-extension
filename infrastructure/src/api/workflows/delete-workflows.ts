@@ -1,13 +1,14 @@
 import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_iam, aws_lambda, Duration} from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import {JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource} from 'aws-cdk-lib/aws-apigateway';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
-import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
+import {Role} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {ApiModels} from '../../shared/models';
 import {SCHEMA_WORKFLOW_NAME} from '../../shared/schema';
 import {ApiValidators} from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface DeleteWorkflowsApiProps {
     router: Resource;
@@ -22,7 +23,6 @@ export class DeleteWorkflowsApi {
     private readonly httpMethod: string;
     private readonly scope: Construct;
     private readonly workflowsTable: Table;
-    private readonly multiUserTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
 
@@ -32,7 +32,6 @@ export class DeleteWorkflowsApi {
         this.router = props.router;
         this.httpMethod = props.httpMethod;
         this.workflowsTable = props.workflowsTable;
-        this.multiUserTable = props.multiUserTable;
         this.layer = props.commonLayer;
 
         const lambdaFunction = this.apiLambda();
@@ -53,6 +52,7 @@ export class DeleteWorkflowsApi {
             operationName: 'DeleteWorkflows',
             methodResponses: [
                 ApiModels.methodResponses202(),
+                ApiModels.methodResponses204(),
                 ApiModels.methodResponses400(),
                 ApiModels.methodResponses401(),
                 ApiModels.methodResponses403(),
@@ -60,78 +60,10 @@ export class DeleteWorkflowsApi {
         });
     }
 
-    private iamRole(): Role {
-
-        const newRole = new Role(this.scope, `${this.baseId}-role`, {
-            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-        });
-
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                'dynamodb:Query',
-                'dynamodb:GetItem',
-                'dynamodb:PutItem',
-                'dynamodb:DeleteItem',
-                'dynamodb:UpdateItem',
-            ],
-            resources: [
-                this.workflowsTable.tableArn,
-                `${this.workflowsTable.tableArn}/*`,
-                this.multiUserTable.tableArn,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'sagemaker:DescribeEndpoint',
-            ],
-            resources: [
-                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`,
-            ],
-        }));
-
-        newRole.addToPolicy(new aws_iam.PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'lambda:invokeFunction',
-            ],
-            resources: [
-                `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                's3:Get*',
-                's3:List*',
-                's3:PutObject',
-                's3:GetObject',
-                's3:DeleteObject',
-            ],
-            resources: [
-                '*',
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents',
-                'logs:DeleteLogGroup',
-            ],
-            resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-        }));
-
-        return newRole;
-    }
-
     private createRequestBodyModel(): Model {
         return new Model(this.scope, `${this.baseId}-model`, {
             restApi: this.router.api,
-            modelName: this.baseId,
+            modelName: `${this.baseId}Request`,
             description: `Request Model ${this.baseId}`,
             schema: {
                 schema: JsonSchemaVersion.DRAFT7,
@@ -154,7 +86,7 @@ export class DeleteWorkflowsApi {
     }
 
     private apiLambda() {
-        const role = this.iamRole();
+        const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
         const deleteHandle = new PythonFunction(this.scope, `${this.baseId}-handler-lambda`, {
             entry: '../middleware_api/workflows',

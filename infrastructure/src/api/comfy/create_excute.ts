@@ -19,7 +19,6 @@ import {
 export interface ExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
   mergeQueue: aws_sqs.Queue;
@@ -32,7 +31,6 @@ export class CreateExecuteApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
   private readonly mergeQueue: aws_sqs.Queue;
@@ -42,7 +40,6 @@ export class CreateExecuteApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
     this.mergeQueue = props.mergeQueue;
@@ -198,7 +195,6 @@ export class CreateExecuteApi {
         'dynamodb:Query',
       ],
       resources: [
-        this.configTable.tableArn,
         this.executeTable.tableArn,
         `${this.endpointTable.tableArn}`,
         `${this.endpointTable.tableArn}/*`,
@@ -265,7 +261,6 @@ export class CreateExecuteApi {
       ephemeralStorageSize: Size.gibibytes(10),
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
         MERGE_SQS_URL: this.mergeQueue.queueUrl,
       },
       layers: [this.layer],
@@ -275,7 +270,7 @@ export class CreateExecuteApi {
   private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: this.baseId,
+      modelName: `${this.baseId}Request`,
       description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

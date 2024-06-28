@@ -8,34 +8,36 @@ import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
   SCHEMA_LAST_KEY,
-  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_IMAGE_URI,
-  SCHEMA_WORKFLOW_NAME, SCHEMA_WORKFLOW_PAYLOAD_JSON, SCHEMA_WORKFLOW_SIZE, SCHEMA_WORKFLOW_STATUS,
-} from '../../shared/schema';
+  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_CREATED,
+  SCHEMA_WORKFLOW_JSON_NAME,
+  SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
+} from "../../shared/schema";
 import {ESD_ROLE} from "../../shared/const";
 
 
-export interface ListWorkflowsApiProps {
+export interface ListSchemasApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  workflowsTable: aws_dynamodb.Table;
+  workflowsSchemasTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
 }
 
-export class ListWorkflowsApi {
+export class ListSchemasApi {
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly workflowsTable: aws_dynamodb.Table;
+  private readonly workflowsSchemasTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
 
 
-  constructor(scope: Construct, id: string, props: ListWorkflowsApiProps) {
+  constructor(scope: Construct, id: string, props: ListSchemasApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.workflowsTable = props.workflowsTable;
+    this.workflowsSchemasTable = props.workflowsSchemasTable;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -49,7 +51,7 @@ export class ListWorkflowsApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      operationName: 'ListWorkflows',
+      operationName: 'ListSchemas',
       requestParameters: {
         'method.request.querystring.limit': false,
         'method.request.querystring.exclusive_start_key': false,
@@ -66,12 +68,12 @@ export class ListWorkflowsApi {
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'ListWorkflowsResponse',
+      modelName: 'ListSchemasResponse',
       description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
-        title: 'ListWorkflowsResponse',
+        title: 'ListSchemasResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -83,30 +85,28 @@ export class ListWorkflowsApi {
             type: JsonSchemaType.OBJECT,
             additionalProperties: true,
             properties: {
-              workflows: {
+              schemas: {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    name: SCHEMA_WORKFLOW_NAME,
-                    size: SCHEMA_WORKFLOW_SIZE,
-                    status: SCHEMA_WORKFLOW_STATUS,
-                    image_uri: SCHEMA_WORKFLOW_IMAGE_URI,
-                    payload_json: SCHEMA_WORKFLOW_PAYLOAD_JSON,
+                    name: SCHEMA_WORKFLOW_JSON_NAME,
+                    payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
+                    workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+                    create_time: SCHEMA_WORKFLOW_JSON_CREATED,
                   },
                   required: [
                     'name',
-                    'size',
-                    'status',
-                    'image_uri',
-                    'payload_json',
+                    'payload',
+                    'workflow',
+                    'create_time',
                   ],
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
-              'workflows',
+              'schemas',
               'last_evaluated_key',
             ],
           },
@@ -127,10 +127,10 @@ export class ListWorkflowsApi {
     const role = <Role>Role.fromRoleName(this.scope, `${this.baseId}-role`, ESD_ROLE);
 
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: '../middleware_api/workflows',
+      entry: '../middleware_api/schemas',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
-      index: 'list_workflows.py',
+      index: 'list_schemas.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: role,
@@ -138,7 +138,7 @@ export class ListWorkflowsApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
       environment: {
-        WORKFLOWS_TABLE: this.workflowsTable.tableName,
+        WORKFLOW_SCHEMA_TABLE: this.workflowsSchemasTable.tableName,
       }
     });
   }

@@ -611,3 +611,23 @@ export const SCHEMA_WORKFLOW_STATUS: JsonSchema = {
 export const SCHEMA_WORKFLOW_SIZE: JsonSchema = {
   type: JsonSchemaType.STRING,
 };
+
+export const SCHEMA_WORKFLOW_JSON_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  minLength: 1,
+  maxLength: 20,
+  pattern: '^[A-Za-z][A-Za-z0-9_]*$',
+  description: 'Name of Workflow Schema',
+};
+
+export const SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_WORKFLOW_JSON_WORKFLOW: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_WORKFLOW_JSON_CREATED: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
