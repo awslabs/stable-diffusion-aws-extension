@@ -54,8 +54,9 @@ export async function handleResetButton() {
     dialog.show();
 }
 
-export async function changeOnAWS(disableAWS) {
+export async function changeOnAWS(disableAWS, checkbox) {
     var target
+    var isChecked = checkbox.checked;
     if (disableAWS === false) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
             try {
@@ -67,6 +68,7 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = false;
         });
         dialog.show();
     } else {
@@ -80,9 +82,11 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = true;
         });
         dialog.show();
     }
+    checkbox.checked = !isChecked;
     return disableAWS;
 }
 
@@ -508,10 +512,7 @@ function createWorkflowItem(workflow, onClick) {
 async function handlePromptChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.checked);
-    // const response = await api.fetchApi("/get_env");
-    // const data = await response.json();
-    // event.target.checked = data.env.toUpperCase() === 'FALSE';
+    changeOnAWS(event.target.checked, event.target);
 }
 
 async function handleLoadJson(templateId){
@@ -901,7 +902,6 @@ export class ModalConfirmDialog extends ComfyDialog {
     }
 
     handleYesClick() {
-
         this.callback();
         this.element.close();
     }
