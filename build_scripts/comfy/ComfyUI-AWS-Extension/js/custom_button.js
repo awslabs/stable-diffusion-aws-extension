@@ -54,8 +54,9 @@ export async function handleResetButton() {
     dialog.show();
 }
 
-export async function changeOnAWS(disableAWS) {
+export async function changeOnAWS(disableAWS, checkbox) {
     var target
+    var isChecked = checkbox.checked;
     if (disableAWS === false) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
             try {
@@ -67,6 +68,7 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = false;
         });
         dialog.show();
     } else {
@@ -80,9 +82,11 @@ export async function changeOnAWS(disableAWS) {
                 });
             } catch (exception) {
             }
+            checkbox.checked = true;
         });
         dialog.show();
     }
+    checkbox.checked = !isChecked;
     return disableAWS;
 }
 
@@ -508,10 +512,7 @@ function createWorkflowItem(workflow, onClick) {
 async function handlePromptChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.checked);
-    // const response = await api.fetchApi("/get_env");
-    // const data = await response.json();
-    // event.target.checked = data.env.toUpperCase() === 'FALSE';
+    changeOnAWS(event.target.checked, event.target);
 }
 
 async function handleLoadJson(templateId){
@@ -706,9 +707,10 @@ export class ModalBlankDialog extends ComfyDialog {
 }
 
 
-
+var newWorkflowName = '';
 // input field dialog
 export class ModalReleaseDialog extends ComfyDialog {
+
     constructor(app) {
         super();
         this.app = app;
@@ -735,6 +737,8 @@ export class ModalReleaseDialog extends ComfyDialog {
                                     type: "text",
                                     id: "input-field",
                                     style: { width: "100%", border: "0" },
+                                    value: "",
+                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
                         ]
@@ -783,17 +787,20 @@ export class ModalReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
+    handleInputChange(event) {
+        newWorkflowName = event.target.value;
+    }
+
     async releaseWorkflow() {
-        const inputValue = document.getElementById("input-field").value;
         // validate names
-        if (inputValue.length > 40) {
+        if (newWorkflowName.length > 40) {
             document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
-        if (!nameRegex.test(inputValue)) {
+        if (!nameRegex.test(newWorkflowName)) {
             document.getElementById("release-validate").textContent = 'The workflow name must only contain letters, numbers, and underscores.';
             return;
         }
@@ -809,7 +816,7 @@ export class ModalReleaseDialog extends ComfyDialog {
             console.log(payloadJson)
 
             var target = {
-                'name': inputValue,
+                'name': newWorkflowName,
                 'payload_json': payloadJson
             };
             const response = await api.fetchApi("/workflows", {
@@ -829,10 +836,12 @@ export class ModalReleaseDialog extends ComfyDialog {
             handleUnlockScreen();
             document.getElementById("release-validate").textContent = errorMessage;
         }
+        newWorkflowName = '';
     }
 
     handleCancelClick() {
         this.element.close();
+        newWorkflowName = ''
     }
 }
 
@@ -893,7 +902,6 @@ export class ModalConfirmDialog extends ComfyDialog {
     }
 
     handleYesClick() {
-
         this.callback();
         this.element.close();
     }

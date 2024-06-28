@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_lambda, Duration } from 'aws-cdk-lib';
+import {aws_apigateway, aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import {Role} from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';

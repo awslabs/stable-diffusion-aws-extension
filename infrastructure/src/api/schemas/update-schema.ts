@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_lambda, Duration } from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Role } from 'aws-cdk-lib/aws-iam';
@@ -10,8 +10,8 @@ import {
   SCHEMA_DEBUG,
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_WORKFLOW
 } from "../../shared/schema";
-import {ESD_ROLE} from "../../shared/const";
 import {ApiValidators} from "../../shared/validator";
+import {ESD_ROLE} from "../../shared/const";
 
 export interface UpdateSchemaApiProps {
   router: Resource;

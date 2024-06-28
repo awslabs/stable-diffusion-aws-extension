@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_lambda, Duration } from 'aws-cdk-lib';
+import {aws_lambda, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,

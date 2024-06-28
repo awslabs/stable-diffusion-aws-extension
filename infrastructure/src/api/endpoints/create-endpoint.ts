@@ -1,12 +1,11 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
+import {aws_dynamodb, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { ESD_ROLE } from '../../shared/const';
 import { ApiModels } from '../../shared/models';
 import {
   SCHEMA_DEBUG,
@@ -26,6 +25,7 @@ import {
   SCHEMA_MESSAGE, SCHEMA_WORKFLOW_NAME,
 } from '../../shared/schema';
 import { ApiValidators } from '../../shared/validator';
+import {ESD_ROLE} from "../../shared/const";
 
 export interface CreateEndpointApiProps {
   router: Resource;

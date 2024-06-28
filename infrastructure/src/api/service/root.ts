@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Duration } from 'aws-cdk-lib';
+import {Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
