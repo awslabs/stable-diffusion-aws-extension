@@ -154,7 +154,7 @@ export class Inference {
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'inference_async_events.py',
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
