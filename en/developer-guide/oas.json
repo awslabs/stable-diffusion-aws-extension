@@ -3,7 +3,7 @@
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
     "description": "This is a ESD Server based on the OpenAPI 3.0 specification. \nSome useful links: \n\n- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)\n- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)",
-    "version": "v1.6.0",
+    "version": "v1.6.1",
     "license": {
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -494,7 +494,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteCheckpoints"
+                "$ref": "#/components/schemas/DeleteCheckpointsRequest"
               }
             }
           },
@@ -670,7 +670,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCheckPoint"
+                "$ref": "#/components/schemas/UpdateCheckPointRequest"
               }
             }
           },
@@ -823,39 +823,6 @@
         ]
       }
     },
-    "/config": {
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        },
-        "description": "",
-        "summary": "",
-        "tags": [
-          "Others"
-        ],
-        "parameters": []
-      }
-    },
     "/datasets": {
       "get": {
         "operationId": "ListDatasets",
@@ -959,7 +926,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateDataset"
+                "$ref": "#/components/schemas/CreateDatasetRequest"
               }
             }
           },
@@ -1081,7 +1048,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteDatasets"
+                "$ref": "#/components/schemas/DeleteDatasetsRequest"
               }
             }
           },
@@ -1361,7 +1328,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateDataset"
+                "$ref": "#/components/schemas/UpdateDatasetRequest"
               }
             }
           },
@@ -1508,7 +1475,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CropDataset"
+                "$ref": "#/components/schemas/CropDatasetRequest"
               }
             }
           },
@@ -1764,7 +1731,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateEndpoint"
+                "$ref": "#/components/schemas/CreateEndpointRequest"
               }
             }
           },
@@ -1886,7 +1853,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteEndpoints"
+                "$ref": "#/components/schemas/DeleteEndpointsRequest"
               }
             }
           },
@@ -2137,7 +2104,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Execute"
+                "$ref": "#/components/schemas/ExecuteRequest"
               }
             }
           },
@@ -2293,7 +2260,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteExecutesApi"
+                "$ref": "#/components/schemas/DeleteExecutesApiRequest"
               }
             }
           },
@@ -2844,7 +2811,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateInferenceJob"
+                "$ref": "#/components/schemas/CreateInferenceJobRequest"
               }
             }
           },
@@ -3000,7 +2967,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteInferenceJobs"
+                "$ref": "#/components/schemas/DeleteInferenceJobsRequest"
               }
             }
           },
@@ -3446,7 +3413,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MergeExecute"
+                "$ref": "#/components/schemas/MergeExecuteRequest"
               }
             }
           },
@@ -3510,79 +3477,24 @@
             "api_key": []
           }
         ],
-        "description": "",
-        "summary": "MergeExecute",
+        "description": "Merge specify Executes",
+        "summary": "Merge Executes (MergeExecute)",
         "tags": [
-          "Others"
+          "Executes"
         ],
-        "parameters": []
+        "parameters": [
+          {
+            "name": "username",
+            "description": "Username",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "api"
+            }
+          }
+        ]
       },
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        },
-        "description": "",
-        "summary": "",
-        "tags": [
-          "Others"
-        ],
-        "parameters": []
-      }
-    },
-    "/model": {
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        },
-        "description": "",
-        "summary": "",
-        "tags": [
-          "Others"
-        ],
-        "parameters": []
-      }
-    },
-    "/node": {
       "options": {
         "responses": {
           "204": {
@@ -3739,7 +3651,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Prepare"
+                "$ref": "#/components/schemas/PrepareRequest"
               }
             }
           },
@@ -4074,7 +3986,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateRole"
+                "$ref": "#/components/schemas/CreateRoleRequest"
               }
             }
           },
@@ -4196,7 +4108,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteRoles"
+                "$ref": "#/components/schemas/DeleteRolesRequest"
               }
             }
           },
@@ -4344,6 +4256,525 @@
         "parameters": []
       }
     },
+    "/schemas": {
+      "get": {
+        "operationId": "ListSchemas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSchemasResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "List Schemas with Parameters",
+        "summary": "List Schemas (ListSchemas)",
+        "tags": [
+          "Schemas"
+        ]
+      },
+      "post": {
+        "operationId": "CreateSchema",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSchemaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSchemaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "Create a new Schema",
+        "summary": "Release new Schema (CreateSchema)",
+        "tags": [
+          "Schemas"
+        ],
+        "parameters": []
+      },
+      "delete": {
+        "operationId": "DeleteSchemas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteSchemasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "202 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/202"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "Delete specify Schemas",
+        "summary": "Delete Schemas (DeleteSchemas)",
+        "tags": [
+          "Schemas"
+        ],
+        "parameters": []
+      },
+      "options": {
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "description": "",
+        "summary": "",
+        "tags": [
+          "Others"
+        ],
+        "parameters": []
+      }
+    },
+    "/schemas/{name}": {
+      "get": {
+        "operationId": "GetSchema",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name"
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "404 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/404"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSchemaResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "Get Schema by Name",
+        "summary": "Get Schema (GetSchema)",
+        "tags": [
+          "Schemas"
+        ]
+      },
+      "put": {
+        "operationId": "UpdateSchema",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSchemaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "401 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSchemaResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/403"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "Update Schema by Name",
+        "summary": "Update Schema (UpdateSchema)",
+        "tags": [
+          "Schemas"
+        ]
+      },
+      "options": {
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Methods": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Access-Control-Allow-Headers": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "description": "",
+        "summary": "",
+        "tags": [
+          "Others"
+        ]
+      }
+    },
     "/sync": {
       "post": {
         "operationId": "SyncMessage",
@@ -4351,7 +4782,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SyncMsg"
+                "$ref": "#/components/schemas/SyncMsgRequest"
               }
             }
           },
@@ -4584,39 +5015,6 @@
         ]
       }
     },
-    "/template": {
-      "options": {
-        "responses": {
-          "204": {
-            "description": "204 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Methods": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "Access-Control-Allow-Headers": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {}
-          }
-        },
-        "description": "",
-        "summary": "",
-        "tags": [
-          "Others"
-        ],
-        "parameters": []
-      }
-    },
     "/trainings": {
       "get": {
         "operationId": "ListTrainings",
@@ -4737,7 +5135,7 @@
           "content": {
             "$default": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTrainingJob"
+                "$ref": "#/components/schemas/CreateTrainingJobRequest"
               }
             }
           },
@@ -4859,7 +5257,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteTrainingJobs"
+                "$ref": "#/components/schemas/DeleteTrainingJobsRequest"
               }
             }
           },
@@ -5263,7 +5661,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateUser"
+                "$ref": "#/components/schemas/CreateUserRequest"
               }
             }
           },
@@ -5385,7 +5783,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteUsers"
+                "$ref": "#/components/schemas/DeleteUsersRequest"
               }
             }
           },
@@ -5624,7 +6022,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateWorkflow"
+                "$ref": "#/components/schemas/CreateWorkflowRequest"
               }
             }
           },
@@ -5735,7 +6133,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DeleteWorkflows"
+                "$ref": "#/components/schemas/DeleteWorkflowsRequest"
               }
             }
           },
@@ -5789,6 +6187,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/204"
                 }
               }
             }
@@ -5985,6 +6400,48 @@
   },
   "components": {
     "schemas": {
+      "CreateInferenceJobRequest": {
+        "title": "CreateInferenceJob",
+        "required": [
+          "inference_type",
+          "models",
+          "task_type"
+        ],
+        "type": "object",
+        "properties": {
+          "inference_type": {
+            "type": "string",
+            "description": "Inference type",
+            "enum": [
+              "Real-time",
+              "Async"
+            ]
+          },
+          "custom_extensions": {
+            "type": "string"
+          },
+          "models": {
+            "type": "object",
+            "properties": {
+              "embeddings": {
+                "type": "array"
+              }
+            }
+          },
+          "payload_string": {
+            "type": "string"
+          },
+          "workflow": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string",
+            "description": "Workflow remark"
+          },
+          "task_type": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
       "CreateWorkflowResponse": {
         "title": "CreateWorkflowResponse",
         "required": [
@@ -6063,6 +6520,24 @@
             "enum": [
               202
             ]
+          }
+        }
+      },
+      "DeleteEndpointsRequest": {
+        "title": "DeleteEndpoints",
+        "required": [
+          "endpoint_name_list"
+        ],
+        "type": "object",
+        "properties": {
+          "endpoint_name_list": {
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Name of endpoint"
+            }
           }
         }
       },
@@ -6212,25 +6687,6 @@
           },
           "statusCode": {
             "type": "integer"
-          }
-        }
-      },
-      "DeleteUsers": {
-        "title": "DeleteUsers",
-        "required": [
-          "user_name_list"
-        ],
-        "type": "object",
-        "properties": {
-          "user_name_list": {
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "minLength": 1,
-              "type": "string",
-              "description": "Username for user"
-            }
           }
         }
       },
@@ -6546,6 +7002,79 @@
         },
         "description": "Response Model for Ping API"
       },
+      "GetSchemaResponse": {
+        "title": "GetSchema",
+        "required": [
+          "data",
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "data": {
+            "required": [
+              "create_time",
+              "name",
+              "payload",
+              "workflow"
+            ],
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "create_time": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              },
+              "name": {
+                "maxLength": 20,
+                "minLength": 1,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string",
+                "description": "Name of Workflow Schema"
+              }
+            }
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "number"
+          }
+        }
+      },
       "GetTrainResponse": {
         "title": "GetTrainingJob",
         "required": [
@@ -6654,6 +7183,41 @@
         "type": "object",
         "additionalProperties": true,
         "description": "Response Model for OAS"
+      },
+      "CropDatasetRequest": {
+        "title": "CropDataset",
+        "required": [
+          "max_resolution"
+        ],
+        "type": "object",
+        "properties": {
+          "max_resolution": {
+            "pattern": "^[1-9]\\d*x[1-9]\\d*$",
+            "type": "string",
+            "description": "Max resolution of the image, like: 512x512"
+          }
+        }
+      },
+      "DeleteWorkflowsRequest": {
+        "title": "DeleteWorkflows",
+        "required": [
+          "workflow_name_list"
+        ],
+        "type": "object",
+        "properties": {
+          "workflow_name_list": {
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string",
+              "description": "Name of workflow"
+            }
+          }
+        }
       },
       "ListRolesResponse": {
         "title": "ListRoles",
@@ -6930,24 +7494,6 @@
           }
         }
       },
-      "DeleteExecutesApi": {
-        "title": "DeleteExecutesApi",
-        "required": [
-          "execute_id_list"
-        ],
-        "type": "object",
-        "properties": {
-          "execute_id_list": {
-            "maxItems": 20,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            }
-          }
-        }
-      },
       "CreateUserResponse": {
         "title": "CreateUser",
         "required": [
@@ -6990,45 +7536,6 @@
           },
           "statusCode": {
             "type": "integer"
-          }
-        }
-      },
-      "DeleteWorkflows": {
-        "title": "DeleteWorkflows",
-        "required": [
-          "workflow_name_list"
-        ],
-        "type": "object",
-        "properties": {
-          "workflow_name_list": {
-            "maxItems": 10,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "maxLength": 20,
-              "minLength": 1,
-              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
-              "type": "string",
-              "description": "Name of workflow"
-            }
-          }
-        }
-      },
-      "DeleteInferenceJobs": {
-        "title": "DeleteInferenceJobs",
-        "required": [
-          "inference_id_list"
-        ],
-        "type": "object",
-        "properties": {
-          "inference_id_list": {
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            }
           }
         }
       },
@@ -7483,92 +7990,6 @@
           }
         }
       },
-      "CreateTrainingJob": {
-        "title": "CreateTrainingJob",
-        "required": [
-          "lora_train_type",
-          "params"
-        ],
-        "type": "object",
-        "properties": {
-          "lora_train_type": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "params": {
-            "required": [
-              "config_params",
-              "training_params"
-            ],
-            "type": "object",
-            "properties": {
-              "enable_wd14_tagger": {
-                "type": "boolean",
-                "description": "Enable WD14 Tagger",
-                "default": false
-              },
-              "wd14_tagger_params": {
-                "type": "object",
-                "properties": {
-                  "character_threshold": {
-                    "type": "string",
-                    "description": "Character threshold",
-                    "default": "0"
-                  },
-                  "general_threshold": {
-                    "type": "string",
-                    "description": "General threshold",
-                    "default": "0"
-                  }
-                },
-                "additionalProperties": true
-              },
-              "training_params": {
-                "required": [
-                  "dataset",
-                  "fm_type",
-                  "model",
-                  "training_instance_type"
-                ],
-                "type": "object",
-                "properties": {
-                  "model": {
-                    "type": "string",
-                    "description": "Model"
-                  },
-                  "dataset": {
-                    "type": "string",
-                    "description": "Dataset"
-                  },
-                  "training_instance_type": {
-                    "type": "string",
-                    "description": "Training instance type"
-                  },
-                  "fm_type": {
-                    "type": "string",
-                    "description": "FM type"
-                  }
-                }
-              },
-              "config_params": {
-                "required": [
-                  "output_name"
-                ],
-                "type": "object",
-                "properties": {
-                  "output_name": {
-                    "minLength": 1,
-                    "type": "string",
-                    "description": "Output Model Name"
-                  }
-                },
-                "additionalProperties": true,
-                "description": "Training Configuration Parameters"
-              }
-            }
-          }
-        }
-      },
       "StartInferenceJobRealtimeResponse": {
         "title": "StartInferenceJob",
         "required": [
@@ -7708,10 +8129,23 @@
           }
         }
       },
-      "SyncMsg": {
-        "title": "SyncMsg",
+      "DeleteDatasetsRequest": {
+        "title": "DeleteDatasets",
+        "required": [
+          "dataset_name_list"
+        ],
         "type": "object",
-        "additionalProperties": true
+        "properties": {
+          "dataset_name_list": {
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Name of dataset"
+            }
+          }
+        }
       },
       "GetDatasetResponse": {
         "title": "GetDatasetResponse",
@@ -7841,21 +8275,99 @@
           }
         }
       },
-      "CreateWorkflow": {
-        "title": "CreateWorkflow",
+      "CreateDatasetRequest": {
+        "title": "CreateDataset",
         "required": [
-          "image_uri",
-          "name",
-          "payload_json",
-          "size"
+          "content",
+          "creator",
+          "dataset_name",
+          "prefix"
         ],
         "type": "object",
         "properties": {
-          "size": {
+          "creator": {
+            "minLength": 1,
             "type": "string"
           },
-          "image_uri": {
+          "prefix": {
+            "minLength": 0,
+            "type": "string"
+          },
+          "dataset_name": {
+            "maxLength": 20,
             "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              }
+            }
+          },
+          "content": {
+            "maxItems": 500,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "DeleteSchemasRequest": {
+        "title": "DeleteSchemas",
+        "required": [
+          "schema_name_list"
+        ],
+        "type": "object",
+        "properties": {
+          "schema_name_list": {
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string",
+              "description": "Name of Workflow Schema"
+            }
+          }
+        }
+      },
+      "CreateSchemaRequest": {
+        "title": "CreateSchema",
+        "required": [
+          "name",
+          "payload",
+          "workflow"
+        ],
+        "type": "object",
+        "properties": {
+          "workflow": {
+            "type": "string"
+          },
+          "payload": {
             "type": "string"
           },
           "name": {
@@ -7863,10 +8375,7 @@
             "minLength": 1,
             "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
             "type": "string",
-            "description": "Name of workflow"
-          },
-          "payload_json": {
-            "type": "string"
+            "description": "Name of Workflow Schema"
           }
         }
       },
@@ -8087,62 +8596,123 @@
           }
         }
       },
-      "CreateDataset": {
-        "title": "CreateDataset",
+      "CreateRoleRequest": {
+        "title": "CreateRole",
         "required": [
-          "content",
-          "creator",
-          "dataset_name",
-          "prefix"
+          "permissions",
+          "role_name"
         ],
         "type": "object",
         "properties": {
-          "creator": {
+          "role_name": {
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Role name"
           },
-          "prefix": {
-            "minLength": 0,
-            "type": "string"
-          },
-          "dataset_name": {
-            "maxLength": 20,
-            "minLength": 1,
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "type": "string"
-          },
-          "params": {
-            "type": "object",
-            "properties": {
-              "description": {
-                "type": "string"
-              }
+          "permissions": {
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array",
+            "description": "List of permissions",
+            "items": {
+              "minLength": 1,
+              "type": "string"
             }
-          },
-          "content": {
-            "maxItems": 500,
+          }
+        }
+      },
+      "DeleteCheckpointsRequest": {
+        "title": "DeleteCheckpoints",
+        "required": [
+          "checkpoint_id_list"
+        ],
+        "type": "object",
+        "properties": {
+          "checkpoint_id_list": {
+            "maxItems": 100,
             "minItems": 1,
             "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "filename": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "name": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "type": {
-                  "minLength": 1,
-                  "type": "string"
-                },
-                "params": {
-                  "type": "object"
-                }
+              "type": "string",
+              "description": "ID of checkpoint",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "CreateSchemaResponse": {
+        "title": "CreateSchemaResponse",
+        "required": [
+          "data",
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "data": {
+            "required": [
+              "create_time",
+              "name",
+              "payload",
+              "workflow"
+            ],
+            "type": "object",
+            "properties": {
+              "workflow": {
+                "type": "string"
+              },
+              "create_time": {
+                "type": "string"
+              },
+              "payload": {
+                "type": "string"
+              },
+              "name": {
+                "maxLength": 20,
+                "minLength": 1,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string",
+                "description": "Name of Workflow Schema"
               }
             }
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "integer",
+            "enum": [
+              202
+            ]
           }
         }
       },
@@ -8533,25 +9103,30 @@
         },
         "description": "Unauthorized"
       },
-      "UpdateDataset": {
-        "title": "UpdateDataset",
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "minLength": 1,
-            "type": "string"
-          }
-        }
-      },
       "204": {
         "title": "Response Model 204",
         "type": "object",
         "properties": {},
         "additionalProperties": false,
         "description": "Schema for an API response with a 204 No Content status. Since the 204 status indicates that there is no content in the response, this schema does not define any properties for the response body."
+      },
+      "DeleteInferenceJobsRequest": {
+        "title": "DeleteInferenceJobs",
+        "required": [
+          "inference_id_list"
+        ],
+        "type": "object",
+        "properties": {
+          "inference_id_list": {
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        }
       },
       "403": {
         "title": "Response Model 403",
@@ -8575,22 +9150,21 @@
         },
         "description": "Forbidden"
       },
-      "UpdateCheckPoint": {
-        "title": "UpdateCheckPoint",
+      "DeleteRolesRequest": {
+        "title": "DeleteRoles",
+        "required": [
+          "role_name_list"
+        ],
         "type": "object",
         "properties": {
-          "name": {
-            "maxLength": 20,
-            "minLength": 1,
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "type": "string"
-          },
-          "multi_parts_tags": {
-            "type": "object"
-          },
-          "status": {
-            "type": "string",
-            "description": "Status of checkpoint"
+          "role_name_list": {
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
           }
         }
       },
@@ -8642,6 +9216,25 @@
           }
         },
         "description": "Not Found"
+      },
+      "DeleteUsersRequest": {
+        "title": "DeleteUsers",
+        "required": [
+          "user_name_list"
+        ],
+        "type": "object",
+        "properties": {
+          "user_name_list": {
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string",
+              "description": "Username for user"
+            }
+          }
+        }
       },
       "UpdateCheckpointResponse": {
         "title": "UpdateCheckpointResponse",
@@ -8825,21 +9418,144 @@
           }
         }
       },
-      "DeleteEndpoints": {
-        "title": "DeleteEndpoints",
+      "CreateUserRequest": {
+        "title": "CreateUser",
         "required": [
-          "endpoint_name_list"
+          "username"
         ],
         "type": "object",
         "properties": {
-          "endpoint_name_list": {
-            "maxItems": 10,
+          "password": {
+            "type": "string",
+            "description": "Password for user"
+          },
+          "roles": {
+            "maxItems": 20,
             "minItems": 1,
             "type": "array",
+            "description": "Roles for user",
             "items": {
-              "type": "string",
-              "description": "Name of endpoint"
+              "minLength": 1,
+              "type": "string"
             }
+          },
+          "username": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Username for user"
+          }
+        }
+      },
+      "ListSchemasResponse": {
+        "title": "ListSchemasResponse",
+        "required": [
+          "data",
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "data": {
+            "required": [
+              "last_evaluated_key",
+              "schemas"
+            ],
+            "type": "object",
+            "properties": {
+              "last_evaluated_key": {
+                "oneOf": [
+                  {
+                    "type": "null",
+                    "description": "Last Key for Pagination"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Last Key for Pagination"
+                  }
+                ]
+              },
+              "schemas": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "create_time",
+                    "name",
+                    "payload",
+                    "workflow"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "type": "string"
+                    },
+                    "create_time": {
+                      "type": "string"
+                    },
+                    "payload": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 20,
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                      "type": "string",
+                      "description": "Name of Workflow Schema"
+                    }
+                  }
+                }
+              }
+            },
+            "additionalProperties": true
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "integer",
+            "enum": [
+              200
+            ]
+          }
+        }
+      },
+      "UpdateSchemaRequest": {
+        "title": "UpdateSchema",
+        "required": [
+          "workflow"
+        ],
+        "type": "object",
+        "properties": {
+          "workflow": {
+            "type": "string"
           }
         }
       },
@@ -8961,25 +9677,6 @@
           },
           "statusCode": {
             "type": "integer"
-          }
-        }
-      },
-      "DeleteCheckpoints": {
-        "title": "DeleteCheckpoints",
-        "required": [
-          "checkpoint_id_list"
-        ],
-        "type": "object",
-        "properties": {
-          "checkpoint_id_list": {
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "ID of checkpoint",
-              "format": "uuid"
-            }
           }
         }
       },
@@ -9144,7 +9841,402 @@
         },
         "description": "Response Model RootAPIResponse"
       },
-      "Execute": {
+      "UpdateSchemaResponse": {
+        "title": "UpdateSchema",
+        "required": [
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "number"
+          }
+        }
+      },
+      "ListWorkflowsResponse": {
+        "title": "ListWorkflowsResponse",
+        "required": [
+          "data",
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "data": {
+            "required": [
+              "last_evaluated_key",
+              "workflows"
+            ],
+            "type": "object",
+            "properties": {
+              "last_evaluated_key": {
+                "oneOf": [
+                  {
+                    "type": "null",
+                    "description": "Last Key for Pagination"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Last Key for Pagination"
+                  }
+                ]
+              },
+              "workflows": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "image_uri",
+                    "name",
+                    "payload_json",
+                    "size",
+                    "status"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "size": {
+                      "type": "string"
+                    },
+                    "image_uri": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 20,
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                      "type": "string",
+                      "description": "Name of workflow"
+                    },
+                    "payload_json": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "additionalProperties": true
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "integer",
+            "enum": [
+              200
+            ]
+          }
+        }
+      },
+      "CreateTrainingJobRequest": {
+        "title": "CreateTrainingJob",
+        "required": [
+          "lora_train_type",
+          "params"
+        ],
+        "type": "object",
+        "properties": {
+          "lora_train_type": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "params": {
+            "required": [
+              "config_params",
+              "training_params"
+            ],
+            "type": "object",
+            "properties": {
+              "enable_wd14_tagger": {
+                "type": "boolean",
+                "description": "Enable WD14 Tagger",
+                "default": false
+              },
+              "wd14_tagger_params": {
+                "type": "object",
+                "properties": {
+                  "character_threshold": {
+                    "type": "string",
+                    "description": "Character threshold",
+                    "default": "0"
+                  },
+                  "general_threshold": {
+                    "type": "string",
+                    "description": "General threshold",
+                    "default": "0"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "training_params": {
+                "required": [
+                  "dataset",
+                  "fm_type",
+                  "model",
+                  "training_instance_type"
+                ],
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Model"
+                  },
+                  "dataset": {
+                    "type": "string",
+                    "description": "Dataset"
+                  },
+                  "training_instance_type": {
+                    "type": "string",
+                    "description": "Training instance type"
+                  },
+                  "fm_type": {
+                    "type": "string",
+                    "description": "FM type"
+                  }
+                }
+              },
+              "config_params": {
+                "required": [
+                  "output_name"
+                ],
+                "type": "object",
+                "properties": {
+                  "output_name": {
+                    "minLength": 1,
+                    "type": "string",
+                    "description": "Output Model Name"
+                  }
+                },
+                "additionalProperties": true,
+                "description": "Training Configuration Parameters"
+              }
+            }
+          }
+        }
+      },
+      "StartInferenceJobAsyncResponse": {
+        "title": "StartInferenceJobAsyncResponse",
+        "required": [
+          "data",
+          "debug",
+          "message",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "debug": {
+            "title": "Response Model Debug",
+            "required": [
+              "function_url",
+              "log_url",
+              "trace_url"
+            ],
+            "type": "object",
+            "properties": {
+              "trace_url": {
+                "type": "string",
+                "description": "URL to X-Ray Trace",
+                "format": "uri"
+              },
+              "function_url": {
+                "type": "string",
+                "description": "URL to Lambda Function",
+                "format": "uri"
+              },
+              "log_url": {
+                "type": "string",
+                "description": "URL to CloudWatch Logs",
+                "format": "uri"
+              }
+            },
+            "description": "Debugging information for Lambda Function"
+          },
+          "data": {
+            "required": [
+              "InferenceJobId",
+              "status"
+            ],
+            "type": "object",
+            "properties": {
+              "InferenceJobId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "message": {
+            "type": "string",
+            "description": "API Operate Message"
+          },
+          "statusCode": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateEndpointRequest": {
+        "title": "CreateEndpoint",
+        "required": [
+          "assign_to_roles",
+          "autoscaling_enabled",
+          "endpoint_type",
+          "initial_instance_count",
+          "instance_type"
+        ],
+        "type": "object",
+        "properties": {
+          "assign_to_roles": {
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "endpoint_type": {
+            "type": "string",
+            "description": "Endpoint Type",
+            "enum": [
+              "Real-time",
+              "Async"
+            ]
+          },
+          "service_type": {
+            "type": "string",
+            "enum": [
+              "sd",
+              "comfy"
+            ]
+          },
+          "min_instance_number": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "workflow_name": {
+            "maxLength": 20,
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string",
+            "description": "Name of workflow"
+          },
+          "cool_down_time": {
+            "type": "string",
+            "enum": [
+              "15 minutes",
+              "1 hour",
+              "6 hours",
+              "1 day"
+            ]
+          },
+          "endpoint_name": {
+            "type": "string",
+            "description": "Name of endpoint"
+          },
+          "custom_docker_image_uri": {
+            "type": "string"
+          },
+          "autoscaling_enabled": {
+            "type": "boolean"
+          },
+          "initial_instance_count": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "instance_type": {
+            "type": "string",
+            "description": "Instance Type"
+          },
+          "max_instance_number": {
+            "type": "number"
+          }
+        }
+      },
+      "MergeExecuteRequest": {
+        "title": "MergeExecute",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "UpdateDatasetRequest": {
+        "title": "UpdateDataset",
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "ExecuteRequest": {
         "title": "Execute",
         "required": [
           "endpoint_name",
@@ -9212,185 +10304,21 @@
           }
         }
       },
-      "ListWorkflowsResponse": {
-        "title": "ListWorkflowsResponse",
+      "DeleteExecutesApiRequest": {
+        "title": "DeleteExecutesApi",
         "required": [
-          "data",
-          "debug",
-          "message",
-          "statusCode"
+          "execute_id_list"
         ],
         "type": "object",
         "properties": {
-          "debug": {
-            "title": "Response Model Debug",
-            "required": [
-              "function_url",
-              "log_url",
-              "trace_url"
-            ],
-            "type": "object",
-            "properties": {
-              "trace_url": {
-                "type": "string",
-                "description": "URL to X-Ray Trace",
-                "format": "uri"
-              },
-              "function_url": {
-                "type": "string",
-                "description": "URL to Lambda Function",
-                "format": "uri"
-              },
-              "log_url": {
-                "type": "string",
-                "description": "URL to CloudWatch Logs",
-                "format": "uri"
-              }
-            },
-            "description": "Debugging information for Lambda Function"
-          },
-          "data": {
-            "required": [
-              "last_evaluated_key"
-            ],
-            "type": "object",
-            "properties": {
-              "last_evaluated_key": {
-                "oneOf": [
-                  {
-                    "type": "null",
-                    "description": "Last Key for Pagination"
-                  },
-                  {
-                    "type": "string",
-                    "description": "Last Key for Pagination"
-                  }
-                ]
-              },
-              "endpoints": {
-                "type": "array",
-                "items": {
-                  "required": [
-                    "image_uri",
-                    "name",
-                    "payload_json",
-                    "size",
-                    "status"
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "size": {
-                      "type": "string"
-                    },
-                    "image_uri": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "name": {
-                      "maxLength": 20,
-                      "minLength": 1,
-                      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
-                      "type": "string",
-                      "description": "Name of workflow"
-                    },
-                    "payload_json": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "additionalProperties": true
-          },
-          "message": {
-            "type": "string",
-            "description": "API Operate Message"
-          },
-          "statusCode": {
-            "type": "integer",
-            "enum": [
-              200
-            ]
-          }
-        }
-      },
-      "StartInferenceJobAsyncResponse": {
-        "title": "StartInferenceJobAsyncResponse",
-        "required": [
-          "data",
-          "debug",
-          "message",
-          "statusCode"
-        ],
-        "type": "object",
-        "properties": {
-          "debug": {
-            "title": "Response Model Debug",
-            "required": [
-              "function_url",
-              "log_url",
-              "trace_url"
-            ],
-            "type": "object",
-            "properties": {
-              "trace_url": {
-                "type": "string",
-                "description": "URL to X-Ray Trace",
-                "format": "uri"
-              },
-              "function_url": {
-                "type": "string",
-                "description": "URL to Lambda Function",
-                "format": "uri"
-              },
-              "log_url": {
-                "type": "string",
-                "description": "URL to CloudWatch Logs",
-                "format": "uri"
-              }
-            },
-            "description": "Debugging information for Lambda Function"
-          },
-          "data": {
-            "required": [
-              "InferenceJobId",
-              "status"
-            ],
-            "type": "object",
-            "properties": {
-              "InferenceJobId": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "status": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": true
-          },
-          "message": {
-            "type": "string",
-            "description": "API Operate Message"
-          },
-          "statusCode": {
-            "type": "number"
-          }
-        }
-      },
-      "CropDataset": {
-        "title": "CropDataset",
-        "required": [
-          "max_resolution"
-        ],
-        "type": "object",
-        "properties": {
-          "max_resolution": {
-            "pattern": "^[1-9]\\d*x[1-9]\\d*$",
-            "type": "string",
-            "description": "Max resolution of the image, like: 512x512"
+          "execute_id_list": {
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
           }
         }
       },
@@ -9500,7 +10428,7 @@
           }
         }
       },
-      "Prepare": {
+      "PrepareRequest": {
         "title": "Prepare",
         "required": [
           "endpoint_name",
@@ -9540,108 +10468,6 @@
               "custom",
               "other"
             ]
-          }
-        }
-      },
-      "CreateEndpoint": {
-        "title": "CreateEndpoint",
-        "required": [
-          "assign_to_roles",
-          "autoscaling_enabled",
-          "endpoint_type",
-          "initial_instance_count",
-          "instance_type"
-        ],
-        "type": "object",
-        "properties": {
-          "assign_to_roles": {
-            "maxItems": 10,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "endpoint_type": {
-            "type": "string",
-            "description": "Endpoint Type",
-            "enum": [
-              "Real-time",
-              "Async"
-            ]
-          },
-          "service_type": {
-            "type": "string",
-            "enum": [
-              "sd",
-              "comfy"
-            ]
-          },
-          "min_instance_number": {
-            "minimum": 0,
-            "type": "number"
-          },
-          "workflow_name": {
-            "maxLength": 20,
-            "minLength": 1,
-            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
-            "type": "string",
-            "description": "Name of workflow"
-          },
-          "cool_down_time": {
-            "type": "string",
-            "enum": [
-              "15 minutes",
-              "1 hour",
-              "6 hours",
-              "1 day"
-            ]
-          },
-          "endpoint_name": {
-            "type": "string",
-            "description": "Name of endpoint"
-          },
-          "custom_docker_image_uri": {
-            "type": "string"
-          },
-          "autoscaling_enabled": {
-            "type": "boolean"
-          },
-          "initial_instance_count": {
-            "minimum": 1,
-            "type": "number"
-          },
-          "instance_type": {
-            "type": "string",
-            "description": "Instance Type"
-          },
-          "max_instance_number": {
-            "type": "number"
-          }
-        }
-      },
-      "CreateRole": {
-        "title": "CreateRole",
-        "required": [
-          "permissions",
-          "role_name"
-        ],
-        "type": "object",
-        "properties": {
-          "role_name": {
-            "minLength": 1,
-            "type": "string",
-            "description": "Role name"
-          },
-          "permissions": {
-            "maxItems": 20,
-            "minItems": 1,
-            "type": "array",
-            "description": "List of permissions",
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            }
           }
         }
       },
@@ -9776,49 +10602,22 @@
           }
         }
       },
-      "DeleteRoles": {
-        "title": "DeleteRoles",
+      "DeleteTrainingJobsRequest": {
+        "title": "DeleteTrainingJobs",
         "required": [
-          "role_name_list"
+          "training_id_list"
         ],
         "type": "object",
         "properties": {
-          "role_name_list": {
+          "training_id_list": {
             "maxItems": 100,
             "minItems": 1,
             "type": "array",
             "items": {
-              "minLength": 1,
-              "type": "string"
+              "pattern": "^[a-f0-9\\-]{36}$",
+              "type": "string",
+              "description": "ID of training job"
             }
-          }
-        }
-      },
-      "CreateUser": {
-        "title": "CreateUser",
-        "required": [
-          "username"
-        ],
-        "type": "object",
-        "properties": {
-          "password": {
-            "type": "string",
-            "description": "Password for user"
-          },
-          "roles": {
-            "maxItems": 20,
-            "minItems": 1,
-            "type": "array",
-            "description": "Roles for user",
-            "items": {
-              "minLength": 1,
-              "type": "string"
-            }
-          },
-          "username": {
-            "minLength": 1,
-            "type": "string",
-            "description": "Username for user"
           }
         }
       },
@@ -9980,25 +10779,6 @@
             "enum": [
               200
             ]
-          }
-        }
-      },
-      "DeleteTrainingJobs": {
-        "title": "DeleteTrainingJobs",
-        "required": [
-          "training_id_list"
-        ],
-        "type": "object",
-        "properties": {
-          "training_id_list": {
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "pattern": "^[a-f0-9\\-]{36}$",
-              "type": "string",
-              "description": "ID of training job"
-            }
           }
         }
       },
@@ -10174,11 +10954,6 @@
           }
         }
       },
-      "MergeExecute": {
-        "title": "MergeExecute",
-        "type": "object",
-        "additionalProperties": true
-      },
       "CreateDatasetResponse": {
         "title": "CreateDatasetResponse",
         "required": [
@@ -10241,48 +11016,6 @@
             "enum": [
               201
             ]
-          }
-        }
-      },
-      "CreateInferenceJob": {
-        "title": "CreateInferenceJob",
-        "required": [
-          "inference_type",
-          "models",
-          "task_type"
-        ],
-        "type": "object",
-        "properties": {
-          "inference_type": {
-            "type": "string",
-            "description": "Inference type",
-            "enum": [
-              "Real-time",
-              "Async"
-            ]
-          },
-          "custom_extensions": {
-            "type": "string"
-          },
-          "models": {
-            "type": "object",
-            "properties": {
-              "embeddings": {
-                "type": "array"
-              }
-            }
-          },
-          "payload_string": {
-            "type": "string"
-          },
-          "workflow": {
-            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
-            "type": "string",
-            "description": "Workflow remark"
-          },
-          "task_type": {
-            "minLength": 1,
-            "type": "string"
           }
         }
       },
@@ -10428,6 +11161,35 @@
           }
         }
       },
+      "CreateWorkflowRequest": {
+        "title": "CreateWorkflow",
+        "required": [
+          "image_uri",
+          "name",
+          "payload_json",
+          "size"
+        ],
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "string"
+          },
+          "image_uri": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 20,
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string",
+            "description": "Name of workflow"
+          },
+          "payload_json": {
+            "type": "string"
+          }
+        }
+      },
       "CreateInferenceJobRealtimeResponse": {
         "title": "CreateInferenceJobRealtimeResponse",
         "required": [
@@ -10567,21 +11329,27 @@
           }
         }
       },
-      "DeleteDatasets": {
-        "title": "DeleteDatasets",
-        "required": [
-          "dataset_name_list"
-        ],
+      "SyncMsgRequest": {
+        "title": "SyncMsg",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "UpdateCheckPointRequest": {
+        "title": "UpdateCheckPoint",
         "type": "object",
         "properties": {
-          "dataset_name_list": {
-            "maxItems": 10,
-            "minItems": 1,
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "Name of dataset"
-            }
+          "name": {
+            "maxLength": 20,
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "multi_parts_tags": {
+            "type": "object"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of checkpoint"
           }
         }
       }
@@ -10663,6 +11431,10 @@
     {
       "name": "Workflows",
       "description": "Manage Workflows"
+    },
+    {
+      "name": "Schemas",
+      "description": "Manage Schemas"
     },
     {
       "name": "Others",
