@@ -35,7 +35,6 @@ def handler(event, ctx):
 
         scan_kwargs = {
             'Limit': limit,
-            "ScanIndexForward": False
         }
 
         if exclusive_start_key:
