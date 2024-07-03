@@ -1290,17 +1290,33 @@ if is_on_ec2:
             response = requests.get(f"{api_url}/schemas", headers=headers, params=params)
 
             if response.status_code != 200:
+                resp = response.json()
                 return web.Response(status=500, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": 'List schemas failed'}))
+                                    body=json.dumps({"result": False, "message": f'List schemas failed: {resp["message"]}'}))
 
             data = response.json()['data']
+            schemas = data['schemas']
+
+            list = []
+
+            for schema in schemas:
+                if not is_master_process and not schema['workflow']:
+                    continue
+
+                list.append({
+                    "name": schema['name'],
+                    "workflow": schema['workflow'],
+                    "payload": schema['payload'],
+                    "create_time": schema['create_time'],
+                })
+
+            data['schemas'] = list
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "data": data}))
         except Exception as e:
-            logger.info(e)
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'List schemas failed'}))
+                                body=json.dumps({"result": False, "message": f'List schemas failed: {e}'}))
 
     @server.PromptServer.instance.routes.post("/schemas")
     async def create_schema(request):
