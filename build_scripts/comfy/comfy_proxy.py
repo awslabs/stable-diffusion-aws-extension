@@ -1261,8 +1261,150 @@ if is_on_ec2:
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
+                                body=json.dumps({"result": False, "message": 'list workflows failed'}))
 
+    @server.PromptServer.instance.routes.get("/schemas")
+    async def get_schemas(request):
+        try:
+
+            limit = 10
+            if 'limit' in request.query and request.query['limit']:
+                limit = int(request.query['limit'])
+
+            exclusive_start_key = None
+            if 'exclusive_start_key' in request.query and request.query['exclusive_start_key']:
+                exclusive_start_key = request.query['exclusive_start_key']
+
+            params={
+                "limit": limit,
+                "exclusive_start_key": exclusive_start_key,
+            }
+
+            response = requests.get(f"{api_url}/schemas", headers=headers, params=params)
+
+            if response.status_code != 200:
+                return web.Response(status=500, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": 'List schemas failed'}))
+
+            data = response.json()['data']
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "data": data}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'List schemas failed'}))
+
+    @server.PromptServer.instance.routes.post("/schemas")
+    async def create_schema(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can create schema"}))
+
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"name is required"}))
+
+            if 'payload' not in json_data or not json_data['payload']:
+                return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": f"payload is required"}))
+
+            name = json_data['name']
+            payload = json_data['payload']
+            workflow_name = ''
+
+            if 'workflow' in json_data and json_data['workflow']:
+                workflow_name = json_data['workflow']
+
+            data = {
+                "payload": payload,
+                "name": name,
+                "workflow": workflow_name,
+            }
+            get_response = requests.post(f"{api_url}/schemas", headers=headers, data=json.dumps(data))
+            response = get_response.json()
+            if get_response.status_code != 200:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": response['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Created schema"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Create schema failed'}))
+
+    @server.PromptServer.instance.routes.delete("/schemas")
+    async def delete_schemas(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can delete schemas"}))
+
+        try:
+            json_data = await request.json()
+            if 'schema_name_list' not in json_data or not json_data['schema_name_list']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"schema_name_list is required"}))
+            schema_name_list = json_data['schema_name_list']
+
+            data = {
+                "schema_name_list": schema_name_list,
+            }
+            response = requests.delete(f"{api_url}/schemas", headers=headers, data=json.dumps(data))
+
+            if response.status_code != 204:
+                resp = response.json()
+                return web.Response(status=200,
+                                    content_type='application/json',
+                                    body=json.dumps({"result": False, "message": resp['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Schema deleted"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Delete schemas failed'}))
+
+    @server.PromptServer.instance.routes.put("/schemas")
+    async def update_schema(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can update schema"}))
+
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                raise ValueError("name is required")
+
+            if 'payload' not in json_data or not json_data['payload']:
+                raise ValueError("payload is required")
+
+            workflow_name = ''
+
+            if 'workflow' in json_data and json_data['workflow']:
+                workflow_name = json_data['workflow']
+
+            name = json_data['name']
+            payload = json_data['payload']
+
+            data = {
+                "workflow": workflow_name,
+                "payload": payload,
+            }
+            get_response = requests.put(f"{api_url}/schemas/{name}", headers=headers, data=json.dumps(data))
+            if get_response.status_code != 200:
+                response = get_response.json()
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": response['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Updated schema"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": f'Update schema failed: {e}'}))
 
     def check_workflow_exists(name: str):
         get_response = requests.get(f"{api_url}/workflows/{name}", headers=headers)

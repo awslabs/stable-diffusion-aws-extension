@@ -101,6 +101,15 @@ class Api:
             data=data
         )
 
+    def delete_schemas(self, headers=None, data=None):
+        return self.req(
+            "DELETE",
+            "schemas",
+            headers=headers,
+            operation_id='DeleteSchemas',
+            data=data
+        )
+
     def delete_users(self, headers=None, data=None):
         return self.req(
             "DELETE",
@@ -254,6 +263,15 @@ class Api:
             params=params
         )
 
+    def list_schemas(self, headers=None, params=None):
+        return self.req(
+            "GET",
+            "schemas",
+            headers=headers,
+            operation_id='ListSchemas',
+            params=params
+        )
+
     def get_workflow(self, name: str, headers=None):
         return self.req(
             "GET",
@@ -277,6 +295,15 @@ class Api:
             "workflows",
             headers=headers,
             operation_id='CreateWorkflow',
+            data=data
+        )
+
+    def create_schema(self, headers=None, data=None):
+        return self.req(
+            "POST",
+            "schemas",
+            headers=headers,
+            operation_id='CreateSchema',
             data=data
         )
 
