@@ -364,7 +364,7 @@ async function handleLoadTemplateButton() {
     container.appendChild(loadingIndicator);
 
     try {
-        const response = await api.fetchApi("/templates");
+        const response = await api.fetchApi("/schemas");
         console.log(response);
         const data = await response.json();
         // Clear the loading indicator
@@ -446,11 +446,10 @@ async function handleChangeTemplateButton() {
             try {
                 handleLockScreen();
                 var target = {
-                    'name': selectedItem.firstChild.firstChild.textContent
+                    'name': selectedItem.firstChild.firstChild.value
                 };
-
-                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
-                const response = await api.fetchApi("/templates", {
+                await handleLoadTemplateJson(selectedItem.firstChild.firstChild.hidden);
+                const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
@@ -505,7 +504,7 @@ async function handleEditTemplateButton(){
                 var target = {
                     'name': selectedItem.firstChild.firstChild.textContent
                 };
-                const response = await api.fetchApi("/templates", {
+                const response = await api.fetchApi("/schemas", {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
@@ -535,9 +534,9 @@ async function handleDeleteTemplateButton() {
         var dialog = new ModalConfirmDialog(app, 'Do you want to DELETE the template?', async () => {
             try {
                 var target = {
-                    'name': selectedItem.firstChild.firstChild.textContent
+                    'schema_name_list': [selectedItem.firstChild.firstChild.textContent]
                 };
-                const response = await api.fetchApi("/templates", {
+                const response = await api.fetchApi("/schemas", {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(target)
@@ -656,11 +655,13 @@ function createTemplateItem(template, onClick) {
     labelContainer.style.flexDirection = 'column';
     labelContainer.style.alignItems = 'flex-start';
     labelContainer.style.zIndex = '1';
-    labelContainer.setAttribute('alt', template.payload_json);
-    labelContainer.setAttribute('title', template.payload_json);
+    labelContainer.setAttribute('alt', template.payload);
+    labelContainer.setAttribute('title', template.payload);
 
     const nameLabel = document.createElement('span');
     nameLabel.textContent = `${template.name}`;
+    nameLabel.value = `${template.workflow}`;
+    nameLabel.hidden = `${template.payload}`;
     nameLabel.style.display = 'flex';
     nameLabel.style.alignItems = 'center';
     if (workflow.in_use) {
@@ -668,7 +669,7 @@ function createTemplateItem(template, onClick) {
         try {
             var target = {
                 'clientId': api.initialClientId ?? api.clientId,
-                'releaseVersion': `${template.name}`
+                'releaseVersion': `${template.workflow}`
             };
             const response = api.fetchApi("/map_release", {
                 method: 'POST',
@@ -692,7 +693,7 @@ function createTemplateItem(template, onClick) {
     nameLabel.style.marginBottom = '2px';
 
     const sizeLabel = document.createElement('span');
-    sizeLabel.textContent = template.size ? `${template.size} GB` : "unknow";
+    sizeLabel.textContent = template.workflow ? `${template.workflow} ` : "unbind";
     sizeLabel.style.fontWeight = '300';
     sizeLabel.style.color = '#6c757d';
     sizeLabel.style.fontSize = '12px';
@@ -869,6 +870,37 @@ async function handleLoadJson(templateId){
         return false
     }
 }
+
+async function handleLoadTemplateJson(promptJson){
+    try {
+        if (!promptJson){
+            console.info("load default json")
+            return
+        }
+        let jsonContent;
+        if (typeof promptJson === 'object') {
+            const jsonString = JSON.stringify(promptJson);
+            jsonContent = JSON.parse(jsonString);
+        } else {
+            jsonContent = JSON.parse(promptJson);
+        }
+        if (jsonContent?.workflow) {
+            const workflowJsonString = JSON.stringify(jsonContent.workflow);
+            const workflowContent = JSON.parse(workflowJsonString);
+            console.log(workflowContent)
+            await app.loadGraphData(workflowContent);
+            console.log("finished loadGraphData")
+        } else {
+            console.error(jsonContent);
+            console.error("Invalid JSON: missing 'workflow' property when loadGraphData.");
+        }
+        return true
+    } catch (error) {
+        console.error('Loading error:', error);
+        return false
+    }
+}
+
 
 const awsConfigPanel = {
     name: 'awsConfigPanel',
@@ -1271,7 +1303,7 @@ export class ModalTemplateDialog extends ComfyDialog{
 
             var target = {
                 'name': templateName,
-                'payload_json': payloadJson
+                'payload': payloadJson
             };
             const response = await api.fetchApi("/templates", {
                 method: 'POST',
