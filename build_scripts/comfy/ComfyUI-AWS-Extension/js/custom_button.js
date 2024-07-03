@@ -1076,12 +1076,12 @@ export class ModalReleaseDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "Release Workflow", style: { border: "0" } },
+                        { textContent: "Release Env", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
+                            $el("th", { textContent: "Env Name", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
                                     type: "text",
@@ -1144,19 +1144,19 @@ export class ModalReleaseDialog extends ComfyDialog {
     async releaseWorkflow() {
         // validate names
         if (newWorkflowName.length > 40) {
-            document.getElementById("release-validate").textContent = 'The workflow name cannot exceed 40 characters.';
+            document.getElementById("release-validate").textContent = 'The env name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
         if (!nameRegex.test(newWorkflowName)) {
-            document.getElementById("release-validate").textContent = 'The workflow name must only contain letters, numbers, and underscores.';
+            document.getElementById("release-validate").textContent = 'The env name must only contain letters, numbers, and underscores.';
             return;
         }
 
         // this.element.close();
-        handleLockScreen("Creating workflow...");
+        handleLockScreen("Creating env...");
         try {
             // let payloadJson = '';
             // app.graphToPrompt().then(p => {
