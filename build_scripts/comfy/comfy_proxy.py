@@ -1288,6 +1288,23 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f'List schemas failed: {resp["message"]}'}))
 
             data = response.json()['data']
+            schemas = data['schemas']
+
+            list = []
+
+            for schema in schemas:
+                if not is_master_process:
+                    if not schema['workflow']:
+                        continue
+
+                list.append({
+                    "name": schema['name'],
+                    "workflow": schema['workflow'],
+                    "payload": schema['payload'],
+                    "create_time": schema['create_time'],
+                })
+
+            data['schemas'] = list
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "data": data}))
