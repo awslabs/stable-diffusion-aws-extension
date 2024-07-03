@@ -64,23 +64,22 @@
 请打开任何可以运行代码的窗口，比如本地Macbook电脑的Terminal，运行如下API代码。
 
 ```
-curl --location ‘此处填写您的api地址/endpoints’ \
---header ‘x-api-key: 此处填写您的apikey’ \
---header ‘username: api’ \
---header ‘Content-Type: application/json’ \
---data-raw ‘{
+curl --location 'api地址/endpoints' \
+--header 'x-api-key: 此处填写您的apikey' \
+--header 'username: api' \
+--header 'Content-Type: application/json' \
+--data-raw '{
     “workflow_name”:“此处填写您创建的workflow名称“,
     “endpoint_name”: “当无需关联workflow时需要填写您要创建的推理端点名字",
     “service_type”: “comfy”,
     “endpoint_type”: “Async”,
-    “instance_type”: “实例类型”,
+    “instance_type”: “实例类型.ml.xxx”,
     “initial_instance_count”: 1,
     “min_instance_number”: 1,
     “max_instance_number”: 2,
     “autoscaling_enabled”: true,
-    “assign_to_roles”: “test”
     “assign_to_roles”: [ “test” ]
-}’
+}'
 ```
 
 !!! Important "注意" 
