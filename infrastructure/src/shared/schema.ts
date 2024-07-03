@@ -622,6 +622,8 @@ export const SCHEMA_WORKFLOW_JSON_NAME: JsonSchema = {
 
 export const SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Payload JSON String of Schema',
+  minLength: 1,
 };
 
 export const SCHEMA_WORKFLOW_JSON_WORKFLOW: JsonSchema = {

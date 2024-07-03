@@ -7,8 +7,8 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import {
-  SCHEMA_DEBUG,
-  SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_WORKFLOW
+    SCHEMA_DEBUG,
+    SCHEMA_MESSAGE, SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON, SCHEMA_WORKFLOW_JSON_WORKFLOW
 } from "../../shared/schema";
 import {ApiValidators} from "../../shared/validator";
 import {ESD_ROLE} from "../../shared/const";
@@ -76,9 +76,11 @@ export class UpdateSchemaApi {
         type: JsonSchemaType.OBJECT,
         properties: {
           workflow: SCHEMA_WORKFLOW_JSON_WORKFLOW,
+          payload: SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON,
         },
         required: [
           'workflow',
+          'payload',
         ],
       },
     });
