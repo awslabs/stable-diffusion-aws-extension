@@ -1283,17 +1283,17 @@ if is_on_ec2:
             response = requests.get(f"{api_url}/schemas", headers=headers, params=params)
 
             if response.status_code != 200:
+                resp = response.json()
                 return web.Response(status=500, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": 'List schemas failed'}))
+                                    body=json.dumps({"result": False, "message": f'List schemas failed: {resp["message"]}'}))
 
             data = response.json()['data']
 
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps({"result": True, "data": data}))
         except Exception as e:
-            logger.info(e)
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'List schemas failed'}))
+                                body=json.dumps({"result": False, "message": f'List schemas failed: {e}'}))
 
     @server.PromptServer.instance.routes.post("/schemas")
     async def create_schema(request):
