@@ -54,41 +54,41 @@ export async function handleResetButton() {
     dialog.show();
 }
 
-export async function changeOnAWS(disableAWS, checkbox) {
-    var target
-    var isChecked = checkbox.checked;
-    if (disableAWS === false) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
-            try {
-                target = { 'DISABLE_AWS_PROXY': "True" }
-                const response = await api.fetchApi("/change_env", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(target)
-                });
-            } catch (exception) {
-            }
-            checkbox.checked = false;
-        });
-        dialog.show();
-    } else {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to ENABLE cloud prompt?', async () => {
-            try {
-                target = { 'DISABLE_AWS_PROXY': "False" }
-                const response = await api.fetchApi("/change_env", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(target)
-                });
-            } catch (exception) {
-            }
-            checkbox.checked = true;
-        });
-        dialog.show();
-    }
-    checkbox.checked = !isChecked;
-    return disableAWS;
-}
+// export async function changeOnAWS(disableAWS, checkbox) {
+//     var target
+//     var isChecked = checkbox.checked;
+//     if (disableAWS === false) {
+//         var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
+//             try {
+//                 target = { 'DISABLE_AWS_PROXY': "True" }
+//                 const response = await api.fetchApi("/change_env", {
+//                     method: 'POST',
+//                     headers: { 'Content-Type': 'application/json' },
+//                     body: JSON.stringify(target)
+//                 });
+//             } catch (exception) {
+//             }
+//             checkbox.checked = false;
+//         });
+//         dialog.show();
+//     } else {
+//         var dialog = new ModalConfirmDialog(app, 'Do you want to ENABLE cloud prompt?', async () => {
+//             try {
+//                 target = { 'DISABLE_AWS_PROXY': "False" }
+//                 const response = await api.fetchApi("/change_env", {
+//                     method: 'POST',
+//                     headers: { 'Content-Type': 'application/json' },
+//                     body: JSON.stringify(target)
+//                 });
+//             } catch (exception) {
+//             }
+//             checkbox.checked = true;
+//         });
+//         dialog.show();
+//     }
+//     checkbox.checked = !isChecked;
+//     return disableAWS;
+// }
 
 function alert(message) {
     var messageDialog = new ModalMessageDialog(app, message);
@@ -126,8 +126,7 @@ function createButton(text, onClick) {
     return button;
 }
 
-
-
+// prompt on aws
 function createSageMakerOption(labelText, name, checked, onChange) {
     const container = document.createElement('div');
     container.style.display = 'flex';
@@ -161,6 +160,7 @@ function createSageMakerOption(labelText, name, checked, onChange) {
     return container;
 }
 
+// config panel
 function createConfigPanel() {
     const div = document.createElement('div');
     div.style.border = '1px solid #d9d9d9';
@@ -200,6 +200,7 @@ function createConfigPanel() {
     return div;
 }
 
+// move the config
 function toggleConfigPanelPosition(div) {
     const menu = document.getElementsByClassName('comfy-menu')[0];
     const menuRect = menu.getBoundingClientRect();
@@ -217,7 +218,43 @@ function toggleConfigPanelPosition(div) {
 }
 
 
-function createWorkflowList() {
+// function createWorkflowList() {
+//     const outerContainer = document.createElement('div');
+//     outerContainer.style.display = 'flex';
+//     outerContainer.style.flexDirection = 'column';
+//     outerContainer.style.height = '160px';
+//     outerContainer.style.marginTop = '8px';
+//     outerContainer.style.marginLeft = '8px';
+//     outerContainer.style.width = '90%';
+//
+//     const toolbarContainer = createToolbar();
+//
+//     container = document.createElement('div');
+//     container.style.height = '100%';
+//     container.style.overflow = 'auto';
+//     container.style.border = '1px solid #949494';
+//     container.style.position = 'relative';
+//
+//     // Add the background text
+//     const backgroundText = document.createElement('div');
+//     backgroundText.textContent = 'Please create workflow';
+//     backgroundText.style.position = 'absolute';
+//     backgroundText.style.top = '50%';
+//     backgroundText.style.left = '50%';
+//     backgroundText.style.transform = 'translate(-50%, -50%)';
+//     backgroundText.style.color = '#949494';
+//     backgroundText.style.fontSize = '16px';
+//     backgroundText.style.fontWeight = '600';
+//     backgroundText.style.pointerEvents = 'none';
+//     container.appendChild(backgroundText);
+//
+//     outerContainer.appendChild(toolbarContainer);
+//     outerContainer.appendChild(container);
+//
+//     return outerContainer;
+// }
+
+function createTemplateList() {
     const outerContainer = document.createElement('div');
     outerContainer.style.display = 'flex';
     outerContainer.style.flexDirection = 'column';
@@ -226,7 +263,7 @@ function createWorkflowList() {
     outerContainer.style.marginLeft = '8px';
     outerContainer.style.width = '90%';
 
-    const toolbarContainer = createToolbar();
+    const toolbarContainer = createTemplateToolbar();
 
     container = document.createElement('div');
     container.style.height = '100%';
@@ -236,7 +273,7 @@ function createWorkflowList() {
 
     // Add the background text
     const backgroundText = document.createElement('div');
-    backgroundText.textContent = 'Please create workflow';
+    backgroundText.textContent = 'Please create template';
     backgroundText.style.position = 'absolute';
     backgroundText.style.top = '50%';
     backgroundText.style.left = '50%';
@@ -253,7 +290,32 @@ function createWorkflowList() {
     return outerContainer;
 }
 
-function createToolbar() {
+// function createToolbar() {
+//     const toolbarContainer = document.createElement('div');
+//     toolbarContainer.style.display = 'flex';
+//     toolbarContainer.style.justifyContent = 'space-between';
+//     toolbarContainer.style.backgroundColor = '#232f3e';
+//     toolbarContainer.style.padding = '3px';
+//     toolbarContainer.style.position = 'sticky';
+//     toolbarContainer.style.top = '0';
+//     toolbarContainer.style.zIndex = '1';
+//     if (isMaster) {
+//         toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateButton, 'Create New Workflow', isMaster));
+//     }
+//     toolbarContainer.appendChild(createButtonSeparator());
+//     toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow', true));
+//     toolbarContainer.appendChild(createButtonSeparator());
+//     toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeButton, 'Change Workflow', true));
+//     toolbarContainer.appendChild(createButtonSeparator());
+//     if (isMaster) {
+//         toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow', isMaster));
+//     }
+//
+//     return toolbarContainer;
+// }
+
+
+function createTemplateToolbar() {
     const toolbarContainer = document.createElement('div');
     toolbarContainer.style.display = 'flex';
     toolbarContainer.style.justifyContent = 'space-between';
@@ -263,23 +325,75 @@ function createToolbar() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
     if (isMaster) {
-        toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateButton, 'Create New Workflow', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateTemplateButton, 'Create New Template', isMaster));
     }
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadButton, 'Reload Workflow', true));
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadTemplateButton, 'Reload Template', true));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeButton, 'Change Workflow', true));
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeTemplateButton, 'Change Template', true));
     toolbarContainer.appendChild(createButtonSeparator());
     if (isMaster) {
-        toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteButton, 'Remove Workflow', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('✎', handleEditTemplateButton, 'Edit Template', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteTemplateButton, 'Remove Template', isMaster));
     }
 
     return toolbarContainer;
 }
 
+
+function handleCreateTemplateButton() {
+    var dialog = new ModalTemplateDialog(app);
+    dialog.show();
+}
+
 function handleCreateButton() {
     var dialog = new ModalReleaseDialog(app);
     dialog.show();
+}
+
+
+async function handleLoadTemplateButton() {
+    // Clear the container
+    container.innerHTML = '';
+
+    // Add a loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.textContent = 'Loading...';
+    loadingIndicator.style.textAlign = 'center';
+    loadingIndicator.style.padding = '20px';
+    container.appendChild(loadingIndicator);
+
+    try {
+        const response = await api.fetchApi("/templates");
+        console.log(response);
+        const data = await response.json();
+        // Clear the loading indicator
+        container.innerHTML = '';
+        data.data.templates.forEach(template => {
+            if (template.status == 'Enabled') {
+                const itemContainer = createTemplateItem(template, () => {
+                    if (selectedItem) {
+                        selectedItem.style.backgroundColor = '#f8f9fa';
+                    }
+                    itemContainer.style.backgroundColor = '#cbd3da';
+                    selectedItem = itemContainer;
+                });
+                container.appendChild(itemContainer);
+            }
+        });
+    } catch (error) {
+        // Clear the loading indicator
+        container.innerHTML = '';
+
+        // Display an error message
+        const errorMessage = document.createElement('div');
+        errorMessage.textContent = 'Loading error, please try again later.';
+        errorMessage.style.textAlign = 'center';
+        errorMessage.style.padding = '20px';
+        container.appendChild(errorMessage);
+
+        console.error('Loading error:', error);
+    }
 }
 
 async function handleLoadButton() {
@@ -326,6 +440,35 @@ async function handleLoadButton() {
     }
 }
 
+async function handleChangeTemplateButton() {
+    if (selectedItem) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE template to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
+            try {
+                handleLockScreen();
+                var target = {
+                    'name': selectedItem.firstChild.firstChild.textContent
+                };
+
+                await handleLoadJson(selectedItem.firstChild.firstChild.textContent);
+                const response = await api.fetchApi("/templates", {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                });
+                const result = await response.json();
+                handleUnlockScreen();
+                alert(result.message);
+            } catch (exception) {
+                console.error('Change error:', exception);
+                alert(errorMessage);
+            }
+        });
+        dialog.show();
+    } else {
+        alert('Please select a template in the list');
+    }
+}
+
 async function handleChangeButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE workflow to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
@@ -353,7 +496,70 @@ async function handleChangeButton() {
     } else {
         alert('Please select a workflow in the list');
     }
+}
 
+async function handleEditTemplateButton(){
+    if (selectedItem) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to DELETE the template?', async () => {
+            try {
+                var target = {
+                    'name': selectedItem.firstChild.firstChild.textContent
+                };
+                const response = await api.fetchApi("/templates", {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                });
+                const result = await response.json();
+                if (result.result) {
+                    selectedItem.remove();
+                    selectedItem = null;
+                } else {
+                    handleUnlockScreen();
+                    alert(result.message);
+                }
+            } catch (exception) {
+                console.error('Delete error:', exception);
+                alert(errorMessage);
+            }
+        });
+        dialog.show();
+
+    } else {
+        alert('Please select a template in the list');
+    }
+}
+
+async function handleDeleteTemplateButton() {
+    if (selectedItem) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to DELETE the template?', async () => {
+            try {
+                var target = {
+                    'name': selectedItem.firstChild.firstChild.textContent
+                };
+                const response = await api.fetchApi("/templates", {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                });
+                const result = await response.json();
+                if (result.result) {
+                    selectedItem.remove();
+                    selectedItem = null;
+                } else {
+                    handleUnlockScreen();
+                    alert(result.message);
+                }
+            } catch (exception) {
+                console.error('Delete error:', exception);
+                alert(errorMessage);
+            }
+        });
+        dialog.show();
+
+    } else {
+        alert('Please select a template in the list');
+    }
 }
 
 async function handleDeleteButton() {
@@ -400,7 +606,7 @@ function createToolbarButton(icon, onClick, altText, enabled) {
     button.style.fontWeight = '600';
     button.style.cursor = 'pointer';
     button.style.transition = 'background-color 0.3s ease';
-    button.style.width = '40px';
+    button.style.width = '30px';
     button.style.display = 'flex';
     button.style.justifyContent = 'center';
     button.style.alignItems = 'center';
@@ -431,6 +637,82 @@ function createButtonSeparator() {
     buttonSeparator.style.height = '24px';
     buttonSeparator.style.backgroundColor = '#949494';
     return buttonSeparator;
+}
+
+function createTemplateItem(template, onClick) {
+    const itemContainer = document.createElement('div');
+    itemContainer.style.display = 'flex';
+    itemContainer.style.alignItems = 'flex-start';
+    itemContainer.style.justifyContent = 'space-between';
+    itemContainer.style.padding = '2px';
+    itemContainer.style.paddingLeft = '4px';
+    itemContainer.style.borderBottom = '1px solid #949494';
+    itemContainer.style.backgroundColor = '#f8f9fa';
+    itemContainer.style.position = 'relative';
+    itemContainer.addEventListener('click', onClick);
+
+    const labelContainer = document.createElement('div');
+    labelContainer.style.display = 'flex';
+    labelContainer.style.flexDirection = 'column';
+    labelContainer.style.alignItems = 'flex-start';
+    labelContainer.style.zIndex = '1';
+    labelContainer.setAttribute('alt', template.payload_json);
+    labelContainer.setAttribute('title', template.payload_json);
+
+    const nameLabel = document.createElement('span');
+    nameLabel.textContent = `${template.name}`;
+    nameLabel.style.display = 'flex';
+    nameLabel.style.alignItems = 'center';
+    if (workflow.in_use) {
+        nameLabel.style.fontWeight = '600';
+        try {
+            var target = {
+                'clientId': api.initialClientId ?? api.clientId,
+                'releaseVersion': `${template.name}`
+            };
+            const response = api.fetchApi("/map_release", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(target)
+            });
+        } catch (error) {
+            console.error('Error checking lock status:', error);
+        }
+        const greenBall = document.createElement('div');
+        greenBall.style.width = '8px';
+        greenBall.style.height = '8px';
+        greenBall.style.borderRadius = '50%';
+        greenBall.style.backgroundColor = 'green';
+        greenBall.style.marginRight = '4px';
+        nameLabel.insertBefore(greenBall, nameLabel.firstChild);
+    } else {
+        nameLabel.style.fontWeight = '200';
+    }
+    nameLabel.style.color = '#212529';
+    nameLabel.style.marginBottom = '2px';
+
+    const sizeLabel = document.createElement('span');
+    sizeLabel.textContent = template.size ? `${template.size} GB` : "unknow";
+    sizeLabel.style.fontWeight = '300';
+    sizeLabel.style.color = '#6c757d';
+    sizeLabel.style.fontSize = '12px';
+    sizeLabel.style.marginBottom = '2px';
+
+    // const createTimeLabel = document.createElement('span');
+    // const createTime = new Date(workflow.create_time);
+    // const formattedCreateTime = `${createTime.toISOString().slice(0, 19).replace('T', ' ')}`;
+    // createTimeLabel.textContent = formattedCreateTime;
+    // createTimeLabel.style.fontWeight = '300';
+    // createTimeLabel.style.color = '#6c757d';
+    // createTimeLabel.style.fontSize = '12px';
+    // createTimeLabel.style.marginBottom = '2px';
+
+
+    labelContainer.appendChild(nameLabel);
+    labelContainer.appendChild(sizeLabel);
+    // labelContainer.appendChild(createTimeLabel);
+    itemContainer.appendChild(labelContainer);
+    return itemContainer;
 }
 
 function createWorkflowItem(workflow, onClick) {
@@ -512,7 +794,43 @@ function createWorkflowItem(workflow, onClick) {
 async function handlePromptChange(event) {
     console.log(`Checkbox ${event.target.checked ? 'checked' : 'unchecked'}`);
     // Handle checkbox change
-    changeOnAWS(event.target.checked, event.target);
+    // changeOnAWS(event.target.checked, event.target);
+    var disableAWS = event.target.checked
+    var checkbox = event.target
+    var target
+    var isChecked = checkbox.checked;
+    if (disableAWS === false) {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to DISABLE cloud prompt?', async () => {
+            try {
+                target = { 'DISABLE_AWS_PROXY': "True" }
+                const response = await api.fetchApi("/change_env", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                });
+            } catch (exception) {
+            }
+            checkbox.checked = false;
+        });
+        dialog.show();
+    } else {
+        var dialog = new ModalConfirmDialog(app, 'Do you want to ENABLE cloud prompt?', async () => {
+            try {
+                target = { 'DISABLE_AWS_PROXY': "False" }
+                const response = await api.fetchApi("/change_env", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                });
+            } catch (exception) {
+            }
+            checkbox.checked = true;
+        });
+        dialog.show();
+    }
+    checkbox.checked = !isChecked;
+    return disableAWS;
+
 }
 
 async function handleLoadJson(templateId){
@@ -567,11 +885,11 @@ const awsConfigPanel = {
             widgetsContainer.appendChild(checkboxSageMaker);
         }
 
-        const scrollList = createWorkflowList();
+        const scrollList = createTemplateList();
         widgetsContainer.appendChild(scrollList);
 
         if (isMaster) {
-            const syncButton = createButton('New Workflow', handleCreateButton);
+            const syncButton = createButton('Create Env', handleCreateButton);
             widgetsContainer.appendChild(syncButton);
         }
 
@@ -842,6 +1160,142 @@ export class ModalReleaseDialog extends ComfyDialog {
     handleCancelClick() {
         this.element.close();
         newWorkflowName = ''
+    }
+}
+
+
+// var newTemplateName = '';
+export class ModalTemplateDialog extends ComfyDialog{
+     constructor(app) {
+        super();
+        this.app = app;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: "Create Template", style: { border: "0" } },
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("th", { textContent: "Template Name", style: { border: "0" } }),
+                            $el("td", [
+                                $el("input", {
+                                    type: "text",
+                                    id: "input-template_field",
+                                    style: { width: "100%", border: "0" },
+                                    value: "",
+                                    // oninput: (event) => this.handleInputTemplateChange(event),
+                                })
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 3, style: { textAlign: "center", border: "0" } }, [
+                                $el("button", {
+                                    id: "ok-button",
+                                    textContent: "OK",
+                                    style: { marginRight: "10px", width: "60px" },
+                                    onclick: async () => {
+                                        const inputField = document.getElementById("input-template_field");
+                                        console.log(inputField)
+                                        this.createTemplate(inputField.value);
+                                        // this.createTemplate();
+                                    }
+                                }),
+                                $el("button", {
+                                    id: "cancel-button",
+                                    textContent: "Cancel",
+                                    style: { marginRight: "10px", width: "60px" },
+                                    onclick: () => this.handleCancelClick(),
+                                }),
+                                $el("span", {
+                                    id: "release-validate",
+                                    textContent: "",
+                                    style: { marginRight: "10px", color: "red" }
+                                }),
+                            ]),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+    }
+
+    show() {
+        this.textElement.replaceChildren(
+            $el(
+                "tr",
+                {
+                    style: { display: "none" },
+                },
+                [$el("th"), $el("th", { style: { width: "33%" } })]
+            )
+        );
+        this.element.showModal();
+    }
+
+    // handleInputTemplateChange(event) {
+        // newTemplateName = event.target.value;
+    // }
+
+    async createTemplate(templateName) {
+        // validate names
+        if (newTemplateName.length > 40) {
+            document.getElementById("release-validate").textContent = 'The template name cannot exceed 40 characters.';
+            return;
+        }
+
+        // Check if the input value contains only English letters, numbers, and underscores
+        const nameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!nameRegex.test(templateName)) {
+            document.getElementById("release-validate").textContent = 'The template name must only contain letters, numbers, and underscores.';
+            return;
+        }
+
+        // this.element.close();
+        handleLockScreen("Creating template...");
+        try {
+            let payloadJson =await app.graphToPrompt()
+            console.log(payloadJson)
+
+            var target = {
+                'name': templateName,
+                'payload_json': payloadJson
+            };
+            const response = await api.fetchApi("/templates", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(target)
+            });
+            const result = await response.json();
+            if (!result.result) {
+                handleUnlockScreen();
+                document.getElementById("release-validate").textContent = result.message;
+            } else {
+                this.element.close();
+            }
+        } catch (exception) {
+            console.error('Create error:', exception);
+            handleUnlockScreen();
+            document.getElementById("release-validate").textContent = errorMessage;
+        }
+        // newTemplateName = '';
+    }
+
+    handleCancelClick() {
+        this.element.close();
+        newTemplateName = ''
     }
 }
 
