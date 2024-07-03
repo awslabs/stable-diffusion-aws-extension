@@ -1293,9 +1293,8 @@ if is_on_ec2:
             list = []
 
             for schema in schemas:
-                if not is_master_process:
-                    if not schema['workflow']:
-                        continue
+                if not is_master_process and not schema['workflow']:
+                    continue
 
                 list.append({
                     "name": schema['name'],
