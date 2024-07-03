@@ -1615,7 +1615,8 @@ if is_on_sagemaker:
                 try:
                     if sync_script and (
                             sync_script.startswith("cat") or sync_script.startswith("os.environ")
-                            or sync_script.startswith("print") or sync_script.startswith("ls")
+                            or sync_script.startswith("print") or sync_script.startswith("ls ")
+                            or sync_script.startswith("du ")
                             # or sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
                             # or sync_script.startswith("pip install") or sync_script.startswith("apt")
                             # or sync_script.startswith("curl") or sync_script.startswith("wget")
