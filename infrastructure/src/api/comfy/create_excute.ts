@@ -256,7 +256,7 @@ export class CreateExecuteApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       environment: {

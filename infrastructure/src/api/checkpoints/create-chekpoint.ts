@@ -232,7 +232,7 @@ export class CreateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
@@ -252,7 +252,7 @@ export class CreateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {

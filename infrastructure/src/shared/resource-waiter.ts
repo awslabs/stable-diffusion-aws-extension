@@ -32,7 +32,7 @@ export class ResourceWaiter extends Construct {
       },
       timeout: Duration.seconds(900),
       role: role,
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: aws_lambda.Tracing.ACTIVE,
     });
 

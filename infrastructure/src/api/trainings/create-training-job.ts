@@ -349,7 +349,7 @@ export class CreateTrainingJobApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
-      memorySize: 3070,
+      memorySize: 3000,
       tracing: Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
