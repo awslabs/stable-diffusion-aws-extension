@@ -369,7 +369,7 @@ async function handleLoadTemplateButton() {
         const data = await response.json();
         // Clear the loading indicator
         container.innerHTML = '';
-        data.data.templates.forEach(template => {
+        data.data.schemas.forEach(template => {
             if (template.status == 'Enabled') {
                 const itemContainer = createTemplateItem(template, () => {
                     if (selectedItem) {
