@@ -778,6 +778,9 @@ if is_on_ec2:
             return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
         global client_release_map
         client_release_map[json_data.get('clientId')] = json_data.get('releaseVersion')
+        # don‘t move used for sync automic
+        os.environ['COMFY_ENDPOINT'] = get_endpoint_name_by_workflow_name(json_data.get('releaseVersion'))
+
         logger.info(f"client_release_map :{client_release_map}")
         return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
 
@@ -1209,6 +1212,10 @@ if is_on_ec2:
                                         body=json.dumps({"result": False, "message": f"{workflow_name} not exists"}))
 
             name_file = os.getenv('WORKFLOW_NAME_FILE')
+
+            # don‘t move used for sync automic
+            os.environ['COMFY_ENDPOINT'] = get_endpoint_name_by_workflow_name(workflow_name)
+
             subprocess.check_output(f"echo {workflow_name} > {name_file}", shell=True)
 
             thread = threading.Thread(target=kill_after_seconds)
