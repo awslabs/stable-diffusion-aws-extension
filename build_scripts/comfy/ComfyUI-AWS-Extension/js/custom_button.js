@@ -1278,6 +1278,8 @@ export class ModalTemplateDialog extends ComfyDialog{
                 [$el("th"), $el("th", { style: { width: "33%" } })]
             )
         );
+        const workflowSelectField = document.getElementById("select-workflow_field");
+        workflowSelectField.click();
         this.element.showModal();
     }
 
@@ -1294,6 +1296,7 @@ export class ModalTemplateDialog extends ComfyDialog{
             const data = await response.json();
             if (data.data && Array.isArray(data.data.workflows)) {
                 const workflowSelectField = document.getElementById("select-workflow_field");
+                workflowSelectField.innerHTML = '';
                 data.data.workflows.forEach(workflow => {
                     if (workflow.status === 'Enabled') {
                         const option = document.createElement('option');
