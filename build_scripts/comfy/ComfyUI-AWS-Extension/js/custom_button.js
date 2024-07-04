@@ -1283,7 +1283,7 @@ export class ModalTemplateDialog extends ComfyDialog{
 
     async createTemplate(templateName) {
         // validate names
-        if (newTemplateName.length > 40) {
+        if (templateName.length > 40) {
             document.getElementById("release-validate").textContent = 'The template name cannot exceed 40 characters.';
             return;
         }
