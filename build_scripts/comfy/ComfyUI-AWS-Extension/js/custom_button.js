@@ -1221,15 +1221,10 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     // oninput: (event) => this.handleInputTemplateChange(event),
                                 })
                             ]),
-                        ]
-                    ),
-                    $el(
-                        "tr",
-                        [
                             $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
                             $el("td", [
                                 $el("select", {
-                                    id: "input-workflow_field",
+                                    id: "select-workflow_field",
                                     style: { width: "100%", border: "0" },
                                     onclick: async () => {
                                         await this.populateWorkflowSelectField();
@@ -1248,7 +1243,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     style: { marginRight: "10px", width: "60px" },
                                     onclick: async () => {
                                         const tempInputField = document.getElementById("input-template_field");
-                                        const workflowInputField = document.getElementById("input-workflow_field");
+                                        const workflowInputField = document.getElementById("select-workflow_field");
                                         console.log(tempInputField)
                                         console.log(workflowInputField)
                                         await this.createTemplate(tempInputField.value, workflowInputField.value);
