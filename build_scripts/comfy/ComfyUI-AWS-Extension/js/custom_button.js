@@ -1310,8 +1310,7 @@ export class ModalTemplateDialog extends ComfyDialog{
 
     clear() {
         document.getElementById("input-template_field").value='';
-        document.getElementById("select-workflow_field").selected = '';
-        document.getElementById("select-workflow_field").value = '';
+        document.getElementById("select-workflow_field").value = 'default';
     }
 
     populateWorkflowSelectField() {
