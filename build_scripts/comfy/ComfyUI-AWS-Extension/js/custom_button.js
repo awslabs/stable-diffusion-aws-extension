@@ -13,6 +13,7 @@ var errorMessage = 'An error occurred, please try again later.';
 
 let dialogCreateTemplateInstance = null;
 let dialogModalBlank = null;
+let dialogModalRelease = null;
 
 
 export async function handleRestartButton() {
@@ -355,8 +356,11 @@ function handleCreateTemplateButton() {
 }
 
 function handleCreateButton() {
-    var dialog = new ModalReleaseDialog(app);
-    dialog.show();
+    if(!dialogModalRelease){
+        dialogModalRelease = new ModalReleaseDialog(app);
+        dialogModalRelease.clear();
+    }
+    dialogModalRelease.show();
 }
 
 
@@ -1152,6 +1156,10 @@ export class ModalReleaseDialog extends ComfyDialog {
 
     handleInputChange(event) {
         newWorkflowName = event.target.value;
+    }
+
+    clear(){
+        document.getElementById("input-field").value = '';
     }
 
     async releaseWorkflow() {
