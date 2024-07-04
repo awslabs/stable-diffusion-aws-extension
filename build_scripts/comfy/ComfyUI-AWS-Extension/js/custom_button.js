@@ -370,16 +370,14 @@ async function handleLoadTemplateButton() {
         // Clear the loading indicator
         container.innerHTML = '';
         data.data.schemas.forEach(template => {
-            if (template.status == 'Enabled') {
-                const itemContainer = createTemplateItem(template, () => {
-                    if (selectedItem) {
-                        selectedItem.style.backgroundColor = '#f8f9fa';
-                    }
-                    itemContainer.style.backgroundColor = '#cbd3da';
-                    selectedItem = itemContainer;
-                });
-                container.appendChild(itemContainer);
-            }
+            const itemContainer = createTemplateItem(template, () => {
+                if (selectedItem) {
+                    selectedItem.style.backgroundColor = '#f8f9fa';
+                }
+                itemContainer.style.backgroundColor = '#cbd3da';
+                selectedItem = itemContainer;
+            });
+            container.appendChild(itemContainer);
         });
     } catch (error) {
         // Clear the loading indicator
