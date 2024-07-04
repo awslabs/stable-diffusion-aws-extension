@@ -662,31 +662,33 @@ function createTemplateItem(template, onClick) {
     nameLabel.hidden = `${template.payload}`;
     nameLabel.style.display = 'flex';
     nameLabel.style.alignItems = 'center';
-    if (template.in_use) {
-        nameLabel.style.fontWeight = '600';
-        try {
-            var target = {
-                'clientId': api.initialClientId ?? api.clientId,
-                'releaseVersion': `${template.workflow}`
-            };
-            const response = api.fetchApi("/map_release", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(target)
-            });
-        } catch (error) {
-            console.error('Error checking lock status:', error);
-        }
-        const greenBall = document.createElement('div');
-        greenBall.style.width = '8px';
-        greenBall.style.height = '8px';
-        greenBall.style.borderRadius = '50%';
-        greenBall.style.backgroundColor = 'green';
-        greenBall.style.marginRight = '4px';
-        nameLabel.insertBefore(greenBall, nameLabel.firstChild);
-    } else {
-        nameLabel.style.fontWeight = '200';
-    }
+    // if (template.in_use) {
+    //     nameLabel.style.fontWeight = '600';
+    //     try {
+    //         var target = {
+    //             'clientId': api.initialClientId ?? api.clientId,
+    //             'releaseVersion': `${template.workflow}`
+    //         };
+    //         const response = api.fetchApi("/map_release", {
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify(target)
+    //         });
+    //     } catch (error) {
+    //         console.error('Error checking lock status:', error);
+    //     }
+    //     const greenBall = document.createElement('div');
+    //     greenBall.style.width = '8px';
+    //     greenBall.style.height = '8px';
+    //     greenBall.style.borderRadius = '50%';
+    //     greenBall.style.backgroundColor = 'green';
+    //     greenBall.style.marginRight = '4px';
+    //     nameLabel.insertBefore(greenBall, nameLabel.firstChild);
+    //     //TODO 增加默认选中
+    //
+    // } else {
+    //     nameLabel.style.fontWeight = '200';
+    // }
     nameLabel.style.color = '#212529';
     nameLabel.style.marginBottom = '2px';
 
@@ -696,16 +698,6 @@ function createTemplateItem(template, onClick) {
     sizeLabel.style.color = '#6c757d';
     sizeLabel.style.fontSize = '12px';
     sizeLabel.style.marginBottom = '2px';
-
-    // const createTimeLabel = document.createElement('span');
-    // const createTime = new Date(workflow.create_time);
-    // const formattedCreateTime = `${createTime.toISOString().slice(0, 19).replace('T', ' ')}`;
-    // createTimeLabel.textContent = formattedCreateTime;
-    // createTimeLabel.style.fontWeight = '300';
-    // createTimeLabel.style.color = '#6c757d';
-    // createTimeLabel.style.fontSize = '12px';
-    // createTimeLabel.style.marginBottom = '2px';
-
 
     labelContainer.appendChild(nameLabel);
     labelContainer.appendChild(sizeLabel);
