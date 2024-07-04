@@ -1299,8 +1299,10 @@ export class ModalTemplateDialog extends ComfyDialog{
         handleLockScreen("Creating template...");
         try {
             let payloadJson =await app.graphToPrompt()
+            if (typeof payloadJson === 'object') {
+                payloadJson = JSON.stringify(payloadJson);
+            }
             console.log(payloadJson)
-
             var target = {
                 'name': templateName,
                 'payload': payloadJson
@@ -1327,7 +1329,7 @@ export class ModalTemplateDialog extends ComfyDialog{
 
     handleCancelClick() {
         this.element.close();
-        newTemplateName = ''
+        // newTemplateName = ''
     }
 }
 
