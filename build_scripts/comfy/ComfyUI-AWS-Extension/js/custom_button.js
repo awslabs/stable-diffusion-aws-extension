@@ -688,8 +688,7 @@ function createTemplateItem(template, onClick) {
         greenBall.style.backgroundColor = 'green';
         greenBall.style.marginRight = '4px';
         nameLabel.insertBefore(greenBall, nameLabel.firstChild);
-        //TODO 增加默认选中
-
+        nameLabel.click()
     } else {
         nameLabel.style.fontWeight = '200';
     }
@@ -705,7 +704,6 @@ function createTemplateItem(template, onClick) {
 
     labelContainer.appendChild(nameLabel);
     labelContainer.appendChild(sizeLabel);
-    // labelContainer.appendChild(createTimeLabel);
     itemContainer.appendChild(labelContainer);
     return itemContainer;
 }
