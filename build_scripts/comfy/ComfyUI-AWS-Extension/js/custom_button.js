@@ -1305,7 +1305,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                 'name': templateName,
                 'payload': payloadJson
             };
-            const response = await api.fetchApi("/templates", {
+            const response = await api.fetchApi("/schemas", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(target)
