@@ -460,7 +460,7 @@ async function handleChangeTemplateButton() {
                 var target = {
                     'name': templateValue
                 };
-                await handleLoadTemplateJson(selectedItem.firstChild.firstChild.hidden);
+                await handleLoadTemplateJson(selectedItem.firstChild.firstChild.dataset.payload);
                 const response = await api.fetchApi("/workflows", {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -674,7 +674,7 @@ function createTemplateItem(template, onClick) {
     const nameLabel = document.createElement('span');
     nameLabel.textContent = `${template.name}`;
     nameLabel.value = `${template.workflow}`;
-    nameLabel.hidden = `${template.payload}`;
+    nameLabel.dataset.payload = `${template.payload}`;
     nameLabel.style.display = 'flex';
     nameLabel.style.alignItems = 'center';
     const in_use_template = localStorage.getItem("in_use_template");
