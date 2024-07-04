@@ -662,7 +662,7 @@ function createTemplateItem(template, onClick) {
     nameLabel.hidden = `${template.payload}`;
     nameLabel.style.display = 'flex';
     nameLabel.style.alignItems = 'center';
-    if (workflow.in_use) {
+    if (template.in_use) {
         nameLabel.style.fontWeight = '600';
         try {
             var target = {
