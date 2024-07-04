@@ -11,6 +11,10 @@ var lockTimeout = 30000; // 30 seconds
 var lockInterval = 2000; // 2  seconds
 var errorMessage = 'An error occurred, please try again later.';
 
+let dialogCreateTemplateInstance = null;
+let dialogModalBlank = null;
+
+
 export async function handleRestartButton() {
 
     var dialog = new ModalConfirmDialog(app, 'Do you want to RESTART the ComfyUI?', async () => {
@@ -342,9 +346,12 @@ function createTemplateToolbar() {
 
 
 function handleCreateTemplateButton() {
-    var dialog = new ModalTemplateDialog(app);
-    dialog.populateWorkflowSelectField();
-    dialog.show();
+    if (!dialogCreateTemplateInstance) {
+        dialogCreateTemplateInstance = new ModalTemplateDialog(app);
+        dialogCreateTemplateInstance.populateWorkflowSelectField();
+        dialogCreateTemplateInstance.clearInputTemplateChange();
+    }
+    dialogCreateTemplateInstance.show();
 }
 
 function handleCreateButton() {
@@ -936,7 +943,12 @@ app.registerExtension(awsConfigPanel);
 
 function handleLockScreen(message) {
     if (lockCanvas == null) {
-        lockCanvas = new ModalBlankDialog(app, message ? message : "Create processing...");
+        if (!dialogModalBlank){
+            lockCanvas = new ModalBlankDialog(app, message ? message : "Create processing...");
+        }else {
+            dialogModalBlank.reset_msg(message)
+            lockCanvas = dialogModalBlank
+        }
     }
     lockCanvas.show();
     localStorage.setItem("ui_lock_status", "locked");
@@ -1005,7 +1017,10 @@ export class ModalBlankDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: message },
+                        {
+                            id: "black_model_msg",
+                            textContent: message
+                        },
                     ),
                     $el(
                         "tr",
@@ -1043,6 +1058,10 @@ export class ModalBlankDialog extends ComfyDialog {
 
     show() {
         this.element.showModal();
+    }
+
+    reset_msg(message){
+        document.getElementById("black_model_msg").textContent = message;
     }
 
     close() {
@@ -1279,9 +1298,12 @@ export class ModalTemplateDialog extends ComfyDialog{
         this.element.showModal();
     }
 
-    // handleInputTemplateChange(event) {
-        // newTemplateName = event.target.value;
-    // }
+    clearInputTemplateChange() {
+        const tempInputField = document.getElementById("input-template_field");
+        tempInputField.value = ''
+        const workflowInputField = document.getElementById("select-workflow_field");
+        workflowInputField.selected = ''
+    }
 
     populateWorkflowSelectField() {
         api.fetchApi("/workflows", {
