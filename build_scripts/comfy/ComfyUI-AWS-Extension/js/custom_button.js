@@ -671,7 +671,7 @@ function createTemplateItem(template, onClick) {
         try {
             var target = {
                 'clientId': api.initialClientId ?? api.clientId,
-                'releaseVersion': `${template.workflow}`
+                'releaseVersion': `${template.workflow}` || 'default'
             };
             const response = api.fetchApi("/map_release", {
                 method: 'POST',
@@ -1266,6 +1266,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                 ]),
             ]
         );
+        this.populateWorkflowSelectField();
     }
 
     show() {
@@ -1278,8 +1279,6 @@ export class ModalTemplateDialog extends ComfyDialog{
                 [$el("th"), $el("th", { style: { width: "33%" } })]
             )
         );
-        const workflowSelectField = document.getElementById("select-workflow_field");
-        workflowSelectField.click();
         this.element.showModal();
     }
 
