@@ -1226,9 +1226,6 @@ export class ModalTemplateDialog extends ComfyDialog{
                                 $el("select", {
                                     id: "select-workflow_field",
                                     style: { width: "100%", border: "0" },
-                                    onclick: async () => {
-                                        await this.populateWorkflowSelectField();
-                                    }
                                 })
                             ]),
                         ]
