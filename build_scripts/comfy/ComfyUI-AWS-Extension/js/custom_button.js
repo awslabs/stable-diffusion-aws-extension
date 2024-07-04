@@ -710,7 +710,7 @@ function createTemplateItem(template, onClick) {
     const sizeLabel = document.createElement('span');
     sizeLabel.textContent = template.workflow ? `${template.workflow} ` : "unbind";
     sizeLabel.style.fontWeight = '300';
-    sizeLabel.style.color = '#6c757d';
+    sizeLabel.style.color = template.workflow ? '#6c757d' : '#FFA07A';
     sizeLabel.style.fontSize = '12px';
     sizeLabel.style.marginBottom = '2px';
 
