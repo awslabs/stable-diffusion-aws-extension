@@ -363,7 +363,7 @@ function handleEditTemplateButton() {
             dialogEditTemplateInstance = new ModalEditTemplateDialog(app, selectedItem);
             dialogEditTemplateInstance.populateWorkflowSelectField();
         }
-        dialogEditTemplateInstance.clear();
+        dialogEditTemplateInstance.clear(selectedItem);
         dialogEditTemplateInstance.show();
     } else {
         alert('Please select a template in the list');
@@ -1407,6 +1407,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                                     id: "edit-template_field",
                                     style: { width: "100%", border: "0" },
                                     value: selectedItem.value,
+                                    disabled: true,
                                 })
                             ]),
                             $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
@@ -1466,8 +1467,8 @@ export class ModalEditTemplateDialog extends ComfyDialog{
         this.element.showModal();
     }
 
-    clear() {
-        document.getElementById("edit-template_field").value='';
+    clear(selectedItem) {
+        document.getElementById("edit-template_field").value = selectedItem.value;
         document.getElementById("edit-workflow_field").value = 'default';
     }
 
