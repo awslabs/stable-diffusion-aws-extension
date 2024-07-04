@@ -537,12 +537,14 @@ if is_on_ec2:
             # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
             if prepare_type in ['default', 'inputs']:
                 logger.info(f" sync input files")
-                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                # s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f's5cmd {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
                 logger.info(f"sync input files start {s5cmd_syn_input_command}")
                 os.system(s5cmd_syn_input_command)
             if prepare_type in ['default', 'models']:
                 logger.info(f" sync models files")
-                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                # s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f's5cmd {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
                 logger.info(f"sync models files start {s5cmd_syn_model_command}")
                 os.system(s5cmd_syn_model_command)
             logger.info(f"Files changed in:: {need_prepare} {prepare_type} {DIR2} {DIR1} {DIR3}")
