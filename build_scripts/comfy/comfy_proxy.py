@@ -36,7 +36,7 @@ from typing import Optional
 
 from boto3.dynamodb.conditions import Key
 
-DISABLE_AWS_PROXY = 'DISABLE_AWS_PROXY'
+DISABLE_AWS_PROXY = 'True'
 sync_msg_list = []
 client_release_map = {}
 lock_status = False
@@ -943,7 +943,7 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/get_env")
     async def get_env(request):
-        env = os.environ.get(DISABLE_AWS_PROXY, 'False')
+        env = os.environ.get(DISABLE_AWS_PROXY, 'True')
         return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
 
 
