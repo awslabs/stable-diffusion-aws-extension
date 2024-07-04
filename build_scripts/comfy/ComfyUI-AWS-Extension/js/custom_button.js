@@ -1226,16 +1226,32 @@ export class ModalTemplateDialog extends ComfyDialog{
                     $el(
                         "tr",
                         [
+                            $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
+                            $el("td", [
+                                $el("select", {
+                                    id: "input-workflow_field",
+                                    style: { width: "100%", border: "0" },
+                                    onclick: async () => {
+                                        await this.populateWorkflowSelectField();
+                                    }
+                                })
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
                             $el("td", { colspan: 3, style: { textAlign: "center", border: "0" } }, [
                                 $el("button", {
                                     id: "ok-button",
                                     textContent: "OK",
                                     style: { marginRight: "10px", width: "60px" },
                                     onclick: async () => {
-                                        const inputField = document.getElementById("input-template_field");
-                                        console.log(inputField)
-                                        this.createTemplate(inputField.value);
-                                        // this.createTemplate();
+                                        const tempInputField = document.getElementById("input-template_field");
+                                        const workflowInputField = document.getElementById("input-workflow_field");
+                                        console.log(tempInputField)
+                                        console.log(workflowInputField)
+                                        await this.createTemplate(tempInputField.value, workflowInputField.value);
                                     }
                                 }),
                                 $el("button", {
@@ -1273,8 +1289,34 @@ export class ModalTemplateDialog extends ComfyDialog{
     // handleInputTemplateChange(event) {
         // newTemplateName = event.target.value;
     // }
+    async populateWorkflowSelectField() {
+        try {
+            const response = await api.fetchApi("/workflows", {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            console.log(response);
+            const data = await response.json();
+            if (data.data && Array.isArray(data.data.workflows)) {
+                const workflowSelectField = document.getElementById("select-workflow_field");
+                data.data.workflows.forEach(workflow => {
+                    if (workflow.status === 'Enabled') {
+                        const option = document.createElement('option');
+                        option.value = workflow.name;
+                        option.textContent = workflow.name;
+                        workflowSelectField.appendChild(option);
+                    }
+                });
+            } else {
+                console.error('Failed to fetch workflow names:', result.message);
+            }
+        } catch (exception) {
+            console.error('Error fetching workflow names:', exception);
+        }
+    }
 
-    async createTemplate(templateName) {
+
+    async createTemplate(templateName, workflowName) {
         // validate names
         if (templateName.length > 40) {
             document.getElementById("release-validate").textContent = 'The template name cannot exceed 40 characters.';
@@ -1298,7 +1340,8 @@ export class ModalTemplateDialog extends ComfyDialog{
             console.log(payloadJson)
             var target = {
                 'name': templateName,
-                'payload': payloadJson
+                'payload': payloadJson,
+                'workflow': workflowName
             };
             const response = await api.fetchApi("/schemas", {
                 method: 'POST',
