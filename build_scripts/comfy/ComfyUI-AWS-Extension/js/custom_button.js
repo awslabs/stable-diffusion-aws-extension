@@ -1282,14 +1282,14 @@ export class ModalTemplateDialog extends ComfyDialog{
     // handleInputTemplateChange(event) {
         // newTemplateName = event.target.value;
     // }
-    async populateWorkflowSelectField() {
-        try {
-            const response = await api.fetchApi("/workflows", {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            console.log(response);
-            const data = await response.json();
+
+    populateWorkflowSelectField() {
+        api.fetchApi("/workflows", {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
             if (data.data && Array.isArray(data.data.workflows)) {
                 const workflowSelectField = document.getElementById("select-workflow_field");
                 workflowSelectField.innerHTML = '';
@@ -1302,11 +1302,12 @@ export class ModalTemplateDialog extends ComfyDialog{
                     }
                 });
             } else {
-                console.error('Failed to fetch workflow names:', result.message);
+                console.error('Failed to fetch workflow names:', data.message);
             }
-        } catch (exception) {
+        })
+        .catch(exception => {
             console.error('Error fetching workflow names:', exception);
-        }
+        });
     }
 
 
