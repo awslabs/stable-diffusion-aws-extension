@@ -350,16 +350,16 @@ function handleCreateTemplateButton() {
     if (!dialogCreateTemplateInstance) {
         dialogCreateTemplateInstance = new ModalTemplateDialog(app);
         dialogCreateTemplateInstance.populateWorkflowSelectField();
-        dialogCreateTemplateInstance.clearInputTemplateChange();
     }
+    dialogCreateTemplateInstance.clear();
     dialogCreateTemplateInstance.show();
 }
 
 function handleCreateButton() {
     if(!dialogModalRelease){
         dialogModalRelease = new ModalReleaseDialog(app);
-        dialogModalRelease.clear();
     }
+    dialogModalRelease.clear();
     dialogModalRelease.show();
 }
 
@@ -1306,11 +1306,9 @@ export class ModalTemplateDialog extends ComfyDialog{
         this.element.showModal();
     }
 
-    clearInputTemplateChange() {
-        const tempInputField = document.getElementById("input-template_field");
-        tempInputField.value = ''
-        const workflowInputField = document.getElementById("select-workflow_field");
-        workflowInputField.selected = ''
+    clear() {
+        document.getElementById("input-template_field").value='';
+        document.getElementById("select-workflow_field").selected = '';
     }
 
     populateWorkflowSelectField() {
