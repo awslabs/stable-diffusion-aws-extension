@@ -934,7 +934,7 @@ app.registerExtension(awsConfigPanel);
 
 function handleLockScreen(message) {
     if (lockCanvas == null) {
-        lockCanvas = new ModalBlankDialog(app, message ? message : "Processing workflows...");
+        lockCanvas = new ModalBlankDialog(app, message ? message : "Create processing...");
     }
     lockCanvas.show();
     localStorage.setItem("ui_lock_status", "locked");
@@ -1148,7 +1148,7 @@ export class ModalReleaseDialog extends ComfyDialog {
         }
 
         // this.element.close();
-        handleLockScreen("Creating env...");
+        handleLockScreen("Creating...");
         try {
             // let payloadJson = '';
             // app.graphToPrompt().then(p => {
@@ -1288,7 +1288,7 @@ export class ModalTemplateDialog extends ComfyDialog{
         }
 
         // this.element.close();
-        handleLockScreen("Creating template...");
+        handleLockScreen("Creating...");
         try {
             let payloadJson =await app.graphToPrompt()
             if (typeof payloadJson === 'object') {
