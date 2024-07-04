@@ -14,6 +14,7 @@ var errorMessage = 'An error occurred, please try again later.';
 let dialogCreateTemplateInstance = null;
 let dialogModalBlank = null;
 let dialogModalRelease = null;
+let dialogEditTemplateInstance= null;
 
 
 export async function handleRestartButton() {
@@ -355,6 +356,20 @@ function handleCreateTemplateButton() {
     dialogCreateTemplateInstance.show();
 }
 
+
+function handleEditTemplateButton() {
+    if (selectedItem) {
+        if (!dialogEditTemplateInstance) {
+            dialogEditTemplateInstance = new ModalEditTemplateDialog(app, selectedItem);
+            dialogEditTemplateInstance.populateWorkflowSelectField();
+        }
+        dialogEditTemplateInstance.clear();
+        dialogEditTemplateInstance.show();
+    } else {
+        alert('Please select a template in the list');
+    }
+}
+
 function handleCreateButton() {
     if(!dialogModalRelease){
         dialogModalRelease = new ModalReleaseDialog(app);
@@ -510,37 +525,6 @@ async function handleChangeButton() {
     }
 }
 
-async function handleEditTemplateButton(){
-    if (selectedItem) {
-        var dialog = new ModalConfirmDialog(app, 'Do you want to DELETE the template?', async () => {
-            try {
-                var target = {
-                    'name': selectedItem.firstChild.firstChild.textContent
-                };
-                const response = await api.fetchApi("/schemas", {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(target)
-                });
-                const result = await response.json();
-                if (result.result) {
-                    selectedItem.remove();
-                    selectedItem = null;
-                } else {
-                    handleUnlockScreen();
-                    alert(result.message);
-                }
-            } catch (exception) {
-                console.error('Delete error:', exception);
-                alert(errorMessage);
-            }
-        });
-        dialog.show();
-
-    } else {
-        alert('Please select a template in the list');
-    }
-}
 
 async function handleDeleteTemplateButton() {
     if (selectedItem) {
@@ -1391,6 +1375,166 @@ export class ModalTemplateDialog extends ComfyDialog{
     handleCancelClick() {
         this.element.close();
         // newTemplateName = ''
+    }
+}
+
+export class ModalEditTemplateDialog extends ComfyDialog{
+    constructor(app, selectedItem) {
+        super();
+        this.app = app;
+        this.settingsValues = {};
+        this.settingsLookup = {};
+        this.selectedItem = selectedItem;
+        this.element = $el(
+            "dialog",
+            {
+                id: "comfy-settings-dialog",
+                parent: document.body,
+            },
+            [
+                $el("table.comfy-modal-content.comfy-table", [
+                    $el(
+                        "caption",
+                        { textContent: "Edit Template", style: { border: "0" } },
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("th", { textContent: "Template Name", style: { border: "0" } }),
+                            $el("td", [
+                                $el("input", {
+                                    type: "text",
+                                    id: "edit-template_field",
+                                    style: { width: "100%", border: "0" },
+                                    value: selectedItem.value,
+                                })
+                            ]),
+                            $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
+                            $el("td", [
+                                $el("select", {
+                                    id: "edit-workflow_field",
+                                    style: { width: "100%", border: "0" },
+                                })
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
+                            $el("td", { colspan: 3, style: { textAlign: "center", border: "0" } }, [
+                                $el("button", {
+                                    id: "edit-ok-button",
+                                    textContent: "OK",
+                                    style: { marginRight: "10px", width: "60px" },
+                                    onclick: async () => {
+                                        const tempEditField = document.getElementById("edit-template_field");
+                                        const workflowEditField = document.getElementById("edit-workflow_field");
+                                        console.log(tempEditField)
+                                        console.log(workflowEditField)
+                                        await this.editTemplate(tempEditField.value, workflowEditField.value);
+                                    }
+                                }),
+                                $el("button", {
+                                    id: "edit-cancel-button",
+                                    textContent: "Cancel",
+                                    style: { marginRight: "10px", width: "60px" },
+                                    onclick: () => this.handleCancelClick(),
+                                }),
+                                $el("span", {
+                                    id: "edit-release-validate",
+                                    textContent: "",
+                                    style: { marginRight: "10px", color: "red" }
+                                }),
+                            ]),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+    }
+
+    show() {
+        this.textElement.replaceChildren(
+            $el(
+                "tr",
+                {
+                    style: { display: "none" },
+                },
+                [$el("th"), $el("th", { style: { width: "33%" } })]
+            )
+        );
+        this.element.showModal();
+    }
+
+    clear() {
+        document.getElementById("edit-template_field").value='';
+        document.getElementById("edit-workflow_field").value = 'default';
+    }
+
+    populateWorkflowSelectField() {
+        api.fetchApi("/workflows", {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.data && Array.isArray(data.data.workflows)) {
+                const workflowSelectField = document.getElementById("edit-workflow_field");
+                workflowSelectField.innerHTML = '';
+                data.data.workflows.forEach(workflow => {
+                    if (workflow.status === 'Enabled') {
+                        const option = document.createElement('option');
+                        option.value = workflow.name;
+                        option.textContent = workflow.name;
+                        workflowSelectField.appendChild(option);
+                    }
+                });
+            } else {
+                console.error('Failed to fetch workflow names:', data.message);
+            }
+        })
+        .catch(exception => {
+            console.error('Error fetching workflow names:', exception);
+        });
+    }
+
+
+    async editTemplate(templateName, workflowName) {
+
+        // this.element.close();
+        handleLockScreen("Updating...");
+        try {
+            let payloadJson =await app.graphToPrompt()
+            if (typeof payloadJson === 'object') {
+                payloadJson = JSON.stringify(payloadJson);
+            }
+            console.log(payloadJson)
+            var target = {
+                'name': templateName,
+                'payload': payloadJson,
+                'workflow': workflowName
+            };
+            const response = await api.fetchApi("/schemas", {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(target)
+            });
+            const result = await response.json();
+            if (!result.result) {
+                handleUnlockScreen();
+                document.getElementById("release-validate").textContent = result.message;
+            } else {
+                this.element.close();
+            }
+        } catch (exception) {
+            console.error('Update error:', exception);
+            handleUnlockScreen();
+            document.getElementById("release-validate").textContent = errorMessage;
+        }
+    }
+
+    handleCancelClick() {
+        this.element.close();
     }
 }
 
