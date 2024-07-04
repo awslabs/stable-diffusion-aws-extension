@@ -343,6 +343,7 @@ function createTemplateToolbar() {
 
 function handleCreateTemplateButton() {
     var dialog = new ModalTemplateDialog(app);
+    dialog.populateWorkflowSelectField();
     dialog.show();
 }
 
@@ -1263,7 +1264,6 @@ export class ModalTemplateDialog extends ComfyDialog{
                 ]),
             ]
         );
-        this.populateWorkflowSelectField();
     }
 
     show() {
