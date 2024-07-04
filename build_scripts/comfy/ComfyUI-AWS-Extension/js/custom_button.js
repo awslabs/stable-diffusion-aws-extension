@@ -926,7 +926,8 @@ const awsConfigPanel = {
         }
 
         app.ui.menuContainer.appendChild(widgetsContainer);
-        handleLoadButton();
+        // handleLoadButton();
+        handleLoadTemplateButton();
     }
 }
 
