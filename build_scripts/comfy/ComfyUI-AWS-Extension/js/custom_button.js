@@ -442,9 +442,11 @@ async function handleChangeTemplateButton() {
     if (selectedItem) {
         var dialog = new ModalConfirmDialog(app, 'Do you want to CHANGE template to "' + selectedItem.firstChild.firstChild.textContent + '" ?', async () => {
             try {
+                const template_name = selectedItem.firstChild.firstChild.textContent
                 handleLockScreen();
+                const templateValue = selectedItem.firstChild.firstChild.value || 'default';
                 var target = {
-                    'name': selectedItem.firstChild.firstChild.value
+                    'name': templateValue
                 };
                 await handleLoadTemplateJson(selectedItem.firstChild.firstChild.hidden);
                 const response = await api.fetchApi("/workflows", {
@@ -454,6 +456,7 @@ async function handleChangeTemplateButton() {
                 });
                 const result = await response.json();
                 handleUnlockScreen();
+                localStorage.setItem("in_use_template", template_name);
                 alert(result.message);
             } catch (exception) {
                 console.error('Change error:', exception);
@@ -662,33 +665,34 @@ function createTemplateItem(template, onClick) {
     nameLabel.hidden = `${template.payload}`;
     nameLabel.style.display = 'flex';
     nameLabel.style.alignItems = 'center';
-    // if (template.in_use) {
-    //     nameLabel.style.fontWeight = '600';
-    //     try {
-    //         var target = {
-    //             'clientId': api.initialClientId ?? api.clientId,
-    //             'releaseVersion': `${template.workflow}`
-    //         };
-    //         const response = api.fetchApi("/map_release", {
-    //             method: 'POST',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             body: JSON.stringify(target)
-    //         });
-    //     } catch (error) {
-    //         console.error('Error checking lock status:', error);
-    //     }
-    //     const greenBall = document.createElement('div');
-    //     greenBall.style.width = '8px';
-    //     greenBall.style.height = '8px';
-    //     greenBall.style.borderRadius = '50%';
-    //     greenBall.style.backgroundColor = 'green';
-    //     greenBall.style.marginRight = '4px';
-    //     nameLabel.insertBefore(greenBall, nameLabel.firstChild);
-    //     //TODO 增加默认选中
-    //
-    // } else {
-    //     nameLabel.style.fontWeight = '200';
-    // }
+    const in_use_template = localStorage.getItem("in_use_template");
+    if (in_use_template === `${template.name}` ) {
+        nameLabel.style.fontWeight = '600';
+        try {
+            var target = {
+                'clientId': api.initialClientId ?? api.clientId,
+                'releaseVersion': `${template.workflow}`
+            };
+            const response = api.fetchApi("/map_release", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(target)
+            });
+        } catch (error) {
+            console.error('Error checking lock status:', error);
+        }
+        const greenBall = document.createElement('div');
+        greenBall.style.width = '8px';
+        greenBall.style.height = '8px';
+        greenBall.style.borderRadius = '50%';
+        greenBall.style.backgroundColor = 'green';
+        greenBall.style.marginRight = '4px';
+        nameLabel.insertBefore(greenBall, nameLabel.firstChild);
+        //TODO 增加默认选中
+
+    } else {
+        nameLabel.style.fontWeight = '200';
+    }
     nameLabel.style.color = '#212529';
     nameLabel.style.marginBottom = '2px';
 
