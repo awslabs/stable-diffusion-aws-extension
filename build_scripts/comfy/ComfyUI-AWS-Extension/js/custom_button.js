@@ -924,6 +924,7 @@ const awsConfigPanel = {
         app.ui.menuContainer.appendChild(widgetsContainer);
         // handleLoadButton();
         dialogCreateTemplateInstance = new ModalTemplateDialog(app);
+        dialogEditTemplateInstance = new ModalEditTemplateDialog(app);
         dialogCreateTemplateInstance.populateWorkflowSelectField();
         handleLoadTemplateButton();
     }
@@ -1307,12 +1308,15 @@ export class ModalTemplateDialog extends ComfyDialog{
             if (data.data && Array.isArray(data.data.workflows)) {
                 const workflowSelectField = document.getElementById("select-workflow_field");
                 workflowSelectField.innerHTML = '';
+                const workflowSelectFieldEdit = document.getElementById("edit-workflow_field");
+                workflowSelectFieldEdit.innerHTML = '';
                 data.data.workflows.forEach(workflow => {
                     if (workflow.status === 'Enabled') {
                         const option = document.createElement('option');
                         option.value = workflow.name;
                         option.textContent = workflow.name;
                         workflowSelectField.appendChild(option);
+                        workflowSelectFieldEdit.appendChild(option);
                     }
                 });
             } else {
@@ -1406,7 +1410,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                                     type: "text",
                                     id: "edit-template_field",
                                     style: { width: "100%", border: "0" },
-                                    value: selectedItem.value,
+                                    value: selectedItem.firstChild.firstChild.textContent,
                                     disabled: true,
                                 })
                             ]),
@@ -1468,7 +1472,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
     }
 
     clear(selectedItem) {
-        document.getElementById("edit-template_field").value = selectedItem.value;
+        document.getElementById("edit-template_field").value = selectedItem.firstChild.firstChild.textContent;
         document.getElementById("edit-workflow_field").value = 'default';
     }
 
