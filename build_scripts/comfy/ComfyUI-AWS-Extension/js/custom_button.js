@@ -1307,15 +1307,12 @@ export class ModalTemplateDialog extends ComfyDialog{
             if (data.data && Array.isArray(data.data.workflows)) {
                 const workflowSelectField = document.getElementById("select-workflow_field");
                 workflowSelectField.innerHTML = '';
-                const workflowSelectFieldEdit = document.getElementById("edit-workflow_field");
-                workflowSelectFieldEdit.innerHTML = '';
                 data.data.workflows.forEach(workflow => {
                     if (workflow.status === 'Enabled') {
                         const option = document.createElement('option');
                         option.value = workflow.name;
                         option.textContent = workflow.name;
                         workflowSelectField.appendChild(option);
-                        workflowSelectFieldEdit.appendChild(option);
                     }
                 });
             } else {
