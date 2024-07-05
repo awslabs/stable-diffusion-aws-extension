@@ -924,7 +924,6 @@ const awsConfigPanel = {
         app.ui.menuContainer.appendChild(widgetsContainer);
         // handleLoadButton();
         dialogCreateTemplateInstance = new ModalTemplateDialog(app);
-        dialogEditTemplateInstance = new ModalEditTemplateDialog(app);
         dialogCreateTemplateInstance.populateWorkflowSelectField();
         handleLoadTemplateButton();
     }
