@@ -573,8 +573,8 @@ if is_on_ec2:
             if not directory:
                 logger.info("root path no need to sync files by duplicate opt")
                 return None
-            logger.info(f"Files changed in: {filepath}")
             timestamp = str(int(time.time() * 1000))
+            logger.info(f"Files changed in: {filepath} time is:{timestamp}")
             need_prepare = False
             prepare_type = 'inputs'
             need_reboot = False
@@ -604,7 +604,7 @@ if is_on_ec2:
                   or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
                 logger.info(f" sync input files: {filepath}")
                 # s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
-                s5cmd_syn_input_command = f's5cmd sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f's5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -624,7 +624,7 @@ if is_on_ec2:
                   or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
                 logger.info(f" sync models files: {filepath}")
                 # s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
-                s5cmd_syn_model_command = f's5cmd sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f's5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -642,7 +642,8 @@ if is_on_ec2:
                 os.system(s5cmd_syn_model_command)
                 need_prepare = True
                 prepare_type = 'models'
-            logger.info(f"Files changed in:: {need_prepare} {str(directory)} {DIR2} {DIR1} {DIR3}")
+            timestamp_sync = str(int(time.time() * 1000))
+            logger.info(f"Files changed in:: {need_prepare} {str(directory)} {DIR2} {DIR1} {DIR3}, time is:{timestamp_sync}")
             if need_prepare:
                 url = api_url + "prepare"
                 logger.info(f"URL:{url}")
@@ -653,6 +654,8 @@ if is_on_ec2:
                                          f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                         capture_output=True, text=True)
                 logger.info(result.stdout)
+                timestamp_prepare = str(int(time.time() * 1000))
+                logger.info(f"finish prepare in : {timestamp_prepare}")
                 return result.stdout
             return None
         except Exception as e:
