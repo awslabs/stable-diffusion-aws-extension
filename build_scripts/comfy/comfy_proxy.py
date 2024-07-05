@@ -603,8 +603,8 @@ if is_on_ec2:
             elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
                   or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
                 logger.info(f" sync input files: {filepath}")
-                # s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
-                s5cmd_syn_input_command = f'/usr/local/bin/s5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                # s5cmd_syn_input_command = f'/usr/local/bin/s5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -617,16 +617,16 @@ if is_on_ec2:
                         return None
                 logger.info("sync input files start")
                 logger.info(s5cmd_syn_input_command)
-                # os.system(s5cmd_syn_input_command)
-                result = subprocess.run(s5cmd_syn_input_command, shell=True, check=True, stdout=subprocess.PIPE)
-                logger.info(result.stdout.decode())
+                os.system(s5cmd_syn_input_command)
+                # result = subprocess.run(s5cmd_syn_input_command, shell=True, check=True, stdout=subprocess.PIPE)
+                # logger.info(result.stdout.decode())
                 need_prepare = True
                 prepare_type = 'inputs'
             elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
                   or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
                 logger.info(f" sync models files: {filepath}")
-                # s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
-                s5cmd_syn_model_command = f'/usr/local/bin/s5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                # s5cmd_syn_model_command = f'/usr/local/bin/s5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -641,9 +641,9 @@ if is_on_ec2:
 
                 logger.info("sync models files start")
                 logger.info(s5cmd_syn_model_command)
-                # os.system(s5cmd_syn_model_command)
-                result = subprocess.run(s5cmd_syn_model_command, shell=True, check=True, stdout=subprocess.PIPE)
-                logger.info(result.stdout.decode())
+                os.system(s5cmd_syn_model_command)
+                # result = subprocess.run(s5cmd_syn_model_command, shell=True, check=True, stdout=subprocess.PIPE)
+                # logger.info(result.stdout.decode())
                 need_prepare = True
                 prepare_type = 'models'
             timestamp_sync = str(int(time.time() * 1000))
