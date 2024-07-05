@@ -107,7 +107,6 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $START_SH:/start.sh \\
            -v $COMFY_PROXY:/comfy_proxy.py:ro \\
            -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
-           -v /usr/local/bin/s5cmd:/usr/local/bin/s5cmd \\
            --gpus all \\
            -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
            -e ACCOUNT_ID=$ACCOUNT_ID \\
