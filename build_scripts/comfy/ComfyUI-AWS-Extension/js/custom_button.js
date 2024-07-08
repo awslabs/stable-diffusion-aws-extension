@@ -898,7 +898,7 @@ const awsConfigPanel = {
         isMaster = check_data.master;
         const widgetsContainer = createConfigPanel();
         if (isMaster) {
-            const response = await api.fetchApi("/get_env");
+            const response = await api.fetchApi("/get_env_new/DISABLE_AWS_PROXY");
             const data = await response.json();
 
             const checkboxSageMaker = createSageMakerOption('Prompt on AWS', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
@@ -1240,7 +1240,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             $el("td", [
                                 $el("input", {
                                     type: "text",
-                                    id: "release-input-field",
+                                    id: "init-count-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
                                     oninput: (event) => this.handleInputChange(event),
@@ -1257,14 +1257,20 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "select-instance-field",
                                     style: { width: "100%", border: "0" },
                                 }, [
-                                    $el("option", { value: "true", textContent: "true" }),
-                                    $el("option", { value: "false", textContent: "false" }),
+                                    $el("option", { value: "ml.g5.2xlarge", textContent: "ml.g5.2xlarge" }),
+                                    $el("option", { value: "ml.g5.4xlarge", textContent: "ml.g5.4xlarge" }),
+                                    $el("option", { value: "ml.g5.8xlarge", textContent: "ml.g5.8xlarge" }),
+                                    $el("option", { value: "ml.g5.16xlarge", textContent: "ml.g5.16xlarge" }),
+                                    $el("option", { value: "ml.g4dn.2xlarge", textContent: "ml.g4dn.2xlarge" }),
+                                    $el("option", { value: "ml.g4dn.4xlarge", textContent: "ml.g4dn.4xlarge" }),
+                                    $el("option", { value: "ml.g4dn.8xlarge", textContent: "ml.g4dn.8xlarge" }),
+                                    $el("option", { value: "ml.g4dn.16xlarge", textContent: "ml.g4dn.16xlarge" }),
                                 ])
                             ]),
                             $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
                             $el("td", [
                                 $el("select", {
-                                    id: "release-input-field",
+                                    id: "select-scale-field",
                                     style: { width: "100%", border: "0" },
                                 }, [
                                     $el("option", { value: "true", textContent: "true" }),
@@ -1280,7 +1286,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             $el("td", [
                                 $el("input", {
                                     type: "text",
-                                    id: "release-input-field",
+                                    id: "min-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
                                     oninput: (event) => this.handleInputChange(event),
@@ -1290,7 +1296,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             $el("td", [
                                 $el("input", {
                                     type: "text",
-                                    id: "release-input-field",
+                                    id: "max-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
                                     oninput: (event) => this.handleInputChange(event),
@@ -1308,12 +1314,12 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     style: { marginRight: "10px", width: "60px" },
                                     onclick: async () => {
                                         const workflowNameInputField = document.getElementById("release-input-field");
-                                        // const workflowInputField = document.getElementById("select-workflow_field");
-                                        // console.log(workflowNameInputField)
-                                        // console.log(workflowInputField)
-                                        // await this.createTemplate(workflowNameInputField.value, workflowInputField.value);
-                                        //
-                                        // await this.releaseEndpointWorkflow(workflowNameInputField.value, );
+                                        const initCountInputField = document.getElementById("init-count-input-field");
+                                        const instanceTypeSelectField = document.getElementById("select-instance-field");
+                                        const scaleSelectField = document.getElementById("select-scale-field");
+                                        const minInputField = document.getElementById("min-input-field");
+                                        const maxInputField = document.getElementById("max-input-field");
+                                        await this.releaseEndpointWorkflow(workflowNameInputField.value, initCountInputField.value, instanceTypeSelectField,value, scaleSelectField.value, minInputField.value, maxInputField.value);
                                     }
                                 }),
                                 $el("button", {
@@ -1356,7 +1362,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
         document.getElementById("release-input-field").value = '';
     }
 
-    async releaseEndpointWorkflow(workflowName, instanceType, initCount, autoScale, minCount, maxCount) {
+    async releaseEndpointWorkflow(workflowName, initCount, instanceType, autoScale, minCount, maxCount) {
         // validate names
         if (workflowName.length > 40) {
             document.getElementById("release-validate-span").textContent = 'The env name cannot exceed 40 characters.';
@@ -1378,7 +1384,11 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
 
             var target = {
                 'name': workflowName,
-                'payload_json': payloadJson
+                'initCount': initCount,
+                'instanceType': instanceType,
+                'autoScale': autoScale,
+                'minCount': minCount,
+                'maxCount': maxCount,
             };
             const response = await api.fetchApi("/workflows", {
                 method: 'POST',
@@ -1389,6 +1399,28 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
             if (!result.result) {
                 handleUnlockScreen();
                 document.getElementById("release-validate-span").textContent = result.message;
+                var endpoint_target = {
+                    'workflow_name': workflowName,
+                    'endpoint_name': '',
+                    'service_type': 'comfy',
+                    'endpoint_type': 'Async',
+                    'instance_type': instanceType,
+                    'initial_instance_count': initCount,
+                    'min_instance_number': minCount,
+                    'max_instance_number': maxCount,
+                    'autoscaling_enabled': autoScale,
+                    'assign_to_roles': ['ec2'],
+                };
+                const api_url_response = await api.fetchApi("/get_env_new/COMFY_API_URL");
+                const data = await api_url_response.json();
+                const api_url  = data.env
+                const endpoint_response = await api.fetchApi(api_url+"/endpoints", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(endpoint_target)
+                });
+                const endpoint_result = await response.json();
+                console.log(endpoint_result)
             } else {
                 this.element.close();
             }
