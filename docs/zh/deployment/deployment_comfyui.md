@@ -13,7 +13,7 @@
 - 步骤3: 在ComfyUI页面调试并创建一个可用的工作流。
 - 步骤4：根据创建的工作流部署新的Amazon SageMaker推理节点。
 
-!!! tip "贴士" 
+!!! tip "贴士"
         遇到部署问题时可以查看[faq](../faq.md)中ComfyUI相关部分。
 
 ## 部署步骤
@@ -29,12 +29,12 @@
 7. 在**审核**页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择**提交**以部署堆栈。
 8. 您可以在 AWS CloudFormation 控制台的 **状态** 列中查看堆栈的状态。您应该会在大约 15 分钟内收到**CREATE_COMPLETE**状态。
 
-    !!! tip "贴士" 
+    !!! tip "贴士"
         请及时检查您预留邮箱的收件箱，并在主题为“AWS Notification - Subscription Confirmation”的邮件中，点击“Confirm subscription”超链接，按提示完成订阅。
 
 
 ### 步骤2: 部署ComfyUI前端
-步骤3将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
+步骤2将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
 
 1. 点击[链接](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml){:target="_blank"}来下载ComfyUI前端部署的yaml文件。或复制此链接，亦或者从步骤一的输出获取到对应部署ComfyUI前端的文件链接。
 2. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击控制台右上角**Create Stack**, **With new resource(standard)**，页面跳转至创建堆栈。
@@ -83,7 +83,7 @@ curl --location ‘此处填写您的api地址/endpoints’ \
 }’
 ```
 
-!!! Important "注意" 
+!!! Important "注意"
     如果是相对复杂的workflow 注意选择异步推理节点类型，否则受限于service最长等待30s，会出现调用推理超时的情况。
 
 
@@ -100,10 +100,5 @@ curl --location --request DELETE 'https://此处填ApiGatewayUrl地址/endpoints
 }'
 ```
 
-!!! Important "注意" 
+!!! Important "注意"
     不建议直接进去SageMaker console直接删除endpoint，容易造成数据不一致的隐患。
-
-
-
-
-
