@@ -901,7 +901,7 @@ const awsConfigPanel = {
             const response = await api.fetchApi("/get_env_new/DISABLE_AWS_PROXY");
             const data = await response.json();
 
-            const checkboxSageMaker = createSageMakerOption('Prompt on AWS', 'options', data.env.toUpperCase() === 'FALSE', handlePromptChange);
+            const checkboxSageMaker = createSageMakerOption('Prompt on AWS', 'options', data.env ? data.env.toUpperCase() === 'FALSE' : false, handlePromptChange);
             widgetsContainer.appendChild(checkboxSageMaker);
         }
 
