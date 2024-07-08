@@ -1360,6 +1360,13 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
 
     clear(){
         document.getElementById("release-input-field").value = '';
+        document.getElementById("release-input-field").value = '';
+        document.getElementById("init-count-input-field").value = '';
+        document.getElementById("select-instance-field").value = '';
+        document.getElementById("select-scale-field").value = '';
+        document.getElementById("min-input-field").value = '';
+        document.getElementById("max-input-field").value = '';
+        document.getElementById("release-validate-span").textContent = '';
     }
 
     async releaseEndpointWorkflow(workflowName, initCount, instanceType, autoScale, minCount, maxCount) {
@@ -1479,7 +1486,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     onclick: () => this.handleCancelClick(),
                                 }),
                                 $el("span", {
-                                    id: "release-validate",
+                                    id: "template-release-validate",
                                     textContent: "",
                                     style: { marginRight: "10px", color: "red" }
                                 }),
@@ -1507,6 +1514,8 @@ export class ModalTemplateDialog extends ComfyDialog{
     clear() {
         document.getElementById("input-template_field").value='';
         document.getElementById("select-workflow_field").value = 'default';
+        document.getElementById("template-release-validate").textContent = '';
+
     }
 
     populateWorkflowSelectField() {
@@ -1540,14 +1549,14 @@ export class ModalTemplateDialog extends ComfyDialog{
     async createTemplate(templateName, workflowName) {
         // validate names
         if (templateName.length > 40) {
-            document.getElementById("release-validate").textContent = 'The template name cannot exceed 40 characters.';
+            document.getElementById("template-release-validate").textContent = 'The template name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
         if (!nameRegex.test(templateName)) {
-            document.getElementById("release-validate").textContent = 'The template name must only contain letters, numbers, and underscores.';
+            document.getElementById("template-release-validate").textContent = 'The template name must only contain letters, numbers, and underscores.';
             return;
         }
 
@@ -1572,21 +1581,19 @@ export class ModalTemplateDialog extends ComfyDialog{
             const result = await response.json();
             if (!result.result) {
                 handleUnlockScreen();
-                document.getElementById("release-validate").textContent = result.message;
+                document.getElementById("template-release-validate").textContent = result.message;
             } else {
                 this.element.close();
             }
         } catch (exception) {
             console.error('Create error:', exception);
             handleUnlockScreen();
-            document.getElementById("release-validate").textContent = errorMessage;
+            document.getElementById("template-release-validate").textContent = errorMessage;
         }
-        // newTemplateName = '';
     }
 
     handleCancelClick() {
         this.element.close();
-        // newTemplateName = ''
     }
 }
 
@@ -1682,6 +1689,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
     clear(selectedItem) {
         document.getElementById("edit-template_field").value = selectedItem.firstChild.firstChild.textContent;
         document.getElementById("edit-workflow_field").value = 'default';
+        document.getElementById("edit-release-validate").textContent = '';
     }
 
     populateWorkflowSelectField() {
@@ -1735,14 +1743,14 @@ export class ModalEditTemplateDialog extends ComfyDialog{
             const result = await response.json();
             if (!result.result) {
                 handleUnlockScreen();
-                document.getElementById("release-validate").textContent = result.message;
+                document.getElementById("edit-release-validate").textContent = result.message;
             } else {
                 this.element.close();
             }
         } catch (exception) {
             console.error('Update error:', exception);
             handleUnlockScreen();
-            document.getElementById("release-validate").textContent = errorMessage;
+            document.getElementById("edit-release-validate").textContent = errorMessage;
         }
     }
 
