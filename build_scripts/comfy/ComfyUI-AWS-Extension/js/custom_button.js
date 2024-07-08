@@ -1138,8 +1138,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                         minMaxCountRow.hidden = scaleSelectField.value !== 'true';
                                     }
                                 }, [
-                                    $el("option", { value: "true", textContent: "true" }),
-                                    $el("option", { value: "false", textContent: "false" }),
+                                    $el("option", { value: true, textContent: "true" }),
+                                    $el("option", { value: false, textContent: "false" }),
                                 ])
                             ]),
                             $el("th", { textContent: "Init Count", style: { border: "0" } }),

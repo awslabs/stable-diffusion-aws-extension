@@ -1082,7 +1082,7 @@ if is_on_ec2:
                             body=json.dumps({"result": True, "lock": is_action_lock()}))
 
 
-    def async_release_env(workflow_name, payload_json, init_count, instance_type, auto_scale, min_count, max_count):
+    def async_release_env(workflow_name, payload_json, init_count: int, instance_type, auto_scale: bool, min_count: int, max_count: int):
         start_time = time.time()
         action_lock(workflow_name)
         base_image = os.getenv('BASE_IMAGE')
@@ -1185,24 +1185,23 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
             if ('initCount' not in json_data or not json_data['initCount']
-                    or not json_data['initCount'].isdigit() or json_data['initCount'] <= 0):
+                    or not json_data['initCount'].isdigit() or int(json_data['initCount']) <= 0):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"initCount is required"}))
-            if ('autoScale' not in json_data or not json_data['autoScale']
-                    or json_data['initCount'].lower() not in ["true", "false"]):
+            if ('autoScale' not in json_data or not json_data['autoScale']):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"autoScale is required"}))
             if 'autoScale' in json_data and json_data['autoScale']:
                 if ('minCount' not in json_data or not json_data['minCount']
-                        or not json_data['minCount'].isdigit() or json_data['minCount'] <= 0):
+                        or not json_data['minCount'].isdigit() or int(json_data['minCount']) <= 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"minCount is required"}))
                 if ('maxCount' not in json_data or not json_data['maxCount']
-                        or not json_data['maxCount'].isdigit() or json_data['maxCount'] <= 0):
+                        or not json_data['maxCount'].isdigit() or int(json_data['maxCount']) <= 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"maxCount is required"}))
 
-            thread = threading.Thread(target=async_release_env, args=(workflow_name, payload_json))
+            thread = threading.Thread(target=async_release_env, args=(workflow_name, payload_json, int(json_data['initCount']), json_data['instanceType'], bool(json_data['autoScale']), int(json_data['minCount']), int(json_data['maxCount'])))
             thread.start()
 
             return web.Response(status=200, content_type='application/json',
