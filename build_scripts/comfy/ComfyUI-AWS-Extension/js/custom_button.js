@@ -1277,11 +1277,9 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     onclick: async ()=>{
                                         const scaleSelectField = document.getElementById("select-scale-field");
                                         if(scaleSelectField.value === 'true'){
-                                            document.getElementById("min-input-field").hidden=false;
-                                            document.getElementById("max-input-field").hidden=false;
+                                            document.getElementById("min-max-count").hidden=false;
                                         }else {
-                                            document.getElementById("min-input-field").hidden=true;
-                                            document.getElementById("max-input-field").hidden=true;
+                                            document.getElementById("min-max-count").hidden=true;
                                         }
                                     }
                                 }, [
@@ -1291,7 +1289,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             ]),
                         ]
                     ),
-                    ,
                     $el(
                         "tr",
                         [
@@ -1308,6 +1305,10 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                     ),
                     $el(
                         "tr",
+                        {
+                            id: "min-max-count",
+                            hidden: true
+                        }
                         [
                             $el("th", { textContent: "Min-count", style: { border: "0" } }),
                             $el("td", [
@@ -1316,7 +1317,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "min-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    hidden: true,
                                 })
                             ]),
                             $el("th", { textContent: "Max-Count", style: { border: "0" } }),
@@ -1326,9 +1326,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "max-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    hidden: true,
                                 })
-                            ]),
+                            ])
                         ]
                     ),
                     $el(
