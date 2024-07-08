@@ -1308,7 +1308,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                         {
                             id: "min-max-count",
                             hidden: true
-                        }
+                        },
                         [
                             $el("th", { textContent: "Min-count", style: { border: "0" } }),
                             $el("td", [
