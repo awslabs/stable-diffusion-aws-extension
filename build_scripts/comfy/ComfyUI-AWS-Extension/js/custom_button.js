@@ -1000,7 +1000,7 @@ export class ModalBlankDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-blank",
+                id: "comfy-settings-dialog",
                 parent: document.body,
             },
             [
@@ -1070,8 +1070,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-env",
-                parent: document.body
+                id: "comfy-settings-dialog",
+                parent: document.body,
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1316,7 +1316,7 @@ export class ModalTemplateDialog extends ComfyDialog{
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-template",
+                id: "comfy-settings-dialog",
                 parent: document.body,
             },
             [
@@ -1389,7 +1389,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: { padding: "0", width: "33%" } })]
+                [$el("th"), $el("th", { style: { width: "33%" } })]
             )
         );
         this.element.showModal();
@@ -1491,7 +1491,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-edit-tem",
+                id: "comfy-settings-dialog",
                 parent: document.body,
             },
             [
@@ -1564,7 +1564,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: {padding: "0", width: "33%" } })]
+                [$el("th"), $el("th", { style: { width: "33%" } })]
             )
         );
         this.element.showModal();
@@ -1654,7 +1654,7 @@ export class ModalConfirmDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-confirm",
+                id: "comfy-settings-dialog",
                 parent: document.body,
             },
             [
@@ -1719,7 +1719,7 @@ export class ModalMessageDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog-msg",
+                id: "comfy-settings-dialog",
                 parent: document.body,
             },
             [
