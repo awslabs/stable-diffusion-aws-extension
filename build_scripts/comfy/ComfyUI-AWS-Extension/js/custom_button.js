@@ -1319,7 +1319,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                         const scaleSelectField = document.getElementById("select-scale-field");
                                         const minInputField = document.getElementById("min-input-field");
                                         const maxInputField = document.getElementById("max-input-field");
-                                        await this.releaseEndpointWorkflow(workflowNameInputField.value, initCountInputField.value, instanceTypeSelectField,value, scaleSelectField.value, minInputField.value, maxInputField.value);
+                                        await this.releaseEndpointWorkflow(workflowNameInputField.value, initCountInputField.value, instanceTypeSelectField.value, scaleSelectField.value, minInputField.value, maxInputField.value);
                                     }
                                 }),
                                 $el("button", {
