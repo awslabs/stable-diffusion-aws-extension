@@ -98,7 +98,7 @@ if is_on_ec2:
     if not api_token:
         raise ValueError("API_TOKEN environment variables must be set.")
 
-    headers = {"x-api-key": api_token, "Content-Type": "application/json"}
+    headers = {"x-api-key": api_token, "Content-Type": "application/json", "username": "api"}
 
 
     def send_msg_to_all_sockets(event: str, msg: dict):
