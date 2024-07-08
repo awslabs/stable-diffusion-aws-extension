@@ -1253,11 +1253,20 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     $el("option", { value: "ml.g5.2xlarge", textContent: "ml.g5.2xlarge" }),
                                     $el("option", { value: "ml.g5.4xlarge", textContent: "ml.g5.4xlarge" }),
                                     $el("option", { value: "ml.g5.8xlarge", textContent: "ml.g5.8xlarge" }),
-                                    $el("option", { value: "ml.g5.16xlarge", textContent: "ml.g5.16xlarge" }),
-                                    $el("option", { value: "ml.g4dn.2xlarge", textContent: "ml.g4dn.2xlarge" }),
+                                    $el("option", { value: "ml.g5.12xlarge", textContent: "ml.g5.12xlarge" }),
+                                    $el("option", { value: "ml.g5.24xlarge", textContent: "ml.g5.24xlarge" }),
                                     $el("option", { value: "ml.g4dn.4xlarge", textContent: "ml.g4dn.4xlarge" }),
                                     $el("option", { value: "ml.g4dn.8xlarge", textContent: "ml.g4dn.8xlarge" }),
-                                    $el("option", { value: "ml.g4dn.16xlarge", textContent: "ml.g4dn.16xlarge" }),
+                                    $el("option", { value: "ml.g4dn.12xlarge", textContent: "ml.g4dn.12xlarge" }),
+                                    $el("option", { value: "ml.p4d.24xlarge", textContent: "ml.p4d.24xlarge" }),
+                                    $el("option", { value: "ml.g6.xlarge", textContent: "ml.g6.xlarge" }),
+                                    $el("option", { value: "ml.g6.2xlarge", textContent: "ml.g6.2xlarge" }),
+                                    $el("option", { value: "ml.g6.4xlarge", textContent: "ml.g6.4xlarge" }),
+                                    $el("option", { value: "ml.g6.8xlarge", textContent: "ml.g6.8xlarge" }),
+                                    $el("option", { value: "ml.g6.12xlarge", textContent: "ml.g6.12xlarge" }),
+                                    $el("option", { value: "ml.g6.16xlarge", textContent: "ml.g6.16xlarge" }),
+                                    $el("option", { value: "ml.g6.24xlarge", textContent: "ml.g6.24xlarge" }),
+                                    $el("option", { value: "ml.g6.48xlarge", textContent: "ml.g6.48xlarge" }),
                                 ])
                             ]),
                             $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
@@ -1265,6 +1274,16 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                 $el("select", {
                                     id: "select-scale-field",
                                     style: { width: "100%", border: "0" },
+                                    onclick: async ()=>{
+                                        const scaleSelectField = document.getElementById("select-scale-field");
+                                        if(scaleSelectField.value === 'true'){
+                                            document.getElementById("min-input-field").hidden=false;
+                                            document.getElementById("max-input-field").hidden=false;
+                                        }else {
+                                            document.getElementById("min-input-field").hidden=true;
+                                            document.getElementById("max-input-field").hidden=true;
+                                        }
+                                    }
                                 }, [
                                     $el("option", { value: "true", textContent: "true" }),
                                     $el("option", { value: "false", textContent: "false" }),
@@ -1297,6 +1316,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "min-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
+                                    hidden: true,
                                 })
                             ]),
                             $el("th", { textContent: "Max-Count", style: { border: "0" } }),
@@ -1306,6 +1326,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "max-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
+                                    hidden: true,
                                 })
                             ]),
                         ]
