@@ -1384,13 +1384,14 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
 
             var target = {
                 'name': workflowName,
+                'payload_json': payloadJson,
                 'initCount': initCount,
                 'instanceType': instanceType,
                 'autoScale': autoScale,
                 'minCount': minCount,
                 'maxCount': maxCount,
             };
-            const response = await api.fetchApi("/workflows", {
+            const response = await api.fetchApi("/release", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(target)
@@ -1400,28 +1401,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 handleUnlockScreen();
                 document.getElementById("release-validate-span").textContent = result.message;
             } else {
-                var endpoint_target = {
-                    'workflow_name': workflowName,
-                    'endpoint_name': '',
-                    'service_type': 'comfy',
-                    'endpoint_type': 'Async',
-                    'instance_type': instanceType,
-                    'initial_instance_count': initCount,
-                    'min_instance_number': minCount,
-                    'max_instance_number': maxCount,
-                    'autoscaling_enabled': autoScale,
-                    'assign_to_roles': ['ec2'],
-                };
-                const api_url_response = await api.fetchApi("/get_env_new/COMFY_API_URL");
-                const data = await api_url_response.json();
-                const api_url  = data.env
-                const endpoint_response = await api.fetchApi(api_url+"endpoints", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(endpoint_target)
-                });
-                const endpoint_result = await response.json();
-                console.log(endpoint_result)
                 this.element.close();
             }
         } catch (exception) {
