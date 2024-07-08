@@ -1239,11 +1239,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             $el("th", { textContent: "Instance Type", style: { border: "0" } }),
                             $el("td", [
                                 $el("select", {
-                                    type: "text",
-                                    id: "release-input-field",
+                                    id: "select-instance-field",
                                     style: { width: "100%", border: "0" },
-                                    value: "",
-                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
                             $el("th", { textContent: "Init Count", style: { border: "0" } }),
