@@ -1000,8 +1000,9 @@ export class ModalBlankDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-blank",
                 parent: document.body,
+                style: { width: "33%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1070,8 +1071,9 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-release",
                 parent: document.body,
+                style: { width: "40%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1316,8 +1318,9 @@ export class ModalTemplateDialog extends ComfyDialog{
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-temp",
                 parent: document.body,
+                style: { width: "33%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1491,8 +1494,9 @@ export class ModalEditTemplateDialog extends ComfyDialog{
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-edit",
                 parent: document.body,
+                style: { width: "33%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1654,8 +1658,9 @@ export class ModalConfirmDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-confirm",
                 parent: document.body,
+                style: { width: "33%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1719,8 +1724,9 @@ export class ModalMessageDialog extends ComfyDialog {
         this.element = $el(
             "dialog",
             {
-                id: "comfy-settings-dialog",
+                id: "comfy-settings-dialog-msg",
                 parent: document.body,
+                style: { width: "33%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
