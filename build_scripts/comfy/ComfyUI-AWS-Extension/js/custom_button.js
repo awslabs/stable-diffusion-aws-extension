@@ -1415,7 +1415,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 const api_url_response = await api.fetchApi("/get_env_new/COMFY_API_URL");
                 const data = await api_url_response.json();
                 const api_url  = data.env
-                const endpoint_response = await api.fetchApi(api_url+"/endpoints", {
+                const endpoint_response = await api.fetchApi(api_url+"endpoints", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(endpoint_target)
