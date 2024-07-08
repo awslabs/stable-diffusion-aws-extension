@@ -1380,7 +1380,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: { width: "40%" } })]
+                [$el("th"), $el("th", { style: { width: "60%" } })]
             )
         );
         this.element.showModal();
