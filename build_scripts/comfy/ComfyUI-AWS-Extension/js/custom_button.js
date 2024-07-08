@@ -1274,24 +1274,16 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                 $el("select", {
                                     id: "select-scale-field",
                                     style: { width: "100%", border: "0" },
-                                    onclick: async ()=>{
+                                    onchange: async () => {
                                         const scaleSelectField = document.getElementById("select-scale-field");
-                                        if(scaleSelectField.value === 'true'){
-                                            document.getElementById("min-max-count").hidden=false;
-                                        }else {
-                                            document.getElementById("min-max-count").hidden=true;
-                                        }
+                                        const minMaxCountRow = document.getElementById("min-max-count");
+                                        minMaxCountRow.hidden = scaleSelectField.value !== 'true';
                                     }
                                 }, [
                                     $el("option", { value: "true", textContent: "true" }),
                                     $el("option", { value: "false", textContent: "false" }),
                                 ])
                             ]),
-                        ]
-                    ),
-                    $el(
-                        "tr",
-                        [
                             $el("th", { textContent: "Init Count", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
@@ -1303,6 +1295,20 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             ]),
                         ]
                     ),
+                    // $el(
+                    //     "tr",
+                    //     [
+                    //         $el("th", { textContent: "Init Count", style: { border: "0" } }),
+                    //         $el("td", [
+                    //             $el("input", {
+                    //                 type: "text",
+                    //                 id: "init-count-input-field",
+                    //                 style: { width: "100%", border: "0" },
+                    //                 value: "",
+                    //             })
+                    //         ]),
+                    //     ]
+                    // ),
                     $el(
                         "tr",
                         {
@@ -1374,7 +1380,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: { width: "33%" } })]
+                [$el("th"), $el("th", { style: { width: "40%" } })]
             )
         );
         this.element.showModal();
