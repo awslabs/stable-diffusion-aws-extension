@@ -1399,6 +1399,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
             if (!result.result) {
                 handleUnlockScreen();
                 document.getElementById("release-validate-span").textContent = result.message;
+            } else {
                 var endpoint_target = {
                     'workflow_name': workflowName,
                     'endpoint_name': '',
@@ -1421,7 +1422,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 });
                 const endpoint_result = await response.json();
                 console.log(endpoint_result)
-            } else {
                 this.element.close();
             }
         } catch (exception) {
