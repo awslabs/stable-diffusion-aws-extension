@@ -1256,14 +1256,20 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                 $el("select", {
                                     id: "select-instance-field",
                                     style: { width: "100%", border: "0" },
-                                })
+                                }, [
+                                    $el("option", { value: "true", textContent: "true" }),
+                                    $el("option", { value: "false", textContent: "false" }),
+                                ])
                             ]),
                             $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
                             $el("td", [
                                 $el("select", {
                                     id: "release-input-field",
                                     style: { width: "100%", border: "0" },
-                                })
+                                }, [
+                                    $el("option", { value: "true", textContent: "true" }),
+                                    $el("option", { value: "false", textContent: "false" }),
+                                ])
                             ]),
                         ]
                     ),
