@@ -909,7 +909,7 @@ const awsConfigPanel = {
         widgetsContainer.appendChild(scrollList);
 
         if (isMaster) {
-            const syncButton = createButton('Create Env', handleCreateButton);
+            const syncButton = createButton('Create Environment', handleCreateButton);
             widgetsContainer.appendChild(syncButton);
         }
 
@@ -1151,14 +1151,14 @@ export class ModalReleaseDialog extends ComfyDialog {
     async releaseWorkflow() {
         // validate names
         if (newWorkflowName.length > 40) {
-            document.getElementById("release-validate").textContent = 'The env name cannot exceed 40 characters.';
+            document.getElementById("release-validate").textContent = 'The environment name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
         if (!nameRegex.test(newWorkflowName)) {
-            document.getElementById("release-validate").textContent = 'The env name must only contain letters, numbers, and underscores.';
+            document.getElementById("release-validate").textContent = 'The environment name must only contain letters, numbers, and underscores.';
             return;
         }
 
@@ -1221,32 +1221,25 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                 $el("table.comfy-modal-content.comfy-table", [
                     $el(
                         "caption",
-                        { textContent: "Release Env", style: { border: "0" } },
+                        { textContent: "Release Environment", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Env Name", style: { border: "0" } }),
+                            $el("th", { textContent: "Environment Name", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
                                     type: "text",
                                     id: "release-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    oninput: (event) => this.handleInputChange(event),
                                 })
-                            ]),
-                            $el("th", { textContent: "Init Count", style: { border: "0" } }),
-                            $el("td", [
-                                $el("input", {
-                                    type: "text",
-                                    id: "init-count-input-field",
-                                    style: { width: "100%", border: "0" },
-                                    value: "",
-                                    oninput: (event) => this.handleInputChange(event),
-                                })
-                            ]),
+                            ])
                         ]
+                    ),
+                    $el(
+                        "caption",
+                        { textContent: "Endpoint Config", style: { border: "0" } },
                     ),
                     $el(
                         "tr",
@@ -1279,6 +1272,21 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             ]),
                         ]
                     ),
+                    ,
+                    $el(
+                        "tr",
+                        [
+                            $el("th", { textContent: "Init Count", style: { border: "0" } }),
+                            $el("td", [
+                                $el("input", {
+                                    type: "text",
+                                    id: "init-count-input-field",
+                                    style: { width: "100%", border: "0" },
+                                    value: "",
+                                })
+                            ]),
+                        ]
+                    ),
                     $el(
                         "tr",
                         [
@@ -1289,7 +1297,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "min-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
                             $el("th", { textContent: "Max-Count", style: { border: "0" } }),
@@ -1299,7 +1306,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "max-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
                         ]
@@ -1354,10 +1360,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
         this.element.showModal();
     }
 
-    handleInputChange(event) {
-        newWorkflowName = event.target.value;
-    }
-
     clear(){
         document.getElementById("release-input-field").value = '';
         document.getElementById("release-input-field").value = '';
@@ -1372,14 +1374,14 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
     async releaseEndpointWorkflow(workflowName, initCount, instanceType, autoScale, minCount, maxCount) {
         // validate names
         if (workflowName.length > 40) {
-            document.getElementById("release-validate-span").textContent = 'The env name cannot exceed 40 characters.';
+            document.getElementById("release-validate-span").textContent = 'The environment name cannot exceed 40 characters.';
             return;
         }
 
         // Check if the input value contains only English letters, numbers, and underscores
         const nameRegex = /^[a-zA-Z0-9_]+$/;
         if (!nameRegex.test(workflowName)) {
-            document.getElementById("release-validate-span").textContent = 'The env name must only contain letters, numbers, and underscores.';
+            document.getElementById("release-validate-span").textContent = 'The environment name must only contain letters, numbers, and underscores.';
             return;
         }
 

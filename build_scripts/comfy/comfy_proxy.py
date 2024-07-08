@@ -1189,7 +1189,7 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"initCount is required"}))
             if ('autoScale' not in json_data or not json_data['autoScale']
-                    or not isinstance(json_data['autoScale'], bool)):
+                    or json_data['initCount'].lower() not in ["true", "false"]):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"autoScale is required"}))
             if 'autoScale' in json_data and json_data['autoScale']:
