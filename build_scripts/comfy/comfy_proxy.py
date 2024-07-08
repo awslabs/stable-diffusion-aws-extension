@@ -1185,7 +1185,7 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
             if ('initCount' not in json_data or not json_data['initCount']
-                    or not isinstance(json_data['initCount'], int) or json_data['initCount'] <= 0):
+                    or not json_data['initCount'].isdigit() or json_data['initCount'] <= 0):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"initCount is required"}))
             if ('autoScale' not in json_data or not json_data['autoScale']
@@ -1194,11 +1194,11 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f"autoScale is required"}))
             if 'autoScale' in json_data and json_data['autoScale']:
                 if ('minCount' not in json_data or not json_data['minCount']
-                        or not isinstance(json_data['minCount'], int) or json_data['minCount'] <= 0):
+                        or not json_data['minCount'].isdigit() or json_data['minCount'] <= 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"minCount is required"}))
                 if ('maxCount' not in json_data or not json_data['maxCount']
-                        or not isinstance(json_data['maxCount'], int) or json_data['maxCount'] <= 0):
+                        or not json_data['maxCount'].isdigit() or json_data['maxCount'] <= 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"maxCount is required"}))
 
