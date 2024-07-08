@@ -1059,150 +1059,6 @@ export class ModalBlankDialog extends ComfyDialog {
     }
 }
 
-
-var newWorkflowName = '';
-// input field dialog
-export class ModalReleaseDialog extends ComfyDialog {
-
-    constructor(app) {
-        super();
-        this.app = app;
-        this.settingsValues = {};
-        this.settingsLookup = {};
-        this.element = $el(
-            "dialog",
-            {
-                id: "comfy-settings-dialog-release",
-                parent: document.body,
-            },
-            [
-                $el("table.comfy-modal-content.comfy-table", [
-                    $el(
-                        "caption",
-                        { textContent: "Release Env", style: { border: "0" } },
-                    ),
-                    $el(
-                        "tr",
-                        [
-                            $el("th", { textContent: "Env Name", style: { border: "0" } }),
-                            $el("td", [
-                                $el("input", {
-                                    type: "text",
-                                    id: "input-field",
-                                    style: { width: "100%", border: "0" },
-                                    value: "",
-                                    oninput: (event) => this.handleInputChange(event),
-                                })
-                            ]),
-                        ]
-                    ),
-                    $el(
-                        "tr",
-                        [
-                            $el("td", { colspan: 3, style: { textAlign: "center", border: "0" } }, [
-                                $el("button", {
-                                    id: "ok-button",
-                                    textContent: "OK",
-                                    style: { marginRight: "10px", width: "60px" },
-                                    onclick: async () => {
-                                        this.releaseWorkflow();
-                                    }
-                                }),
-                                $el("button", {
-                                    id: "cancel-button",
-                                    textContent: "Cancel",
-                                    style: { marginRight: "10px", width: "60px" },
-                                    onclick: () => this.handleCancelClick(),
-                                }),
-                                $el("span", {
-                                    id: "release-validate",
-                                    textContent: "",
-                                    style: { marginRight: "10px", color: "red" }
-                                }),
-                            ]),
-                        ]
-                    ),
-                ]),
-            ]
-        );
-    }
-
-    show() {
-        this.textElement.replaceChildren(
-            $el(
-                "tr",
-                {
-                    style: { display: "none" },
-                },
-                [$el("th"), $el("th", { style: { width: "33%" } })]
-            )
-        );
-        this.element.showModal();
-    }
-
-    handleInputChange(event) {
-        newWorkflowName = event.target.value;
-    }
-
-    clear(){
-        document.getElementById("input-field").value = '';
-    }
-
-    async releaseWorkflow() {
-        // validate names
-        if (newWorkflowName.length > 40) {
-            document.getElementById("release-validate").textContent = 'The environment name cannot exceed 40 characters.';
-            return;
-        }
-
-        // Check if the input value contains only English letters, numbers, and underscores
-        const nameRegex = /^[a-zA-Z0-9_]+$/;
-        if (!nameRegex.test(newWorkflowName)) {
-            document.getElementById("release-validate").textContent = 'The environment name must only contain letters, numbers, and underscores.';
-            return;
-        }
-
-        // this.element.close();
-        handleLockScreen("Creating...");
-        try {
-            // let payloadJson = '';
-            // app.graphToPrompt().then(p => {
-            //     payloadJson = JSON.stringify(p.workflow, null, 2);
-            // });
-            let payloadJson =await app.graphToPrompt()
-            console.log(payloadJson)
-
-            var target = {
-                'name': newWorkflowName,
-                'payload_json': payloadJson
-            };
-            const response = await api.fetchApi("/workflows", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(target)
-            });
-            const result = await response.json();
-            if (!result.result) {
-                handleUnlockScreen();
-                document.getElementById("release-validate").textContent = result.message;
-            } else {
-                this.element.close();
-            }
-        } catch (exception) {
-            console.error('Create error:', exception);
-            handleUnlockScreen();
-            document.getElementById("release-validate").textContent = errorMessage;
-        }
-        newWorkflowName = '';
-    }
-
-    handleCancelClick() {
-        this.element.close();
-        newWorkflowName = ''
-    }
-}
-
-
 // input field dialog
 export class ModalEndpointReleaseDialog extends ComfyDialog {
 
@@ -1533,7 +1389,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: { width: "33%" } })]
+                [$el("th"), $el("th", { style: { padding: "0", width: "33%" } })]
             )
         );
         this.element.showModal();
@@ -1708,7 +1564,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                 {
                     style: { display: "none" },
                 },
-                [$el("th"), $el("th", { style: { width: "33%" } })]
+                [$el("th"), $el("th", { style: {padding: "0", width: "33%" } })]
             )
         );
         this.element.showModal();
