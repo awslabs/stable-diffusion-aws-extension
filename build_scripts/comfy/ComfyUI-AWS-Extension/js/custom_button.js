@@ -1236,13 +1236,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
-                            $el("th", { textContent: "Instance Type", style: { border: "0" } }),
-                            $el("td", [
-                                $el("select", {
-                                    id: "select-instance-field",
-                                    style: { width: "100%", border: "0" },
-                                })
-                            ]),
                             $el("th", { textContent: "Init Count", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
@@ -1253,19 +1246,30 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
-                        ],
+                        ]
+                    ),
+                    $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
+                            $el("th", { textContent: "Instance Type", style: { border: "0" } }),
                             $el("td", [
-                                $el("input", {
-                                    type: "text",
-                                    id: "release-input-field",
+                                $el("select", {
+                                    id: "select-instance-field",
                                     style: { width: "100%", border: "0" },
-                                    value: "",
-                                    oninput: (event) => this.handleInputChange(event),
                                 })
                             ]),
+                            $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
+                            $el("td", [
+                                $el("select", {
+                                    id: "release-input-field",
+                                    style: { width: "100%", border: "0" },
+                                })
+                            ]),
+                        ]
+                    ),
+                    $el(
+                        "tr",
+                        [
                             $el("th", { textContent: "Min-count", style: { border: "0" } }),
                             $el("td", [
                                 $el("input", {
