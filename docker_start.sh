@@ -44,24 +44,6 @@ echo "total_memory_mb: $total_memory_mb"
 export limit_memory_mb=$((total_memory_mb - 2048))
 echo "limit_memory_mb: $limit_memory_mb"
 
-ROLE_NAME=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-echo "ROLE_NAME: $ROLE_NAME"
-CREDENTIALS=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${ROLE_NAME})
-AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.AccessKeyId')
-echo "AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
-AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')
-echo "AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
-AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Token')
-
-#mkdir -p ~/.aws
-#cat > ~/.aws/credentials <<EOF
-#[default]
-#aws_access_key_id=$AWS_ACCESS_KEY_ID
-#aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
-#aws_session_token=$AWS_SESSION_TOKEN
-#region=us-east-1
-#EOF
-
 generate_process(){
   init_port=$1
   export PROGRAM_NAME="comfy_$init_port"
@@ -128,8 +110,6 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            --gpus all \\
            -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
            -e ACCOUNT_ID=$ACCOUNT_ID \\
-           -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \\
-           -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
