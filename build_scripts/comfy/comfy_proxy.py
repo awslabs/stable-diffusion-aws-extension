@@ -1147,9 +1147,8 @@ if is_on_ec2:
             action_unlock()
             logger.info(f"release workflow cost time is {cost_time}")
         except Exception as e:
-            rm_command = 'rm /container/sync_lock'
-            subprocess.check_output(rm_command, shell=True)
-            logger.info(f"release workflow error start to rm lock:{rm_command}, {e} ")
+            action_unlock()
+            logger.info(f"release workflow error start to rm lock:{e} ")
 
 
     @server.PromptServer.instance.routes.post("/release")
