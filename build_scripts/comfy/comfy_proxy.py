@@ -1037,8 +1037,8 @@ if is_on_ec2:
         source_path = f"/container/workflows/{cur_workflow_name}"
         print(f"source_path is {source_path}")
 
-        s5cmd_sync_command = (f's5cmd sync '
-                              f'--delete=true '
+        s5cmd_sync_command = (f'aws s3 sync '
+                              f'--delete '
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
                               f'--exclude="*__pycache__*" '
@@ -1048,7 +1048,7 @@ if is_on_ec2:
                               f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
 
         s5cmd_lock_command = (f'echo "lock" > lock && '
-                              f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+                              f'aws s3 sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
 
         logger.info(f"sync workflows files start {s5cmd_sync_command}")
 
@@ -1093,8 +1093,8 @@ if is_on_ec2:
         source_path = f"/container/workflows/{cur_workflow_name}"
         print(f"source_path is {source_path}")
 
-        s5cmd_sync_command = (f's5cmd sync '
-                              f'--delete=true '
+        s5cmd_sync_command = (f'aws s3 sync '
+                              f'--delete '
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
                               f'--exclude="*__pycache__*" '
@@ -1104,7 +1104,7 @@ if is_on_ec2:
                               f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
 
         s5cmd_lock_command = (f'echo "lock" > lock && '
-                              f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+                              f'aws s3 sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
 
         logger.info(f"sync workflows files start {s5cmd_sync_command}")
 
