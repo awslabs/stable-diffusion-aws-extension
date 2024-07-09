@@ -1023,6 +1023,59 @@ if is_on_ec2:
         source_size = round(total_size_bytes / (1024 ** 3), 2)
         return str(source_size)
 
+
+    # def async_release_workflow(workflow_name, payload_json):
+    #     start_time = time.time()
+    #
+    #     action_lock(workflow_name)
+    #
+    #     base_image = os.getenv('BASE_IMAGE')
+    #     subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
+    #     subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
+    #
+    #     cur_workflow_name = os.getenv('WORKFLOW_NAME')
+    #     source_path = f"/container/workflows/{cur_workflow_name}"
+    #     print(f"source_path is {source_path}")
+    #
+    #     s5cmd_sync_command = (f'aws s3 sync --quiet '
+    #                           f'--delete '
+    #                           f'--exclude="*comfy.tar" '
+    #                           f'--exclude="*.log" '
+    #                           f'--exclude="*__pycache__*" '
+    #                           f'--exclude="*/ComfyUI/output/*" '
+    #                           f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
+    #                           f'"{source_path}/" '
+    #                           f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"  --debug')
+    #
+    #     s5cmd_lock_command = (f'echo "lock" > lock && '
+    #                           f'aws s3 cp lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+    #
+    #     logger.info(f"sync workflows files start {s5cmd_sync_command}")
+    #
+    #     subprocess.check_output(s5cmd_sync_command, shell=True)
+    #     subprocess.check_output(s5cmd_lock_command, shell=True)
+    #
+    #     end_time = time.time()
+    #     cost_time = end_time - start_time
+    #     image_hash = os.getenv('IMAGE_HASH')
+    #     image_uri = f"{image_hash}:{workflow_name}"
+    #
+    #     if isinstance(payload_json, dict):
+    #         payload_json = json.dumps(payload_json)
+    #
+    #     data = {
+    #         "payload_json": payload_json,
+    #         "image_uri": image_uri,
+    #         "name": workflow_name,
+    #         "size": dir_size(source_path),
+    #     }
+    #     get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+    #     response = get_response.json()
+    #     logger.info(f"release workflow response is {response}")
+    #     action_unlock()
+    #     print(f"release workflow cost time is {cost_time}")
+
+
     @server.PromptServer.instance.routes.get("/lock")
     async def get_lock_status(request):
         return web.Response(status=200, content_type='application/json',
@@ -1163,6 +1216,54 @@ if is_on_ec2:
             action_unlock()
             return web.Response(status=500, content_type='application/json',
                                 body=json.dumps({"result": False, "message": 'Release workflow failed'}))
+
+    # @server.PromptServer.instance.routes.post("/workflows")
+    # async def release_workflow(request):
+    #     if is_action_lock():
+    #         return web.Response(status=200, content_type='application/json',
+    #                             body=json.dumps(
+    #                                 {"result": False, "message": "action is not allowed during workflow release/restore"}))
+    #
+    #     if not is_master_process:
+    #         return web.Response(status=200, content_type='application/json',
+    #                             body=json.dumps({"result": False, "message": "only master can release workflow"}))
+    #
+    #     logger.info(f"start to release workflow {request}")
+    #     try:
+    #         json_data = await request.json()
+    #         if 'name' not in json_data or not json_data['name']:
+    #             return web.Response(status=200, content_type='application/json',
+    #                                 body=json.dumps({"result": False, "message": f"name is required"}))
+    #
+    #         workflow_name = json_data['name']
+    #         if workflow_name == 'default' or workflow_name == 'local':
+    #             return web.Response(status=200, content_type='application/json',
+    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} is not allowed"}))
+    #
+    #         if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', workflow_name):
+    #             return web.Response(status=200, content_type='application/json',
+    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} is invalid name"}))
+    #
+    #         payload_json = ''
+    #
+    #         if 'payload_json' in json_data:
+    #             payload_json = json_data['payload_json']
+    #
+    #         if check_workflow_exists(workflow_name):
+    #             return web.Response(status=200, content_type='application/json',
+    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
+    #
+    #         thread = threading.Thread(target=async_release_workflow, args=(workflow_name, payload_json))
+    #         thread.start()
+    #
+    #         return web.Response(status=200, content_type='application/json',
+    #                             body=json.dumps({"result": True, "message": "Pending to release workflow, "
+    #                                                                         "it's may take a few minutes"}))
+    #     except Exception as e:
+    #         logger.info(e)
+    #         action_unlock()
+    #         return web.Response(status=500, content_type='application/json',
+    #                             body=json.dumps({"result": False, "message": 'Release workflow failed'}))
 
     @server.PromptServer.instance.routes.delete("/workflows")
     async def delete_workflow(request):
