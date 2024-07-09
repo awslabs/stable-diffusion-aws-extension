@@ -1037,7 +1037,7 @@ if is_on_ec2:
         source_path = f"/container/workflows/{cur_workflow_name}"
         print(f"source_path is {source_path}")
 
-        s5cmd_sync_command = (f'aws s3 sync '
+        s5cmd_sync_command = (f'aws s3 sync --quiet '
                               f'--delete '
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
@@ -1093,7 +1093,7 @@ if is_on_ec2:
         source_path = f"/container/workflows/{cur_workflow_name}"
         print(f"source_path is {source_path}")
 
-        s5cmd_sync_command = (f'aws s3 sync '
+        s5cmd_sync_command = (f'aws s3 sync --quiet '
                               f'--delete '
                               f'--exclude="*comfy.tar" '
                               f'--exclude="*.log" '
