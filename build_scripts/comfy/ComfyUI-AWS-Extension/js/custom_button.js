@@ -1269,11 +1269,32 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
             return;
         }
 
+        // Validate initCount
+        if (!initCount || isNaN(initCount) || Number(initCount) < 0) {
+            document.getElementById("release-validate-span").textContent = 'Initial count must be a non-negative number.';
+            return;
+        }
+
+        // Validate minCount and maxCount if autoScale is true
+        if (autoScale === true) {
+            if (!minCount || isNaN(minCount) || Number(minCount) < 0) {
+                document.getElementById("release-validate-span").textContent = 'Min count must be a non-negative number.';
+                return;
+            }
+            if (!maxCount || isNaN(maxCount) || Number(maxCount) < 0) {
+                document.getElementById("release-validate-span").textContent = 'Max count must be a non-negative number.';
+                return;
+            }
+        }
+
         // this.element.close();
         handleLockScreen("Creating...");
         try {
             let payloadJson =await app.graphToPrompt()
             console.log(payloadJson)
+
+            minCount = minCount || 1;
+            maxCount = maxCount || 1;
 
             var target = {
                 'name': workflowName,
