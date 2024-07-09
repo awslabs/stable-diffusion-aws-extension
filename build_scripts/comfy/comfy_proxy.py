@@ -538,13 +538,13 @@ if is_on_ec2:
             if prepare_type in ['default', 'inputs']:
                 logger.info(f" sync input files")
                 # s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
-                s5cmd_syn_input_command = f's5cmd {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f'aws s3 sync --delete {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
                 logger.info(f"sync input files start {s5cmd_syn_input_command}")
                 os.system(s5cmd_syn_input_command)
             if prepare_type in ['default', 'models']:
                 logger.info(f" sync models files")
                 # s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
-                s5cmd_syn_model_command = f's5cmd {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f'aws s3 sync --delete {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
                 logger.info(f"sync models files start {s5cmd_syn_model_command}")
                 os.system(s5cmd_syn_model_command)
             logger.info(f"Files changed in:: {need_prepare} {prepare_type} {DIR2} {DIR1} {DIR3}")
@@ -603,7 +603,7 @@ if is_on_ec2:
             elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
                   or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
                 logger.info(f" sync input files: {filepath}")
-                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f'aws s3 sync --delete {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
                 # s5cmd_syn_input_command = f'/usr/local/bin/s5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
                 # 判断文件写完后再同步
@@ -625,7 +625,7 @@ if is_on_ec2:
             elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
                   or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
                 logger.info(f" sync models files: {filepath}")
-                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f'aws s3 sync --delete {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
                 # s5cmd_syn_model_command = f'/usr/local/bin/s5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
                 # 判断文件写完后再同步

@@ -75,6 +75,7 @@ else
   /venv/bin/python3 -m pip install fastapi
   /venv/bin/python3 -m pip install uvicorn
   /venv/bin/python3 -m pip install watchdog
+  /venv/bin/python3 -m pip install awscli
   /venv/bin/python3 -m pip install python-dotenv
   /venv/bin/python3 -m pip install httpx
   /venv/bin/python3 -s -m pip install onnxruntime
