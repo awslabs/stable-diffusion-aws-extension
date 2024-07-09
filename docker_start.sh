@@ -44,7 +44,6 @@ echo "total_memory_mb: $total_memory_mb"
 export limit_memory_mb=$((total_memory_mb - 2048))
 echo "limit_memory_mb: $limit_memory_mb"
 
-
 ROLE_NAME=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
 echo "ROLE_NAME: $ROLE_NAME"
 CREDENTIALS=$(curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/${ROLE_NAME})
@@ -62,8 +61,6 @@ AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Token')
 #aws_session_token=$AWS_SESSION_TOKEN
 #region=us-east-1
 #EOF
-
-
 
 generate_process(){
   init_port=$1
