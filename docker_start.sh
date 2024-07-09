@@ -54,14 +54,14 @@ AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.SecretAccessKey')
 echo "AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
 AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Token')
 
-mkdir -p ~/.aws
-cat > ~/.aws/credentials <<EOF
-[default]
-aws_access_key_id=$AWS_ACCESS_KEY_ID
-aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
-aws_session_token=$AWS_SESSION_TOKEN
-region=us-east-1
-EOF
+#mkdir -p ~/.aws
+#cat > ~/.aws/credentials <<EOF
+#[default]
+#aws_access_key_id=$AWS_ACCESS_KEY_ID
+#aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+#aws_session_token=$AWS_SESSION_TOKEN
+#region=us-east-1
+#EOF
 
 
 
@@ -131,6 +131,8 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            --gpus all \\
            -e IMAGE_HASH=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/esd_container \\
            -e ACCOUNT_ID=$ACCOUNT_ID \\
+           -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \\
+           -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
