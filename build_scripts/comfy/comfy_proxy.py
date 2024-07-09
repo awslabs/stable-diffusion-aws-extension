@@ -1044,8 +1044,8 @@ if is_on_ec2:
                               f'--exclude="*__pycache__*" '
                               f'--exclude="*/ComfyUI/output/*" '
                               f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
-                              f'"{source_path}/*" '
-                              f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+                              f'"{source_path}/" '
+                              f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"  --debug')
 
         s5cmd_lock_command = (f'echo "lock" > lock && '
                               f'aws s3 sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
@@ -1100,7 +1100,7 @@ if is_on_ec2:
                               f'--exclude="*__pycache__*" '
                               f'--exclude="*/ComfyUI/output/*" '
                               f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
-                              f'"{source_path}/*" '
+                              f'"{source_path}/" '
                               f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
 
         s5cmd_lock_command = (f'echo "lock" > lock && '
