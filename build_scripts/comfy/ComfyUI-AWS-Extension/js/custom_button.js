@@ -1293,8 +1293,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
             let payloadJson =await app.graphToPrompt()
             console.log(payloadJson)
 
-            minCount = minCount || 1;
-            maxCount = maxCount || 1;
+            minCount = minCount || "1";
+            maxCount = maxCount || "1";
 
             var target = {
                 'name': workflowName,
