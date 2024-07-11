@@ -164,9 +164,14 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   rm -rf "$CONTAINER_PATH/workflows/default"
   mkdir -p "$CONTAINER_PATH/workflows/default"
   tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
+  rm -rf "$CONTAINER_PATH/workflows/local"
+  mkdir -p "$CONTAINER_PATH/workflows/local"
+  tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/local/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+
+  rm -rf "$CONTAINER_PATH/workflows/local/ComfyUI/custom_nodes/ComfyUI-Manager"
 
   echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
@@ -174,8 +179,6 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
 
-  cp -r "$CONTAINER_PATH/workflows/default" "$CONTAINER_PATH/workflows/local"
-  rm -rf "$CONTAINER_PATH/workflows/local/ComfyUI/custom_nodes/ComfyUI-Manager"
 fi
 
 rm -rf /tmp/s5cmd.txt
