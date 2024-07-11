@@ -1140,7 +1140,7 @@ if is_on_ec2:
                 'min_instance_number': min_count,
                 'max_instance_number': max_count,
                 'autoscaling_enabled': auto_scale,
-                'assign_to_roles': ['ec2'],
+                'assign_to_roles': [f'ec2{workflow_name}'],
             }
             endpoint_response = requests.post(f"{api_url}/endpoints", headers=headers, data=json.dumps(endpoint_data))
             logger.info(f"release env endpoint response is {endpoint_response}")
