@@ -1452,7 +1452,7 @@ if is_on_ec2:
             data = response.json()['data']
             schemas = data['schemas']
 
-            list = [{"name": "default(cannot edit)", "workflow": "default", "payload": "", "create_time": time.time()}]
+            list = [{"name": "default(🔒)", "workflow": "default", "payload": "", "create_time": time.time()}]
 
             for schema in schemas:
                 if not is_master_process and not schema['workflow']:
