@@ -350,8 +350,8 @@ function createTemplateToolbar() {
 function handleCreateTemplateButton() {
     if (!dialogCreateTemplateInstance) {
         dialogCreateTemplateInstance = new ModalTemplateDialog(app);
-        dialogCreateTemplateInstance.populateWorkflowSelectField();
     }
+    dialogCreateTemplateInstance.populateWorkflowSelectField();
     dialogCreateTemplateInstance.clear();
     dialogCreateTemplateInstance.show();
 }
@@ -361,8 +361,8 @@ function handleEditTemplateButton() {
     if (selectedItem) {
         if (!dialogEditTemplateInstance) {
             dialogEditTemplateInstance = new ModalEditTemplateDialog(app, selectedItem);
-            dialogEditTemplateInstance.populateWorkflowSelectField();
         }
+        dialogEditTemplateInstance.populateWorkflowSelectField();
         dialogEditTemplateInstance.clear(selectedItem);
         dialogEditTemplateInstance.show();
     } else {
@@ -1424,7 +1424,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                     if (workflow.status === 'Enabled') {
                         const option = document.createElement('option');
                         option.value = workflow.name;
-                        option.textContent = workflow.name;
+                        option.textContent = `${workflow.name}(${workflow.size})`;
                         workflowSelectField.appendChild(option);
                     }
                 });
@@ -1599,7 +1599,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                     if (workflow.status === 'Enabled') {
                         const option = document.createElement('option');
                         option.value = workflow.name;
-                        option.textContent = workflow.name;
+                        option.textContent = `${workflow.name}(${workflow.size})`;
                         workflowSelectField.appendChild(option);
                     }
                 });
