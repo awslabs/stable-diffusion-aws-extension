@@ -749,7 +749,6 @@ if is_on_ec2:
 
     stop_event = threading.Event()
 
-
     def check_and_sync():
         logger.info("check_and_sync start")
         event_handler = MyHandlerWithSync()
@@ -763,8 +762,12 @@ if is_on_ec2:
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.info("sync Shutting down please restart ComfyUI")
+        except Exception as e:
+            logger.error(f"Exception in check_and_sync: {e}")
+        finally:
+            logger.info("Stopping observer")
             observer.stop()
-        observer.join()
+            observer.join()
 
 
     def signal_handler(sig, frame):
