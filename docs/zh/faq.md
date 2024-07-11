@@ -41,9 +41,11 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 
 ## ComfyUI相关
 **问：模型上传到哪里？**
+
 模型的上传需要以root身份登陆ec2后，在/root/stable-diffusion-aws-extension/container/workflows/下，选择您UI选中的环境进入到对应子路径就可以看到ComfyUI，就可以继续按照您本地部署ComfyUI一样放入到对应models的路径即可。
 
 **问：如果manager安装不上，怎么手动安装部分特殊的包？**
+
 首先查看运行的容器命令： docker ps
 找到10000端口的designer环境容器 复制containerid
 然后进入到容器： docker exec -it 复制的containerid /bin/bash
@@ -52,6 +54,7 @@ pip install 您想要的包
 之后UI重启即可
 
 **问：如何查看ComfyUI运行的日志？**
+
 ec2刚启动时可以通过以下命令查看是否已加载完ComfyUI的基础依赖环境
 tail -f /var/log/cloud-init-output.log 
 也可以通过以下命令查看启动ComfyUI进程的日志
