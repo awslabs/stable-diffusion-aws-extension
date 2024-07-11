@@ -29,12 +29,13 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 @tracer.capture_method
 def parse_sagemaker_result(sagemaker_out, create_time, inference_id, task_type, endpoint_name):
     update_inference_job_table(inference_id, 'completeTime', datetime.now().isoformat())
-    record_queue_latency_metrics(create_time=create_time,
-                                 start_time=sagemaker_out['start_time'],
-                                 ep_name=endpoint_name,
-                                 service=ServiceType.SD.value)
 
     try:
+        # maybe start_time is not in the response
+        record_queue_latency_metrics(create_time=create_time,
+                                     start_time=sagemaker_out['start_time'],
+                                     ep_name=endpoint_name,
+                                     service=ServiceType.SD.value)
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
         elif task_type in ["txt2img", "img2img"]:
