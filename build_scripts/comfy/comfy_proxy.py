@@ -777,7 +777,6 @@ if is_on_ec2:
         signal.signal(signal.SIGTERM, signal_handler)
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
-        check_sync_thread.join()
 
 
     @server.PromptServer.instance.routes.post('/map_release')
