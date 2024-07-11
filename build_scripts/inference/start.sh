@@ -362,8 +362,8 @@ if [ -n "$ON_EC2" ]; then
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
-    if [ "$WORKFLOW_NAME" = "default" ]; then
-      echo "default workflow init must be in create EC2"
+    if [ "$WORKFLOW_NAME" = "default" ] || [ "$WORKFLOW_NAME" = "local" ]; then
+      echo "$WORKFLOW_NAME workflow init must be in create EC2"
       tar_file="$CONTAINER_PATH/default.tar"
       if [ ! -f "$tar_file" ]; then
           mkdir -p "$CONTAINER_PATH/workflows"
@@ -373,12 +373,12 @@ if [ -n "$ON_EC2" ]; then
           export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
       fi
       start_at=$(date +%s)
-      rm -rf "$CONTAINER_PATH/workflows/default"
-      mkdir -p "$CONTAINER_PATH/workflows/default"
-      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
+      rm -rf "$CONTAINER_PATH/workflows/$WORKFLOW_NAME"
+      mkdir -p "$CONTAINER_PATH/workflows/$WORKFLOW_NAME"
+      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/$WORKFLOW_NAME/"
       end_at=$(date +%s)
       export DECOMPRESS_SECONDS=$((end_at-start_at))
-      cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+      cd "$CONTAINER_PATH/workflows/$WORKFLOW_NAME/ComfyUI"
 
       echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
       echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
