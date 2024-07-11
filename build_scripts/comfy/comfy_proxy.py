@@ -1485,7 +1485,7 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"name is required"}))
 
-            if json_data['name'] == "default":
+            if json_data['name'] == "default(🔒)":
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"named 'default' cannot be created"}))
 
@@ -1559,7 +1559,7 @@ if is_on_ec2:
             json_data = await request.json()
             if 'name' not in json_data or not json_data['name']:
                 raise ValueError("name is required")
-            if json_data['name'] == "default":
+            if json_data['name'] == "default(🔒)":
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"named 'default' cannot be edited"}))
             if 'payload' not in json_data or not json_data['payload']:
