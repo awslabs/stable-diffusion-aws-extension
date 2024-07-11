@@ -760,8 +760,6 @@ if is_on_ec2:
             observer.start()
             while not stop_event.is_set():
                 time.sleep(1)
-        except KeyboardInterrupt:
-            logger.info("sync Shutting down please restart ComfyUI")
         except Exception as e:
             logger.error(f"Exception in check_and_sync: {e}")
         finally:
@@ -780,6 +778,7 @@ if is_on_ec2:
         signal.signal(signal.SIGTERM, signal_handler)
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
+        check_sync_thread.join()
 
 
     @server.PromptServer.instance.routes.post('/map_release')
