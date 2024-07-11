@@ -1601,7 +1601,7 @@ if is_on_ec2:
                                     {"result": False, "message": "action is not allowed during release workflow"}))
 
         subprocess.run(["sleep", "5"])
-        subprocess.run(["pkill", "-f", "python3"])
+        kill_python_process()
 
 
     def restart_comfy_commands():
@@ -1625,14 +1625,26 @@ if is_on_ec2:
 
     def kill_after_seconds():
         subprocess.run(["sleep", "2"])
-        subprocess.run(["pkill", "-f", "python3"])
+        kill_python_process()
+
+
+    def kill_python_process():
+        result = subprocess.run(["ps", "-ef"], stdout=subprocess.PIPE)
+        lines = result.stdout.decode().splitlines()
+
+        for line in lines:
+            if "venv/bin/python3 main.py" in line and "--listen" in line:
+                parts = line.split()
+                pid = int(parts[1])
+                print(f"Killing process with PID: {pid}")
+                os.kill(pid, 9)
 
     def restore_workflow():
         action_lock("restore")
         subprocess.run(["sleep", "2"])
         os.system("rm -rf /container/workflows/default")
         action_unlock()
-        subprocess.run(["pkill", "-f", "python3"])
+        kill_python_process()
 
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
