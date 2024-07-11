@@ -765,7 +765,6 @@ if is_on_ec2:
         finally:
             logger.info("Stopping observer")
             observer.stop()
-            observer.join()
 
 
     def signal_handler(sig, frame):
