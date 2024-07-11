@@ -759,7 +759,7 @@ if is_on_ec2:
             # observer.schedule(event_handler, DIR2, recursive=True)
             observer.schedule(event_handler, DIR3, recursive=True)
             observer.start()
-            while True:
+            while not stop_event.is_set():
                 time.sleep(1)
         except KeyboardInterrupt:
             logger.info("sync Shutting down please restart ComfyUI")
@@ -775,7 +775,6 @@ if is_on_ec2:
     if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
 
