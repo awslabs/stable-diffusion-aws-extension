@@ -1153,20 +1153,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             ]),
                         ]
                     ),
-                    // $el(
-                    //     "tr",
-                    //     [
-                    //         $el("th", { textContent: "Init Count", style: { border: "0" } }),
-                    //         $el("td", [
-                    //             $el("input", {
-                    //                 type: "text",
-                    //                 id: "init-count-input-field",
-                    //                 style: { width: "100%", border: "0" },
-                    //                 value: "",
-                    //             })
-                    //         ]),
-                    //     ]
-                    // ),
                     $el(
                         "tr",
                         {
@@ -1245,7 +1231,6 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
     }
 
     clear(){
-        document.getElementById("release-input-field").value = '';
         document.getElementById("release-input-field").value = '';
         document.getElementById("init-count-input-field").value = '';
         document.getElementById("select-instance-field").value = '';
@@ -1359,7 +1344,6 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     id: "input-template_field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                    // oninput: (event) => this.handleInputTemplateChange(event),
                                 })
                             ]),
                             $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
