@@ -909,7 +909,7 @@ const awsConfigPanel = {
         widgetsContainer.appendChild(scrollList);
 
         if (isMaster) {
-            const syncButton = createButton('Create Environment', handleCreateButton);
+            const syncButton = createButton('New Environment', handleCreateButton);
             widgetsContainer.appendChild(syncButton);
         }
 
