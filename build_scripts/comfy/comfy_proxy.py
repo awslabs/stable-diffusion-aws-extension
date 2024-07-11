@@ -1331,11 +1331,6 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
-
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
                                     {"result": False, "message": "switch is not allowed during workflow release/restore"}))
 
         if os.path.exists("/container/s5cmd_lock"):

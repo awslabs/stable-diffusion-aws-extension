@@ -56,7 +56,11 @@ generate_process(){
   fi
 
   if [ -z "$WORKFLOW_NAME_TMP" ]; then
-    WORKFLOW_NAME_TMP="default"
+    if [ "$init_port" -eq "10000" ]; then
+        WORKFLOW_NAME_TMP="default"
+    else
+        WORKFLOW_NAME_TMP="local"
+    fi
   fi
 
   echo "$WORKFLOW_NAME_TMP" > "$COMFY_WORKFLOW_FILE"
@@ -84,7 +88,7 @@ set -euxo pipefail
 
 WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
-if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
+if [ \"\$WORKFLOW_NAME\" = \"default\" ] || [ \"\$WORKFLOW_NAME\" = \"local\" ]; then
   BASE_IMAGE=$PUBLIC_BASE_IMAGE
 else
   BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
@@ -169,6 +173,9 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
+
+  cp -r "$CONTAINER_PATH/workflows/default" "$CONTAINER_PATH/workflows/local"
+  rm -rf "$CONTAINER_PATH/workflows/local/ComfyUI/custom_nodes/ComfyUI-Manager"
 fi
 
 rm -rf /tmp/s5cmd.txt
