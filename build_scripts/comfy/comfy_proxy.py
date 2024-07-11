@@ -227,7 +227,7 @@ if is_on_ec2:
                 }
                 executor.add_message("execution_error", mes, broadcast=True)
 
-            if is_master_process and 'True' == os.environ.get(DISABLE_AWS_PROXY):
+            if is_master_process and ('True' == os.environ.get(DISABLE_AWS_PROXY) or not os.environ.get(DISABLE_AWS_PROXY)):
                 logger.info("disabled aws proxy, use local")
                 return func(*args, **kwargs)
             logger.info(f"enable aws proxy, use aws")
