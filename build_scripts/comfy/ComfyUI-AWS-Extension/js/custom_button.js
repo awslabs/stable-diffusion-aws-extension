@@ -1095,15 +1095,16 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Environment Name", style: { border: "0", width: "25%" } }),
-                            $el("td",[
+                            $el("th", { textContent: "Environment Name", style: { border: "0", width: "15%" } }),
+                            $el("td", {style: { width: "30%" } },[
                                 $el("input", {
                                     type: "text",
                                     id: "release-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
                                 })
-                            ])
+                            ]),
+                            $el("th", { textContent: "", style: { border: "0", width: "55%" } }),
                         ]
                     ),
                     $el(
