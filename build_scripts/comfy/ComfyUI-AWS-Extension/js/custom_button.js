@@ -1361,7 +1361,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     value: "",
                                 })
                             ]),
-                            $el("th", { textContent: "Environment Name", style: { border: "0", width: "20%" } }),
+                            $el("th", { textContent: "Environment Name", style: { border: "0", width: "25%" } }),
                             $el("td", {style: { width: "25%" } }, [
                                 $el("select", {
                                     id: "select-workflow_field",
@@ -1538,7 +1538,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
                                     disabled: true,
                                 })
                             ]),
-                            $el("th", { textContent: "Environment Name", style: { border: "0" , width: "20%"} }),
+                            $el("th", { textContent: "Environment Name", style: { border: "0" , width: "25%"} }),
                             $el("td", {style: { width: "25%" } }, [
                                 $el("select", {
                                     id: "edit-workflow_field",
