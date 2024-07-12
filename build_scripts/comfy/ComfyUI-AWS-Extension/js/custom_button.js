@@ -1073,7 +1073,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
             {
                 id: "comfy-settings-dialog-release",
                 parent: document.body,
-                style: { width: "75%" , border: 0, padding:0}
+                style: { width: "60%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
@@ -1326,7 +1326,7 @@ export class ModalTemplateDialog extends ComfyDialog{
             {
                 id: "comfy-settings-dialog-temp",
                 parent: document.body,
-                style: { width: "50%" , border: 0, padding:0}
+                style: { width: "40%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
