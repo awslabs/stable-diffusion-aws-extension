@@ -281,6 +281,7 @@ function createTemplateList() {
     outerContainer.appendChild(title);
 
     const toolbarContainer = createTemplateToolbar();
+    toolbarContainer.style.marginTop = '0';
 
     container = document.createElement('div');
     container.style.height = '100%';
