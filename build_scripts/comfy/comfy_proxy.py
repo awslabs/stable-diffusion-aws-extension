@@ -1220,11 +1220,11 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
+                                    {"result": False, "message": "Action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": False, "message": "only master can delete workflows"}))
+                                body=json.dumps({"result": False, "message": "Only master can delete workflows"}))
 
         logger.info(f"start to delete workflows {request}")
         try:
