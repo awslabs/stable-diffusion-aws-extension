@@ -1248,6 +1248,7 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
         document.getElementById("select-scale-field").value = '';
         document.getElementById("min-input-field").value = '';
         document.getElementById("max-input-field").value = '';
+        document.getElementById("min-max-count").hidden = true;
         document.getElementById("release-validate-span").textContent = '';
     }
 
