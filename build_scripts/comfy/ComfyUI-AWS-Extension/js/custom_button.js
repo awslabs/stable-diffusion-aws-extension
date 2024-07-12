@@ -1189,7 +1189,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     style: { width: "100%", border: "0" },
                                     value: "",
                                 })
-                            ])
+                            ]),
+                            $el("th", { textContent: "", style: { border: "0" , width: "35%" } }),
                         ]
                     ),
                     $el(
