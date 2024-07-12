@@ -1196,11 +1196,11 @@ if is_on_ec2:
                                     body=json.dumps({"result": False, "message": f"autoScale is required"}))
             if 'autoScale' in json_data and json_data['autoScale']:
                 if ('minCount' not in json_data or not json_data['minCount']
-                        or not json_data['minCount'].isdigit() or int(json_data['minCount']) <= 0):
+                        or not json_data['minCount'].isdigit() or int(json_data['minCount']) < 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"minCount is required"}))
                 if ('maxCount' not in json_data or not json_data['maxCount']
-                        or not json_data['maxCount'].isdigit() or int(json_data['maxCount']) <= 0):
+                        or not json_data['maxCount'].isdigit() or int(json_data['maxCount']) < 0):
                     return web.Response(status=200, content_type='application/json',
                                         body=json.dumps({"result": False, "message": f"maxCount is required"}))
 
