@@ -1516,7 +1516,7 @@ export class ModalEditTemplateDialog extends ComfyDialog{
             {
                 id: "comfy-settings-dialog-edit",
                 parent: document.body,
-                style: { width: "50%" , border: 0, padding:0}
+                style: { width: "40%" , border: 0, padding:0}
             },
             [
                 $el("table.comfy-modal-content.comfy-table", [
