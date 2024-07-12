@@ -1208,61 +1208,12 @@ if is_on_ec2:
             thread.start()
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Pending to release workflow, "
-                                                                            "it's may take a few minutes"}))
+                                body=json.dumps({"result": True, "message": "Pending to release, it may take a few minutes"}))
         except Exception as e:
             logger.info(e)
             action_unlock()
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'Release workflow failed'}))
-
-    # @server.PromptServer.instance.routes.post("/workflows")
-    # async def release_workflow(request):
-    #     if is_action_lock():
-    #         return web.Response(status=200, content_type='application/json',
-    #                             body=json.dumps(
-    #                                 {"result": False, "message": "action is not allowed during workflow release/restore"}))
-    #
-    #     if not is_master_process:
-    #         return web.Response(status=200, content_type='application/json',
-    #                             body=json.dumps({"result": False, "message": "only master can release workflow"}))
-    #
-    #     logger.info(f"start to release workflow {request}")
-    #     try:
-    #         json_data = await request.json()
-    #         if 'name' not in json_data or not json_data['name']:
-    #             return web.Response(status=200, content_type='application/json',
-    #                                 body=json.dumps({"result": False, "message": f"name is required"}))
-    #
-    #         workflow_name = json_data['name']
-    #         if workflow_name == 'default' or workflow_name == 'local':
-    #             return web.Response(status=200, content_type='application/json',
-    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} is not allowed"}))
-    #
-    #         if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', workflow_name):
-    #             return web.Response(status=200, content_type='application/json',
-    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} is invalid name"}))
-    #
-    #         payload_json = ''
-    #
-    #         if 'payload_json' in json_data:
-    #             payload_json = json_data['payload_json']
-    #
-    #         if check_workflow_exists(workflow_name):
-    #             return web.Response(status=200, content_type='application/json',
-    #                                 body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
-    #
-    #         thread = threading.Thread(target=async_release_workflow, args=(workflow_name, payload_json))
-    #         thread.start()
-    #
-    #         return web.Response(status=200, content_type='application/json',
-    #                             body=json.dumps({"result": True, "message": "Pending to release workflow, "
-    #                                                                         "it's may take a few minutes"}))
-    #     except Exception as e:
-    #         logger.info(e)
-    #         action_unlock()
-    #         return web.Response(status=500, content_type='application/json',
-    #                             body=json.dumps({"result": False, "message": 'Release workflow failed'}))
+                                body=json.dumps({"result": False, "message": 'Release workflow failed.'}))
 
     @server.PromptServer.instance.routes.delete("/workflows")
     async def delete_workflow(request):
@@ -1289,7 +1240,7 @@ if is_on_ec2:
 
             if os.getenv('WORKFLOW_NAME') == name:
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "can not delete current workflow"}))
+                                    body=json.dumps({"result": False, "message": "Cannot delete current workflow."}))
 
             i = 0
             start_n = 10000
@@ -1304,8 +1255,7 @@ if is_on_ec2:
                         if content == name:
                             return web.Response(status=200, content_type='application/json',
                                                 body=json.dumps({"result": False,
-                                                                 "message": f"can not delete workflow "
-                                                                            f"because it is in use by {port}"}))
+                                                                 "message": f"Cannot delete workflow, it is in use by port {port}."}))
 
             data = {
                 "workflow_name_list": [name],
@@ -1331,12 +1281,12 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during workflow release/restore"}))
+                                    {"result": False, "message": "Switch is not allowed during workflow release/restore"}))
 
         if os.path.exists("/container/s5cmd_lock"):
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during other's switch, "
+                                    {"result": False, "message": "Switch is not allowed during other's switch, "
                                                                  "please try again later"}))
 
         try:
@@ -1348,12 +1298,11 @@ if is_on_ec2:
 
             if workflow_name == os.getenv('WORKFLOW_NAME'):
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "workflow is already in use"}))
+                                    body=json.dumps({"result": False, "message": "Workflow is already in use"}))
 
             if workflow_name == 'default' and not is_master_process:
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "slave can not use default workflow "
-                                                                                 "after initial"}))
+                                    body=json.dumps({"result": False, "message": "Slave cannot use default after initial"}))
 
             if workflow_name != 'default':
                 if not check_workflow_exists(workflow_name):
@@ -1370,8 +1319,7 @@ if is_on_ec2:
             thread = threading.Thread(target=kill_after_seconds)
             thread.start()
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Comfy will be switch in 2 seconds, "
-                                                                            "it's may take a few minutes"}))
+                                body=json.dumps({"result": True, "message": "Comfy workflow will switch in 2 seconds, it may take a few minutes."}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
@@ -1659,8 +1607,7 @@ if is_on_ec2:
         thread = threading.Thread(target=restore_workflow)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "Comfy will be start restore in 2 seconds, "
-                                                                        "it's may take a few minutes"}))
+                            body=json.dumps({"result": True, "message": "Comfy will be restored in 2 seconds,it may take a few minutes"}))
 
 if is_on_sagemaker:
 
