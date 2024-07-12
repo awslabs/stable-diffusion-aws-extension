@@ -1095,8 +1095,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Environment Name", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Environment Name", style: { border: "0", width: "25%" } }),
+                            $el("td", {style: { width: "75%" } },[
                                 $el("input", {
                                     type: "text",
                                     id: "release-input-field",
@@ -1113,8 +1113,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                     $el(
                         "tr",
                         [
-                            $el("th", { textContent: "Instance Type", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Instance Type", style: { border: "0", width: "25%"  } }),
+                            $el("td", {style: { width: "75%" } }, [
                                 $el("select", {
                                     id: "select-instance-field",
                                     style: { width: "100%", border: "0" },
@@ -1138,8 +1138,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     $el("option", { value: "ml.g6.48xlarge", textContent: "ml.g6.48xlarge" }),
                                 ])
                             ]),
-                            $el("th", { textContent: "Auto-Scale", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Auto-Scale", style: { border: "0", width: "25%"  } }),
+                            $el("td", {style: { width: "75%" } }, [
                                 $el("select", {
                                     id: "select-scale-field",
                                     style: { width: "100%", border: "0" },
@@ -1153,8 +1153,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     $el("option", { value: false, textContent: "false" }),
                                 ])
                             ]),
-                            $el("th", { textContent: "Init Count", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Init Count", style: { border: "0" , width: "25%" } }),
+                            $el("td", {style: { width: "75%" } }, [
                                 $el("input", {
                                     type: "text",
                                     id: "init-count-input-field",
@@ -1171,8 +1171,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                             hidden: true
                         },
                         [
-                            $el("th", { textContent: "Min-count", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Min-count", style: { border: "0" , width: "25%" } }),
+                            $el("td", {style: { width: "75%" } }, [
                                 $el("input", {
                                     type: "text",
                                     id: "min-input-field",
@@ -1180,8 +1180,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     value: "",
                                 })
                             ]),
-                            $el("th", { textContent: "Max-Count", style: { border: "0" } }),
-                            $el("td", [
+                            $el("th", { textContent: "Max-Count", style: { border: "0" , width: "25%" } }),
+                            $el("td", {style: { width: "75%" } }, [
                                 $el("input", {
                                     type: "text",
                                     id: "max-input-field",
