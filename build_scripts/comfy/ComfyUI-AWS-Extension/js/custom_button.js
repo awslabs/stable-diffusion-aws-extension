@@ -273,9 +273,9 @@ function createTemplateList() {
     title.textContent = 'Template List';
     title.style.fontSize = '14px';
     title.style.fontWeight = 'bold';
-    title.style.color = '#b0b0b0';
+    title.style.color = '#333';
     title.style.marginBottom = '0px';
-    title.style.backgroundColor = '#f0f0f0';
+    title.style.backgroundColor = '#b0b0b0';
     title.style.borderRadius = '4px';
     outerContainer.appendChild(title);
 
