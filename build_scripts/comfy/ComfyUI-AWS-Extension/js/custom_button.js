@@ -271,10 +271,13 @@ function createTemplateList() {
 
     const title = document.createElement('div');
     title.textContent = 'Template List';
-    title.style.fontSize = '10px';
+    title.style.fontSize = '14px';
     title.style.fontWeight = 'bold';
     title.style.color = '#333';
     title.style.marginBottom = '8px';
+    title.style.padding = '4px 8px';
+    title.style.backgroundColor = '#f0f0f0';
+    title.style.borderRadius = '4px';
     outerContainer.appendChild(title);
 
     const toolbarContainer = createTemplateToolbar();
