@@ -271,7 +271,7 @@ function createTemplateList() {
 
     const title = document.createElement('div');
     title.textContent = 'Template List';
-    title.style.fontSize = '18px';
+    title.style.fontSize = '10px';
     title.style.fontWeight = 'bold';
     title.style.color = '#333';
     title.style.marginBottom = '8px';
