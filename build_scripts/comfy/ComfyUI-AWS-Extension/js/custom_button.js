@@ -1160,7 +1160,8 @@ export class ModalEndpointReleaseDialog extends ComfyDialog {
                                     id: "init-count-input-field",
                                     style: { width: "100%", border: "0" },
                                     value: "",
-                                })
+                                }),
+                                $el("div", { style: { flex: "1" } })
                             ]),
                         ]
                     ),
