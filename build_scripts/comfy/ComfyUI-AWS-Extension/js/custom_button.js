@@ -269,6 +269,14 @@ function createTemplateList() {
     outerContainer.style.marginLeft = '8px';
     outerContainer.style.width = '90%';
 
+    const title = document.createElement('div');
+    title.textContent = 'Template List';
+    title.style.fontSize = '18px';
+    title.style.fontWeight = 'bold';
+    title.style.color = '#333';
+    title.style.marginBottom = '8px';
+    outerContainer.appendChild(title);
+
     const toolbarContainer = createTemplateToolbar();
 
     container = document.createElement('div');
@@ -331,16 +339,16 @@ function createTemplateToolbar() {
     toolbarContainer.style.top = '0';
     toolbarContainer.style.zIndex = '1';
     if (isMaster) {
-        toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateTemplateButton, 'Create New Template', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('&#10010;', handleCreateTemplateButton, 'Create', isMaster));
     }
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadTemplateButton, 'Reload Template', true));
+    toolbarContainer.appendChild(createToolbarButton('&#8635;', handleLoadTemplateButton, 'Refresh', true));
     toolbarContainer.appendChild(createButtonSeparator());
-    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeTemplateButton, 'Change Template', true));
+    toolbarContainer.appendChild(createToolbarButton('&#10003;', handleChangeTemplateButton, 'Confirm to Switch', true));
     toolbarContainer.appendChild(createButtonSeparator());
     if (isMaster) {
-        toolbarContainer.appendChild(createToolbarButton('✎', handleEditTemplateButton, 'Edit Template', isMaster));
-        toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteTemplateButton, 'Remove Template', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('✎', handleEditTemplateButton, 'Edit', isMaster));
+        toolbarContainer.appendChild(createToolbarButton('&#10005;', handleDeleteTemplateButton, 'Delete', isMaster));
     }
 
     return toolbarContainer;
@@ -1346,7 +1354,7 @@ export class ModalTemplateDialog extends ComfyDialog{
                                     value: "",
                                 })
                             ]),
-                            $el("th", { textContent: "Workflow Name", style: { border: "0" } }),
+                            $el("th", { textContent: "Environment Name", style: { border: "0" } }),
                             $el("td", [
                                 $el("select", {
                                     id: "select-workflow_field",
