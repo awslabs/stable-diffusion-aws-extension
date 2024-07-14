@@ -23,19 +23,21 @@ nav:
     - Deploy the solution:
         - Permissions: deployment/permissions.md
         - AWS CloudFormation template: deployment/template.md
-        - Deployment step: deployment/deployment.md
-        - Deployment step from existing resource: deployment/deployment_for_existing_users.md
+        - Deploy for SD webUI: deployment/deployment.md
+        - Deploy for ComfyUI: deployment/deployment_comfyui.md
+        - Update SD webUI: deployment/deployment_for_existing_users.md
     #- Update the solution: update.md
     - Uninstall the solution: uninstall.md
     - Use the solution:
-        - Preparation: user-guide/preparation.md
-        - Configure API and Users Management: user-guide/multi-user.md
-        - Cloud Assets Management: user-guide/CloudAssetsManage.md
-        - txt2img guide: user-guide/txt2img-guide.md
-        - img2img guide: user-guide/img2img-guide.md
-        - controlNet guide: user-guide/controlnet-guide.md
-        - Training guide: user-guide/training-guide.md
-        - Other Extensions guide: user-guide/extensions-guide.md
+        - Kohya Training guide: user-guide/training-guide.md
+        - SD webUI guide: 
+            - Configure API and Users Management: user-guide/webUI/multi-user.md
+            - Cloud Assets Management: user-guide/webUI/CloudAssetsManage.md
+            - txt2img guide: user-guide/webUI/txt2img-guide.md
+            - img2img guide: user-guide/webUI/img2img-guide.md
+            - controlNet guide: user-guide/webUI/controlnet-guide.md
+            - Other Extensions guide: user-guide/webUI/extensions-guide.md
+        - ComfyUI guide: user-guide/ComfyUI/inference.md
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md

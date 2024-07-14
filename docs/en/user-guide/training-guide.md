@@ -7,7 +7,7 @@ The training is based on [Kohya-SS](https://github.com/kohya-ss/sd-scripts). Koh
 ![Kohya Training](../images/Kohya_training.png)
 
 ### Prepare Foundation Model
-Please refresh and check the dropdown list under **Model** to ensure that the required base models for this training session are available. If not, you can use the **Upload Models** in [Cloud Asset Management](./CloudAssetsManage.md) to upload the base models under the *SD Checkpoints* category.
+Please refresh and check the dropdown list under **Model** to ensure that the required base models for this training session are available. If not, you can use the **Upload Models** in [Cloud Asset Management](./webUI/CloudAssetsManage.md) to upload the base models under the *SD Checkpoints* category.
 
 Alternatively, you can also upload local SD models to an S3 bucket using the following command:
 
@@ -26,7 +26,7 @@ Taking the example of training a LoRa model containing specific image style, use
 
 After preprocessing, it is necessary to annotate the images in  dataset, that is, add textual descriptions to each training image and save them as text files with the same name as the corresponding images. Image annotation can be complete through the built-in image annotation function in the SD WebUI or through multi-modal large models. The annotations made by the model may not be perfect, so manual review and adjustments are recommended to ensure the final effect.
 
-Please refer **Dataset Management** in [Cloud Asset Management](./CloudAssetsManage.md) to upload dataset to cloud.
+Please refer **Dataset Management** in [Cloud Asset Management](./webUI/CloudAssetsManage.md) to upload dataset to cloud.
 
 In addition, user could also upload dataset by execute AWS CLI command to copy the dataset to S3 bucket
 ```
@@ -41,7 +41,7 @@ After the base model and dataset have been uploaded successfully, please follow 
 2. Update the training parameters in **config_params**, and click **Format config Params** to check and correct updated params file format.
 3. Click **Create Training Job** to submit training job.
 4. Refresh **Trainings List** to follow status of training job.
-5. The successfully trained LoRa model can be selected directly in **txt2img** or **img2img**, and used in image generation. More details refer to [txt2img guide](./txt2img-guide.md) or [img2img guide](./img2img-guide.md).
+5. The successfully trained LoRa model can be selected directly in **txt2img** or **img2img**, and used in image generation. More details refer to [txt2img guide](./webUI/txt2img-guide.md) or [img2img guide](./webUI/img2img-guide.md).
 
 ### Train Loss Visualization
 On the **Train Management** tab, all the finished training job will be listed in the **Training List**, click the training id and the logs will show the below referred to the following figure. 

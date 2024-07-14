@@ -1,7 +1,12 @@
 ## 主要功能
 
-本解决方案支持以下 Stable Diffusion WebUI 的原生功能/第三方插件的云上工作：
+| **开源主项目**  | **支持版本** | **贴士**|
+| ------------- | ------------- | ------------- |
+|Stable Diffusion WebUI| V 1.8.0| 默认支持的原生/第三方插件如下表 |
+|ComfyUI| 605e64f6d3da44235498bf9103d7aab1c95ef211| 需要支持云上推理的custom nodes，皆可通过本方案提供的模版发布功能，一键打包至云上。因此本方案无内置支持的custom node，用户可灵活选择安装并打包上传。|
+|Kohya_ss|V0.8.3|支持基于SD 1.5 & SDXL的LoRa模型训练|
 
+本方案支持以下 Stable Diffusion WebUI 的原生功能/第三方插件的云上工作。其他插件需求可以通过[BYOC（Bring Your Own Container）](../developer-guide/byoc.md)来支持。
 
 | **功能**             | **支持版本** |  **注释** |
 | ------------- | ------------- | ------------- |
