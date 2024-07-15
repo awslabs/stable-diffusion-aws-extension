@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.29">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.76a95c52.min.css">
       
       
 
@@ -475,27 +475,6 @@
             架构概览
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../architecture-overview/architecture/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    架构图
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -1605,19 +1584,53 @@
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">贴士</p>
-<pre><code>遇到部署问题时可以查看[faq](../faq.md)中ComfyUI相关部分。
+<pre><code>遇到部署问题时可以查看“常见问题解答”章节中ComfyUI相关部分。
 </code></pre>
 </div>
 <h2 id="_3">部署步骤</h2>
 <h3 id="1">步骤1: 部署解决方案中间件</h3>
 <p>此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。</p>
 <ol>
-<li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击链接<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/v1.6.0-cc5e0f3/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json" target="_blank">Extension-for-Stable-Diffusion-on-AWS-ComfyUI.template</a>。</li>
+<li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击链接<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json" target="_blank">Extension for Stable Diffusion on AWS</a>。</li>
 <li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
 <li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
-<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。</li>
-<li>在<strong>参数</strong>部分，在<strong>Bucket</strong>中填入一个有效的新的S3桶的名字（或之前部署的、用于本解决方案ComfyUI部分的S3桶名字）。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>SdExtensionApiKey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>LogLevel</strong>处选择您心仪的Lambda Log日志打印级别，默认ERROR才打印。点击<strong>下一步</strong>。</li>
-<li>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</li>
+<li>
+<p>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。部署参数参考下表。点击<strong>下一步</strong>。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">说明</th>
+<th style="text-align: left;">建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Bucket</td>
+<td style="text-align: left;">填入一个有效的新的S3桶的名字（或之前部署的、用于本解决方案ComfyUI部分的S3桶名字）</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">email</td>
+<td style="text-align: left;">输入一个正确的电子邮件地址，以便接收将来的通知</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">SdExtensionApiKey</td>
+<td style="text-align: left;">请输入一个包含数字和字母组合的20个字符的字符串</td>
+<td style="text-align: left;">默认为"09876543210987654321"</td>
+</tr>
+<tr>
+<td style="text-align: left;">LogLevel</td>
+<td style="text-align: left;">择您心仪的Lambda Log日志打印级别</td>
+<td style="text-align: left;">默认ERROR才打印</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</p>
+</li>
 <li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
 <li>
 <p>您可以在 AWS CloudFormation 控制台的 <strong>状态</strong> 列中查看堆栈的状态。您应该会在大约 15 分钟内收到<strong>CREATE_COMPLETE</strong>状态。</p>
@@ -1628,17 +1641,47 @@
 </li>
 </ol>
 <h3 id="2-comfyui">步骤2: 部署ComfyUI前端</h3>
-<p>步骤3将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。</p>
+<p>步骤2将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署。</p>
 <ol>
-<li>点击<a href="https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml" target="_blank">链接</a>来下载ComfyUI前端部署的yaml文件。或复制此链接，亦或者从步骤一的输出获取到对应部署ComfyUI前端的文件链接。</li>
 <li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击控制台右上角<strong>Create Stack</strong>, <strong>With new resource(standard)</strong>，页面跳转至创建堆栈。</li>
-<li>在<strong>创建堆栈</strong>页面上，选择<strong>Choose an existing template</strong>，在<strong>特定模版</strong>区域选择<strong>Upload a template file</strong>，从本地选择选择刚下载的yaml文件上传，或者是<strong>Amazon S3 URL</strong>，填入上述复制的链接，然后选择<strong>下一步</strong>。</li>
+<li>在<strong>创建堆栈</strong>页面上，选择<strong>Choose an existing template</strong>，在<strong>特定模版</strong>区域选择<strong>Amazon S3 URLe</strong>，填入该<a href="https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml">部署模版链接</a>，然后选择<strong>下一步</strong>。</li>
 <li>
-<p>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，<strong>InstanceType</strong>为选择部署的ec2的实例类型、<strong>NumberOfInferencePorts</strong>为推理环境数量（建议不超过5个）<strong>StackName</strong>来自于部署步骤第一大部分中成功部署堆栈的名称。<strong>keyPairName</strong>选择现有的一个EC2 Key Pair，点击<strong>Next</strong>。</p>
+<p>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，部署参数说明如下。点击<strong>Next</strong>。</p>
 <div class="admonition tip">
 <p class="admonition-title">贴士</p>
 <p>此处的EC2 Key Pair主要用于本地远程连接EC2。如果没有现有的，可以参考<a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html" target="_blank">官方手册</a>来创建。</p>
 </div>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">说明</th>
+<th style="text-align: left;">建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">InstanceType</td>
+<td style="text-align: left;">部署的ec2的实例类型</td>
+<td style="text-align: left;">如果是涉及推理动图、视频等，建议G6、G5机器</td>
+</tr>
+<tr>
+<td style="text-align: left;">NumberOfInferencePorts</td>
+<td style="text-align: left;">推理环境数量</td>
+<td style="text-align: left;">建议不超过5个</td>
+</tr>
+<tr>
+<td style="text-align: left;">StackName</td>
+<td style="text-align: left;">来自于部署步骤1中成功部署堆栈的名称</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;">keyPairName</td>
+<td style="text-align: left;">选择现有的一个EC2 Key Pair</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
 </li>
 <li>
 <p>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</p>
@@ -1646,7 +1689,28 @@
 <li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
 <li>您可以在 AWS CloudFormation 控制台的 <strong>状态</strong> 列中查看堆栈的状态。您应该会在大约 3 分钟内收到<strong>CREATE_COMPLETE</strong>状态。</li>
 <li>
-<p>选择部署成功的堆栈，打开<strong>Outputs</strong>，点击<strong>Designer</strong>对应的链接，即可打开解决方案部署的ComfyUI前端，Designer的访问可能需要关闭VPN或者去掉10000端口后访问。<strong>NumberOfInferencePortsStart</strong>代表推理环境地址起始路径端口，按照部署数量端口地址依次增加，例如：当NumberOfInferencePorts填写3时，地址范围时，可访问的推理环境地址依次为：http://EC2地址:10001，http://EC2地址:10002，http://EC2地址:10003</p>
+<p>选择部署成功的堆栈，打开<strong>Outputs</strong>，点击<strong>Designer</strong>对应的链接，即可打开解决方案部署的ComfyUI前端，Designer的访问可能需要关闭VPN或者去掉10000端口后访问。<strong>NumberOfInferencePortsStart</strong>代表推理环境地址起始路径端口，按照部署数量端口地址依次增加，例如：当NumberOfInferencePorts填写2时，地址范围时，可访问的推理环境地址依次为：http://EC2地址:10001，http://EC2地址:10002.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">角色</th>
+<th style="text-align: left;">功能</th>
+<th style="text-align: left;">端口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">主美/工作流管理</td>
+<td style="text-align: left;">能够安装新的custom nodes，在EC2上调试工作流，发布工作流、环境至Amazon SageMaker。同时可以调用SageMaker资源、选中已发布的工作流进行推理验证</td>
+<td style="text-align: left;">http://EC2地址</td>
+</tr>
+<tr>
+<td style="text-align: left;">普通美术</td>
+<td style="text-align: left;">从该端口进入的界面，可以选择主美已发布的工作流，简单修改推理参数后，勾选“Prompt on AWS”后、调用Amazon SageMaker进行推理</td>
+<td style="text-align: left;">当NumberOfInferencePorts填写3时，地址范围时，可访问的推理环境地址依次为：<ul><li>http://EC2地址:10001 </li><li>http://EC2地址:10002 </li><li>http://EC2地址:10003</li></ul></td>
+</tr>
+</tbody>
+</table>
 <div class="admonition tip">
 <p class="admonition-title">贴士</p>
 <p>刚部署好贴士以后，需要稍作等待。如果打开链接后，看到提示“Comfy is Initializing or Starting”，表示后端在初始化ComfyUI过程中，请稍作等待，再次刷新页面确认。</p>

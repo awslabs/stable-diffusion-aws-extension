@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.29">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.76a95c52.min.css">
       
       
 
@@ -531,27 +531,6 @@
             架构概览
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../architecture-overview/architecture/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    架构图
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -1491,7 +1470,33 @@
   <h1>功能和优势</h1>
 
 <h2 id="_1">主要功能</h2>
-<p>本解决方案支持以下 Stable Diffusion WebUI 的原生功能/第三方插件的云上工作：</p>
+<table>
+<thead>
+<tr>
+<th><strong>开源主项目</strong></th>
+<th><strong>支持版本</strong></th>
+<th><strong>贴士</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stable Diffusion WebUI</td>
+<td>V 1.8.0</td>
+<td>默认支持的原生/第三方插件如下表</td>
+</tr>
+<tr>
+<td>ComfyUI</td>
+<td>605e64f6d3da44235498bf9103d7aab1c95ef211</td>
+<td>需要支持云上推理的custom nodes，皆可通过本方案提供的模版发布功能，一键打包至云上。因此本方案无内置支持的custom node，用户可灵活选择安装并打包上传。</td>
+</tr>
+<tr>
+<td>Kohya_ss</td>
+<td>V0.8.3</td>
+<td>支持基于SD 1.5 &amp; SDXL的LoRa模型训练</td>
+</tr>
+</tbody>
+</table>
+<p>本方案支持以下 Stable Diffusion WebUI 的原生功能/第三方插件的云上工作。其他插件需求可以通过<a href="../../developer-guide/byoc/">BYOC（Bring Your Own Container）</a>来支持。</p>
 <table>
 <thead>
 <tr>
