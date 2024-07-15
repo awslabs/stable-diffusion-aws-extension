@@ -1,34 +1,29 @@
-在部署解决方案之前，建议您先查看本指南中有关架构图和区域支持等信息。然后按照下面的说明配置解决方案并将其部署到您的帐户中。
+Before deploying the solution, it is recommended that you first review information in this guide regarding architecture diagrams and regional support. Then, follow the instructions below to configure the solution and deploy it to your account.
 
-部署时间：约 20 分钟
+Deployment time: arount 20 minutes.
 
-## 前提条件
+## Deployment Summary
+Deploying this solution (ComfyUI portion) on Amazon Web Services primarily involves the following processes:
 
+- Step 1: Deploy the middleware of the solution.
+- Step 2: Deploy ComfyUI frontend.
 
-## 部署概述
-在亚马逊云科技上部署本解决方案（ComfyUI部分）主要包括以下过程：
+!!! tip 
+        You can refer to the ComfyUI section in the FAQ chapter if you encounter deployment issues.
 
-- 步骤1：部署本解决方案中间件。
-- 步骤2：部署ComfyUI前端。
-- 步骤3: 在ComfyUI页面调试并创建一个可用的工作流。
-- 步骤4：根据创建的工作流部署新的Amazon SageMaker推理节点。
+## Deployment Steps
+### Step 1: Deploy the middleware of the solution
+This automated Amazon CloudFormation template deploys the solution in Amazon Web Services.
 
-!!! tip "贴士" 
-        遇到部署问题时可以查看“常见问题解答”章节中ComfyUI相关部分。
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/)，and use [Extension for Stable Diffusion on AWS](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json){:target="_blank"} to create the stack.
+2. By default, this template will launch in the default region after you log in to the console. To launch this solution in a specified Amazon Web Services region, please select the desired region from the region drop-down list in the console's navigation bar.
+3. On the **Create Stack** page，confirm that the correct template URL has been entered in the **Amazon S3 URL** text box, then select **Next**.
+4. On the **Specify stack details** page, assign a unique name within your account that meets the naming requirements for your solution stack. Refer to the table below for deployment parameters. Click **Next**.
 
-## 部署步骤
-### 步骤1: 部署解决方案中间件
-此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
-
-1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击链接[Extension for Stable Diffusion on AWS](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json){:target="_blank"}。
-2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
-3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
-4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。部署参数参考下表。点击**下一步**。
-
-    |参数|说明|建议|
+    |Parameter|Description|Recommendation|
     |:-------------|:--------------|:--------------|
-    |Bucket|填入一个有效的新的S3桶的名字（或之前部署的、用于本解决方案ComfyUI部分的S3桶名字）||
-    |email|输入一个正确的电子邮件地址，以便接收将来的通知||
+    |Bucket|Enter a valid new S3 bucket name (or the name of a previously deployed S3 bucket used for the ComfyUI section of this solution)||
+    |email|Enter a valid email address for further notification receivement||
     |SdExtensionApiKey|请输入一个包含数字和字母组合的20个字符的字符串|默认为"09876543210987654321"|
     |LogLevel|择您心仪的Lambda Log日志打印级别|默认ERROR才打印|
 
@@ -70,54 +65,57 @@
     !!! tip "贴士"
         刚部署好贴士以后，需要稍作等待。如果打开链接后，看到提示“Comfy is Initializing or Starting”，表示后端在初始化ComfyUI过程中，请稍作等待，再次刷新页面确认。
 
-### 步骤3: 在ComfyUI页面调试并创建一个可用的工作流。
+### Step3: 在ComfyUI页面调试并创建一个可用的工作流。
 可以参考[这里](../user-guide/ComfyUI/inference.md)中的“工作流的调试”子章节部分
 
-### 步骤4: 部署新的Amazon SageMaker推理节点
-在步骤1成功完成后，需要通过API方式部署所需的Amazon SageMaker推理节点。后续的新发布的ComfyUI工作流推理都将使用该推理节点的计算资源。
+### Step 4: Deploy new Amazon SageMaker inference endpoint
+After successfully completing step 1, you need to deploy the required Amazon SageMaker inference nodes using API. Subsequent deployments of new ComfyUI workflow inferences will utilize the computational resources of these inference nodes.
 
-以下API代码中所需的ApiGatewayUrl及ApiGatewayUrlToken，可以在步骤1部署成功的堆栈**Outputs**标签页找到。
+The `ApiGatewayUrl` and `ApiGatewayUrlToken` required in the following API code can be found in the **Outputs** tab of the stack deployed successfully in step 1.
 
-请打开任何可以运行代码的窗口，比如本地Macbook电脑的Terminal，运行如下API代码。
+Please open any command-line interface capable of running code, such as Terminal on a local MacBook, and execute the following API code.
 
 ```
-curl --location 'api地址/endpoints' \
---header 'x-api-key: 此处填写您的apikey' \
---header 'username: api' \
---header 'Content-Type: application/json' \
---data-raw '{
-    “workflow_name”:“此处填写您创建的workflow名称“,
-    “endpoint_name”: “当无需关联workflow时需要填写您要创建的推理端点名字",
+curl --location ‘YourAPIURL/endpoints’ \
+--header ‘x-api-key: Your APIkey’ \
+--header ‘username: api’ \
+--header ‘Content-Type: application/json’ \
+--data-raw ‘{
+    “workflow_name”:“Please fill the name of template you just released“,
+    “endpoint_name”: “When you don't need to associate it with a workflow, you should fill in the name of the inference endpoint you want to create",
     “service_type”: “comfy”,
     “endpoint_type”: “Async”,
-    “instance_type”: “实例类型.ml.xxx”,
+    “instance_type”: “instance type”,
     “initial_instance_count”: 1,
     “min_instance_number”: 1,
     “max_instance_number”: 2,
     “autoscaling_enabled”: true,
+    “assign_to_roles”: “test”
     “assign_to_roles”: [ “test” ]
-}'
+}’
 ```
 
-!!! Important "注意" 
-    如果是相对复杂的workflow 注意选择异步推理节点类型，否则受限于service最长等待30s，会出现调用推理超时的情况。
+!!! Important 
+    If your workflow is relatively complex, it's important to select asynchronous inference node types. Otherwise, you may encounter timeout issues due to the service's maximum wait time of 30 seconds for synchronous calls.
 
 
-后续如需要删除Amazon SageMaker推理节点，可通过以下API完成。
+
+Delete corresponding Amazon SageMaker endpoint, can be executed as below:
 ```
-curl --location --request DELETE 'https://此处填ApiGatewayUrl地址/endpoints' \
+curl --location --request DELETE 'https://please fill ApiGatewayUrl/endpoints' \
 --header 'username: api' \
---header 'x-api-key: 此处填ApiGatewayUrlToken' \
+--header 'x-api-key: please type the ApiGatewayUrlToken' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "endpoint_name_list": [
-        "comfy-real-time-test-34"//填要删除的endpoint名字
+        "comfy-real-time-test-34"//type the name of the endpoint
     ]
 }'
 ```
 
-!!! Important "注意" 
-    不建议直接进去SageMaker console直接删除endpoint，容易造成数据不一致的隐患。
+!!! Important
+    It's not recommended to directly delete endpoints from the SageMaker console as it can potentially lead to inconsistencies in data.
+
 
 
 

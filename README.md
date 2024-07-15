@@ -1,114 +1,67 @@
-# Extension for Stable Diffusion on AWS
-This is a WebUI extension to help users migrate existing workload (inference, train, ckpt merge, etc.) from local server or standalone server to AWS Cloud.
+<h1 align="center">
+  Extension for Stable Diffusion on AWS
+</h1>
+<h4 align="center">Extension for Stable Diffusion on AWS: Unlock the Power of image and video generation in the Cloud with Ease and Speed</h4>
+<div align="center">
+  <h4>
+    <a href="https://github.com/awslabs/stable-diffusion-aws-extension/commits/main/stargazers"><img src="https://img.shields.io/github/stars/awslabs/stable-diffusion-aws-extension.svg?style=plasticr"></a>
+    <a href="https://opensource.org/license/apache-2-0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellow.svg"></a>
+  </h4>
+</div>
 
-## How to get started:
 
-### **Part1**: Install the stable-diffusion-webui and extension
-If you have not installed the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
+This is a webUI extension to help users migrate existing workload (inference, train, etc.) from local server or standalone server to AWS Cloud. Key features include:
+* Support Stable Diffusion webUI inference along with other extensions through BYOC (bring your own containers) in the cloud.
+* Support LoRa model training through Kohya_ss in the cloud.
+* Support ComfyUI inference along with other extensions in the cloud. This supports users in conveniently releasing templates that require stable, continuous inference to the cloud. Additionally, users can make simple modifications (e.g., prompt adjustments) to the released templates on the cloud and maintain stable inference.
 
-### **Part2**: Install Middleware On AWS Cloud
-#### **Option 1**: Use AWS Cloudformation Template
-1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SdWebUiMidWare&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) to install CloudFormation template directly, input the parameter accordingly, note the `Bucket` is the bucket to store all your solution assets, `Email` is the mail address you register to receive notification for events like model training complete, the `SdExtensionApiKey` is the basic authentication for your api url connection:
 
-<img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
-For users who need explicit IAM permissions for strict account control, we provide [CloudFormation template](https://github.com/awslabs/stable-diffusion-aws-extension/blob/dev/workshop/middleware-min-role.yaml) to help system administrators create IAM roles with minimal permissions, user can create & delete middleware CloudFormation templates through newly such created roles.
+## Table of Contents
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Version](#version)
+- [License](#license)
 
-**Create new minimum role first, e.g. sd-min-role.**
-![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/148841f6-8fad-4166-8f02-8a306b177459)
 
-**Specify such role in Cloudformation creation.**
-![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/3121c876-79d4-48a2-8260-be80c480b893)
+## Architecture
+The diagram below presents the architecture you can automatically deploy using the solution's implementation guide and accompanying Amazon CloudFormation template.
+![architecture](./docs/zh/images/middleware.png)
 
->**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in another region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
+1. Users in WebUI console will trigger the requests to API Gateway with assigned API token for authentication. Note that no Amazon Web Services credentials are required from WebUI perspective.
 
-#### **Option 2**: Use AWS CDK(Cloud Development Kit)
-**Prerequisites**
-To set up the development environment, you will need to have AWS account and tools with a preferred version below to install from source code:
-- NPM, Node
-- [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
-- Docker
+2. Amazon API Gateway will route the requests based on URL prefix to different functional Lambda to implement util jobs (for example, model upload, checkpoint merge), model training and model inferencing. In the meantime, Amazon Lambda will record the operation metadata into Amazon DynamoDB (for example, inferencing parameters, model name) for successive query and association.
 
-1. Deploy the project to your AWS account (make sure your current profile has Administrator access, with AWS CDK, Docker installed):
+3. For training process, the Amazon Step Functions will be invoked to orchestrate the training process including Amazon SageMaker for training and SNS for training status notification.
+For inference process, Amazon Lambda will invoke the Amazon SageMaker to implement async inference. Training data, model and checkpoint will be stored in Amazon S3 bucket delimited with difference prefix.
 
-   ```bash
-   aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-   cd infrastructure/
-   npm install
-   npx cdk bootstrap
-   npx cdk deploy
-   ```
-   You can specify the following three parameters:
-   * **sub-email-address**: your subscribe email to receive notification, the email will get endpoint deployment error
-   * **api-token: your token** of api key for api authentication
-   * **util-instance-type**: c2 instance type for operations including ckpt merge, model create etc. Candidate is [**ml.r5.large, ml.r5.xlarge, ml.c6i.2xlarge, ml.c6i.4xlarge,ml.r5.large**]
-   ```
-   npx cdk deploy --parameters api-token=<XXXXXXX>\
-   --parameters sub-email-address=<YOUREMAIL@XXX.COM>\
-   --parameters util-instance-type=<ml.r5.large | ml.r5.xlarge| ml.c6i.2xlarge | ml.c6i.4xlarge | ml.r5.large>
-   ```
-   The project build and deployment will take about 25 minutes, and the first time can be longer due to container image packaging. Once the project is deployed successfully to your AWS account, you will see output similar below:
 
-   ```text
-     Stable-diffusion-aws-extension-middleware-stack: creating CloudFormation changeset...
+## Quick Start
 
-     ✅  Stable-diffusion-aws-extension-middleware-stack
-    
-     ✨  Deployment time: 218.39s
-    
-     Outputs:
-     Stable-diffusion-aws-extension-middleware-stack.ApiGatewayUrl = {API_GATEWAY_URL}          // this url will needed later 
-     Stable-diffusion-aws-extension-middleware-stack.S3BucketName = {YOUR_S3_BUCKET_LOCATION}
-     Stable-diffusion-aws-extension-middleware-stack.SNSTopicName = {SNS_TOPIC}
-     Stack ARN:
-     arn:aws:cloudformation:us-east-1:{ACCOUNT_NUMBER}:stack/Stable-diffusion-aws-extension-middleware-stack/{ARN}
-   ```
-5. Go to AWS CloudFormation console, find the stack you just created, click "Outputs" tab, you will see the API Gateway URL, API Token. You will need them later.
-![Screen Shot 2023-05-28 at 20 35 11](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/743312ea-2cc8-4a2b-bfb8-dcb60cb8862e)
+There are 3 key features that the extension supports. There are 2 branches of deployment method, depending on the key feature that you'd like to deploy. 
 
-## Set up the extension in WebUI console
+* If you'd like to adopt SD webUI or Kohya in the cloud, please follow the instruction [here](./docs/zh/deployment/deployment.md). 
+* If you'd like to adopt ComfyUI in the cloud, please follow the instruction [here](./docs/zh/deployment/deployment_comfyui.md).
 
-1. Go back the WebUI console, and choose "AWS SageMaker" tab, enter the API Gateway URL and API token you just got from CloudFormation/CDK output, click "Update Setting" and "Test Connection" button to make sure the connection is successful. Or you can create new file called ```sagemaker_ui.json``` for the same purpose, the file should be placed under stable diffusion root folder and the content should be like below:
-   
-   ```json
-   {
-    "api_gateway_url": "{API_GATEWAY_URL}", 
-    "api_token": "{API_GATEWAY_KEY}"  
-   }
 
-   ```
 
-Please refer to [**user guide**](https://awslabs.github.io/stable-diffusion-aws-extension/zh/user-guide/preparation/) for following detailed operations.
+## API Reference
+To provide developers with a more convenient experience for invoking and debugging APIs, we offer a feature [API debugger](./docs/en/developer-guide/api_debugger.md). With this tool, you can view the complete set of APIs and corresponding parameters for cloud-based inference images with a single click.
 
-## Why we build such an extension
-Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2img/img2img model. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
-Some user existing workflow is shown below that the data scientists had to jump from customized WebUI, EC2 and manual scripts to accomplished a single model finetune process, which are:
-* time-consuming: the model training is executed on a standalone server that leading long training time (30-40 minutes per model) and no scalable workaround;
-* error prone: data training, model (CKPT) packaging, endpoint deployment, UI update, result validation are not in a single panel;
-* easily out-dated: functional feature of WebUI and community extension keep evolving, making existing customized WebUI laborious to sync with upstream community;
+1. Click the button to refresh the inference history job list
+2. Pull down the inference job list, find and select the job
+3. Click the `API` button on the right
 
-![Screen Shot 2023-05-20 at 21 44 58](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/08109af4-84b0-4055-bf19-b9e8344dba75)
+![debugger](./docs/en/images/api_debugger.png)
 
-Thus we plan to contribute a solution aiming to mitigate the above issue and provide a lite, decouple and user-friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
+The comprehensive APIs with sample can be found [here](./docs/en/developer-guide/api.md).
 
-## What is the user tutorial
-We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such an extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
-Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus, providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
-![UIProcess](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/3c6961d0-e1f9-4bee-b370-892978063781)
+## Version
+Check our [wiki](https://github.com/awslabs/stable-diffusion-aws-extension/wiki) for the latest & historical version
 
-## What is the overall architecture & workflow?
-Diagram below is the brief view of internal workflow between our extension and middleware, user will keep launching community WebUI onto standalone EC2/local server with our extension installed, while the training and inference part will be passed onto AWS cloud (SageMaker, S3 etc.) through the RESTful API provided by middleware installed on user’s AWS account. Note the middleware is per AWS account, means it could be installed separately as work node to communicate with WebUI as control node, user only need to input endpoint URL and API key per account to decide which specific AWS account will be used for successive jobs.
-
-![workflow](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/2781734c-d1fb-44c3-bc57-c0e78e128c4e)
-
-The major function of middleware is to provide RESTful API for WebUI extension to interact with AWS cloud resource (SageMaker, S3 etc.) with OpenAPI conformant schema, it will handling the request authentication, request dispatch to specific SageMaker/S3 API (SageMaker.jumpstart/model/predictor/estimator/tuner/utils etc.) and model lifecycle.
-Diagram below is the overall architecture of middleware, including API Gateway and Lambda to fulfill the RESTful API function and Step Function to orchestrate the model lifecycle.
-
-![middleware](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/8d871565-5792-4a7c-87c9-53fc66d96a5c)
-
-- Users in the WebUI console will use the assigned API token to trigger a request to API Gateway while being authenticated. (Note: AWS credentials are not required in AWS WebUI)
-- API Gateway will route requests to Lambda with different functions according to URL prefixes to implement corresponding tasks (for example, model uploading, checkpoint merging), model training, and model inference. At the same time, the Lambda function records operational metadata into DynamoDB (eg, inferred parameters, model name) for subsequent query and correlation.
-- During the training process, the Step Function will be called to orchestrate the training process, which includes using Amazon SageMaker for training and SNS for training status notification. During the inference process, the Lambda function will call Amazon SageMaker for asynchronous inference. Training data, models and checkpoints will be stored in S3 buckets separated by different prefixes.
+## License
+This project is licensed under the Apache-2.0 License.
 
 ### Source Code Structure
 
@@ -135,5 +88,4 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 └── utils.py -- wrapper function for configure options
 ```
 
-## Version
-Check our [wiki](https://github.com/awslabs/stable-diffusion-aws-extension/wiki) for the latest & historical version
+

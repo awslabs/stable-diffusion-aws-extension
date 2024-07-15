@@ -59,7 +59,7 @@ You can view the status of the stack in the AWS CloudFormation Console in the **
 
 
 ### Step2: Configure API url and API token.
-After successfully stack creation, you can refer to [here](../user-guide/multi-user.md) for subsequent configuration work.
+After successfully stack creation, you can refer to [here](../user-guide/webUI/multi-user.md) for subsequent configuration work.
 
 
 <!-- 1. Go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/).

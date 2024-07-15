@@ -31,7 +31,7 @@ creating a new role, click **Next Page** or refresh the page to update the **Rol
 
 #### Add New User
 1. To meet your specific requirements, create new users, passwords, and roles. Once you click on "Next Page," the newly created users will be visible. To ensure the configuration changes related to the new users take effect in the web UI server, it is necessary to restart the web UI again.
-![add user](../images/multi_user/multi-user-8.png)
+![add user](../../images/multi_user/multi-user-8.png)
 
 2. Open another incognito browser, and log in using the newly created username and password.
 3. When accessing the Amazon SageMaker tab, the displayed content may vary for different users.
