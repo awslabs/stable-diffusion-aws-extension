@@ -6,7 +6,7 @@ To use extra models for inference, you could upload model through steps below in
 
 Method One:
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Models Management**.
-![Upload Models to S3](../images/UploadFromWebUI.png)
+![Upload Models to S3](../../images/UploadFromWebUI.png)
 2. Select the **from WebUI** tab, which means to upload the model from the models file path where the WebUI service is deployed.
 3. Enter the model path where the WebUI service is deployed under corresponding model text box.
 > **Note**: You can upload multiple kinds of models by entering multiple local model paths in text box.
@@ -15,7 +15,7 @@ Method One:
 
 Method Two:
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker** main tab, find session **Cloud Models Management**.
-![Upload Models to S3](../images/UploadFromComputer.png)
+![Upload Models to S3](../../images/UploadFromComputer.png)
 2. Select the **from Laptop** tab, which means to upload the model from the local path to access the WebUI.
 3. Select the type of model to upload, currently supports six types: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 3. Select the model file to be uploaded locally.
@@ -27,7 +27,7 @@ Method Two:
 Method Three:
 1. Within Stable Diffusion WebUI, navigate to the **Amazon SageMaker** main tab and find session **Cloud Models Management**.
 2. Select the **from URL** tab. This option allows you to upload models to S3 from URLs where the models are downloaded.
-![Upload Models to S3](../images/UploadFromURL.png)
+![Upload Models to S3](../../images/UploadFromURL.png)
 3. Choose the type of model you want to upload. Currently, six types are supported: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE.
 4. In the **URL list (Comma-separated in English)** input box, enter the URL list of model downloads, separated by commas.
 5. In the **Models Description (Optional)** input box, provide a JSON-formatted description (optional).
@@ -52,7 +52,7 @@ Method Three:
       | Min Instance Number | If Enable Autoscaling is true, This value will be the minimum number of Endpoint instances                                                                                                                                                                                                    |
 
 4. After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click **Deploy**. You'll see a message indicating **Endpoint deployment started** under **Label**.
-   ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
+   ![Deploy new endpoint](../../images/Deploy-new-endpoint.png)
 
 5. You can navigate to tab **Amazon SageMaker**, session **Inference Endpoint Management**, refresh list to check all the deployment status of endpoints.
 
@@ -73,7 +73,7 @@ Method Three:
 In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.
 
 1. Navigate to main tab **Amazon SageMaker**, section **AWS Dataset Management**，sub-tab **Create**.
-![Create Dataset to S3](../images/Dataset_management.png)
+![Create Dataset to S3](../../images/Dataset_management.png)
 
 2. Click **Click to Upload a File**, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.
 3. Enter file name in **Dataset Name**, enter file description in **Dataset Description**, click **Create Dataset**.

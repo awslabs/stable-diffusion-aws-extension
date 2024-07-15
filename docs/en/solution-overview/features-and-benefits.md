@@ -1,6 +1,14 @@
 ## Features
 
-This solution supports the cloud-based operations of the following native features/third-party extensions of Stable Diffusion WebUI:
+This solution supports the cloud-based operations of the following 3 projects.
+
+| **Project**  | **Supported Version** | **Note**|
+| ------------- | ------------- | ------------- |
+|Stable Diffusion WebUI| V 1.8.0| The default supported native/third-party extensions are listed in the table below. |
+|ComfyUI| 605e64f6d3da44235498bf9103d7aab1c95ef211|The custom nodes that require cloud-based inference support can be packaged and uploaded to the cloud in one click using the template publishing feature provided by this solution. Therefore, this solution does not include built-in support for custom nodes; users can flexibly choose to install and package them for upload. |
+|Kohya_ss|V0.8.3|Support LoRa model training based on SD 1.5 and SDXL.|
+
+Below please find the native features/third-party extensions supported by this solution for Stable Diffusion WebUI. Other extensions can be supported through [BYOC (Bring Your Own Container)]((../developer-guide/byoc.md)).
 
 | **Feature**  | **Supported Version** | **Note** |
 | ------------- | ------------- | ------------- |
