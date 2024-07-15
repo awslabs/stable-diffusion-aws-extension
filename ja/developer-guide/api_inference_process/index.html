@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api" class="md-skip">
+        <a href="#stable-diffusion-api" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -1150,13 +1150,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#api" class="md-nav__link">
+  <a href="#stable-diffusion-api" class="md-nav__link">
     <span class="md-ellipsis">
-      API を通してのインファレンス方法
+      Stable Diffusion の API を通してのインファレンス方法
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="API を通してのインファレンス方法">
+    <nav class="md-nav" aria-label="Stable Diffusion の API を通してのインファレンス方法">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1172,6 +1172,30 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       リアルタイムインファレンス
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comfyui" class="md-nav__link">
+    <span class="md-ellipsis">
+      ComfyUI の推論を実行する方法
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ComfyUI の推論を実行する方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      非同期推論
     </span>
   </a>
   
@@ -1399,13 +1423,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#api" class="md-nav__link">
+  <a href="#stable-diffusion-api" class="md-nav__link">
     <span class="md-ellipsis">
-      API を通してのインファレンス方法
+      Stable Diffusion の API を通してのインファレンス方法
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="API を通してのインファレンス方法">
+    <nav class="md-nav" aria-label="Stable Diffusion の API を通してのインファレンス方法">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1421,6 +1445,30 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       リアルタイムインファレンス
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comfyui" class="md-nav__link">
+    <span class="md-ellipsis">
+      ComfyUI の推論を実行する方法
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ComfyUI の推論を実行する方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      非同期推論
     </span>
   </a>
   
@@ -1451,7 +1499,7 @@
 
   <h1>API推論プロセス</h1>
 
-<h2 id="api">API を通してのインファレンス方法</h2>
+<h2 id="stable-diffusion-api">Stable Diffusion の API を通してのインファレンス方法</h2>
 <ul>
 <li><code>CreateEndpoint</code>を使ってエンドポイントを作成する</li>
 <li><code>CreateCheckpoint</code>を使ってモデルファイルをアップロードする。<code>API Upload Checkpoint Process</code>を参照してください。</li>
@@ -1469,6 +1517,13 @@
 <li><code>CreateInferenceJob</code>を使ってインファレンスジョブを作成する</li>
 <li><code>CreatInferenceJob</code>で返された事前署名アドレス<code>api_params_s3_upload_url</code>に基づいてインファレンスパラメータをアップロードする</li>
 <li><code>StartInferenceJob</code>を使ってインファレンスジョブを開始する。リアルタイムインファレンスジョブはこのインターフェイスでインファレンス結果を取得する</li>
+</ul>
+<h2 id="comfyui">ComfyUI の推論を実行する方法</h2>
+<h3 id="_3">非同期推論</h3>
+<ul>
+<li><code>CreateEndpoint</code> による推理端点の作成</li>
+<li><code>CreateExecute</code> による推理タスクの作成</li>
+<li><code>GetExcute</code> による推理タスクの作成</li>
 </ul>
 
 

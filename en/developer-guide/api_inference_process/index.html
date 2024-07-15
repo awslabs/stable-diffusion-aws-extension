@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-inference-through-api" class="md-skip">
+        <a href="#how-to-inference-on-stable-diffusion-through-api" class="md-skip">
           Skip to content
         </a>
       
@@ -1217,13 +1217,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-inference-through-api" class="md-nav__link">
+  <a href="#how-to-inference-on-stable-diffusion-through-api" class="md-nav__link">
     <span class="md-ellipsis">
-      How-to inference through API
+      How-to inference on Stable Diffusion through API
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How-to inference through API">
+    <nav class="md-nav" aria-label="How-to inference on Stable Diffusion through API">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1239,6 +1239,30 @@
   <a href="#real-time-inference" class="md-nav__link">
     <span class="md-ellipsis">
       Real-time inference
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-inference-on-comfyui-through-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      How-to inference on ComfyUI through API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to inference on ComfyUI through API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#async-inference_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Async inference
     </span>
   </a>
   
@@ -1466,13 +1490,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-inference-through-api" class="md-nav__link">
+  <a href="#how-to-inference-on-stable-diffusion-through-api" class="md-nav__link">
     <span class="md-ellipsis">
-      How-to inference through API
+      How-to inference on Stable Diffusion through API
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How-to inference through API">
+    <nav class="md-nav" aria-label="How-to inference on Stable Diffusion through API">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1488,6 +1512,30 @@
   <a href="#real-time-inference" class="md-nav__link">
     <span class="md-ellipsis">
       Real-time inference
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-inference-on-comfyui-through-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      How-to inference on ComfyUI through API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to inference on ComfyUI through API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#async-inference_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Async inference
     </span>
   </a>
   
@@ -1518,7 +1566,7 @@
 
   <h1>API Inference Process</h1>
 
-<h2 id="how-to-inference-through-api">How-to inference through API</h2>
+<h2 id="how-to-inference-on-stable-diffusion-through-api">How-to inference on Stable Diffusion through API</h2>
 <ul>
 <li>Create Endpoint through <code>CreateEndpoint</code></li>
 <li>Upload model file through <code>CreateCheckpoint</code>, Please refer to: <code>API Upload Checkpoint Process</code></li>
@@ -1529,13 +1577,20 @@
 <li>Create an inference job through <code>CreateInferenceJob</code></li>
 <li>Based on the presigned address <code>api_params_s3_upload_url</code> returned by <code>CreatInferenceJob</code> Upload inference parameters</li>
 <li>Start an inference job through <code>StartInferenceJob</code></li>
-<li>Obtain an inference job through <code>GetInferenceJob</code>, check the status, and stop the request if successful</li>
+<li>Get an inference job through <code>GetInferenceJob</code>, check the status, and stop the request if successful</li>
 </ul>
 <h3 id="real-time-inference">Real-time inference</h3>
 <ul>
 <li>Create an inference job through <code>CreateInferenceJob</code></li>
 <li>Based on the pre signed address <code>api_params_s3_upload_url</code> returned by <code>CreatInferenceJob</code> Upload inference parameters</li>
-<li>Starting the inference job through <code>StartInferenceJob</code>, the real-time inference job will obtain the inference result in this interface</li>
+<li>Starting the inference job through <code>StartInferenceJob</code>, the real-time inference job will get the inference result in this interface</li>
+</ul>
+<h2 id="how-to-inference-on-comfyui-through-api">How-to inference on ComfyUI through API</h2>
+<h3 id="async-inference_1">Async inference</h3>
+<ul>
+<li>Create Endpoint through <code>CreateEndpoint</code></li>
+<li>Create an inference job through <code>CreateExecute</code></li>
+<li>Get an inference job through <code>GetExcute</code>, check the status, and stop the request if successful</li>
 </ul>
 
 
