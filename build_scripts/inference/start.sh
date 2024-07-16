@@ -328,25 +328,28 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
+download_so(){
+  file_name=$1
+  if [ ! -f "/home/ubuntu/conda/lib/$file_name" ]; then
+    echo "cp s3://$COMMON_FILES_PREFIX/so/$file_name /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
+  fi
+}
+
 download_conda_and_models(){
   echo "---------------------------------------------------------------------------------"
 
   rm -rf /tmp/s5cmd.txt
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcufft.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcurand.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
+  download_so "libcufft.so.10"
+  download_so "libcurand.so.10"
+  download_so "libcublasLt.so.11"
+  download_so "libonnxruntime_providers_cuda.so"
+  download_so "libcublas.so.11"
+  download_so "libcudart.so.11.0"
   if [ -f "/tmp/s5cmd.txt" ]; then
     s5cmd run /tmp/s5cmd.txt
   fi
 
   set_conda
-
 }
 
 # ----------------------------- On EC2 -----------------------------

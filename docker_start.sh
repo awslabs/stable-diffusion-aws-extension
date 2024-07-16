@@ -147,6 +147,12 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
   echo "" >> "$SUPERVISORD_FILE"
 }
 
+download_so(){
+  file_name=$1
+  if [ ! -f "/home/ubuntu/conda/lib/$file_name" ]; then
+    echo "cp s3://$COMMON_FILES_PREFIX/so/$file_name $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
+  fi
+}
 
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
@@ -182,12 +188,12 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
 fi
 
 rm -rf /tmp/s5cmd.txt
-if [ ! -f "$CONTAINER_PATH/conda/lib/libcufft.so.10" ]; then
-  echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
-fi
-if [ ! -f "$CONTAINER_PATH/conda/lib/libcurand.so.10" ]; then
-  echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
-fi
+download_so "libcufft.so.10"
+download_so "libcurand.so.10"
+download_so "libcublasLt.so.11"
+download_so "libonnxruntime_providers_cuda.so"
+download_so "libcublas.so.11"
+download_so "libcudart.so.11.0"
 if [ -f "/tmp/s5cmd.txt" ]; then
   s5cmd run /tmp/s5cmd.txt
 fi
