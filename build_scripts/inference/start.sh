@@ -449,7 +449,7 @@ if [ -n "$WORKFLOW_NAME" ]; then
 
   echo "downloading comfy file $WORKFLOW_NAME ..."
   start_at=$(date +%s)
-  s5cmd sync "s3://$S3_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "/home/ubuntu/"
+  s5cmd --log=error sync "s3://$S3_BUCKET_NAME/comfy/workflows/$WORKFLOW_NAME/*" "/home/ubuntu/"
   end_at=$(date +%s)
   export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
   echo "download file: $DOWNLOAD_FILE_SECONDS seconds"
