@@ -181,10 +181,6 @@ export class CreateEndpointApi {
           },
           endpoint_type: SCHEMA_ENDPOINT_TYPE,
           workflow_name: SCHEMA_WORKFLOW_NAME,
-          cool_down_time: {
-            type: JsonSchemaType.STRING,
-            enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
-          },
           service_type: {
             type: JsonSchemaType.STRING,
             enum: ['sd', 'comfy'],
