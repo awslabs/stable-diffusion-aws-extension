@@ -414,6 +414,12 @@ export class Middleware extends Stack {
       value: `https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy_${ESD_VERSION}.yaml`,
       description: 'Create New or Update EC2 Stack for Comfy (Global Only)',
     });
+
+    new CfnOutput(this, 'TemplateForCurrentStack', {
+      value: `https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/${ESD_VERSION}/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json`,
+      description: 'Current stack template source',
+    });
+
   }
 
   addEnvToAllLambdas(variableName: string, value: string) {
