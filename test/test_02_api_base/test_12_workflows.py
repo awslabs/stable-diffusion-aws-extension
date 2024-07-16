@@ -67,7 +67,7 @@ class TestComfyWorkflowApiBase:
     def test_10_create_workflow_file_not_ready(self):
         headers = {'x-api-key': config.api_key}
         data = {
-            "name": "workflow_not_ready",
+            "name": "workflowNotReady",
             "image_uri": "uri",
             "size": "1",
             "payload_json": ""
