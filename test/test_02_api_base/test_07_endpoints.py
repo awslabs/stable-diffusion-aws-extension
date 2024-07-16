@@ -287,7 +287,7 @@ class TestEndpointsApi:
             "username": config.username
         }
 
-        workflow_name = 'bad-workflow'
+        workflow_name = 'badWorkflow'
 
         data = {
             "endpoint_name": "dev-test",
