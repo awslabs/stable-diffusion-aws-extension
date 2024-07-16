@@ -58,7 +58,7 @@ class TestComfyWorkflowApiBase:
         headers = {'x-api-key': config.api_key}
         data = {
             "workflow_name_list": [
-                "workflow_name"
+                "workflowName"
             ],
         }
         resp = self.api.delete_workflows(headers=headers, data=data)
