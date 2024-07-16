@@ -17,6 +17,7 @@ sudo rm -rf "$CONTAINER_PATH/sync_lock"
 sudo rm -rf "$CONTAINER_PATH/s5cmd_lock"
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 START_SH=$(realpath ./build_scripts/inference/start.sh)
+START_PY=$(realpath ./build_scripts/comfy/serve.py)
 COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
 COMFY_EXT=$(realpath ./build_scripts/comfy/ComfyUI-AWS-Extension)
 IMAGE_SH=$(realpath ./docker_image.sh)
@@ -108,7 +109,8 @@ docker rm $PROGRAM_NAME || true
 docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $CONTAINER_PATH:/container \\
            -v $CONTAINER_PATH/conda:/home/ubuntu/conda \\
-           -v $START_SH:/start.sh \\
+           -v $START_SH:/start.sh:ro \\
+           -v $START_PY:/serve.py:ro \\
            -v $COMFY_PROXY:/comfy_proxy.py:ro \\
            -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
            --gpus all \\

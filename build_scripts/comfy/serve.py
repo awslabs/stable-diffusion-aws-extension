@@ -20,7 +20,8 @@ TIMEOUT_KEEP_ALIVE = 30
 SAGEMAKER_PORT = 8080
 LOCALHOST = '0.0.0.0'
 PHY_LOCALHOST = '127.0.0.1'
-
+is_on_ec2 = os.getenv('ON_EC2') == 'true'
+program_name = os.getenv('PROGRAM_NAME', 'none')
 SLEEP_TIME = 5
 TIME_OUT_TIME = 86400
 MAX_KEEPALIVE_CONNECTIONS = 100
@@ -32,7 +33,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE')
+sagemaker_safe_port_range = os.getenv('SAGEMAKER_SAFE_PORT_RANGE', "8088-9088")
 start_port = int(sagemaker_safe_port_range.split('-')[0])
 available_apps = []
 is_multi_gpu = False
@@ -102,7 +103,16 @@ class ComfyApp:
                "--cuda-malloc"
                ]
 
-        logger.info(f"Starting comfy app on {self.port}")
+        if is_on_ec2:
+            cmd = ["python", "main.py",
+                   "--listen", self.host,
+                   "--port", str(self.port),
+                   "--output-directory", f"/container/output/{program_name}/",
+                   "--temp-directory", f"/container/temp/{program_name}/",
+                   "--cuda-malloc"
+                   ]
+
+        logger.info(f"Starting comfy app on {self.host}:{self.port}")
         logger.info(f"Command: {cmd}")
         try:
             self.process = subprocess.Popen(
@@ -391,8 +401,8 @@ def start_comfy_servers():
         is_multi_gpu = False
     logger.info(f"is_multi_gpu is {is_multi_gpu}")
     for gpu_num in range(gpu_nums):
-        logger.info(f"start comfy server by device_id: {gpu_num}")
         port = start_port + gpu_num
+        logger.info(f"start comfy server by device_id: {gpu_num}, port is {port}")
         comfy_app = ComfyApp(host=LOCALHOST, port=port, device_id=gpu_num)
         available_apps.append(comfy_app)
         comfy_app.start()
@@ -458,14 +468,18 @@ def check_sync():
 
 
 if __name__ == "__main__":
-    queue_lock = threading.Lock()
-    api = Api(app, queue_lock)
-    start_comfy_servers()
+    if is_on_ec2:
+        comfy_app = ComfyApp(host='0.0.0.0', port=8188, device_id=0)
+        comfy_app.start()
+    else:
+        queue_lock = threading.Lock()
+        api = Api(app, queue_lock)
+        start_comfy_servers()
 
-    api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
-    check_sync_thread = threading.Thread(target=check_sync)
+        api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
+        check_sync_thread = threading.Thread(target=check_sync)
 
-    api_process.start()
-    check_sync_thread.start()
+        api_process.start()
+        check_sync_thread.start()
 
-    api_process.join()
+        api_process.join()

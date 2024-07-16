@@ -411,6 +411,10 @@ if [ -n "$ON_EC2" ]; then
     cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
   fi
 
+  if [ -f "/serve.py" ]; then
+    cp -f /serve.py /home/ubuntu/ComfyUI/
+  fi
+
   if [ -d "/ComfyUI-AWS-Extension" ]; then
     rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
     cp -r /ComfyUI-AWS-Extension /home/ubuntu/ComfyUI/custom_nodes/
@@ -422,10 +426,7 @@ if [ -n "$ON_EC2" ]; then
 
   chmod -R 777 /home/ubuntu/ComfyUI
 
-  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 \
-                           --cuda-malloc \
-                           --output-directory "/container/output/$PROGRAM_NAME/" \
-                           --temp-directory "/container/temp/$PROGRAM_NAME/"
+  venv/bin/python3 serve.py
   exit 1
 fi
 
