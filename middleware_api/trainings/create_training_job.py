@@ -137,6 +137,10 @@ def _trigger_sagemaker_training_job(
             "s3_location": f"s3://{bucket_name}/{train_params_file}",
         },
         job_id=train_job.id,
+        environment={
+            "SITE_PACKAGES_S3_PATH": f"aws-gcr-solutions-{region}/"
+                                     f"stable-diffusion-aws-extension-github-mainline/{esd_version}/train.tar"
+        }
     )
     est.fit(wait=False)
 
