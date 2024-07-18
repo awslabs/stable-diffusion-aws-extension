@@ -1343,19 +1343,19 @@ if is_on_ec2:
             if is_master_process:
                 list.append({
                     "name": 'default',
+                    "in_use": 'default' == workflow_name,
                     "size": dir_size(f"/container/workflows/default"),
                     "status": 'Enabled',
                     "payload_json": '',
-                    "in_use": 'default' == workflow_name
                 })
 
             for workflow in workflows:
                 list.append({
                     "name": workflow['name'],
+                    "in_use": workflow['name'] == workflow_name,
                     "size": workflow['size'],
                     "status": workflow['status'],
                     "payload_json": workflow['payload_json'],
-                    "in_use": workflow['name'] == workflow_name
                 })
 
             data['workflows'] = list
@@ -1572,6 +1572,8 @@ if is_on_ec2:
 
 
     def kill_python_process():
+        subprocess.run(["pkill", "-f", "python3"])
+
         result = subprocess.run(["ps", "-ef"], stdout=subprocess.PIPE)
         lines = result.stdout.decode().splitlines()
 
