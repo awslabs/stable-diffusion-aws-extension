@@ -100,14 +100,13 @@ def _trigger_sagemaker_training_job(
         train_job_name (str): training job name
     """
 
-    site_packages_s3_path = (f"aws-gcr-solutions-{region}/"
+    site_packages_s3_path = (f"s3://aws-gcr-solutions-{region}/"
                              f"stable-diffusion-aws-extension-github-mainline/{esd_version}/train.tar")
 
     data = {
         "id": train_job.id,
         "training_id": train_job.id,
         "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
-        "site_packages_s3_path": site_packages_s3_path,
         "params": train_job.params,
         "s3-input-path": train_job.input_s3_location,
         "s3-output-path": ckpt_output_path,
