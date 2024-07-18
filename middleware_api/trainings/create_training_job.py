@@ -101,7 +101,7 @@ def _trigger_sagemaker_training_job(
     """
 
     site_packages_s3_path = (f"s3://aws-gcr-solutions-{region}/"
-                             f"stable-diffusion-aws-extension-github-mainline/{esd_version}/train.tar")
+                             f"stable-diffusion-aws-extension-github-mainline/{esd_version}/site-packages.tar")
 
     data = {
         "id": train_job.id,
