@@ -24,49 +24,50 @@ This automated Amazon CloudFormation template deploys the solution in Amazon Web
     |:-------------|:--------------|:--------------|
     |Bucket|Enter a valid new S3 bucket name (or the name of a previously deployed S3 bucket used for the ComfyUI section of this solution)||
     |email|Enter a valid email address for further notification receivement||
-    |SdExtensionApiKey|请输入一个包含数字和字母组合的20个字符的字符串|默认为"09876543210987654321"|
-    |LogLevel|择您心仪的Lambda Log日志打印级别|默认ERROR才打印|
+    |SdExtensionApiKey|Please enter a 20-character string consisting of numbers and letters|Default is "09876543210987654321"|
+    |LogLevel|Choose the Lambda Log printing level you prefer|Default is ERROR only printed|
 
-5. 在**配置堆栈选项**页面，选择**下一步**。
-6. 在**审核**页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择**提交**以部署堆栈。
-7. 您可以在 AWS CloudFormation 控制台的 **状态** 列中查看堆栈的状态。您应该会在大约 15 分钟内收到**CREATE_COMPLETE**状态。
+5. On the **Specify Stack Options** page, choose **Next**.
+6. On the **Review** page, review and confirm the settings. Make sure the checkbox to acknowledge that the template will create AWS Identity and Access Management (IAM) resources is selected. Also, make sure the checkbox for other capabilities required by AWS CloudFormation is selected. Choose **Submit** to deploy the stack.
+7. You can view the status of the stack in the **Status** column of the AWS CloudFormation console. You should receive a **CREATE_COMPLETE** status in approximately 15 minutes.
 
-    !!! tip "贴士" 
-        请及时检查您预留邮箱的收件箱，并在主题为“AWS Notification - Subscription Confirmation”的邮件中，点击“Confirm subscription”超链接，按提示完成订阅。
+    !!! tip "Tip"
+        Please check your reserved email inbox promptly and click the "Confirm subscription" link in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription as prompted.
 
 
-### 步骤2: 部署ComfyUI前端
-步骤2将会为客户安装ComfyUI的前端。该前端自动内置了汉化插件、工作流发布云上等按钮，为客户提供更友好的UI交互界面。此自动化Amazon CloudFormation模板在亚马逊云科技中部署。
+### Step 2: Deploy the ComfyUI Frontend
+Step 2 will install the ComfyUI frontend for the customer. This frontend automatically includes a Chinese localization plugin and buttons for publishing workflows to the cloud, providing a more user-friendly UI interface for customers. This automated Amazon CloudFormation template is deployed in Amazon Web Services.
 
-1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击控制台右上角**Create Stack**, **With new resource(standard)**，页面跳转至创建堆栈。
-2. 在**创建堆栈**页面上，选择**Choose an existing template**，在**特定模版**区域选择**Amazon S3 URLe**，填入该[部署模版链接](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml)，然后选择**下一步**。
-3. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，部署参数说明如下。点击**Next**。
+1. Log in to the [AWS Management Console](https://console.aws.amazon.com/), click **Create Stack** in the top right corner of the console, **With new resource (standard)**, and the page will redirect to create a stack.
+2. On the **Create Stack** page, select **Choose an existing template**, in the **Specify template** area, select **Amazon S3 URL**, enter this [deployment template link](https://aws-gcr-solutions.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/comfy.yaml), and then select **Next**.
+3. On the **Specify Stack Details** page, assign a unique name within your account that complies with the naming requirements for your solution stack. In the **Parameters** section, the deployment parameter descriptions are as follows. Click **Next**.
 
-    !!! tip "贴士"
-        此处的EC2 Key Pair主要用于本地远程连接EC2。如果没有现有的，可以参考[官方手册](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html){:target="_blank"}来创建。
+    !!! tip "Tip"
+        The EC2 Key Pair here is mainly used for local remote connection to EC2. If you don't have an existing one, you can refer to the [official manual](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html){:target="_blank"} to create one.
 
-    |参数|说明|建议|
+    |Parameter|Description|Recommendation|
     |:-------------|:--------------|:--------------|
-    |InstanceType |部署的ec2的实例类型 | 如果是涉及推理动图、视频等，建议G6、G5机器 |
-    |NumberOfInferencePorts|推理环境数量|建议不超过5个|
-    |StackName|来自于部署步骤1中成功部署堆栈的名称||
-    |keyPairName|选择现有的一个EC2 Key Pair||
+    |InstanceType |Instance type of the deployed EC2| If it involves inferencing animations, videos, etc., G6, G5 instances are recommended|
+    |NumberOfInferencePorts|Number of inference environments|Recommended not to exceed 5|
+    |StackName|Name of the stack successfully deployed from Step 1||
+    |keyPairName|Select an existing EC2 Key Pair||
 
-4. 在**配置堆栈选项**页面，选择**下一步**。
-5. 在**审核**页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择**提交**以部署堆栈。
-6. 您可以在 AWS CloudFormation 控制台的 **状态** 列中查看堆栈的状态。您应该会在大约 3 分钟内收到**CREATE_COMPLETE**状态。
-7. 选择部署成功的堆栈，打开**Outputs**，点击**Designer**对应的链接，即可打开解决方案部署的ComfyUI前端，Designer的访问可能需要关闭VPN或者去掉10000端口后访问。**NumberOfInferencePortsStart**代表推理环境地址起始路径端口，按照部署数量端口地址依次增加，例如：当NumberOfInferencePorts填写2时，地址范围时，可访问的推理环境地址依次为：http://EC2地址:10001，http://EC2地址:10002.
+4. On the **Configure Stack Options** page, select **Next**.
+5. On the **Review** page, review and confirm the settings. Make sure to check the box acknowledging that the template will create Amazon Identity and Access Management (IAM) resources. Also, make sure to check the box for AWS CloudFormation to perform the other capabilities required. Select **Submit** to deploy the stack.
+6. You can view the stack status in the **Status** column of the AWS CloudFormation console. You should receive a **CREATE_COMPLETE** status within approximately 3 minutes.
+7. Select the successfully deployed stack, open **Outputs**, and click the link corresponding to **Designer** to open the ComfyUI frontend deployed by the solution. Accessing the Designer may require disabling the VPN or removing port 10000. **NumberOfInferencePortsStart** represents the starting port address of the inference environment, with the port addresses incrementing according to the number of deployments. For example, if NumberOfInferencePorts is set to 2, the accessible inference environment addresses are: http://EC2Address:10001, http://EC2Address:10002.
 
-    |角色|功能|端口|
+    |Role|Function|Port|
     |:-------------|:--------------|:--------------|
-    |主美/工作流管理| 能够安装新的custom nodes，在EC2上调试工作流，发布工作流、环境至Amazon SageMaker。同时可以调用SageMaker资源、选中已发布的工作流进行推理验证 | http://EC2地址|
-    |普通美术| 从该端口进入的界面，可以选择主美已发布的工作流，简单修改推理参数后，勾选“Prompt on AWS”后、调用Amazon SageMaker进行推理|当NumberOfInferencePorts填写3时，地址范围时，可访问的推理环境地址依次为：<ul><li>http://EC2地址:10001 </li><li>http://EC2地址:10002 </li><li>http://EC2地址:10003</li></ul>|
+    |Lead Artist/Workflow Manager| Can install new custom nodes, debug workflows on EC2, publish workflows and environments to Amazon SageMaker. Can also call SageMaker resources, select published workflows for inference validation.| http://EC2Address|
+    |Regular Artist| From this port, the interface can select workflows published by the lead artist, modify inference parameters, check "Prompt on AWS", and call Amazon SageMaker for inference.|If NumberOfInferencePorts is set to 3, the range of accessible inference environment addresses is: <ul><li>http://EC2Address:10001</li><li>http://EC2Address:10002</li><li>http://EC2Address:10003</li></ul>|
 
-    !!! tip "贴士"
-        刚部署好贴士以后，需要稍作等待。如果打开链接后，看到提示“Comfy is Initializing or Starting”，表示后端在初始化ComfyUI过程中，请稍作等待，再次刷新页面确认。
+    !!! tip "Tip"
+        After the initial deployment, you may need to wait a bit. If you see a prompt saying "Comfy is Initializing or Starting" when opening the link, it means the backend is initializing ComfyUI. Please wait a moment and refresh the page again to confirm.
 
-### Step3: 在ComfyUI页面调试并创建一个可用的工作流。
-可以参考[这里](../user-guide/ComfyUI/inference.md)中的“工作流的调试”子章节部分
+
+### Step 3: Debug and create a usable workflow on the ComfyUI page.
+You can refer to the "Debugging Workflows" subsection in [this guide](../user-guide/ComfyUI/inference.md)
 
 ### Step 4: Deploy new Amazon SageMaker inference endpoint
 After successfully completing step 1, you need to deploy the required Amazon SageMaker inference nodes using API. Subsequent deployments of new ComfyUI workflow inferences will utilize the computational resources of these inference nodes.
