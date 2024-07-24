@@ -25,7 +25,7 @@ Parameters:
   NumberOfInferencePorts:
     Description: The number of inference ports
     Type: Number
-    MinValue: 1
+    MinValue: 0
     MaxValue: 5
     Default: 1
 

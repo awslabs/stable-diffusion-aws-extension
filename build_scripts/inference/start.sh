@@ -328,25 +328,28 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
+download_so(){
+  file_name=$1
+  if [ ! -f "/home/ubuntu/conda/lib/$file_name" ]; then
+    echo "cp s3://$COMMON_FILES_PREFIX/so/$file_name /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
+  fi
+}
+
 download_conda_and_models(){
   echo "---------------------------------------------------------------------------------"
 
   rm -rf /tmp/s5cmd.txt
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcufft.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcurand.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
+  download_so "libcufft.so.10"
+  download_so "libcurand.so.10"
+  download_so "libcublasLt.so.11"
+  download_so "libonnxruntime_providers_cuda.so"
+  download_so "libcublas.so.11"
+  download_so "libcudart.so.11.0"
   if [ -f "/tmp/s5cmd.txt" ]; then
     s5cmd run /tmp/s5cmd.txt
   fi
 
   set_conda
-
 }
 
 # ----------------------------- On EC2 -----------------------------
@@ -408,6 +411,10 @@ if [ -n "$ON_EC2" ]; then
     cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
   fi
 
+  if [ -f "/serve.py" ]; then
+    cp -f /serve.py /home/ubuntu/ComfyUI/
+  fi
+
   if [ -d "/ComfyUI-AWS-Extension" ]; then
     rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
     cp -r /ComfyUI-AWS-Extension /home/ubuntu/ComfyUI/custom_nodes/
@@ -419,10 +426,7 @@ if [ -n "$ON_EC2" ]; then
 
   chmod -R 777 /home/ubuntu/ComfyUI
 
-  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 \
-                           --cuda-malloc \
-                           --output-directory "/container/output/$PROGRAM_NAME/" \
-                           --temp-directory "/container/temp/$PROGRAM_NAME/"
+  venv/bin/python3 serve.py
   exit 1
 fi
 
