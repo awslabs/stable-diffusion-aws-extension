@@ -4,9 +4,9 @@ After successfully deploying the solution, you can open the native **ComfyUI** p
 
 * Step 1: Connect to the EC2 that deploys ComfyUI frontend.
 * Step 2: Open the **Designer** link provided by the stack of solution, debug the new workflow locally (on the EC2 virtual machine), install the missing nodes, upload the required inference models, and ensure they can be successfully loaded and inferred locally (on the EC2 virtual machine).
-* Step 3: Release the workflow as a template. 
-* Step 4: Create the endpoints needed for the workflow through API.
-* Step 5: On the ComfyUI inference page, select the released template, modify the inference parameters (for example: prompts) and models as needed, and perform inference on images/videos. This will utilize Amazon SageMaker resource. 
+* Step 3: Repeat Step 2 as needed to **publish multiple workflow templates**.
+* Step 4: After debugging one (or more) workflow templates, package and **publish the current environment** with one click, and deploy a new Amazon SageMaker inference endpoint.
+* Step 5: On the ComfyUI inference page, select the published templates and, if needed, modify the inference prompts, inference models, and inference images/videos. This step will use Amazon SageMaker resources.
 
 
 ## Step 1: Connect to the EC2 that deploys ComfyUI frontend
@@ -40,36 +40,32 @@ The steps for using the senior design version of ComfyUI are summarized as follo
 4. (Optional) If step 3 results in an error prompt, follow the instructions to resolve it. For example, if a missing model is indicated, download the model to the corresponding directory on the EC2 instance; if missing custom nodes are indicated, click **Manager** and then **Install Missing Custom Nodes** to install the missing nodes. After resolving the error, repeat step 3 to test again.
 ![ComfyUI Management](../../images/ComfyUI-Manager.png)
 
-5. When the workflow is completed and the generated results are displayed on the interface, it indicates that the workflow debugging has been successful.
-
-## Step 3: Release workflow as new template
-Once the workflow can successfully infer images/videos locally (on the EC2 virtual machine), you can follow these steps to quickly release the debugged workflow as a template, making it convenient and stable for future inference calls through Amazon SageMaker.
-
-1. Click **New Workflow** in the right navigation bar or the **plus sign** above the workflow list module on the right side.
-2. In the pop-up window, enter the name of the template to be published and click **OK**.
-
+5. Once the workflow is complete and the generated results are displayed on the interface, it indicates that the workflow debugging has been successful.
+6. Click the plus sign above the **Template List** module in the right navigation bar. In the pop-up window, enter the name of the template to be published and the runtime environment to be bound, then click **OK**. 
 
     !!! tip
-        The new template name must not exceed 20 characters in length, combining letters and numbers. It is case-sensitive. Additionally, the name must be unique within the same region. If it conflicts with an existing template name, an error message will be displayed.
+        Please note that the new template name must not exceed 20 characters in length, should be a combination of letters and numbers, and is case-sensitive. Additionally, the name must be unique within the same region; if it conflicts with an existing template name, a creation error will be prompted. If the runtime environment is not yet published, you can return to modify the published templates after completing Step 4 to bind the correct runtime environment.
+![template release](../../images/template_release.png)
 
-3. During the workflow publishing process, no updates should be made on the ComfyUI frontend. Once the publishing is complete, a pop-up notification will confirm the successful publication.
-4. During publication, the workflow you are currently debugging will be temporarily saved. Each time you switch environments, the temporarily saved workflow corresponding to the current environment will be loaded first.
+7. During the workflow publishing process, no updates should be made on the ComfyUI frontend. This process generally takes about ten seconds. After the publication is complete, a pop-up message will appear on the frontend indicating that the publication is finished.
+8. Once the publishing is complete, refresh the page to see the newly published template in the workflow template list on the right navigation bar.
 
-## Step 4: Deploy new inference endpoint for future inference of released workflow
-After completing the workflow releasing, you'll need to create a Amazon SageMaker inference endpoint to perform cloud-based inference based on the workflow:
+## Step 3: Repeat Step 2 as needed to publish multiple templates
+To ensure workflow stability and compatibility, and to maximize resource utilization, it is recommended that users continuously debug and publish multiple workflow templates within the ComfyUI default environment. Once these workflows are ready, the combined running environment should be published and bound to an Amazon SageMaker Inference Endpoint. This setup allows the published environment to stably run multiple templates while maximizing the resource utilization of the inference endpoint. Additionally, consider the environment size when publishing; a larger environment may result in longer cold start times during subsequent auto-scaling. Balancing the number of templates bound to a single environment is a trade-off decision users need to make.
 
-1. You'll need to call the creation via API, referencing the "Deploying New Amazon SageMaker Inference Nodes" subsection in [this documentation](../../deployment/deployment_comfyui.md).
-   
-2. Once the inference endpoint is created and in the **InService** state, the published workflow will be ready for inference.
+## Step 4: Deploy new inference endpoint for future inference of released template
+After completing Step 3, users can package and publish the workflow runtime environment with one click and create an Amazon SageMaker Inference Endpoint for cloud-based inference based on the selected workflow template.
 
+1. Click **New Environment** in the right navigation bar.
+2. In the pop-up dialog, enter the name for the environment to be published. In the *Endpoint Config* section, select the parameters for the Amazon SageMaker Inference Endpoint to be bound to this environment, including instance type, auto-scaling options, etc. Click **OK** when finished.
+3. The environment publishing process may take an uncertain amount of time, potentially up to 10+ minutes, depending on the size of the existing environment. During this time, the page will be locked to prevent any other operations that might disrupt the environment and cause the publishing process to fail.
+4. Once the creation is successful, refresh the page. In the **Template List** section, select the templates to be bound, click the pencil icon, choose the newly published environment in the pop-up dialog, and click **OK**.
 
 ## Step 5: Inference of released template
-In the view of **Designer** or **InferencePot**, you can easily perform inference based on a template using the following steps:
+In the view of **Designer** or **Junior Artists**, you can easily perform inference based on a template using the following steps:
 
 1. Open the ComfyUI page and select a released template from the right-hand navigation bar. If in **Designer** view, also need to select the **Prompt on AWS** checkbox in the right-hand navigation bar.
-   
 2. The selected template will be automatically render in the ComfyUI page. Adjust the parameters as needed, and click **Queue Prompt** to submit the inference task.
-   
 3. Once the inference task is completed, the generated results will automatically be displayed on the page.
 
 
