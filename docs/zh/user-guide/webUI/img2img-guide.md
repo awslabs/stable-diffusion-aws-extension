@@ -81,13 +81,7 @@
 img2img标签的提示词区域就能看到结果。
 ![interrogate generate results](../../images/clip.png)
 
-### 连续使用场景
 
-1. 按**通用场景**使用流程，完成参数录入，并点击**Generate on Cloud**提交第一次推理任务。
-2. 等待右侧**Output**部分出现了新的**inference id**。
-3. 在新的**Inference Job ID**出现后，便可再次点击**Generate on Cloud**进行下一次推理。
-
-![continuous generate results](../../images/continue-inference.png)
 
 ## Inference Job
 Inference Job下拉列表默认列出最近10条推理任务，命名格式遵循 Time-Type-Status-Uid。如果需要列出账户历史上所有推理任务，只需选中**Show All**。如果需要应用筛选器，缩小显示列表，可以勾选**Advanced Inference Job filter**，页面下方会自动增加本解决方案提供的筛选器维度，用户可以按需选择。
