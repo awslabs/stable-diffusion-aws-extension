@@ -25,7 +25,7 @@ Parameters:
   NumberOfInferencePorts:
     Description: The number of inference ports
     Type: Number
-    MinValue: 1
+    MinValue: 0
     MaxValue: 5
     Default: 1
 
@@ -45,6 +45,8 @@ Mappings:
       AMI: ami-0ea5aefd1471f67b2
     us-west-2:
       AMI: ami-09d4fb52761c3d78d
+    cn-northwest-1:
+      AMI: ami-07537385feb8e7974
 
 
 Resources:
@@ -296,7 +298,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket', 's3:HeadObject' ]
+                Action: [ 's3:PutObject', 's3:GetObject', 's3:ListBucket', 's3:HeadObject', 's3:DeleteObject' ]
                 Resource: [ '*' ]
         - PolicyName: EcrPolicy
           PolicyDocument:

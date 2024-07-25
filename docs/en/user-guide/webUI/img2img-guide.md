@@ -79,8 +79,3 @@ You can open the **img2img tab** and use the original region along with the **Am
 4. Check inference result. Refresh the dropdown list of **Inference Job JDs**, check the topmost **Inference Job ID** that match the inference submission timestamp to review the inference result.
 ![interrogate generate results](../../images/clip.png)
 
-### Continuous Inference Scenario
-
-1. Following the **General Inference Scenario**, complete the parameter inputs and click **Generate on Cloud** to submit the initial inference task.
-2. Wait for the appearance of a new **Inference ID** in the right-side **Output** section.
-3. Once the new Inference ID appears, you can proceed to click **Generate on Cloud** again for the next inference task.

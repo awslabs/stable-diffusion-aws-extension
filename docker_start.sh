@@ -17,6 +17,7 @@ sudo rm -rf "$CONTAINER_PATH/sync_lock"
 sudo rm -rf "$CONTAINER_PATH/s5cmd_lock"
 SUPERVISORD_FILE="$CONTAINER_PATH/supervisord.conf"
 START_SH=$(realpath ./build_scripts/inference/start.sh)
+START_PY=$(realpath ./build_scripts/comfy/serve.py)
 COMFY_PROXY=$(realpath ./build_scripts/comfy/comfy_proxy.py)
 COMFY_EXT=$(realpath ./build_scripts/comfy/ComfyUI-AWS-Extension)
 IMAGE_SH=$(realpath ./docker_image.sh)
@@ -56,7 +57,11 @@ generate_process(){
   fi
 
   if [ -z "$WORKFLOW_NAME_TMP" ]; then
-    WORKFLOW_NAME_TMP="default"
+    if [ "$init_port" -eq "10000" ]; then
+        WORKFLOW_NAME_TMP="default"
+    else
+        WORKFLOW_NAME_TMP="local"
+    fi
   fi
 
   echo "$WORKFLOW_NAME_TMP" > "$COMFY_WORKFLOW_FILE"
@@ -84,7 +89,7 @@ set -euxo pipefail
 
 WORKFLOW_NAME=\$(cat $CONTAINER_PATH/$PROGRAM_NAME)
 
-if [ \"\$WORKFLOW_NAME\" = \"default\" ]; then
+if [ \"\$WORKFLOW_NAME\" = \"default\" ] || [ \"\$WORKFLOW_NAME\" = \"local\" ]; then
   BASE_IMAGE=$PUBLIC_BASE_IMAGE
 else
   BASE_IMAGE=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$CONTAINER_NAME:\$WORKFLOW_NAME
@@ -104,7 +109,8 @@ docker rm $PROGRAM_NAME || true
 docker run -v $(realpath ~/.aws):/root/.aws \\
            -v $CONTAINER_PATH:/container \\
            -v $CONTAINER_PATH/conda:/home/ubuntu/conda \\
-           -v $START_SH:/start.sh \\
+           -v $START_SH:/start.sh:ro \\
+           -v $START_PY:/serve.py:ro \\
            -v $COMFY_PROXY:/comfy_proxy.py:ro \\
            -v $COMFY_EXT:/ComfyUI-AWS-Extension:ro \\
            --gpus all \\
@@ -113,6 +119,7 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
            -e BASE_IMAGE=\$BASE_IMAGE \\
            -e SERVICE_TYPE=$SERVICE_TYPE \\
            -e ON_EC2=true \\
+           -e DISABLE_AUTO_SYNC=false \\
            -e COMFY_ENDPOINT=name \\
            -e S3_BUCKET_NAME=$COMFY_BUCKET_NAME \\
            -e AWS_REGION=$AWS_REGION \\
@@ -142,6 +149,12 @@ docker run -v $(realpath ~/.aws):/root/.aws \\
   echo "" >> "$SUPERVISORD_FILE"
 }
 
+download_so(){
+  file_name=$1
+  if [ ! -f "/home/ubuntu/conda/lib/$file_name" ]; then
+    echo "cp s3://$COMMON_FILES_PREFIX/so/$file_name $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
+  fi
+}
 
 echo "---------------------------------------------------------------------------------"
 # init default workflow for all users
@@ -159,24 +172,30 @@ if [ ! -d "$CONTAINER_PATH/workflows/default/ComfyUI/venv" ]; then
   rm -rf "$CONTAINER_PATH/workflows/default"
   mkdir -p "$CONTAINER_PATH/workflows/default"
   tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
+  rm -rf "$CONTAINER_PATH/workflows/local"
+  mkdir -p "$CONTAINER_PATH/workflows/local"
+  tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/local/"
   end_at=$(date +%s)
   export DECOMPRESS_SECONDS=$((end_at-start_at))
   cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+
+  rm -rf "$CONTAINER_PATH/workflows/local/ComfyUI/custom_nodes/ComfyUI-Manager"
 
   echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/v1-5-pruned-emaonly.ckpt models/checkpoints/" >> /tmp/models.txt
   echo "cp s3://$COMMON_FILES_PREFIX/models/mm_sd_v15_v2.ckpt models/animatediff_models/" >> /tmp/models.txt
   s5cmd run /tmp/models.txt
+
 fi
 
 rm -rf /tmp/s5cmd.txt
-if [ ! -f "$CONTAINER_PATH/conda/lib/libcufft.so.10" ]; then
-  echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
-fi
-if [ ! -f "$CONTAINER_PATH/conda/lib/libcurand.so.10" ]; then
-  echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 $CONTAINER_PATH/conda/lib/" >> /tmp/s5cmd.txt
-fi
+download_so "libcufft.so.10"
+download_so "libcurand.so.10"
+download_so "libcublasLt.so.11"
+download_so "libonnxruntime_providers_cuda.so"
+download_so "libcublas.so.11"
+download_so "libcudart.so.11.0"
 if [ -f "/tmp/s5cmd.txt" ]; then
   s5cmd run /tmp/s5cmd.txt
 fi

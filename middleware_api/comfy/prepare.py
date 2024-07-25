@@ -41,6 +41,9 @@ class PrepareEnvEvent:
 def get_endpoint_info(endpoint_name: str):
     endpoint_raw = ddb_service.scan(endpoint_table, filters={'endpoint_name': endpoint_name})[0] if ddb_service.scan(endpoint_table, filters={'endpoint_name': endpoint_name}) else None
     logger.debug(f'endpoint_raw is : {endpoint_raw}')
+    if not endpoint_raw:
+        raise Exception(f'sagemaker endpoint with name {endpoint_name} is not found')
+
     endpoint_info = ddb_service.deserialize(endpoint_raw)
     logger.debug(f'endpoint_info is : {endpoint_info}')
 

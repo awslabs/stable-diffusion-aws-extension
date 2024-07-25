@@ -52,7 +52,8 @@ def handler(event, ctx):
             results.append({
                 'name': do.name,
                 'workflow': do.workflow,
-                'create_time': do.create_time
+                'payload': do.payload,
+                'create_time': do.create_time,
             })
 
         results = sort(results)

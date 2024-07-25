@@ -64,7 +64,7 @@ export async function handler(event: Event, context: Object) {
 }
 
 async function createAndCheckResources() {
-  await createRegionRole(ESD_ROLE);
+  await createRegionRole(`${ESD_ROLE}-${AWS_REGION}`);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   await createBucket();

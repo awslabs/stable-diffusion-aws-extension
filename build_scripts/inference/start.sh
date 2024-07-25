@@ -328,25 +328,28 @@ comfy_launch_from_public_s3(){
     comfy_launch
 }
 
+download_so(){
+  file_name=$1
+  if [ ! -f "/home/ubuntu/conda/lib/$file_name" ]; then
+    echo "cp s3://$COMMON_FILES_PREFIX/so/$file_name /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
+  fi
+}
+
 download_conda_and_models(){
   echo "---------------------------------------------------------------------------------"
 
   rm -rf /tmp/s5cmd.txt
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcufft.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcufft.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
-  if [ ! -f "/home/ubuntu/conda/lib/libcurand.so.10" ]; then
-    echo "cp s3://$COMMON_FILES_PREFIX/so/libcurand.so.10 /home/ubuntu/conda/lib/" >> /tmp/s5cmd.txt
-  fi
-
+  download_so "libcufft.so.10"
+  download_so "libcurand.so.10"
+  download_so "libcublasLt.so.11"
+  download_so "libonnxruntime_providers_cuda.so"
+  download_so "libcublas.so.11"
+  download_so "libcudart.so.11.0"
   if [ -f "/tmp/s5cmd.txt" ]; then
     s5cmd run /tmp/s5cmd.txt
   fi
 
   set_conda
-
 }
 
 # ----------------------------- On EC2 -----------------------------
@@ -362,8 +365,8 @@ if [ -n "$ON_EC2" ]; then
 
   if [ ! -d "$WORKFLOW_DIR/ComfyUI/venv" ]; then
     mkdir -p "$WORKFLOW_DIR"
-    if [ "$WORKFLOW_NAME" = "default" ]; then
-      echo "default workflow init must be in create EC2"
+    if [ "$WORKFLOW_NAME" = "default" ] || [ "$WORKFLOW_NAME" = "local" ]; then
+      echo "$WORKFLOW_NAME workflow init must be in create EC2"
       tar_file="$CONTAINER_PATH/default.tar"
       if [ ! -f "$tar_file" ]; then
           mkdir -p "$CONTAINER_PATH/workflows"
@@ -373,12 +376,12 @@ if [ -n "$ON_EC2" ]; then
           export DOWNLOAD_FILE_SECONDS=$((end_at-start_at))
       fi
       start_at=$(date +%s)
-      rm -rf "$CONTAINER_PATH/workflows/default"
-      mkdir -p "$CONTAINER_PATH/workflows/default"
-      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/default/"
+      rm -rf "$CONTAINER_PATH/workflows/$WORKFLOW_NAME"
+      mkdir -p "$CONTAINER_PATH/workflows/$WORKFLOW_NAME"
+      tar --overwrite -xf "$tar_file" -C "$CONTAINER_PATH/workflows/$WORKFLOW_NAME/"
       end_at=$(date +%s)
       export DECOMPRESS_SECONDS=$((end_at-start_at))
-      cd "$CONTAINER_PATH/workflows/default/ComfyUI"
+      cd "$CONTAINER_PATH/workflows/$WORKFLOW_NAME/ComfyUI"
 
       echo "cp s3://$COMMON_FILES_PREFIX/models/vae-ft-mse-840000-ema-pruned.safetensors models/vae/" > /tmp/models.txt
       echo "cp s3://$COMMON_FILES_PREFIX/models/majicmixRealistic_v7.safetensors models/checkpoints/" >> /tmp/models.txt
@@ -408,6 +411,10 @@ if [ -n "$ON_EC2" ]; then
     cp -f /comfy_proxy.py /home/ubuntu/ComfyUI/custom_nodes/
   fi
 
+  if [ -f "/serve.py" ]; then
+    cp -f /serve.py /home/ubuntu/ComfyUI/
+  fi
+
   if [ -d "/ComfyUI-AWS-Extension" ]; then
     rm -rf /home/ubuntu/ComfyUI/custom_nodes/ComfyUI-AWS-Extension
     cp -r /ComfyUI-AWS-Extension /home/ubuntu/ComfyUI/custom_nodes/
@@ -419,10 +426,7 @@ if [ -n "$ON_EC2" ]; then
 
   chmod -R 777 /home/ubuntu/ComfyUI
 
-  venv/bin/python3 main.py --listen 0.0.0.0 --port 8188 \
-                           --cuda-malloc \
-                           --output-directory "/container/output/$PROGRAM_NAME/" \
-                           --temp-directory "/container/temp/$PROGRAM_NAME/"
+  venv/bin/python3 serve.py
   exit 1
 fi
 

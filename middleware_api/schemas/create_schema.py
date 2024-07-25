@@ -31,8 +31,8 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class CreateSchemaEvent:
     name: str
-    workflow: str
     payload: str
+    workflow: str = ""
 
 
 @tracer.capture_lambda_handler

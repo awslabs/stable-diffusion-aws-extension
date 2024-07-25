@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import boto3
 from aws_lambda_powertools import Tracer
 
+from common.excepts import BadRequestException
 from common.response import ok, not_found
 from libs.utils import response_error, log_json, update_table_by_pk
 
@@ -21,7 +22,8 @@ schemas_table = dynamodb.Table(table_name)
 
 @dataclass
 class UpdateSchemaEvent:
-    workflow: str
+    payload: str
+    workflow: str = ""
 
 
 @tracer.capture_lambda_handler
@@ -41,7 +43,11 @@ def handler(raw_event, ctx):
 
         log_json("schema", item)
 
+        if not event.workflow and not event.payload:
+            raise BadRequestException("At least one of workflow or payload must be provided")
+
         update_table_by_pk(table=table_name, pk_name='name', pk_value=name, key='workflow', value=event.workflow)
+        update_table_by_pk(table=table_name, pk_name='name', pk_value=name, key='payload', value=event.payload)
 
         return ok(data=item, decimal=True)
 

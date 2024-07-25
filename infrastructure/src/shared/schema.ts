@@ -591,7 +591,7 @@ export const SCHEMA_WORKFLOW_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
   minLength: 1,
   maxLength: 20,
-  pattern: '^[A-Za-z][A-Za-z0-9_]*$',
+  pattern: '^[A-Za-z][A-Za-z0-9]*$',
   description: 'Name of workflow',
 };
 
@@ -622,6 +622,8 @@ export const SCHEMA_WORKFLOW_JSON_NAME: JsonSchema = {
 
 export const SCHEMA_WORKFLOW_JSON_PAYLOAD_JSON: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Payload JSON String of Schema',
+  minLength: 1,
 };
 
 export const SCHEMA_WORKFLOW_JSON_WORKFLOW: JsonSchema = {

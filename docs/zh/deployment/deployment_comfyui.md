@@ -2,19 +2,14 @@
 
 部署时间：约 20 分钟
 
-## 前提条件
-
-
 ## 部署概述
 在亚马逊云科技上部署本解决方案（ComfyUI部分）主要包括以下过程：
 
 - 步骤1：部署本解决方案中间件。
 - 步骤2：部署ComfyUI前端。
-- 步骤3: 在ComfyUI页面调试并创建一个可用的工作流。
-- 步骤4：根据创建的工作流部署新的Amazon SageMaker推理节点。
 
-!!! tip "贴士" 
-        遇到部署问题时可以查看“常见问题解答”章节中ComfyUI相关部分。
+部署完成后，具体使用流程，请参考[ComfyUI用户手册](../user-guide/ComfyUI/inference.md)
+
 
 ## 部署步骤
 ### 步骤1: 部署解决方案中间件
@@ -27,6 +22,7 @@
 
     |参数|说明|建议|
     |:-------------|:--------------|:--------------|
+    |APIEndpointType|如需API调用，定义该API的类别，选项REGIONAL / PRIVATE / EDGE|默认Regional|
     |Bucket|填入一个有效的新的S3桶的名字（或之前部署的、用于本解决方案ComfyUI部分的S3桶名字）||
     |email|输入一个正确的电子邮件地址，以便接收将来的通知||
     |SdExtensionApiKey|请输入一个包含数字和字母组合的20个字符的字符串|默认为"09876543210987654321"|
@@ -70,54 +66,7 @@
     !!! tip "贴士"
         刚部署好贴士以后，需要稍作等待。如果打开链接后，看到提示“Comfy is Initializing or Starting”，表示后端在初始化ComfyUI过程中，请稍作等待，再次刷新页面确认。
 
-### 步骤3: 在ComfyUI页面调试并创建一个可用的工作流。
-可以参考[这里](../user-guide/ComfyUI/inference.md)中的“工作流的调试”子章节部分
 
-### 步骤4: 部署新的Amazon SageMaker推理节点
-在步骤1成功完成后，需要通过API方式部署所需的Amazon SageMaker推理节点。后续的新发布的ComfyUI工作流推理都将使用该推理节点的计算资源。
-
-以下API代码中所需的ApiGatewayUrl及ApiGatewayUrlToken，可以在步骤1部署成功的堆栈**Outputs**标签页找到。
-
-请打开任何可以运行代码的窗口，比如本地Macbook电脑的Terminal，运行如下API代码。
-
-```
-curl --location 'api地址/endpoints' \
---header 'x-api-key: 此处填写您的apikey' \
---header 'username: api' \
---header 'Content-Type: application/json' \
---data-raw '{
-    “workflow_name”:“此处填写您创建的workflow名称“,
-    “endpoint_name”: “当无需关联workflow时需要填写您要创建的推理端点名字",
-    “service_type”: “comfy”,
-    “endpoint_type”: “Async”,
-    “instance_type”: “实例类型.ml.xxx”,
-    “initial_instance_count”: 1,
-    “min_instance_number”: 1,
-    “max_instance_number”: 2,
-    “autoscaling_enabled”: true,
-    “assign_to_roles”: [ “test” ]
-}'
-```
-
-!!! Important "注意" 
-    如果是相对复杂的workflow 注意选择异步推理节点类型，否则受限于service最长等待30s，会出现调用推理超时的情况。
-
-
-后续如需要删除Amazon SageMaker推理节点，可通过以下API完成。
-```
-curl --location --request DELETE 'https://此处填ApiGatewayUrl地址/endpoints' \
---header 'username: api' \
---header 'x-api-key: 此处填ApiGatewayUrlToken' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "endpoint_name_list": [
-        "comfy-real-time-test-34"//填要删除的endpoint名字
-    ]
-}'
-```
-
-!!! Important "注意" 
-    不建议直接进去SageMaker console直接删除endpoint，容易造成数据不一致的隐患。
 
 
 

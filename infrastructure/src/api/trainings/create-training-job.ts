@@ -170,10 +170,11 @@ export class CreateTrainingJobApi {
       actions: [
         's3:GetObject',
         's3:PutObject',
+        's3:List*',
+        's3:Head*',
       ],
       resources: [
-        `${this.props.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `*`,
       ],
     }));
 

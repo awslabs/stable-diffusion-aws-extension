@@ -98,7 +98,7 @@ if is_on_ec2:
     if not api_token:
         raise ValueError("API_TOKEN environment variables must be set.")
 
-    headers = {"x-api-key": api_token, "Content-Type": "application/json"}
+    headers = {"x-api-key": api_token, "Content-Type": "application/json", "username": "api"}
 
 
     def send_msg_to_all_sockets(event: str, msg: dict):
@@ -227,7 +227,7 @@ if is_on_ec2:
                 }
                 executor.add_message("execution_error", mes, broadcast=True)
 
-            if is_master_process and 'True' == os.environ.get(DISABLE_AWS_PROXY):
+            if is_master_process and ('True' == os.environ.get(DISABLE_AWS_PROXY) or not os.environ.get(DISABLE_AWS_PROXY)):
                 logger.info("disabled aws proxy, use local")
                 return func(*args, **kwargs)
             logger.info(f"enable aws proxy, use aws")
@@ -245,7 +245,7 @@ if is_on_ec2:
             global client_release_map
             workflow_name = client_release_map.get(client_id) if client_release_map.get(client_id) else os.getenv('WORKFLOW_NAME')
             if not workflow_name or workflow_name == 'default':
-                send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
+                send_error_msg(executor, prompt_id, f"Please choose a cloud environment before you execute prompt")
                 return web.Response()
                 # if not is_master_process:
                 #     send_error_msg(executor, prompt_id, f"Please choose a release env before you execute prompt")
@@ -537,12 +537,14 @@ if is_on_ec2:
             # compress_and_upload(comfy_endpoint, f"{DIR2}", prepare_version)
             if prepare_type in ['default', 'inputs']:
                 logger.info(f" sync input files")
-                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                # s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f'aws s3 sync --delete {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
                 logger.info(f"sync input files start {s5cmd_syn_input_command}")
                 os.system(s5cmd_syn_input_command)
             if prepare_type in ['default', 'models']:
                 logger.info(f" sync models files")
-                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                # s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f'aws s3 sync --delete {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
                 logger.info(f"sync models files start {s5cmd_syn_model_command}")
                 os.system(s5cmd_syn_model_command)
             logger.info(f"Files changed in:: {need_prepare} {prepare_type} {DIR2} {DIR1} {DIR3}")
@@ -571,8 +573,8 @@ if is_on_ec2:
             if not directory:
                 logger.info("root path no need to sync files by duplicate opt")
                 return None
-            logger.info(f"Files changed in: {filepath}")
             timestamp = str(int(time.time() * 1000))
+            logger.info(f"Files changed in: {filepath} time is:{timestamp}")
             need_prepare = False
             prepare_type = 'inputs'
             need_reboot = False
@@ -601,7 +603,8 @@ if is_on_ec2:
             elif (str(directory).endswith(f"{DIR3}" if DIR3.startswith("/") else f"/{DIR3}")
                   or str(filepath) == DIR3 or str(filepath) == f'./{DIR3}' or f"{DIR3}/" in filepath):
                 logger.info(f" sync input files: {filepath}")
-                s5cmd_syn_input_command = f's5cmd --log=error sync --delete=true {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                s5cmd_syn_input_command = f'aws s3 sync --delete {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
+                # s5cmd_syn_input_command = f'/usr/local/bin/s5cmd sync {DIR3}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/input/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -615,12 +618,15 @@ if is_on_ec2:
                 logger.info("sync input files start")
                 logger.info(s5cmd_syn_input_command)
                 os.system(s5cmd_syn_input_command)
+                # result = subprocess.run(s5cmd_syn_input_command, shell=True, check=True, stdout=subprocess.PIPE)
+                # logger.info(result.stdout.decode())
                 need_prepare = True
                 prepare_type = 'inputs'
             elif (str(directory).endswith(f"{DIR1}" if DIR1.startswith("/") else f"/{DIR1}")
                   or str(filepath) == DIR1 or str(filepath) == f'./{DIR1}' or f"{DIR1}/" in filepath):
                 logger.info(f" sync models files: {filepath}")
-                s5cmd_syn_model_command = f's5cmd --log=error sync --delete=true {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                s5cmd_syn_model_command = f'aws s3 sync --delete {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
+                # s5cmd_syn_model_command = f'/usr/local/bin/s5cmd sync {DIR1}/ "s3://{bucket_name}/comfy/{comfy_endpoint}/{prepare_version}/models/"'
 
                 # 判断文件写完后再同步
                 if is_auto:
@@ -636,9 +642,12 @@ if is_on_ec2:
                 logger.info("sync models files start")
                 logger.info(s5cmd_syn_model_command)
                 os.system(s5cmd_syn_model_command)
+                # result = subprocess.run(s5cmd_syn_model_command, shell=True, check=True, stdout=subprocess.PIPE)
+                # logger.info(result.stdout.decode())
                 need_prepare = True
                 prepare_type = 'models'
-            logger.info(f"Files changed in:: {need_prepare} {str(directory)} {DIR2} {DIR1} {DIR3}")
+            timestamp_sync = str(int(time.time() * 1000))
+            logger.info(f"Files changed in:: {need_prepare} {str(directory)} {DIR2} {DIR1} {DIR3}, time is:{timestamp_sync}")
             if need_prepare:
                 url = api_url + "prepare"
                 logger.info(f"URL:{url}")
@@ -649,6 +658,8 @@ if is_on_ec2:
                                          f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
                                         capture_output=True, text=True)
                 logger.info(result.stdout)
+                timestamp_prepare = str(int(time.time() * 1000))
+                logger.info(f"finish prepare in : {timestamp_prepare}")
                 return result.stdout
             return None
         except Exception as e:
@@ -738,7 +749,6 @@ if is_on_ec2:
 
     stop_event = threading.Event()
 
-
     def check_and_sync():
         logger.info("check_and_sync start")
         event_handler = MyHandlerWithSync()
@@ -748,12 +758,13 @@ if is_on_ec2:
             # observer.schedule(event_handler, DIR2, recursive=True)
             observer.schedule(event_handler, DIR3, recursive=True)
             observer.start()
-            while True:
+            while not stop_event.is_set():
                 time.sleep(1)
-        except KeyboardInterrupt:
-            logger.info("sync Shutting down please restart ComfyUI")
+        except Exception as e:
+            logger.error(f"Exception in check_and_sync: {e}")
+        finally:
+            logger.info("Stopping observer")
             observer.stop()
-        observer.join()
 
 
     def signal_handler(sig, frame):
@@ -764,7 +775,6 @@ if is_on_ec2:
     if os.environ.get('DISABLE_AUTO_SYNC') == 'false':
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-
         check_sync_thread = threading.Thread(target=check_and_sync)
         check_sync_thread.start()
 
@@ -778,6 +788,9 @@ if is_on_ec2:
             return web.Response(status=500, content_type='application/json', body=json.dumps({"result": False}))
         global client_release_map
         client_release_map[json_data.get('clientId')] = json_data.get('releaseVersion')
+        # don‘t move used for sync automic
+        os.environ['COMFY_ENDPOINT'] = get_endpoint_name_by_workflow_name(json_data.get('releaseVersion'))
+
         logger.info(f"client_release_map :{client_release_map}")
         return web.Response(status=200, content_type='application/json', body=json.dumps({"result": True}))
 
@@ -938,8 +951,17 @@ if is_on_ec2:
 
     @server.PromptServer.instance.routes.get("/get_env")
     async def get_env(request):
-        env = os.environ.get(DISABLE_AWS_PROXY, 'False')
+        env = os.environ.get(DISABLE_AWS_PROXY, 'True')
         return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env}))
+
+
+    @server.PromptServer.instance.routes.get("/get_env_new/{id}")
+    async def get_env_new(request):
+        logger.info(f"start to get_env_new {request}")
+        env_key = request.match_info.get("id", None)
+        logger.info("env_key is :" + str(env_key))
+        env_value = os.getenv(env_key)
+        return web.Response(status=200, content_type='application/json', body=json.dumps({"env": env_value}))
 
 
     @server.PromptServer.instance.routes.get("/check_is_master")
@@ -1001,56 +1023,56 @@ if is_on_ec2:
         return str(source_size)
 
 
-    def async_release_workflow(workflow_name, payload_json):
-        start_time = time.time()
-
-        action_lock(workflow_name)
-
-        base_image = os.getenv('BASE_IMAGE')
-        subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
-        subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
-
-        cur_workflow_name = os.getenv('WORKFLOW_NAME')
-        source_path = f"/container/workflows/{cur_workflow_name}"
-        print(f"source_path is {source_path}")
-
-        s5cmd_sync_command = (f's5cmd sync '
-                              f'--delete=true '
-                              f'--exclude="*comfy.tar" '
-                              f'--exclude="*.log" '
-                              f'--exclude="*__pycache__*" '
-                              f'--exclude="*/ComfyUI/output/*" '
-                              f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
-                              f'"{source_path}/*" '
-                              f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
-
-        s5cmd_lock_command = (f'echo "lock" > lock && '
-                              f's5cmd sync lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
-
-        logger.info(f"sync workflows files start {s5cmd_sync_command}")
-
-        subprocess.check_output(s5cmd_sync_command, shell=True)
-        subprocess.check_output(s5cmd_lock_command, shell=True)
-
-        end_time = time.time()
-        cost_time = end_time - start_time
-        image_hash = os.getenv('IMAGE_HASH')
-        image_uri = f"{image_hash}:{workflow_name}"
-
-        if isinstance(payload_json, dict):
-            payload_json = json.dumps(payload_json)
-
-        data = {
-            "payload_json": payload_json,
-            "image_uri": image_uri,
-            "name": workflow_name,
-            "size": dir_size(source_path),
-        }
-        get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
-        response = get_response.json()
-        logger.info(f"release workflow response is {response}")
-        action_unlock()
-        print(f"release workflow cost time is {cost_time}")
+    # def async_release_workflow(workflow_name, payload_json):
+    #     start_time = time.time()
+    #
+    #     action_lock(workflow_name)
+    #
+    #     base_image = os.getenv('BASE_IMAGE')
+    #     subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
+    #     subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
+    #
+    #     cur_workflow_name = os.getenv('WORKFLOW_NAME')
+    #     source_path = f"/container/workflows/{cur_workflow_name}"
+    #     print(f"source_path is {source_path}")
+    #
+    #     s5cmd_sync_command = (f'aws s3 sync --quiet '
+    #                           f'--delete '
+    #                           f'--exclude="*comfy.tar" '
+    #                           f'--exclude="*.log" '
+    #                           f'--exclude="*__pycache__*" '
+    #                           f'--exclude="*/ComfyUI/output/*" '
+    #                           f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
+    #                           f'"{source_path}/" '
+    #                           f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"  --debug')
+    #
+    #     s5cmd_lock_command = (f'echo "lock" > lock && '
+    #                           f'aws s3 cp lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+    #
+    #     logger.info(f"sync workflows files start {s5cmd_sync_command}")
+    #
+    #     subprocess.check_output(s5cmd_sync_command, shell=True)
+    #     subprocess.check_output(s5cmd_lock_command, shell=True)
+    #
+    #     end_time = time.time()
+    #     cost_time = end_time - start_time
+    #     image_hash = os.getenv('IMAGE_HASH')
+    #     image_uri = f"{image_hash}:{workflow_name}"
+    #
+    #     if isinstance(payload_json, dict):
+    #         payload_json = json.dumps(payload_json)
+    #
+    #     data = {
+    #         "payload_json": payload_json,
+    #         "image_uri": image_uri,
+    #         "name": workflow_name,
+    #         "size": dir_size(source_path),
+    #     }
+    #     get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+    #     response = get_response.json()
+    #     logger.info(f"release workflow response is {response}")
+    #     action_unlock()
+    #     print(f"release workflow cost time is {cost_time}")
 
 
     @server.PromptServer.instance.routes.get("/lock")
@@ -1059,12 +1081,82 @@ if is_on_ec2:
                             body=json.dumps({"result": True, "lock": is_action_lock()}))
 
 
-    @server.PromptServer.instance.routes.post("/workflows")
-    async def release_workflow(request):
+    def async_release_env(workflow_name, payload_json, init_count: int, instance_type, auto_scale: bool, min_count: int, max_count: int):
+        try:
+            start_time = time.time()
+            action_lock(workflow_name)
+            base_image = os.getenv('BASE_IMAGE')
+            subprocess.check_output(f"echo {workflow_name} > /container/image_target_name", shell=True)
+            subprocess.check_output(f"echo {base_image} > /container/image_base", shell=True)
+
+            cur_workflow_name = os.getenv('WORKFLOW_NAME')
+            source_path = f"/container/workflows/{cur_workflow_name}"
+            print(f"source_path is {source_path}")
+
+            s5cmd_sync_command = (f'aws s3 sync --quiet '
+                                  f'--delete '
+                                  f'--exclude="*comfy.tar" '
+                                  f'--exclude="*.log" '
+                                  f'--exclude="*__pycache__*" '
+                                  f'--exclude="*/ComfyUI/output/*" '
+                                  f'--exclude="*/custom_nodes/ComfyUI-Manager/*" '
+                                  f'"{source_path}/" '
+                                  f'"s3://{bucket_name}/comfy/workflows/{workflow_name}/"')
+
+            s5cmd_lock_command = (f'echo "lock" > lock && '
+                                  f'aws s3 cp lock s3://{bucket_name}/comfy/workflows/{workflow_name}/lock')
+
+            logger.info(f"sync workflows files start {s5cmd_sync_command}")
+
+            subprocess.check_output(s5cmd_sync_command, shell=True)
+            subprocess.check_output(s5cmd_lock_command, shell=True)
+
+            end_time = time.time()
+            cost_time = end_time - start_time
+            image_hash = os.getenv('IMAGE_HASH')
+            image_uri = f"{image_hash}:{workflow_name}"
+
+            if isinstance(payload_json, dict):
+                payload_json = json.dumps(payload_json)
+
+            data = {
+                "payload_json": payload_json,
+                "image_uri": image_uri,
+                "name": workflow_name,
+                "size": dir_size(source_path),
+            }
+            get_response = requests.post(f"{api_url}/workflows", headers=headers, data=json.dumps(data))
+            response = get_response.json()
+            logger.info(f"release workflow response is {response}")
+            # TODO check response
+            endpoint_data = {
+                'workflow_name': workflow_name,
+                'endpoint_name': '',
+                'service_type': 'comfy',
+                'endpoint_type': 'Async',
+                'instance_type': instance_type,
+                'initial_instance_count': init_count,
+                'min_instance_number': min_count,
+                'max_instance_number': max_count,
+                'autoscaling_enabled': auto_scale,
+                'assign_to_roles': [f'ec2{workflow_name}'],
+            }
+            endpoint_response = requests.post(f"{api_url}/endpoints", headers=headers, data=json.dumps(endpoint_data))
+            logger.info(f"release env endpoint response is {endpoint_response}")
+            action_unlock()
+            logger.info(f"release workflow cost time is {cost_time}")
+        except Exception as e:
+            action_unlock()
+            logger.info(f"release workflow error start to rm lock:{e} ")
+
+
+    @server.PromptServer.instance.routes.post("/release")
+    async def release_env(request):
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
+                                    {"result": False,
+                                     "message": "action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
@@ -1082,7 +1174,7 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} is not allowed"}))
 
-            if not re.match(r'^[A-Za-z][A-Za-z0-9_]*$', workflow_name):
+            if not re.match(r'^[A-Za-z][A-Za-z0-9]*$', workflow_name):
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} is invalid name"}))
 
@@ -1095,28 +1187,44 @@ if is_on_ec2:
                 return web.Response(status=200, content_type='application/json',
                                     body=json.dumps({"result": False, "message": f"{workflow_name} already exists"}))
 
-            thread = threading.Thread(target=async_release_workflow, args=(workflow_name, payload_json))
+            if ('initCount' not in json_data or not json_data['initCount']
+                    or not json_data['initCount'].isdigit() or int(json_data['initCount']) <= 0):
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"initCount is required"}))
+            if ('autoScale' not in json_data or not json_data['autoScale']):
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"autoScale is required"}))
+            if 'autoScale' in json_data and json_data['autoScale']:
+                if ('minCount' not in json_data or not json_data['minCount']
+                        or not json_data['minCount'].isdigit() or int(json_data['minCount']) < 0):
+                    return web.Response(status=200, content_type='application/json',
+                                        body=json.dumps({"result": False, "message": f"minCount is required"}))
+                if ('maxCount' not in json_data or not json_data['maxCount']
+                        or not json_data['maxCount'].isdigit() or int(json_data['maxCount']) < 0):
+                    return web.Response(status=200, content_type='application/json',
+                                        body=json.dumps({"result": False, "message": f"maxCount is required"}))
+
+            thread = threading.Thread(target=async_release_env, args=(workflow_name, payload_json, int(json_data['initCount']), json_data['instanceType'], bool(json_data['autoScale']), int(json_data['minCount']), int(json_data['maxCount'])))
             thread.start()
 
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Pending to release workflow, "
-                                                                            "it's may take a few minutes"}))
+                                body=json.dumps({"result": True, "message": "Pending to release, it may take a few minutes"}))
         except Exception as e:
             logger.info(e)
             action_unlock()
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'Release workflow failed'}))
+                                body=json.dumps({"result": False, "message": 'Release workflow failed.'}))
 
     @server.PromptServer.instance.routes.delete("/workflows")
     async def delete_workflow(request):
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
+                                    {"result": False, "message": "Action is not allowed during workflow release/restore"}))
 
         if not is_master_process:
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": False, "message": "only master can delete workflows"}))
+                                body=json.dumps({"result": False, "message": "Only master can delete workflows"}))
 
         logger.info(f"start to delete workflows {request}")
         try:
@@ -1132,7 +1240,7 @@ if is_on_ec2:
 
             if os.getenv('WORKFLOW_NAME') == name:
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "can not delete current workflow"}))
+                                    body=json.dumps({"result": False, "message": "Cannot delete current workflow."}))
 
             i = 0
             start_n = 10000
@@ -1147,8 +1255,7 @@ if is_on_ec2:
                         if content == name:
                             return web.Response(status=200, content_type='application/json',
                                                 body=json.dumps({"result": False,
-                                                                 "message": f"can not delete workflow "
-                                                                            f"because it is in use by {port}"}))
+                                                                 "message": f"Cannot delete workflow, it is in use by port {port}."}))
 
             data = {
                 "workflow_name_list": [name],
@@ -1174,17 +1281,12 @@ if is_on_ec2:
         if is_action_lock():
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "action is not allowed during workflow release/restore"}))
-
-        if is_action_lock():
-            return web.Response(status=200, content_type='application/json',
-                                body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during workflow release/restore"}))
+                                    {"result": False, "message": "Switch is not allowed during workflow release/restore"}))
 
         if os.path.exists("/container/s5cmd_lock"):
             return web.Response(status=200, content_type='application/json',
                                 body=json.dumps(
-                                    {"result": False, "message": "switch is not allowed during other's switch, "
+                                    {"result": False, "message": "Switch is not allowed during other's switch, "
                                                                  "please try again later"}))
 
         try:
@@ -1196,12 +1298,11 @@ if is_on_ec2:
 
             if workflow_name == os.getenv('WORKFLOW_NAME'):
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "workflow is already in use"}))
+                                    body=json.dumps({"result": False, "message": "Workflow is already in use"}))
 
             if workflow_name == 'default' and not is_master_process:
                 return web.Response(status=200, content_type='application/json',
-                                    body=json.dumps({"result": False, "message": "slave can not use default workflow "
-                                                                                 "after initial"}))
+                                    body=json.dumps({"result": False, "message": "Slave cannot use default after initial"}))
 
             if workflow_name != 'default':
                 if not check_workflow_exists(workflow_name):
@@ -1209,13 +1310,16 @@ if is_on_ec2:
                                         body=json.dumps({"result": False, "message": f"{workflow_name} not exists"}))
 
             name_file = os.getenv('WORKFLOW_NAME_FILE')
+
+            # don‘t move used for sync automic
+            os.environ['COMFY_ENDPOINT'] = get_endpoint_name_by_workflow_name(workflow_name)
+
             subprocess.check_output(f"echo {workflow_name} > {name_file}", shell=True)
 
             thread = threading.Thread(target=kill_after_seconds)
             thread.start()
             return web.Response(status=200, content_type='application/json',
-                                body=json.dumps({"result": True, "message": "Comfy will be switch in 2 seconds, "
-                                                                            "it's may take a few minutes"}))
+                                body=json.dumps({"result": True, "message": "Comfy workflow will switch in 2 seconds, it may take a few minutes."}))
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
@@ -1239,19 +1343,19 @@ if is_on_ec2:
             if is_master_process:
                 list.append({
                     "name": 'default',
+                    "in_use": 'default' == workflow_name,
                     "size": dir_size(f"/container/workflows/default"),
                     "status": 'Enabled',
                     "payload_json": '',
-                    "in_use": 'default' == workflow_name
                 })
 
             for workflow in workflows:
                 list.append({
                     "name": workflow['name'],
+                    "in_use": workflow['name'] == workflow_name,
                     "size": workflow['size'],
                     "status": workflow['status'],
                     "payload_json": workflow['payload_json'],
-                    "in_use": workflow['name'] == workflow_name
                 })
 
             data['workflows'] = list
@@ -1261,8 +1365,172 @@ if is_on_ec2:
         except Exception as e:
             logger.info(e)
             return web.Response(status=500, content_type='application/json',
-                                body=json.dumps({"result": False, "message": 'Switch workflow failed'}))
+                                body=json.dumps({"result": False, "message": 'list workflows failed'}))
 
+    @server.PromptServer.instance.routes.get("/schemas")
+    async def get_schemas(request):
+        try:
+
+            limit = 10
+            if 'limit' in request.query and request.query['limit']:
+                limit = int(request.query['limit'])
+
+            exclusive_start_key = None
+            if 'exclusive_start_key' in request.query and request.query['exclusive_start_key']:
+                exclusive_start_key = request.query['exclusive_start_key']
+
+            params={
+                "limit": limit,
+                "exclusive_start_key": exclusive_start_key,
+            }
+
+            response = requests.get(f"{api_url}/schemas", headers=headers, params=params)
+
+            if response.status_code != 200:
+                resp = response.json()
+                return web.Response(status=500, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f'List schemas failed: {resp["message"]}'}))
+
+            data = response.json()['data']
+            schemas = data['schemas']
+
+            list = [{"name": "default(🔒)", "workflow": "default", "payload": "", "create_time": time.time()}]
+
+            for schema in schemas:
+                if not is_master_process and not schema['workflow']:
+                    continue
+
+                list.append({
+                    "name": schema['name'],
+                    "workflow": schema['workflow'],
+                    "payload": schema['payload'],
+                    "create_time": schema['create_time'],
+                })
+
+            data['schemas'] = list
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "data": data}))
+        except Exception as e:
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": f'List schemas failed: {e}'}))
+
+    @server.PromptServer.instance.routes.post("/schemas")
+    async def create_schema(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can create schema"}))
+
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"name is required"}))
+
+            if json_data['name'] == "default(🔒)":
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"named 'default' cannot be created"}))
+
+            if 'payload' not in json_data or not json_data['payload']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"payload is required"}))
+
+            name = json_data['name']
+            payload = json_data['payload']
+            workflow_name = ''
+
+            if 'workflow' in json_data and json_data['workflow']:
+                workflow_name = json_data['workflow']
+
+            data = {
+                "payload": payload,
+                "name": name,
+                "workflow": workflow_name,
+            }
+            get_response = requests.post(f"{api_url}/schemas", headers=headers, data=json.dumps(data))
+            response = get_response.json()
+            if get_response.status_code != 200:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": response['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Created schema"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Create schema failed'}))
+
+    @server.PromptServer.instance.routes.delete("/schemas")
+    async def delete_schemas(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can delete schemas"}))
+
+        try:
+            json_data = await request.json()
+            if 'schema_name_list' not in json_data or not json_data['schema_name_list']:
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"schema_name_list is required"}))
+            schema_name_list = json_data['schema_name_list']
+
+            data = {
+                "schema_name_list": schema_name_list,
+            }
+            response = requests.delete(f"{api_url}/schemas", headers=headers, data=json.dumps(data))
+
+            if response.status_code != 204:
+                resp = response.json()
+                return web.Response(status=200,
+                                    content_type='application/json',
+                                    body=json.dumps({"result": False, "message": resp['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Schema deleted"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": 'Delete schemas failed'}))
+
+    @server.PromptServer.instance.routes.put("/schemas")
+    async def update_schema(request):
+        if not is_master_process:
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": False, "message": "only master can update schema"}))
+
+        try:
+            json_data = await request.json()
+            if 'name' not in json_data or not json_data['name']:
+                raise ValueError("name is required")
+            if json_data['name'] == "default(🔒)":
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": f"named 'default' cannot be edited"}))
+            if 'payload' not in json_data or not json_data['payload']:
+                raise ValueError("payload is required")
+
+            workflow_name = ''
+
+            if 'workflow' in json_data and json_data['workflow']:
+                workflow_name = json_data['workflow']
+
+            name = json_data['name']
+            payload = json_data['payload']
+
+            data = {
+                "workflow": workflow_name,
+                "payload": payload,
+            }
+            get_response = requests.put(f"{api_url}/schemas/{name}", headers=headers, data=json.dumps(data))
+            if get_response.status_code != 200:
+                response = get_response.json()
+                return web.Response(status=200, content_type='application/json',
+                                    body=json.dumps({"result": False, "message": response['message']}))
+
+            return web.Response(status=200, content_type='application/json',
+                                body=json.dumps({"result": True, "message": "Updated schema"}))
+        except Exception as e:
+            logger.info(e)
+            return web.Response(status=500, content_type='application/json',
+                                body=json.dumps({"result": False, "message": f'Update schema failed: {e}'}))
 
     def check_workflow_exists(name: str):
         get_response = requests.get(f"{api_url}/workflows/{name}", headers=headers)
@@ -1276,7 +1544,7 @@ if is_on_ec2:
                                     {"result": False, "message": "action is not allowed during release workflow"}))
 
         subprocess.run(["sleep", "5"])
-        subprocess.run(["pkill", "-f", "python3"])
+        kill_python_process()
 
 
     def restart_comfy_commands():
@@ -1300,14 +1568,28 @@ if is_on_ec2:
 
     def kill_after_seconds():
         subprocess.run(["sleep", "2"])
+        kill_python_process()
+
+
+    def kill_python_process():
         subprocess.run(["pkill", "-f", "python3"])
+
+        result = subprocess.run(["ps", "-ef"], stdout=subprocess.PIPE)
+        lines = result.stdout.decode().splitlines()
+
+        for line in lines:
+            if "venv/bin/python3 main.py" in line and "--listen" in line:
+                parts = line.split()
+                pid = int(parts[1])
+                print(f"Killing process with PID: {pid}")
+                os.kill(pid, 9)
 
     def restore_workflow():
         action_lock("restore")
         subprocess.run(["sleep", "2"])
         os.system("rm -rf /container/workflows/default")
         action_unlock()
-        subprocess.run(["pkill", "-f", "python3"])
+        kill_python_process()
 
     @server.PromptServer.instance.routes.post("/restore")
     async def release_rebuild_workflow(request):
@@ -1327,8 +1609,7 @@ if is_on_ec2:
         thread = threading.Thread(target=restore_workflow)
         thread.start()
         return web.Response(status=200, content_type='application/json',
-                            body=json.dumps({"result": True, "message": "Comfy will be start restore in 2 seconds, "
-                                                                        "it's may take a few minutes"}))
+                            body=json.dumps({"result": True, "message": "Comfy will be restored in 2 seconds,it may take a few minutes"}))
 
 if is_on_sagemaker:
 
@@ -1450,7 +1731,8 @@ if is_on_sagemaker:
                 try:
                     if sync_script and (
                             sync_script.startswith("cat") or sync_script.startswith("os.environ")
-                            or sync_script.startswith("print") or sync_script.startswith("ls")
+                            or sync_script.startswith("print") or sync_script.startswith("ls ")
+                            or sync_script.startswith("du ")
                             # or sync_script.startswith("python3 -m pip") or sync_script.startswith("python -m pip")
                             # or sync_script.startswith("pip install") or sync_script.startswith("apt")
                             # or sync_script.startswith("curl") or sync_script.startswith("wget")
