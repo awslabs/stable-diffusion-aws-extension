@@ -3,7 +3,7 @@
   "info": {
     "title": "Extension-for-Stable-Diffusion-on-AWS",
     "description": "This is a ESD Server based on the OpenAPI 3.0 specification. \nSome useful links: \n\n- [The ESD Repository](https://github.com/awslabs/stable-diffusion-aws-extension)\n- [Implementation Guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/)",
-    "version": "v1.6.1",
+    "version": "v1.7.0",
     "license": {
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -4448,23 +4448,6 @@
           "required": true
         },
         "responses": {
-          "202": {
-            "description": "202 response",
-            "headers": {
-              "Access-Control-Allow-Origin": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/202"
-                }
-              }
-            }
-          },
           "400": {
             "description": "400 response",
             "headers": {
@@ -4495,6 +4478,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/401"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "204 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/204"
                 }
               }
             }
@@ -6499,7 +6499,7 @@
               "name": {
                 "maxLength": 20,
                 "minLength": 1,
-                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "pattern": "^[A-Za-z][A-Za-z0-9]*$",
                 "type": "string",
                 "description": "Name of workflow"
               },
@@ -7055,7 +7055,9 @@
                 "type": "string"
               },
               "payload": {
-                "type": "string"
+                "minLength": 1,
+                "type": "string",
+                "description": "Payload JSON String of Schema"
               },
               "name": {
                 "maxLength": 20,
@@ -7212,7 +7214,7 @@
             "items": {
               "maxLength": 20,
               "minLength": 1,
-              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*$",
               "type": "string",
               "description": "Name of workflow"
             }
@@ -8368,7 +8370,9 @@
             "type": "string"
           },
           "payload": {
-            "type": "string"
+            "minLength": 1,
+            "type": "string",
+            "description": "Payload JSON String of Schema"
           },
           "name": {
             "maxLength": 20,
@@ -8693,7 +8697,9 @@
                 "type": "string"
               },
               "payload": {
-                "type": "string"
+                "minLength": 1,
+                "type": "string",
+                "description": "Payload JSON String of Schema"
               },
               "name": {
                 "maxLength": 20,
@@ -9520,7 +9526,9 @@
                       "type": "string"
                     },
                     "payload": {
-                      "type": "string"
+                      "minLength": 1,
+                      "type": "string",
+                      "description": "Payload JSON String of Schema"
                     },
                     "name": {
                       "maxLength": 20,
@@ -9550,12 +9558,18 @@
       "UpdateSchemaRequest": {
         "title": "UpdateSchema",
         "required": [
+          "payload",
           "workflow"
         ],
         "type": "object",
         "properties": {
           "workflow": {
             "type": "string"
+          },
+          "payload": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Payload JSON String of Schema"
           }
         }
       },
@@ -9964,7 +9978,7 @@
                     "name": {
                       "maxLength": 20,
                       "minLength": 1,
-                      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                      "pattern": "^[A-Za-z][A-Za-z0-9]*$",
                       "type": "string",
                       "description": "Name of workflow"
                     },
@@ -10182,18 +10196,9 @@
           "workflow_name": {
             "maxLength": 20,
             "minLength": 1,
-            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "pattern": "^[A-Za-z][A-Za-z0-9]*$",
             "type": "string",
             "description": "Name of workflow"
-          },
-          "cool_down_time": {
-            "type": "string",
-            "enum": [
-              "15 minutes",
-              "1 hour",
-              "6 hours",
-              "1 day"
-            ]
           },
           "endpoint_name": {
             "type": "string",
@@ -11076,7 +11081,7 @@
               "name": {
                 "maxLength": 20,
                 "minLength": 1,
-                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "pattern": "^[A-Za-z][A-Za-z0-9]*$",
                 "type": "string",
                 "description": "Name of workflow"
               },
@@ -11181,7 +11186,7 @@
           "name": {
             "maxLength": 20,
             "minLength": 1,
-            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "pattern": "^[A-Za-z][A-Za-z0-9]*$",
             "type": "string",
             "description": "Name of workflow"
           },
